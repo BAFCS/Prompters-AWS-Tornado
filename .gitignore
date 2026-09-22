@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# datos descargados (ERA5/GOES son enormes: nunca versionar)
+data/
+*.nc
+*.grib
+*.grb
+*.zarr/
+*.parquet
+
+# credenciales
+.env
+.aws/
+
+# sistema
+.DS_Store
+Thumbs.db
