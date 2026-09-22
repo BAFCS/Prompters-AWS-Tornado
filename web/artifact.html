@@ -3,25 +3,19 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* ── tokens ─────────────────────────────────────────────── */
 :root{
   --ground:#E4E9EB; --surface:#FFFFFF; --surface-2:#F1F4F5; --line:#C9D3D6;
   --ink:#0C1518; --ink-2:#33454B; --muted:#64757B;
-  --accent:#0E6A63;        /* teal — Pacífico / estructura */
-  --accent-soft:#D6E8E5;
-  --severe:#D2492A;        /* vermellón — señal severa, niveles bajos */
-  --severe-soft:#F7E0D8;
-  --cold:#4C7FB8;          /* azul — niveles altos, tope frío */
-  --warm:#C98A3C;          /* ámbar — niveles bajos, advección cálida */
+  --accent:#0E6A63; --accent-soft:#D6E8E5;
+  --severe:#D2492A; --severe-soft:#F7E0D8;
+  --cold:#4C7FB8; --warm:#C98A3C;
   --shadow:0 1px 2px rgba(12,21,24,.06), 0 8px 24px -12px rgba(12,21,24,.18);
-  --maxw:70ch;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --ground:#0B1215; --surface:#131E22; --surface-2:#18262B; --line:#2A3B41;
     --ink:#E7EEF0; --ink-2:#BCCBD0; --muted:#8CA0A7;
-    --accent:#4FB5A8; --accent-soft:#12332F;
-    --severe:#F0785A; --severe-soft:#3A1E17;
+    --accent:#4FB5A8; --accent-soft:#12332F; --severe:#F0785A; --severe-soft:#3A1E17;
     --cold:#7FAEDD; --warm:#E0A85C;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
   }
@@ -29,188 +23,171 @@
 :root[data-theme="dark"]{
   --ground:#0B1215; --surface:#131E22; --surface-2:#18262B; --line:#2A3B41;
   --ink:#E7EEF0; --ink-2:#BCCBD0; --muted:#8CA0A7;
-  --accent:#4FB5A8; --accent-soft:#12332F;
-  --severe:#F0785A; --severe-soft:#3A1E17;
+  --accent:#4FB5A8; --accent-soft:#12332F; --severe:#F0785A; --severe-soft:#3A1E17;
   --cold:#7FAEDD; --warm:#E0A85C;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
 }
-
 *{box-sizing:border-box}
-body{
-  background:var(--ground); color:var(--ink);
-  font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  font-size:17px; line-height:1.65; margin:0;
-  -webkit-font-smoothing:antialiased;
-}
-h1,h2,h3,h4{font-family:Fraunces,Georgia,"Times New Roman",serif; font-weight:600; line-height:1.12; text-wrap:balance; margin:0}
-.mono,code,kbd{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+body{background:var(--ground); color:var(--ink); margin:0; font-size:17px; line-height:1.62;
+  font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:Fraunces,Georgia,serif; font-weight:600; line-height:1.14; text-wrap:balance; margin:0}
+code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace; font-size:.85em;
+  background:var(--surface-2); border:1px solid var(--line); padding:1px 5px; border-radius:4px; word-break:break-word}
+a{color:var(--accent); text-underline-offset:2.5px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 
-/* ── layout ─────────────────────────────────────────────── */
-.wrap{width:100%; max-width:1180px; margin:0 auto; padding-inline:20px}
-.measure{max-width:var(--maxw); margin-inline:auto}
-section.band{padding-block:clamp(48px,7vw,92px); border-top:1px solid var(--line)}
-section.band:first-of-type{border-top:0}
+.wrap{width:100%; max-width:960px; margin:0 auto; padding-inline:20px}
+section{padding-block:clamp(40px,6vw,72px); border-top:1px solid var(--line)}
+.eyebrow{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 14px}
+h2{font-size:clamp(25px,3.4vw,34px); letter-spacing:-.018em; margin-bottom:8px}
+.dek{font-size:17px; color:var(--muted); margin:0 0 26px; max-width:60ch}
+p{margin:0 0 16px; max-width:68ch}
+ul{margin:0 0 16px; padding-left:22px; max-width:68ch}
+li{margin-bottom:7px}
 
-/* ── top nav ────────────────────────────────────────────── */
-#topbar{
-  position:sticky; top:env(safe-area-inset-top,0px); z-index:50;
-  background:color-mix(in srgb, var(--ground) 88%, transparent);
-  backdrop-filter:blur(12px); border-bottom:1px solid var(--line);
-}
-#topbar .wrap{display:flex; align-items:center; gap:18px; min-height:52px; flex-wrap:wrap}
-.brand{font-family:Fraunces,serif; font-weight:700; font-size:15px; letter-spacing:-.01em; white-space:nowrap}
-.brand span{color:var(--accent)}
-#topbar nav{display:flex; gap:2px; flex-wrap:wrap; margin-left:auto}
-#topbar nav a{
-  font-size:12.5px; color:var(--muted); text-decoration:none; padding:5px 9px; border-radius:5px;
-  font-variant-numeric:tabular-nums;
-}
-#topbar nav a:hover{color:var(--ink); background:var(--surface-2)}
-#topbar nav a:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-
-/* ── hero ───────────────────────────────────────────────── */
-#hero{padding-block:clamp(36px,5vw,64px) clamp(28px,4vw,44px)}
-.eyebrow{
-  font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.14em;
-  text-transform:uppercase; color:var(--accent); margin:0 0 16px
-}
-#hero h1{font-size:clamp(34px,6.4vw,64px); letter-spacing:-.022em; max-width:17ch}
+/* hero */
+#hero{padding-block:clamp(34px,5vw,58px) clamp(24px,3vw,36px); border-top:0}
+#hero h1{font-size:clamp(32px,6vw,58px); letter-spacing:-.022em; max-width:16ch}
 #hero h1 em{font-style:italic; color:var(--accent)}
-.lede{font-size:clamp(17px,2.1vw,21px); color:var(--ink-2); max-width:56ch; margin:22px 0 0; font-weight:300}
+.lede{font-size:clamp(17px,2vw,20px); color:var(--ink-2); max-width:58ch; margin:20px 0 0; font-weight:300}
 .lede strong{font-weight:600; color:var(--ink)}
-
-/* ── stat strip ─────────────────────────────────────────── */
-.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:var(--line);
-  border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-top:36px}
-.stat{background:var(--surface); padding:16px 18px}
-.stat b{display:block; font-family:Fraunces,serif; font-size:29px; line-height:1; font-weight:600;
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(142px,1fr)); gap:1px; background:var(--line);
+  border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-top:32px}
+.stat{background:var(--surface); padding:15px 17px}
+.stat b{display:block; font-family:Fraunces,serif; font-size:27px; line-height:1; font-weight:600;
   font-variant-numeric:tabular-nums; letter-spacing:-.02em}
 .stat span{display:block; font-size:12.5px; color:var(--muted); margin-top:7px; line-height:1.4}
 .stat.sev b{color:var(--severe)}
 
-/* ── figure shell ───────────────────────────────────────── */
-figure.fig{margin:0; background:var(--surface); border:1px solid var(--line); border-radius:12px;
+/* figures */
+figure{margin:0; background:var(--surface); border:1px solid var(--line); border-radius:12px;
   box-shadow:var(--shadow); overflow:hidden}
-figure.fig > svg{display:block; width:100%; height:auto; max-width:100%}
+figure > svg{display:block; width:100%; height:auto; max-width:100%}
 figcaption{font-size:13.5px; color:var(--muted); padding:14px 18px; border-top:1px solid var(--line);
   background:var(--surface-2); line-height:1.5}
 figcaption b{color:var(--ink-2); font-weight:600}
 
-/* ── the animation ──────────────────────────────────────── */
-#anim{margin-top:40px}
-.anim-head{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; padding:16px 18px 0}
-.anim-head h2{font-size:19px}
-.anim-head p{margin:0; font-size:13.5px; color:var(--muted)}
-.stage-label{padding:4px 18px 12px; min-height:58px}
-.stage-label h3{font-size:17px; color:var(--accent); font-family:"Source Sans 3",sans-serif; font-weight:700;
-  letter-spacing:.005em}
-.stage-label p{margin:4px 0 0; font-size:14.5px; color:var(--ink-2); max-width:62ch}
-.ctrls{display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:12px 18px; border-top:1px solid var(--line);
-  background:var(--surface-2)}
-.ctrls button{
-  font-family:"JetBrains Mono",monospace; font-size:11.5px; letter-spacing:.03em;
-  background:var(--surface); color:var(--ink-2); border:1px solid var(--line);
-  padding:6px 11px; border-radius:6px; cursor:pointer; transition:.14s
-}
+/* cards */
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:16px; margin:24px 0}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:17px 19px}
+.card h3{font-family:"Source Sans 3",sans-serif; font-weight:700; font-size:16.5px; margin:0 0 7px}
+.card p{font-size:15.5px; margin:0; color:var(--ink-2); max-width:none}
+.card p + p{margin-top:9px}
+.tag{display:inline-block; font-family:"JetBrains Mono",monospace; font-size:10.5px; letter-spacing:.06em;
+  text-transform:uppercase; padding:2px 7px; border-radius:4px; background:var(--accent-soft);
+  color:var(--accent); margin-bottom:9px}
+.tag.s{background:var(--severe-soft); color:var(--severe)}
+
+/* table */
+.tw{overflow-x:auto; margin:22px 0; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14.5px; min-width:420px}
+th,td{padding:9px 13px; text-align:left; border-bottom:1px solid var(--line)}
+thead th{background:var(--surface-2); font-weight:700; font-size:12.5px; letter-spacing:.02em;
+  text-transform:uppercase; color:var(--muted); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td.num{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+
+/* callout + CTA */
+.note{border-left:3px solid var(--severe); background:var(--surface); padding:16px 20px; margin:24px 0;
+  border-radius:0 8px 8px 0; box-shadow:var(--shadow)}
+.note b{color:var(--severe)}
+.note p:last-child{margin-bottom:0}
+.cta{display:flex; gap:12px; flex-wrap:wrap; margin-top:26px}
+.cta a{display:inline-block; text-decoration:none; font-weight:600; font-size:15px; padding:11px 19px;
+  border-radius:8px; border:1px solid var(--accent); color:var(--accent); transition:.15s}
+.cta a.primary{background:var(--accent); color:var(--surface)}
+.cta a:hover{opacity:.82}
+
+/* animation */
+.anim-head{padding:16px 18px 0}
+.anim-head h2{font-size:19px; margin:0}
+.anim-head p{margin:3px 0 0; font-size:13.5px; color:var(--muted)}
+.stage-label{padding:4px 18px 12px; min-height:74px}
+.stage-label h3{font-size:16.5px; color:var(--accent); font-family:"Source Sans 3",sans-serif; font-weight:700}
+.stage-label p{margin:4px 0 0; font-size:14.5px; color:var(--ink-2); max-width:70ch}
+.ctrls{display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:12px 18px;
+  border-top:1px solid var(--line); background:var(--surface-2)}
+.ctrls button{font-family:"JetBrains Mono",monospace; font-size:11.5px; background:var(--surface);
+  color:var(--ink-2); border:1px solid var(--line); padding:6px 11px; border-radius:6px; cursor:pointer; transition:.14s}
 .ctrls button:hover{border-color:var(--accent); color:var(--accent)}
 .ctrls button[aria-current="true"]{background:var(--accent); border-color:var(--accent); color:var(--surface)}
 .ctrls .sep{flex:1}
 
-/* SVG animation internals */
-#mcSvg{background:transparent}
 .sp{transform-box:view-box; transform-origin:0 0; transition:transform 1.5s cubic-bezier(.45,.05,.3,1)}
-.sp .fs{transform:scaleY(.30); transform-origin:0 0; transition:transform 1.5s cubic-bezier(.45,.05,.3,1)}
+.sp .fs{transform:scaleY(.30); transform-origin:0 0}
 .sp .orbit{fill:none; stroke:var(--severe); stroke-width:2.4; opacity:.45}
 .sp .spin{transform-origin:0 0; animation:spin var(--spd,7s) linear infinite}
 .sp .spin circle{fill:var(--severe)}
 @keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}
-.lay{transition:opacity .9s ease, transform 1.3s cubic-bezier(.45,.05,.3,1)}
+.lay{transition:opacity .9s ease}
 .lay.off{opacity:0}
-@media (prefers-reduced-motion:reduce){
-  .sp .spin{animation:none}
-  .sp,.sp .fs,.lay{transition-duration:.01ms}
-}
+@media (prefers-reduced-motion:reduce){ .sp .spin{animation:none} .sp,.lay{transition-duration:.01ms} }
 text{font-family:"JetBrains Mono",monospace; font-size:12px; fill:var(--muted)}
 text.lbl{font-size:12.5px; fill:var(--ink-2)}
 text.big{font-family:"Source Sans 3",sans-serif; font-size:14px; font-weight:600}
-</style>
 
-<header id="topbar">
-  <div class="wrap">
-    <div class="brand">Mesociclones <span>·</span> Chile</div>
-    <nav>
-      <a href="#problema">1 · El problema</a>
-      <a href="#fisica">2 · Física</a>
-      <a href="#chile">3 · Chile</a>
-      <a href="#datos">4 · Datos</a>
-      <a href="#features">5 · Variables</a>
-      <a href="#ml">6 · Modelo</a>
-      <a href="#participar">7 · Participar</a>
-    </nav>
-  </div>
-</header>
+#mcSvg[data-stage="1"] .sp{ transform:translate(calc(244px + var(--i)*70px), 268px) rotate(90deg) }
+#mcSvg[data-stage="2"] .sp{ transform:translate(calc(328px + var(--i)*16px), calc(318px - var(--i)*32px)) rotate(45deg) }
+#mcSvg[data-stage="3"] .sp{ transform:translate(364px, calc(340px - var(--i)*50px)) rotate(0deg) scale(.88,1) }
+#mcSvg[data-stage="4"] .sp{ transform:translate(364px, calc(340px - var(--i)*50px)) rotate(0deg) scale(.64,1) }
+#mcSvg[data-stage="1"]{ --spd:7s } #mcSvg[data-stage="2"]{ --spd:4.6s }
+#mcSvg[data-stage="3"]{ --spd:2.4s } #mcSvg[data-stage="4"]{ --spd:1.2s }
+#mcSvg[data-stage="2"] #updraftG, #mcSvg[data-stage="3"] #updraftG, #mcSvg[data-stage="4"] #updraftG,
+#mcSvg[data-stage="3"] #cloudG, #mcSvg[data-stage="4"] #cloudG,
+#mcSvg[data-stage="3"] #convG, #mcSvg[data-stage="4"] #convG,
+#mcSvg[data-stage="4"] #funnelG, #mcSvg[data-stage="4"] #senseG{ opacity:1 }
+#mcSvg[data-stage="3"] #shearG, #mcSvg[data-stage="4"] #shearG{ opacity:0 }
+#mcSvg[data-stage="2"] #shearG{ opacity:.45 }
+
+footer{border-top:1px solid var(--line); padding-block:30px; background:var(--surface)}
+</style>
 
 <section id="hero" class="wrap">
   <p class="eyebrow">Proyecto abierto · AWS Hackathon</p>
   <h1>¿Qué tormentas chilenas van a <em>empezar a girar</em>?</h1>
   <p class="lede">Chile tiene tornados. Tiene alrededor de <strong>100 registrados desde 2015</strong>, ninguna red de radar meteorológico, y una certeza incómoda: <strong>la mayoría de los eventos nunca fue vista por nadie.</strong> Este proyecto propone usar el reanálisis ERA5 y las imágenes del satélite GOES para encontrar las tormentas que faltan — y para anticipar las que vienen.</p>
-
   <div class="stats">
     <div class="stat"><b>≈100</b><span>eventos catalogados desde 2015</span></div>
-    <div class="stat sev"><b>7</b><span>tornados en 24 h, 30–31 mayo 2019</span></div>
-    <div class="stat"><b>10 min</b><span>cadencia de imagen GOES sobre Chile</span></div>
-    <div class="stat"><b>0</b><span>radares meteorológicos operacionales</span></div>
-    <div class="stat"><b>≤30 %</b><span>de supercélulas produce tornado</span></div>
+    <div class="stat sev"><b>7</b><span>tornados en 24 h, mayo 2019</span></div>
+    <div class="stat"><b>10 min</b><span>cadencia de imagen GOES</span></div>
+    <div class="stat"><b>0</b><span>radares operacionales</span></div>
+  </div>
+  <div class="cta">
+    <a class="primary" href="https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md">Leer el documento completo →</a>
+    <a href="https://github.com/fforster/aws-mesocyclonic">Repositorio</a>
   </div>
 </section>
 
-<section class="wrap" id="anim">
-  <figure class="fig">
+<section class="wrap" style="border-top:0; padding-top:0">
+  <figure>
     <div class="anim-head">
       <h2>Cómo una tormenta empieza a girar</h2>
       <p>Mesociclogénesis en cuatro pasos · hemisferio sur</p>
     </div>
-
     <svg id="mcSvg" viewBox="0 0 760 430" role="img" aria-labelledby="mcTitle mcDesc" data-stage="1">
       <title id="mcTitle">Animación: formación de un mesociclón en cuatro etapas</title>
       <desc id="mcDesc">La cizalladura del viento genera rotación de eje horizontal; la corriente ascendente la inclina hacia la vertical; la convergencia estira y acelera la columna; finalmente se organiza un vórtice coherente dentro de una supercélula.</desc>
-
-      <!-- suelo -->
-      <g>
-        <line x1="40" y1="378" x2="720" y2="378" stroke="var(--line)" stroke-width="2"/>
-        <path d="M40 378 L720 378 L720 392 L40 392 Z" fill="var(--surface-2)"/>
-      </g>
-      <!-- escala de altura -->
-      <g class="lay" id="axisG" opacity=".85">
+      <line x1="40" y1="378" x2="720" y2="378" stroke="var(--line)" stroke-width="2"/>
+      <path d="M40 378 L720 378 L720 392 L40 392 Z" fill="var(--surface-2)"/>
+      <g class="lay" opacity=".85">
         <line x1="62" y1="96" x2="62" y2="378" stroke="var(--line)" stroke-width="1.5"/>
-        <g>
-          <line x1="57" y1="378" x2="67" y2="378" stroke="var(--line)" stroke-width="1.5"/><text x="46" y="374" text-anchor="end">0</text>
-          <line x1="57" y1="308" x2="67" y2="308" stroke="var(--line)" stroke-width="1.5"/><text x="46" y="312" text-anchor="end">2</text>
-          <line x1="57" y1="238" x2="67" y2="238" stroke="var(--line)" stroke-width="1.5"/><text x="46" y="242" text-anchor="end">4</text>
-          <line x1="57" y1="168" x2="67" y2="168" stroke="var(--line)" stroke-width="1.5"/><text x="46" y="172" text-anchor="end">6</text>
-          <line x1="57" y1="98"  x2="67" y2="98"  stroke="var(--line)" stroke-width="1.5"/><text x="46" y="102" text-anchor="end">8</text>
-        </g>
+        <line x1="57" y1="378" x2="67" y2="378" stroke="var(--line)" stroke-width="1.5"/><text x="46" y="374" text-anchor="end">0</text>
+        <line x1="57" y1="308" x2="67" y2="308" stroke="var(--line)" stroke-width="1.5"/><text x="46" y="312" text-anchor="end">2</text>
+        <line x1="57" y1="238" x2="67" y2="238" stroke="var(--line)" stroke-width="1.5"/><text x="46" y="242" text-anchor="end">4</text>
+        <line x1="57" y1="168" x2="67" y2="168" stroke="var(--line)" stroke-width="1.5"/><text x="46" y="172" text-anchor="end">6</text>
+        <line x1="57" y1="98"  x2="67" y2="98"  stroke="var(--line)" stroke-width="1.5"/><text x="46" y="102" text-anchor="end">8</text>
         <text x="62" y="80" text-anchor="middle" font-size="10.5">km</text>
       </g>
-
-      <!-- nube: yunque + torre (etapas 3-4) -->
       <g class="lay off" id="cloudG">
-        <path d="M262 168 C250 150 258 128 282 124 C286 100 320 88 344 100 C358 82 396 80 410 100
-                 C438 92 466 108 462 132 C488 136 494 160 478 172 Z"
-              fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" opacity=".9"/>
-        <path d="M212 170 L520 170 C548 170 556 186 534 192 L200 192 C176 190 184 172 212 170 Z"
-              fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" opacity=".75"/>
-        <path d="M352 96 C356 78 382 76 388 94 C400 88 410 98 404 104 L344 104 Z"
-              fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+        <path d="M262 168 C250 150 258 128 282 124 C286 100 320 88 344 100 C358 82 396 80 410 100 C438 92 466 108 462 132 C488 136 494 160 478 172 Z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" opacity=".9"/>
+        <path d="M212 170 L520 170 C548 170 556 186 534 192 L200 192 C176 190 184 172 212 170 Z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" opacity=".75"/>
+        <path d="M352 96 C356 78 382 76 388 94 C400 88 410 98 404 104 L344 104 Z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
         <text class="lbl" x="418" y="80" fill="var(--accent)">tope penetrante</text>
         <line x1="414" y1="84" x2="392" y2="92" stroke="var(--accent)" stroke-width="1.2"/>
         <text class="lbl" x="196" y="208" fill="var(--muted)">yunque</text>
-        <!-- base y nube pared -->
-        <path d="M280 300 L452 300 C462 300 462 312 452 312 L280 312 C270 312 270 300 280 300 Z"
-              fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4" opacity=".8"/>
+        <path d="M280 300 L452 300 C462 300 462 312 452 312 L280 312 C270 312 270 300 280 300 Z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4" opacity=".8"/>
       </g>
-
-      <!-- flechas de cizalle (etapas 1-2) -->
       <g class="lay" id="shearG">
         <g stroke-linecap="round">
           <path d="M96 352 L152 352" stroke="var(--warm)" stroke-width="4"/><path d="M144 346 L154 352 L144 358" fill="none" stroke="var(--warm)" stroke-width="4"/>
@@ -221,19 +198,13 @@ text.big{font-family:"Source Sans 3",sans-serif; font-size:14px; font-weight:600
         </g>
         <text class="lbl" x="96" y="140" fill="var(--cold)">el viento se acelera con la altura</text>
       </g>
-
-      <!-- corriente ascendente (etapas 2-4) -->
       <g class="lay off" id="updraftG">
-        <path d="M336 374 C332 300 334 240 344 176 L386 176 C392 240 394 300 392 374 Z"
-              fill="var(--accent)" opacity=".14"/>
+        <path d="M336 374 C332 300 334 240 344 176 L386 176 C392 240 394 300 392 374 Z" fill="var(--accent)" opacity=".14"/>
         <path d="M364 372 L364 150" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/>
-        <path d="M348 168 L364 144 L380 168" fill="none" stroke="var(--accent)" stroke-width="5"
-              stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M348 168 L364 144 L380 168" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
         <text class="lbl" x="416" y="244" fill="var(--accent)">corriente</text>
         <text class="lbl" x="416" y="260" fill="var(--accent)">ascendente</text>
       </g>
-
-      <!-- convergencia en la base (etapa 3) -->
       <g class="lay off" id="convG">
         <g stroke="var(--warm)" stroke-width="3.5" stroke-linecap="round" fill="none">
           <path d="M196 358 L296 358"/><path d="M288 352 L298 358 L288 364"/>
@@ -242,25 +213,18 @@ text.big{font-family:"Source Sans 3",sans-serif; font-size:14px; font-weight:600
         <text class="lbl" x="176" y="338" fill="var(--warm)">convergencia</text>
         <text class="lbl" x="552" y="338" fill="var(--warm)" text-anchor="end">convergencia</text>
       </g>
-
-      <!-- embudo / tornado (etapa 4) -->
       <g class="lay off" id="funnelG">
-        <path d="M344 312 C348 338 356 360 362 374 L370 374 C376 358 382 336 384 312 Z"
-              fill="var(--severe)" opacity=".55"/>
+        <path d="M344 312 C348 338 356 360 362 374 L370 374 C376 358 382 336 384 312 Z" fill="var(--severe)" opacity=".55"/>
         <ellipse cx="366" cy="376" rx="30" ry="7" fill="var(--severe)" opacity=".25"/>
         <text class="lbl" x="414" y="360" fill="var(--severe)">tornado</text>
         <line x1="410" y1="356" x2="388" y2="348" stroke="var(--severe)" stroke-width="1.2"/>
       </g>
-
-      <!-- vórtices -->
       <g id="spinners">
         <g class="sp" style="--i:0"><g class="fs"><circle class="orbit" r="46"/><g class="spin"><circle cx="46" cy="0" r="6"/><circle cx="-23" cy="39.8" r="6"/><circle cx="-23" cy="-39.8" r="6"/></g></g></g>
         <g class="sp" style="--i:1"><g class="fs"><circle class="orbit" r="46"/><g class="spin"><circle cx="46" cy="0" r="6"/><circle cx="-23" cy="39.8" r="6"/><circle cx="-23" cy="-39.8" r="6"/></g></g></g>
         <g class="sp" style="--i:2"><g class="fs"><circle class="orbit" r="46"/><g class="spin"><circle cx="46" cy="0" r="6"/><circle cx="-23" cy="39.8" r="6"/><circle cx="-23" cy="-39.8" r="6"/></g></g></g>
         <g class="sp" style="--i:3"><g class="fs"><circle class="orbit" r="46"/><g class="spin"><circle cx="46" cy="0" r="6"/><circle cx="-23" cy="39.8" r="6"/><circle cx="-23" cy="-39.8" r="6"/></g></g></g>
       </g>
-
-      <!-- indicador de sentido de giro -->
       <g class="lay off" id="senseG">
         <circle cx="646" cy="126" r="30" fill="none" stroke="var(--severe)" stroke-width="2" opacity=".5"/>
         <path d="M646 96 A30 30 0 1 1 617 134" fill="none" stroke="var(--severe)" stroke-width="3" stroke-linecap="round"/>
@@ -269,12 +233,10 @@ text.big{font-family:"Source Sans 3",sans-serif; font-size:14px; font-weight:600
         <text x="646" y="196" text-anchor="middle">hemisferio sur</text>
       </g>
     </svg>
-
     <div class="stage-label">
       <h3 id="stTitle">1 · La cizalladura pone a girar el aire</h3>
       <p id="stText">El viento sopla más fuerte arriba que abajo. Esa diferencia empuja el aire como a una ruedita de paletas y lo hace rotar sobre un eje <b>horizontal</b>, paralelo al suelo. Todavía no hay tormenta: solo un campo de viento con rotación latente.</p>
     </div>
-
     <div class="ctrls">
       <button type="button" data-go="1" aria-current="true">1 · Cizalladura</button>
       <button type="button" data-go="2">2 · Inclinación</button>
@@ -283,332 +245,51 @@ text.big{font-family:"Source Sans 3",sans-serif; font-size:14px; font-weight:600
       <span class="sep"></span>
       <button type="button" id="playBtn" aria-label="Pausar animación">⏸ Pausa</button>
     </div>
-
-    <figcaption><b>Los cuatro pasos de la mesociclogénesis.</b> La rotación no se crea dentro de la tormenta: ya estaba en el viento, tumbada de lado. La tormenta se limita a ponerla de pie y apretarla. Nótese el sentido <b>horario</b>: en el hemisferio sur todo gira al revés que en los libros de texto norteamericanos — un detalle con consecuencias prácticas serias (sección 5).</figcaption>
+    <figcaption><b>La rotación no se crea dentro de la tormenta: ya estaba en el viento, tumbada de lado.</b> La tormenta se limita a ponerla de pie y apretarla. Una tormenta con un mesociclón persistente se llama <b>supercélula</b> — y solo <b>una de cada tres</b> llega a producir un tornado.</figcaption>
   </figure>
 </section>
 
-<style>
-/* ── prose ──────────────────────────────────────────────── */
-.prose h2{font-size:clamp(27px,3.6vw,38px); letter-spacing:-.018em; margin:0 0 6px}
-.prose h3{font-size:21px; margin:44px 0 10px; letter-spacing:-.008em}
-.prose h4{font-size:16.5px; font-family:"Source Sans 3",sans-serif; font-weight:700; margin:28px 0 6px}
-.prose p{margin:0 0 17px}
-.prose > p:first-of-type{font-size:18.5px; color:var(--ink-2)}
-.prose ul,.prose ol{margin:0 0 17px; padding-left:22px}
-.prose li{margin-bottom:8px}
-.prose a{color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2.5px}
-.prose strong{font-weight:700}
-.prose code{font-size:.86em; background:var(--surface-2); border:1px solid var(--line);
-  padding:1px 5px; border-radius:4px; word-break:break-word}
-.sec-num{font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.14em;
-  text-transform:uppercase; color:var(--accent); display:block; margin-bottom:14px}
-.dek{font-size:17px; color:var(--muted); margin:0 0 30px; max-width:58ch}
-
-/* callouts */
-.note{border-left:3px solid var(--accent); background:var(--surface); padding:16px 20px;
-  margin:26px 0; border-radius:0 8px 8px 0; box-shadow:var(--shadow)}
-.note.warn{border-left-color:var(--severe)}
-.note.warn .note-t{color:var(--severe)}
-.note-t{font-family:"Source Sans 3",sans-serif; font-weight:700; font-size:14.5px; color:var(--accent);
-  display:block; margin-bottom:6px}
-.note p:last-child{margin-bottom:0}
-.note p{font-size:16px}
-
-/* tables */
-.tw{overflow-x:auto; margin:24px 0; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
-table{border-collapse:collapse; width:100%; font-size:14.5px; min-width:440px}
-th,td{padding:9px 13px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top}
-thead th{background:var(--surface-2); font-family:"Source Sans 3",sans-serif; font-weight:700;
-  font-size:12.5px; letter-spacing:.02em; text-transform:uppercase; color:var(--muted); white-space:nowrap}
-tbody tr:last-child td{border-bottom:0}
-td.num,th.num{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
-td.sev{color:var(--severe); font-weight:600}
-
-/* code block */
-pre{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:15px 17px;
-  overflow-x:auto; margin:22px 0; font-size:13px; line-height:1.6; box-shadow:var(--shadow)}
-pre code{background:none; border:0; padding:0; font-size:inherit}
-.cmt{color:var(--muted)}
-.ok{color:var(--accent); font-weight:600}
-.no{color:var(--severe); font-weight:600}
-
-/* wide figure escapes the measure */
-.wide{max-width:1180px; margin-inline:auto}
-.grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; margin:26px 0}
-.card{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:17px 19px}
-.card h4{margin-top:0}
-.card p{font-size:15.5px; margin-bottom:0; color:var(--ink-2)}
-.tag{display:inline-block; font-family:"JetBrains Mono",monospace; font-size:10.5px; letter-spacing:.06em;
-  text-transform:uppercase; padding:2px 7px; border-radius:4px; background:var(--accent-soft);
-  color:var(--accent); margin-bottom:9px}
-.tag.s{background:var(--severe-soft); color:var(--severe)}
-</style>
-
-<!-- ══════════ 1 · EL PROBLEMA ══════════ -->
-<section class="band" id="problema">
- <div class="wrap"><div class="measure prose">
-  <span class="sec-num">Sección 1</span>
-  <h2>El problema en una página</h2>
-  <p class="dek">Cien tornados conocidos, ningún negativo confiable, y la sospecha fundada de que falta la mayor parte de la historia.</p>
-
-  <p>En Chile ocurren tornados. Durante mucho tiempo se los consideró una rareza casi anecdótica, hasta que el <strong>30 y 31 de mayo de 2019</strong> siete tornados golpearon en menos de 24 horas la zona entre Ñuble y La Araucanía, dos de ellos dentro de ciudades. El episodio obligó a reconocer algo que la comunidad meteorológica chilena venía documentando de a poco: el centro-sur de Chile tiene un régimen de convección severa propio, distinto al del <em>Tornado Alley</em> norteamericano, y prácticamente sin sistemas de alerta temprana.</p>
-
-  <p>Hoy existe un catálogo de alrededor de <strong>100 eventos desde 2015</strong>. Ese catálogo es la base de este proyecto y, al mismo tiempo, su principal dificultad:</p>
-
-  <div class="note warn">
-    <span class="note-t">El sesgo fundamental</span>
-    <p>El catálogo es una muestra de <em>lo que se vio</em>, no de lo que ocurrió. Un tornado entra a la base de datos si tocó tierra cerca de gente, si alguien lo filmó, si dañó algo que salió en la prensa. Una tormenta mesociclónica sobre el mar frente a Valdivia, sobre la cordillera de Nahuelbuta o a las 4 de la madrugada en un campo de Osorno, sencillamente no existe en los registros.</p>
-  </div>
-
-  <h3>El desafío, con precisión</h3>
-  <div class="grid2">
-    <div class="card"><span class="tag">Entrada A</span><h4>ERA5</h4><p>Campos 4D de viento y termodinámica: latitud × longitud × nivel de presión × tiempo. Horario, 0,25°, desde 1940.</p></div>
-    <div class="card"><span class="tag">Entrada B</span><h4>GOES</h4><p>16 bandas multiespectrales, del visible al infrarrojo térmico, <strong>una imagen cada 10 minutos</strong>, las 24 horas.</p></div>
-    <div class="card"><span class="tag s">Etiquetas</span><h4>≈100 positivos</h4><p>Y <strong>cero negativos confiables</strong>. "No hubo tornado" nunca fue observado: solo nadie reportó nada.</p></div>
-    <div class="card"><span class="tag">Objetivo</span><h4>Mapa de riesgo</h4><p>Probabilidad de rotación organizada de mesoescala, sobre Chile centro-sur, con horas de antelación.</p></div>
-  </div>
-
-  <p>Pero no se trata solo de reproducir los ~100 casos conocidos. Un modelo verdaderamente útil debería <strong>encontrar los eventos que faltan</strong>: señalar, en el archivo histórico, días y lugares donde las condiciones fueron indistinguibles de las de un tornado documentado. Eso convierte el proyecto en algo más cercano a un problema de <em>descubrimiento</em> que de clasificación.</p>
- </div></div>
+<section class="wrap">
+  <p class="eyebrow">El problema</p>
+  <h2>Cien tornados conocidos, ningún negativo</h2>
+  <p class="dek">Y la sospecha fundada de que falta la mayor parte de la historia.</p>
+  <p>El <strong>30 y 31 de mayo de 2019</strong>, siete tornados golpearon en menos de 24 horas la zona entre Ñuble y La Araucanía. Dos entraron en ciudades: <strong>Los Ángeles</strong> (EF2) y <strong>Talcahuano–Concepción</strong> (EF1–EF2, 17 km de trayecto, una persona fallecida, 50.000 clientes sin electricidad). El episodio obligó a reconocer que el centro-sur de Chile tiene un régimen de convección severa propio — y prácticamente ningún sistema de alerta temprana.</p>
+  <p>Hoy existe un catálogo de alrededor de 100 eventos desde 2015. Es la base del proyecto y también su principal dificultad: <strong>el catálogo es una muestra de lo que se vio, no de lo que ocurrió.</strong> Un tornado entra a la base de datos si tocó tierra cerca de gente, si alguien lo filmó, si dañó algo que salió en la prensa. Uno sobre el mar frente a Valdivia, o a las 4 de la madrugada en un campo de Osorno, sencillamente no existe en los registros.</p>
+  <p>Por eso el objetivo no es solo reproducir los ~100 casos conocidos, sino <strong>encontrar los que faltan</strong>: señalar, en el archivo histórico, días y lugares donde las condiciones fueron indistinguibles de las de un tornado documentado. Eso convierte el proyecto en algo más cercano a un problema de <em>descubrimiento</em> que de clasificación.</p>
 </section>
 
-<!-- ══════════ 2 · FÍSICA ══════════ -->
-<section class="band" id="fisica">
- <div class="wrap">
-  <div class="measure prose">
-   <span class="sec-num">Sección 2</span>
-   <h2>La física, sin ecuaciones</h2>
-   <p class="dek">Qué es exactamente un mesociclón, de dónde sale su rotación, y por qué predecirlo no es lo mismo que predecir un tornado.</p>
+<section class="wrap">
+  <p class="eyebrow">Por qué es difícil</p>
+  <h2>Tres cosas que rompen el enfoque estándar</h2>
+  <p class="dek">No es un problema de transferir tecnología desde Estados Unidos. Las tres suposiciones que uno traería por defecto son falsas aquí.</p>
 
-   <p>Un <strong>mesociclón</strong> es una columna de aire en rotación, de entre <strong>2 y 10 km de diámetro</strong>, embebida dentro de una tormenta profunda y extendida varios kilómetros en la vertical. No es un tornado: es mucho más grande y mucho más lento que cualquier tornado que pueda nacer dentro de él. Es, por así decirlo, el torno en el que se fabrica el tornado.</p>
-
-   <p>Una tormenta que posee un mesociclón persistente se llama <strong>supercélula</strong>. Son el tipo de tormenta menos frecuente y, a la vez, el más peligroso: concentran el granizo grande, las ráfagas destructivas y prácticamente todos los tornados fuertes.</p>
-
-   <div class="tw"><table>
-    <thead><tr><th>Magnitud</th><th class="num">Valor típico</th></tr></thead>
-    <tbody>
-      <tr><td>Diámetro del mesociclón</td><td class="num">2 – 10 km</td></tr>
-      <tr><td>Duración de una supercélula</td><td class="num">2 – 4 h (hasta &gt;7 h)</td></tr>
-      <tr><td>Altura del tope nuboso</td><td class="num">12 – 21 km</td></tr>
-      <tr><td>Velocidad de la corriente ascendente</td><td class="num">hasta 50 m/s</td></tr>
-      <tr><td><strong>Supercélulas que producen tornado</strong></td><td class="num sev">≤ 30 %</td></tr>
-    </tbody>
-   </table></div>
-
-   <p>Esa última fila es la razón de ser del proyecto y también su trampa: <strong>predecir el mesociclón no es predecir el tornado</strong>. La rotación de mesoescala es una condición casi necesaria pero claramente no suficiente. Un modelo que prediga bien mesociclones dará muchas falsas alarmas de tornado — y aun así será enormemente más útil que no tener nada.</p>
-
-   <h3>Los cuatro ingredientes</h3>
-   <p>La convección severa organizada necesita cuatro cosas a la vez. Casi toda la predicción operacional consiste en medirlas.</p>
+  <div class="grid">
+    <div class="card">
+      <span class="tag s">1</span>
+      <h3>Los índices de EE.UU. no funcionan</h3>
+      <p>Los tornados chilenos ocurren en régimen <strong>HSLC</strong> — mucho cizalle, poco CAPE. Vicencio et al. (2021) señalan que <strong>el STP clásico no habría dado la alarma</strong> en mayo de 2019.</p>
+      <p>Los umbrales chilenos son otros: <code>VGP₀₋₁ &gt; 0,1 m/s²</code>, <code>SHERBE ≥ 1</code>, <code>STP ≤ −0,3</code> (no +1).</p>
+    </div>
+    <div class="card">
+      <span class="tag s">2</span>
+      <h3>Estamos en el hemisferio sur</h3>
+      <p>Un mesociclón chileno gira <strong>en sentido horario</strong>. La SRH de los casos tornádicos es <strong>negativa</strong> y las supercélulas favorecidas son las <em>left-movers</em> — al revés que en los libros de texto.</p>
+      <p>Usar MetPy o SHARPpy tal cual produce índices <strong>con el signo cambiado</strong>. Es el error silencioso más costoso del proyecto.</p>
+    </div>
+    <div class="card">
+      <span class="tag s">3</span>
+      <h3>El catálogo mide testigos, no tornados</h3>
+      <p><strong>69 %</strong> de los eventos registrados caen entre 2015 y 2019. Nadie cree que se hayan multiplicado por cinco en cinco años: lo que cambió fue la densidad de teléfonos con cámara.</p>
+      <p>Hay positivos pero <strong>ningún negativo confiable</strong>. Es un problema de <em>PU learning</em>, no de clasificación binaria.</p>
+    </div>
   </div>
 
-  <div class="wide">
-   <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(215px,1fr))">
-    <div class="card"><span class="tag">1 · Combustible</span><h4>Humedad</h4><p>El calor latente liberado al condensar el vapor de agua es lo que alimenta el ascenso.</p></div>
-    <div class="card"><span class="tag">2 · Energía</span><h4>Inestabilidad</h4><p>Si una burbuja levantada queda más cálida que su entorno, sigue subiendo sola. Se mide con el <strong>CAPE</strong>, en J/kg.</p></div>
-    <div class="card"><span class="tag">3 · Gatillo</span><h4>Disparo</h4><p>Algo tiene que dar el primer empujón: un frente frío, la brisa de mar, una montaña, la convergencia del viento.</p></div>
-    <div class="card"><span class="tag s">4 · Rotación</span><h4>Cizalladura</h4><p>El viento debe <strong>cambiar con la altura</strong>. Los tres primeros hacen tormentas; <strong>este las hace girar</strong>.</p></div>
-   </div>
-  </div>
-
-  <div class="measure prose">
-   <h3>De la cizalladura a la rotación</h3>
-   <p>Éste es el mecanismo central, y vale la pena entenderlo bien porque dicta qué variables hay que calcular a partir de ERA5. Es exactamente la secuencia que muestra la animación al inicio de esta página.</p>
-   <p>Imagine una ruedita de paletas flotando en el aire, con su eje horizontal. Si el viento sopla más fuerte arriba que abajo, empuja más la paleta superior que la inferior y la ruedita empieza a girar. Eso es <strong>vorticidad horizontal</strong>: una tendencia del aire a rotar en torno a un eje paralelo al suelo, generada directamente por el cizalle.</p>
-   <p>Cuando la corriente ascendente de la tormenta atraviesa esa capa, <strong>tuerce el eje de giro hacia la vertical</strong>. La rotación que era "de rodillo" pasa a ser "de trompo". Y una vez vertical, el aire que converge hacia la base <strong>estira la columna</strong>: por conservación del momento angular — el mismo principio por el que una patinadora gira más rápido al cerrar los brazos — la columna, al hacerse más alta y delgada, gira más rápido. Se forma un mínimo de presión en su eje, que succiona más aire, que estira más, que acelera más.</p>
-
-   <div class="note">
-    <span class="note-t">Una precisión que suele omitirse</span>
-    <p>Los esquemas clásicos dibujan "tubos" de aire girando como rodillos. Es una simplificación útil pero imprecisa: en un entorno horizontalmente homogéneo no existen tales tubos. Lo que existe es una <em>tendencia local a rotar</em> distribuida por todo el campo de viento cizallado. La corriente ascendente reorienta esa tendencia, no un rodillo literal.</p>
-   </div>
-
-   <p>Un último detalle, decisivo para el diseño de variables: la inclinación es eficiente <strong>solo cuando la vorticidad horizontal está alineada con el flujo</strong> que entra a la tormenta (vorticidad <em>streamwise</em>). Si es perpendicular, inclinarla produce rotación pero no la correlación entre giro y ascenso que define a una supercélula. Eso es exactamente lo que mide la <strong>helicidad relativa a la tormenta (SRH)</strong> — y la razón por la cual es mejor predictor que el cizalle a secas.</p>
-
-   <h3>Anatomía de una supercélula</h3>
-   <p>Una supercélula no es una nube amorfa: tiene partes bien definidas, y varias dejan huella en las imágenes satelitales.</p>
-  </div>
-
-  <figure class="fig wide" style="margin-top:26px">
-   <svg viewBox="0 0 900 470" role="img" aria-label="Diagrama anatómico de una supercélula: yunque, tope penetrante, corriente ascendente rotatoria, nube pared, corrientes descendentes FFD y RFD, y tornado.">
-     <defs>
-       <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-         <path d="M0 0 L9 4.5 L0 9 z" fill="var(--muted)"/>
-       </marker>
-     </defs>
-     <line x1="40" y1="410" x2="860" y2="410" stroke="var(--line)" stroke-width="2"/>
-     <path d="M40 410 L860 410 L860 424 L40 424 Z" fill="var(--surface-2)"/>
-
-     <!-- yunque -->
-     <path d="M180 148 L700 148 C744 148 752 172 716 178 L166 178 C130 176 142 150 180 148 Z"
-           fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" opacity=".85"/>
-     <!-- torre -->
-     <path d="M360 150 C344 126 356 98 384 96 C392 68 440 58 466 76 C496 62 534 82 528 108
-              C556 116 560 146 536 152 Z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.8"/>
-     <!-- tope penetrante -->
-     <path d="M438 74 C442 50 480 48 486 72 C500 66 510 78 502 84 L430 84 Z"
-           fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.8"/>
-     <!-- cuerpo de la tormenta -->
-     <path d="M300 178 L640 178 L640 300 C640 316 620 322 596 322 L340 322 C314 322 300 314 300 298 Z"
-           fill="var(--accent)" opacity=".10"/>
-     <!-- precipitación FFD -->
-     <g stroke="var(--cold)" stroke-width="2.2" opacity=".62" stroke-linecap="round">
-       <path d="M318 322 L306 392"/><path d="M346 322 L334 392"/><path d="M374 322 L362 392"/>
-       <path d="M402 322 L390 392"/><path d="M430 322 L418 392"/><path d="M458 322 L446 392"/>
-     </g>
-     <!-- base libre de precipitación + nube pared -->
-     <path d="M500 322 L618 322 C630 322 630 338 618 338 L500 338 C488 338 488 322 500 322 Z"
-           fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
-     <path d="M528 338 L590 338 L582 366 L536 366 Z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
-     <!-- embudo -->
-     <path d="M548 366 C552 386 558 402 562 410 L570 410 C574 398 578 384 578 366 Z" fill="var(--severe)" opacity=".6"/>
-     <ellipse cx="566" cy="412" rx="26" ry="6" fill="var(--severe)" opacity=".25"/>
-
-     <!-- updraft rotatorio -->
-     <g>
-       <path d="M562 350 L544 200 L494 128" fill="none" stroke="var(--severe)" stroke-width="4.5"
-             stroke-linecap="round" stroke-dasharray="1 11"/>
-       <ellipse cx="556" cy="286" rx="52" ry="15" fill="none" stroke="var(--severe)" stroke-width="2.4" opacity=".65"/>
-       <path d="M604 282 L610 288 L602 294" fill="none" stroke="var(--severe)" stroke-width="2.6"
-             stroke-linecap="round" stroke-linejoin="round"/>
-     </g>
-
-     <!-- RFD -->
-     <path d="M676 190 C702 232 694 300 652 344" fill="none" stroke="var(--warm)" stroke-width="3.4"
-           marker-end="url(#ar)" stroke-linecap="round"/>
-     <!-- FFD -->
-     <path d="M366 200 C352 250 350 310 356 360" fill="none" stroke="var(--cold)" stroke-width="3.4"
-           marker-end="url(#ar)" stroke-linecap="round"/>
-     <!-- inflow -->
-     <path d="M800 372 C742 368 700 356 646 348" fill="none" stroke="var(--warm)" stroke-width="3.4"
-           marker-end="url(#ar)" stroke-linecap="round"/>
-
-     <!-- etiquetas -->
-     <g>
-       <text class="big" x="466" y="42" text-anchor="middle" fill="var(--accent)">tope penetrante</text>
-       <text x="466" y="58" text-anchor="middle">el ascenso perfora la tropopausa</text>
-
-       <text class="big" x="152" y="206" fill="var(--accent)">yunque</text>
-       <text x="152" y="222">hielo, ≈ −30 °C</text>
-
-       <text class="big" x="240" y="266" fill="var(--cold)">FFD</text>
-       <text x="240" y="282">descendente delantera</text>
-       <text x="240" y="296">fría y húmeda</text>
-
-       <text class="big" x="716" y="206" fill="var(--warm)">RFD</text>
-       <text x="716" y="222">descendente trasera</text>
-       <text x="716" y="236" fill="var(--severe)">clave en la tornadogénesis</text>
-
-       <text class="big" x="648" y="272" text-anchor="end" fill="var(--severe)">mesociclón</text>
-       <text x="648" y="288" text-anchor="end">columna rotatoria, 2–10 km</text>
-
-       <text class="big" x="614" y="392" fill="var(--accent)">nube pared</text>
-       <text x="614" y="406">rota &gt; 10 min si habrá tornado</text>
-
-       <text class="big" x="812" y="352" text-anchor="end" fill="var(--warm)">entrada de aire</text>
-       <text x="812" y="366" text-anchor="end">cálido y húmedo</text>
-     </g>
-   </svg>
-   <figcaption><b>Corte de una supercélula clásica, en configuración de hemisferio sur.</b> El mesociclón (rojo) no coincide con la lluvia más intensa: vive en la frontera entre el ascenso y la descendente trasera. Por eso el tornado aparece en el flanco trasero de la tormenta y no bajo el núcleo de precipitación. En las supercélulas de <b>alta precipitación</b> — el tipo más probable en un régimen marítimo como el chileno — la lluvia envuelve el mesociclón y <b>oculta el tornado a la vista</b>.</figcaption>
-  </figure>
-
-  <div class="measure prose">
-   <h3 id="hemisferio">Una advertencia crítica: estamos en el hemisferio sur</h3>
-   <p>Casi toda la literatura, todos los índices y prácticamente todo el software de meteorología severa fueron escritos para el hemisferio norte. <strong>En el hemisferio sur los signos se invierten.</strong></p>
-  </div>
-
-  <figure class="fig wide" style="margin-top:22px">
-   <svg viewBox="0 0 880 380" role="img" aria-label="Comparación de hodógrafos: hemisferio norte con helicidad positiva y supercélula right-mover, frente a hemisferio sur con helicidad negativa y supercélula left-mover.">
-     <g id="hodoN" transform="translate(215,190)">
-       <circle r="40" fill="none" stroke="var(--line)" stroke-width="1"/>
-       <circle r="80" fill="none" stroke="var(--line)" stroke-width="1"/>
-       <circle r="120" fill="none" stroke="var(--line)" stroke-width="1"/>
-       <line x1="-134" y1="0" x2="134" y2="0" stroke="var(--line)" stroke-width="1"/>
-       <line x1="0" y1="-134" x2="0" y2="134" stroke="var(--line)" stroke-width="1"/>
-       <path d="M0 0 C34 -16 74 -26 104 -58" fill="none" stroke="var(--severe)" stroke-width="4" stroke-linecap="round"/>
-       <path d="M104 -58 C124 -80 130 -104 126 -122" fill="none" stroke="var(--cold)" stroke-width="4" stroke-linecap="round"/>
-       <circle cx="0" cy="0" r="5.5" fill="var(--severe)"/>
-       <circle cx="104" cy="-58" r="5" fill="var(--warm)"/>
-       <circle cx="126" cy="-122" r="5" fill="var(--cold)"/>
-       <text x="10" y="18">0 km</text><text x="116" y="-50">3 km</text><text x="136" y="-120">6 km</text>
-       <circle cx="88" cy="18" r="8" fill="none" stroke="var(--accent)" stroke-width="2.6"/>
-       <text class="big" x="102" y="40" fill="var(--accent)">right-mover</text>
-     </g>
-     <text class="big" x="215" y="52" text-anchor="middle" fill="var(--ink-2)">HEMISFERIO NORTE</text>
-     <text x="215" y="72" text-anchor="middle">hodógrafo curvado en sentido horario</text>
-     <text class="big" x="215" y="346" text-anchor="middle" fill="var(--severe)">SRH &gt; 0 · giro antihorario</text>
-
-     <line x1="440" y1="40" x2="440" y2="348" stroke="var(--line)" stroke-width="1" stroke-dasharray="4 5"/>
-
-     <g id="hodoS" transform="translate(665,190)">
-       <circle r="40" fill="none" stroke="var(--line)" stroke-width="1"/>
-       <circle r="80" fill="none" stroke="var(--line)" stroke-width="1"/>
-       <circle r="120" fill="none" stroke="var(--line)" stroke-width="1"/>
-       <line x1="-134" y1="0" x2="134" y2="0" stroke="var(--line)" stroke-width="1"/>
-       <line x1="0" y1="-134" x2="0" y2="134" stroke="var(--line)" stroke-width="1"/>
-       <path d="M0 0 C-34 -16 -74 -26 -104 -58" fill="none" stroke="var(--severe)" stroke-width="4" stroke-linecap="round"/>
-       <path d="M-104 -58 C-124 -80 -130 -104 -126 -122" fill="none" stroke="var(--cold)" stroke-width="4" stroke-linecap="round"/>
-       <circle cx="0" cy="0" r="5.5" fill="var(--severe)"/>
-       <circle cx="-104" cy="-58" r="5" fill="var(--warm)"/>
-       <circle cx="-126" cy="-122" r="5" fill="var(--cold)"/>
-       <text x="-10" y="18" text-anchor="end">0 km</text><text x="-116" y="-50" text-anchor="end">3 km</text><text x="-136" y="-120" text-anchor="end">6 km</text>
-       <circle cx="-88" cy="18" r="8" fill="none" stroke="var(--accent)" stroke-width="2.6"/>
-       <text class="big" x="-102" y="40" text-anchor="end" fill="var(--accent)">left-mover</text>
-     </g>
-     <text class="big" x="665" y="52" text-anchor="middle" fill="var(--ink-2)">HEMISFERIO SUR · CHILE</text>
-     <text x="665" y="72" text-anchor="middle">hodógrafo curvado en sentido antihorario</text>
-     <text class="big" x="665" y="346" text-anchor="middle" fill="var(--severe)">SRH &lt; 0 · giro horario</text>
-   </svg>
-   <figcaption><b>El mismo fenómeno, reflejado.</b> Un hodógrafo traza la punta del vector viento a medida que se asciende. En Chile la supercélula tornádica favorecida es la <b>left-mover</b>, que se desvía a la izquierda del viento medio, y su helicidad es <b>negativa</b>. Si se usa una librería como MetPy o SHARPpy tal cual, los índices saldrán con el signo cambiado y el modelo aprenderá la quiralidad equivocada. Es probablemente el error silencioso más costoso que se puede cometer en este proyecto.</figcaption>
-  </figure>
- </div>
-</section>
-
-<!-- ══════════ 3 · CHILE ══════════ -->
-<section class="band" id="chile">
- <div class="wrap">
-  <div class="measure prose">
-   <span class="sec-num">Sección 3</span>
-   <h2>Tornados donde "no debería haberlos"</h2>
-   <p class="dek">Chile no aparecía en los atlas globales de tornados. El molde estaba mal — y el régimen chileno resulta ser científicamente más interesante que el norteamericano.</p>
-
-   <p>El "Corredor de los Tornados" sudamericano está del <em>otro</em> lado del continente: Argentina central, Uruguay, sur de Brasil, donde el aire cálido del Amazonas choca con aire frío del sur sobre una llanura sin obstáculos. Chile, encajonado entre el Pacífico y los Andes y dominado por el anticiclón subtropical, no encajaba.</p>
-
-   <h3>30–31 de mayo de 2019</h3>
-   <p>En 24 horas se produjeron <strong>al menos siete tornados</strong> entre los 36° y 38°S. Dos entraron en ciudades.</p>
-
-   <div class="tw"><table>
-    <thead><tr><th></th><th>Los Ángeles, Biobío</th><th>Talcahuano – Concepción</th></tr></thead>
-    <tbody>
-     <tr><td>Fecha y hora</td><td class="num">30 may · 21:57 UTC</td><td class="num">31 may · 18:00 UTC</td></tr>
-     <tr><td>Intensidad</td><td class="num sev">EF2</td><td class="num sev">EF1–EF2</td></tr>
-     <tr><td>Duración</td><td class="num">~8 min</td><td class="num">~15 min</td></tr>
-     <tr><td>Trayecto</td><td class="num">5,0 km</td><td class="num">17,1 km</td></tr>
-     <tr><td>Viento estimado</td><td class="num">50–60 m/s · 218 km/h</td><td class="num">50–55 m/s · 178 km/h</td></tr>
-    </tbody>
-   </table></div>
-
-   <p>El saldo: <strong>una persona fallecida</strong>, decenas de heridos, cerca de 500 viviendas dañadas en el Gran Concepción, una nave industrial destruida y unos <strong>50.000 clientes sin electricidad</strong> en Talcahuano. Granizo de 2–3 cm y hasta 180 mm de lluvia en dos días.</p>
-
-   <div class="note">
-    <span class="note-t">Una medición extraordinaria</span>
-    <p>El tornado de Talcahuano pasó a <strong>400–450 metros</strong> de dos estaciones automáticas del aeropuerto Carriel Sur. Registraron una caída de presión de <strong>2,1 hPa en 6 minutos</strong> y ráfagas de 24,4 m/s. A partir de ese registro se reconstruyó el perfil del vórtice: <strong>50–55 m/s</strong> en el radio de viento máximo, a unos 80 m del centro. Mediciones directas tan cercanas a un tornado son rarísimas en cualquier parte del mundo.</p>
-   </div>
-
-   <p>Y un detalle que define el carácter del problema chileno: <strong>el tornado de Talcahuano nació como tromba marina.</strong> Un piloto lo reportó sobre el agua antes de que tocara tierra en Caleta El Soldado. La convección severa chilena se fabrica, en buena medida, <strong>sobre el océano</strong>.</p>
-
-   <h3>El régimen chileno: mucho cizalle, poco CAPE</h3>
-   <p>Aquí está el hallazgo que hace de éste un problema científico genuino y no una simple transferencia de tecnología desde Estados Unidos. En la imaginería popular un tornado necesita un día sofocante y un CAPE monstruoso — los 4.000 J/kg de una tarde de mayo en Oklahoma. <strong>En Chile no pasa nada parecido.</strong></p>
-  </div>
-
-  <figure class="fig wide" style="margin-top:26px">
+  <figure style="margin-top:8px">
    <svg viewBox="0 0 880 470" role="img" aria-label="Gráfico de CAPE contra cizalle de 0 a 1 km. Los casos chilenos tienen cizalle comparable o mayor que las Grandes Llanuras con cinco a diez veces menos CAPE, y caen fuera de la zona donde el índice STP clásico da alarma.">
-     <!-- zona STP clásico -->
      <rect x="598" y="70" width="192" height="330" fill="var(--cold)" opacity=".10"/>
      <line x1="598" y1="70" x2="598" y2="400" stroke="var(--cold)" stroke-width="1.6" stroke-dasharray="5 4"/>
      <text class="big" x="694" y="94" text-anchor="middle" fill="var(--cold)">zona que ve el STP clásico</text>
      <text x="694" y="110" text-anchor="middle" fill="var(--cold)">calibrado en EE.UU.</text>
-
-     <!-- ejes -->
      <line x1="90" y1="400" x2="800" y2="400" stroke="var(--line)" stroke-width="1.8"/>
      <line x1="90" y1="400" x2="90" y2="62" stroke="var(--line)" stroke-width="1.8"/>
      <g stroke="var(--line)" stroke-width="1" opacity=".55">
@@ -616,739 +297,121 @@ pre code{background:none; border:0; padding:0; font-size:inherit}
        <line x1="90" y1="334" x2="800" y2="334"/><line x1="90" y1="268" x2="800" y2="268"/>
        <line x1="90" y1="202" x2="800" y2="202"/><line x1="90" y1="136" x2="800" y2="136"/>
      </g>
-     <g>
-       <text x="90" y="420" text-anchor="middle">10</text><text x="323" y="420" text-anchor="middle">100</text>
-       <text x="557" y="420" text-anchor="middle">1.000</text><text x="790" y="420" text-anchor="middle">10.000</text>
-       <text class="big" x="445" y="444" text-anchor="middle" fill="var(--ink-2)">CAPE  (J/kg, escala logarítmica)</text>
-       <text x="80" y="404" text-anchor="end">0</text><text x="80" y="338" text-anchor="end">5</text>
-       <text x="80" y="272" text-anchor="end">10</text><text x="80" y="206" text-anchor="end">15</text>
-       <text x="80" y="140" text-anchor="end">20</text><text x="80" y="74" text-anchor="end">25</text>
-       <text class="big" x="30" y="240" text-anchor="middle" fill="var(--ink-2)" transform="rotate(-90 30 240)">cizalle 0–1 km  (m/s)</text>
-     </g>
-
-     <!-- curva VGP = 0.1 -->
-     <path d="M160 104 L253 214 L323 268 L435 324 L557 358 L668 376 L790 387"
-           fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-dasharray="7 5"/>
+     <text x="90" y="420" text-anchor="middle">10</text><text x="323" y="420" text-anchor="middle">100</text>
+     <text x="557" y="420" text-anchor="middle">1.000</text><text x="790" y="420" text-anchor="middle">10.000</text>
+     <text class="big" x="445" y="444" text-anchor="middle" fill="var(--ink-2)">CAPE  (J/kg, escala logarítmica)</text>
+     <text x="80" y="404" text-anchor="end">0</text><text x="80" y="338" text-anchor="end">5</text>
+     <text x="80" y="272" text-anchor="end">10</text><text x="80" y="206" text-anchor="end">15</text>
+     <text x="80" y="140" text-anchor="end">20</text><text x="80" y="74" text-anchor="end">25</text>
+     <text class="big" x="30" y="240" text-anchor="middle" fill="var(--ink-2)" transform="rotate(-90 30 240)">cizalle 0–1 km  (m/s)</text>
+     <path d="M160 104 L253 214 L323 268 L435 324 L557 358 L668 376 L790 387" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-dasharray="7 5"/>
      <text class="big" x="300" y="180" fill="var(--accent)">VGP₀₋₁ = 0,1 m/s²</text>
      <text x="300" y="196" fill="var(--accent)">umbral chileno · por encima = favorable</text>
-
-     <!-- Grandes Llanuras -->
      <ellipse cx="694" cy="205" rx="66" ry="42" fill="var(--cold)" opacity=".20"/>
-     <circle cx="668" cy="215" r="7" fill="var(--cold)"/>
-     <circle cx="729" cy="189" r="7" fill="var(--cold)"/>
+     <circle cx="668" cy="215" r="7" fill="var(--cold)"/><circle cx="729" cy="189" r="7" fill="var(--cold)"/>
      <text class="big" x="694" y="272" text-anchor="middle" fill="var(--cold)">Grandes Llanuras</text>
      <text x="694" y="288" text-anchor="middle" fill="var(--cold)">EE.UU. · supercélula clásica</text>
-
-     <!-- Chile 2019 -->
      <ellipse cx="492" cy="200" rx="56" ry="48" fill="var(--severe)" opacity=".18"/>
-     <circle cx="464" cy="228" r="7.5" fill="var(--severe)"/>
-     <circle cx="520" cy="176" r="7.5" fill="var(--severe)"/>
+     <circle cx="464" cy="228" r="7.5" fill="var(--severe)"/><circle cx="520" cy="176" r="7.5" fill="var(--severe)"/>
      <text class="big" x="440" y="130" text-anchor="middle" fill="var(--severe)">Chile · 30–31 mayo 2019</text>
      <text x="440" y="146" text-anchor="middle" fill="var(--severe)">régimen HSLC</text>
      <line x1="452" y1="152" x2="470" y2="216" stroke="var(--severe)" stroke-width="1.2"/>
-
-     <!-- Chile día típico -->
      <circle cx="201" cy="294" r="7" fill="var(--muted)"/>
      <text class="big" x="196" y="324" text-anchor="middle" fill="var(--muted)">día chileno típico</text>
      <text x="196" y="340" text-anchor="middle" fill="var(--muted)">CAPE medio de mayo: 15–45 J/kg</text>
    </svg>
-   <figcaption><b>El mismo cizalle, una fracción del CAPE.</b> Los tornados chilenos de 2019 ocurrieron con <b>200–1.000 J/kg</b> de CAPE — entre cinco y diez veces menos que una supercélula de las Grandes Llanuras — pero con cizalle de 0–1 km <b>igual o mayor</b>. Es el régimen que la literatura llama <b>HSLC</b> (<i>High Shear, Low CAPE</i>), el mismo del sureste de EE.UU. en invierno, California, el sur de Australia y las Islas Británicas. La consecuencia operativa es dura: <b>el STP clásico no habría dado la alarma</b>, porque pondera demasiado el CAPE. Fuentes: Vicencio et al. (2021); Barrett et al. (2020).</figcaption>
+   <figcaption><b>El mismo cizalle, una fracción del CAPE.</b> Los tornados chilenos de 2019 ocurrieron con <b>200–1.000 J/kg</b> — entre cinco y diez veces menos que una supercélula de las Grandes Llanuras — pero con cizalle de 0–1 km igual o mayor. Para la climatología chilena eso ya es extraordinario: el CAPE medio de fines de mayo en el Biobío es de <b>15–45 J/kg</b>.</figcaption>
   </figure>
-
-  <div class="measure prose">
-   <div class="tw"><table>
-    <thead><tr><th>Parámetro</th><th class="num">Brote de mayo 2019</th><th>Lectura</th></tr></thead>
-    <tbody>
-      <tr><td>MUCAPE</td><td class="num">200 – 1.000 J/kg</td><td>bajo</td></tr>
-      <tr><td><strong>Cizalle 0–1 km</strong></td><td class="num sev">12 – 20 m/s</td><td><strong>alto · el discriminante</strong></td></tr>
-      <tr><td>Cizalle 0–6 km</td><td class="num">18 – 21 m/s</td><td>alto, pero no discrimina</td></tr>
-      <tr><td>SRH 0–1 km</td><td class="num">−100 a −250 m²/s²</td><td>parches de −600</td></tr>
-      <tr><td>SRH 0–3 km</td><td class="num">−253 a −688 m²/s²</td><td>negativa (hemisferio sur)</td></tr>
-      <tr><td>Altura del LCL</td><td class="num">&lt; 650 – 713 m</td><td>muy bajo · océano cerca</td></tr>
-      <tr><td>Jet de bajo nivel (850 hPa)</td><td class="num">20 – 25 m/s del NW</td><td>reforzado por los Andes</td></tr>
-    </tbody>
-   </table></div>
-
-   <p>Hay que añadir un matiz sobre el "bajo" CAPE: <strong>para la climatología chilena, 500 J/kg es extraordinario.</strong> El CAPE medio de fines de mayo en el Biobío es de apenas <strong>15–45 J/kg</strong>. No es que Chile tenga poco CAPE para hacer tornados; es que Chile normalmente no tiene <em>nada</em>, y los días tornádicos son precisamente aquellos en que aparece algo.</p>
-
-   <p>Eso explica por qué el momento del día importa tanto. La sensibilidad del CAPE al calentamiento superficial en este régimen es de aproximadamente <strong>+500 J/kg por cada grado Celsius</strong>. Los siete tornados de 2019 ocurrieron entre las 18:00 y las 23:25 UTC — es decir, <strong>entre las 14:00 y las 19:25 hora local</strong>: la ventana del calentamiento diurno.</p>
-
-   <div class="note warn">
-    <span class="note-t">⚠ La consecuencia más importante para este proyecto</span>
-    <p>Los índices calibrados para Chile <strong>no</strong> son los norteamericanos:</p>
-    <ul>
-      <li><strong>VGP₀₋₁ = √CAPE × cizalle₀₋₁ &gt; 0,1 m/s²</strong> — superado por todos los días tornádicos analizados (2008–2019); Los Ángeles, el más intenso, supera <strong>0,2</strong>. <span style="color:var(--muted)">(Vicencio et al. 2021)</span></li>
-      <li><strong>SHERBE ≥ 1</strong> y <strong>STP (rama <i>left-mover</i>) ≤ −0,3</strong> — ambos sobre el percentil 99 de la distribución chilena 1959–2021. Nótese el umbral: <strong>−0,3</strong>, no <strong>+1</strong>. <span style="color:var(--muted)">(Marín et al. 2024)</span></li>
-      <li>El <strong>cizalle 0–6 km no discrimina</strong> en Chile: en invierno extratropical casi siempre está disponible. El que discrimina es el de <strong>0–1 km</strong>.</li>
-    </ul>
-    <p>Un modelo que use los índices norteamericanos tal cual va a fallar. Un modelo que descubra por sí solo la combinación correcta sería un resultado valioso.</p>
-   </div>
-
-   <h3>Los Andes fabrican el cizalle</h3>
-   <p>La cordillera no es un espectador pasivo. Con más de 3 km de altura y orientada norte–sur, <strong>bloquea el flujo del oeste</strong> y lo obliga a canalizarse paralelo a la barrera, generando un <em>jet de barrera</em> del nor-noroeste de 20–25 m/s en 850 hPa. Ese jet es precisamente lo que <strong>amplifica el cizalle de bajo nivel y la helicidad</strong>.</p>
-   <p>Esto no es especulación. Marín et al. (2021) lo comprobaron con experimentos de sensibilidad en el modelo WRF, reduciendo la topografía al 50 %, 25 % y 0 %: <strong>al bajar la cordillera, el cizalle y la SRH se desploman.</strong> Los mismos experimentos muestran que la temperatura del mar modula la severidad vía inestabilidad y que — de nuevo — <strong>el cizalle importa más que el CAPE</strong>.</p>
-   <p>Hay además un contraste mar–tierra útil: el cizalle 0–1 km es de <strong>5–10 m/s sobre el océano pero 10–20 m/s tierra adentro</strong>. Es decir, una celda que se forma sobre el mar <strong>se vuelve más propensa a rotar justo al cruzar la costa</strong>. La franja costera entre los 36° y 40°S es la zona crítica.</p>
-
-   <h3>Una temporada de cuatro semanas</h3>
-   <p>Quizá la diferencia más llamativa respecto del imaginario común: <strong>los tornados chilenos son un fenómeno de otoño e invierno</strong>, no de verano.</p>
-  </div>
-
-  <figure class="fig wide" style="margin-top:24px">
-   <svg viewBox="0 0 880 320" role="img" aria-label="Distribución estacional de tornados en Chile: máximo marcado en mayo y junio, con 89 por ciento de los eventos en otoño e invierno.">
-     <line x1="70" y1="250" x2="838" y2="250" stroke="var(--line)" stroke-width="1.8"/>
-     <g stroke="var(--line)" stroke-width="1" opacity=".5">
-       <line x1="70" y1="190" x2="838" y2="190"/><line x1="70" y1="130" x2="838" y2="130"/><line x1="70" y1="70" x2="838" y2="70"/>
-     </g>
-     <text x="60" y="254" text-anchor="end">0</text><text x="60" y="194" text-anchor="end">10</text>
-     <text x="60" y="134" text-anchor="end">20</text><text x="60" y="74" text-anchor="end">30 %</text>
-
-     <!-- ventana óptima -->
-     <rect x="318" y="46" width="128" height="204" fill="var(--severe)" opacity=".09"/>
-     <text class="big" x="382" y="38" text-anchor="middle" fill="var(--severe)">temporada</text>
-
-     <g>
-       <rect x="82"  y="238" width="44" height="12"  fill="var(--muted)" opacity=".5" rx="2"/><text x="104" y="272" text-anchor="middle">ENE</text>
-       <rect x="146" y="238" width="44" height="12"  fill="var(--muted)" opacity=".5" rx="2"/><text x="168" y="272" text-anchor="middle">FEB</text>
-       <rect x="210" y="214" width="44" height="36"  fill="var(--warm)" rx="2"/><text x="232" y="272" text-anchor="middle">MAR</text>
-       <rect x="274" y="190" width="44" height="60"  fill="var(--warm)" rx="2"/><text x="296" y="272" text-anchor="middle">ABR</text>
-       <rect x="338" y="70"  width="44" height="180" fill="var(--severe)" rx="2"/><text x="360" y="272" text-anchor="middle" fill="var(--severe)" font-weight="600">MAY</text>
-       <rect x="402" y="118" width="44" height="132" fill="var(--severe)" rx="2"/><text x="424" y="272" text-anchor="middle" fill="var(--severe)" font-weight="600">JUN</text>
-       <rect x="466" y="178" width="44" height="72"  fill="var(--cold)" rx="2"/><text x="488" y="272" text-anchor="middle">JUL</text>
-       <rect x="530" y="196" width="44" height="54"  fill="var(--cold)" rx="2"/><text x="552" y="272" text-anchor="middle">AGO</text>
-       <rect x="594" y="232" width="44" height="18"  fill="var(--muted)" opacity=".5" rx="2"/><text x="616" y="272" text-anchor="middle">SEP</text>
-       <rect x="658" y="238" width="44" height="12"  fill="var(--muted)" opacity=".5" rx="2"/><text x="680" y="272" text-anchor="middle">OCT</text>
-       <rect x="722" y="244" width="44" height="6"   fill="var(--muted)" opacity=".5" rx="2"/><text x="744" y="272" text-anchor="middle">NOV</text>
-       <rect x="786" y="244" width="44" height="6"   fill="var(--muted)" opacity=".5" rx="2"/><text x="808" y="272" text-anchor="middle">DIC</text>
-     </g>
-     <g>
-       <line x1="210" y1="292" x2="382" y2="292" stroke="var(--warm)" stroke-width="3"/>
-       <text class="big" x="296" y="310" text-anchor="middle" fill="var(--warm)">OTOÑO · 46 %</text>
-       <line x1="402" y1="292" x2="574" y2="292" stroke="var(--cold)" stroke-width="3"/>
-       <text class="big" x="488" y="310" text-anchor="middle" fill="var(--cold)">INVIERNO · 43 %</text>
-     </g>
-   </svg>
-   <figcaption><b>El 89 % de los tornados chilenos ocurre en otoño e invierno</b>, con un pico concentrado entre mediados de mayo y mediados de junio: una temporada de apenas cuatro semanas. La razón física es clara — es cuando llega aire frío en altura sobre un océano y una superficie todavía cálidos y húmedos. El máximo de CAPE cae a fines de mayo, el de cizalle a fines de junio, y el máximo del VGP resulta del solapamiento. <span style="opacity:.8">Las proporciones estacionales (46 % / 43 %) y el pico de mayo provienen de Vicencio et al. (2021) y Caballero-Morán &amp; Rondanelli (2025); el reparto mes a mes es una reconstrucción esquemática consistente con esas cifras, no un conteo publicado.</span></figcaption>
-  </figure>
-
-  <div class="measure prose">
-   <p>Geográficamente los tornados se concentran entre los <strong>36° y 42°S</strong>, con máximos de densidad de reportes cerca de los <strong>37°S</strong> (Ñuble y Biobío) y los <strong>41°S</strong> (Los Lagos). La climatología de índices identifica dos focos: <strong>38°S / 72°W</strong>, entre la Cordillera de la Costa y los Andes, que coincide con el máximo de tornados; y <strong>42,7°S / 74°W</strong>, Isla de Chiloé, que coincide con el máximo de trombas marinas.</p>
-
-   <h3>El sesgo de reporte, cuantificado</h3>
-   <p>El catálogo académico reúne unos 43 eventos documentados entre 1633 y 2019. Su distribución temporal delata el problema:</p>
-  </div>
-
-  <figure class="fig wide" style="margin-top:24px">
-   <svg viewBox="0 0 880 250" role="img" aria-label="Distribución temporal del catálogo chileno de tornados: 14 por ciento antes del año 2000, 17 por ciento entre 2000 y 2014, y 69 por ciento entre 2015 y 2019.">
-     <g>
-       <text class="big" x="70" y="56" fill="var(--ink-2)">1633 – 1999</text>
-       <text x="70" y="74">366 años</text>
-       <rect x="230" y="36" width="76" height="34" fill="var(--muted)" opacity=".55" rx="3"/>
-       <text class="big" x="320" y="59" fill="var(--muted)">14 %</text>
-
-       <text class="big" x="70" y="126" fill="var(--ink-2)">2000 – 2014</text>
-       <text x="70" y="144">15 años</text>
-       <rect x="230" y="106" width="92" height="34" fill="var(--cold)" rx="3"/>
-       <text class="big" x="336" y="129" fill="var(--cold)">17 %</text>
-
-       <text class="big" x="70" y="196" fill="var(--ink-2)">2015 – 2019</text>
-       <text x="70" y="214">5 años</text>
-       <rect x="230" y="176" width="374" height="34" fill="var(--severe)" rx="3"/>
-       <text class="big" x="618" y="199" fill="var(--severe)">69 %</text>
-     </g>
-     <line x1="668" y1="30" x2="668" y2="220" stroke="var(--line)" stroke-width="1" stroke-dasharray="4 4"/>
-     <text class="big" x="690" y="110" fill="var(--severe)">El catálogo no mide</text>
-     <text class="big" x="690" y="130" fill="var(--severe)">tornados: mide testigos</text>
-     <text class="big" x="690" y="150" fill="var(--severe)">con cámara en el bolsillo.</text>
-   </svg>
-   <figcaption><b>86 % de los eventos catalogados son posteriores al año 2000; 69 % ocurrieron entre 2015 y 2019.</b> Nadie sostiene que los tornados chilenos se hayan multiplicado por cinco en cinco años: lo que cambió fue la densidad de teléfonos con cámara y de redes sociales. Puede haber además una señal climática real superpuesta, pero es imposible separarla sin corregir primero la observabilidad — y ése es, precisamente, uno de los problemas técnicos centrales de este proyecto.</figcaption>
-  </figure>
-
-  <div class="measure prose">
-   <div class="note warn">
-    <span class="note-t">El dato que justifica todo este proyecto</span>
-    <p><strong>Caballero-Morán &amp; Rondanelli (2025)</strong>, analizando ERA5 entre 1959 y 2021, encontraron que amplias zonas del <strong>sur austral de Chile presentan VGP, cizalle y helicidad perfectamente suficientes para generar tornados — y no tienen ningún registro documentado.</strong> Su estacionalidad es incluso más plana que la del centro-sur. La conclusión de los autores es directa: se trata, casi con certeza, de <strong>subregistro por baja densidad poblacional</strong>.</p>
-    <p>Es decir: no estamos especulando sobre eventos faltantes. La literatura revisada por pares <strong>ya señaló dónde buscarlos</strong>.</p>
-   </div>
-
-   <h3>Chile no tiene radar</h3>
-   <p>Vicencio et al. (2021) lo dicen sin rodeos: en 2019, Chile era <strong>"un país sin radares meteorológicos y sin sistema de alerta de tornados"</strong>. Toda la evidencia de que aquellas tormentas fueron supercelulares tuvo que reconstruirse <em>a posteriori</em> con imágenes GOES-16 cada 10 minutos, detección de rayos de la red WWLLN, perfiles AMDAR de aviones comerciales que casualmente aterrizaban en Carriel Sur, estaciones de superficie, videos de aficionados y simulaciones WRF.</p>
-   <p>La situación no ha cambiado sustancialmente. El proyecto de la Dirección Meteorológica de Chile contempla unos <strong>ocho radares</strong> entre Valparaíso y Los Lagos, a alrededor de <strong>dos millones de dólares cada uno</strong>, y sigue sin financiamiento. En 2025 ANID adjudicó vía Fondequip <strong>el primer radar meteorológico del país</strong> — móvil, sobre tráiler, unos US$700.000, liderado desde la Universidad de Valparaíso, con disponibilidad esperada hacia fines de 2026. Es un instrumento científico y móvil, no una red operacional.</p>
-   <p>Sin radar, la ventana de aviso de 20–30 minutos que ofrece el <em>nowcasting</em> Doppler se reduce a <strong>5–10 minutos</strong>.</p>
-   <p>Un matiz honesto, sin embargo: <strong>el radar tampoco sería una bala de plata.</strong> En los entornos HSLC los mesociclones son <strong>someros y transitorios</strong>, y con frecuencia se forman y disipan en el lapso de unos pocos volúmenes de barrido. Incluso en el sureste de Estados Unidos, con cobertura NEXRAD completa, estos eventos son notoriamente difíciles de avisar.</p>
-   <p><strong>Ésa es exactamente la brecha que un modelo basado en ERA5 y GOES puede ayudar a cerrar.</strong> No reemplaza al radar: opera en una escala temporal distinta y complementaria — horas de antelación en lugar de minutos — e identifica <em>el entorno</em> favorable antes de que la tormenta exista. Y, de paso, puede reconstruir el catálogo histórico que Chile nunca tuvo.</p>
-  </div>
- </div>
-</section>
-
-<!-- ══════════ 4 · DATOS ══════════ -->
-<section class="band" id="datos">
- <div class="wrap">
-  <div class="measure prose">
-   <span class="sec-num">Sección 4</span>
-   <h2>Los datos de entrada</h2>
-   <p class="dek">Un reanálisis, un satélite y un catálogo. Todo público, casi todo en S3, y con varias trampas que conviene conocer antes de escribir la primera línea de código.</p>
-
-   <h3>ERA5 · el estado 4D de la atmósfera</h3>
-   <p>Un <strong>reanálisis</strong> no es un pronóstico ni una observación: es el resultado de correr un modelo de circulación global moderno <em>hacia atrás en el tiempo</em>, asimilando todas las observaciones históricas disponibles — radiosondas, satélites, aviones, boyas, estaciones. El producto es una reconstrucción física y dinámicamente consistente del estado completo de la atmósfera, hora por hora.</p>
-
-   <div class="tw"><table>
-    <thead><tr><th>Característica</th><th class="num">Valor</th></tr></thead>
-    <tbody>
-     <tr><td>Cobertura temporal</td><td class="num">Enero 1940 – presente</td></tr>
-     <tr><td>Resolución temporal</td><td class="num">horaria</td></tr>
-     <tr><td>Resolución horizontal</td><td class="num">0,25° (nativa ~31 km)</td></tr>
-     <tr><td>Niveles verticales</td><td class="num">137 de modelo → 37 de presión</td></tr>
-     <tr><td>Latencia</td><td class="num">~5 días (ERA5T) · ~2–3 meses (final)</td></tr>
-     <tr><td>Formato en AWS</td><td class="num">NetCDF-4</td></tr>
-    </tbody>
-   </table></div>
-
-   <p>En niveles de presión: viento <code>u</code>, <code>v</code>, <code>w</code>, temperatura <code>t</code>, humedad específica <code>q</code>, geopotencial <code>z</code>, vorticidad potencial. En nivel único: presión a nivel del mar, temperatura y rocío a 2 m, viento a 10 y 100 m, temperatura del mar, y los índices <strong>CAPE y CIN</strong> ya calculados por el ECMWF.</p>
-
-   <h4>Acceso en AWS — hay dos buckets y es importante no equivocarse</h4>
-<pre><code><span class="cmt"># <span class="ok">✅ EL BUCKET A USAR</span> — NSF NCAR, región us-west-2</span>
-aws s3 ls --no-sign-request s3://nsf-ncar-era5/
-
-<span class="cmt"># <span class="no">⚠️ DEPRECADO</span> — solo 18 variables de superficie, sin datos en altura</span>
-aws s3 ls --no-sign-request s3://era5-pds/</code></pre>
-
-   <p>El bucket <code>era5-pds</code> está marcado como deprecado y contiene únicamente 18 variables de superficie. <strong>No tiene niveles de presión, ni viento en altura, ni CAPE</strong>: es inservible para este problema. La copia mantenida es <code>nsf-ncar-era5</code>, cuya estructura de claves es:</p>
-
-<pre><code>e5.oper.an.pl/            <span class="cmt">← análisis en niveles de presión (u, v, w, t, q, z)</span>
-e5.oper.an.sfc/           <span class="cmt">← análisis en superficie</span>
-e5.oper.fc.sfc.instan/    <span class="cmt">← pronóstico instantáneo (CAPE, CIN)</span>
-e5.oper.invariant/        <span class="cmt">← orografía, máscara de tierra</span>
-
-<span class="cmt"># ejemplo real de clave:</span>
-e5.oper.an.pl/202401/e5.oper.an.pl.128_060_pv.ll025sc.2024010100_2024010123.nc
-<span class="cmt">                                   │       │   │      │</span>
-<span class="cmt">                          tabla GRIB   param  nombre  grilla 0,25° escalar</span></code></pre>
-
-   <div class="note warn">
-    <span class="note-t">Advertencia de volumen</span>
-    <p>Cada archivo de nivel de presión contiene <strong>una variable, un día completo, el globo entero y los 37 niveles: ≈ 1,36 GB</strong>. No hay recorte del lado del servidor. Bajar 10 años × 6 variables ingenuamente son decenas de terabytes.</p>
-    <p>La estrategia correcta es <strong>lectura perezosa por rangos de bytes</strong> — <code>xarray</code> + <code>fsspec</code> + <code>h5netcdf</code>, o <code>kerchunk</code> para indexar y leer solo los fragmentos del recuadro chileno (<strong>17°S–56°S, 80°W–66°W</strong>), una fracción minúscula del globo. Para prototipar, el <strong>Climate Data Store</strong> de Copernicus sí ofrece recorte geográfico, a costa de una cola de peticiones.</p>
-   </div>
-
-   <div class="note">
-    <span class="note-t">Lo que ERA5 no puede hacer</span>
-    <p>Con 31 km de resolución y paso horario, <strong>ERA5 no resuelve un mesociclón</strong>: uno de 5 km cabe dentro de una sola celda. Eso no es un defecto, es la premisa del proyecto. <strong>ERA5 describe el entorno; el satélite describe la tormenta.</strong> La pregunta es si el entorno predice a la tormenta.</p>
-   </div>
-
-   <h3>GOES · la tormenta vista desde arriba, cada 10 minutos</h3>
-   <p>El satélite que mira a Chile es el <strong>GOES-East</strong>, sobre el ecuador a <strong>75,2°W</strong> — casi exactamente sobre el meridiano chileno. La serie se reparte entre dos satélites:</p>
-
-   <div class="tw"><table>
-    <thead><tr><th>Bucket (us-east-1)</th><th>Período</th><th>Estado</th></tr></thead>
-    <tbody>
-     <tr><td class="num">s3://noaa-goes16/</td><td class="num">Dic 2017 – Abr 2025</td><td>archivo histórico de GOES-East</td></tr>
-     <tr><td class="num">s3://noaa-goes19/</td><td class="num">Abr 2025 – presente</td><td><strong>GOES-East operacional</strong></td></tr>
-     <tr><td class="num">s3://noaa-goes18/</td><td class="num">Ene 2023 – presente</td><td>GOES-<strong>West</strong> · no sirve para Chile</td></tr>
-     <tr><td class="num">s3://noaa-goes17/</td><td class="num">congelado</td><td>fuera de servicio</td></tr>
-    </tbody>
-   </table></div>
-  </div>
-
-  <figure class="fig wide" style="margin-top:26px">
-   <svg viewBox="0 0 880 330" role="img" aria-label="Las 16 bandas del radiómetro ABI de GOES, con su longitud de onda central, tipo y resolución espacial. Se destacan las cinco bandas más relevantes para convección severa.">
-     <text class="big" x="60" y="34" fill="var(--ink-2)">LAS 16 BANDAS DEL ABI</text>
-     <text x="60" y="52">2 visibles · 4 infrarrojo cercano · 10 infrarrojo térmico</text>
-
-     <g id="bands">
-       <!-- i, x=60+i*50 ; visible/NIR/IR colors -->
-       <g><rect x="60"  y="96" width="38" height="96" rx="3" fill="var(--warm)" opacity=".85"/><text x="79"  y="88" text-anchor="middle" font-size="11">0,47</text><text class="big" x="79"  y="150" text-anchor="middle" fill="var(--surface)">01</text><text x="79"  y="208" text-anchor="middle" font-size="10">1 km</text></g>
-       <g><rect x="110" y="96" width="38" height="96" rx="3" fill="var(--warm)"/><rect x="106" y="92" width="46" height="104" rx="5" fill="none" stroke="var(--severe)" stroke-width="2.4"/><text x="129" y="88" text-anchor="middle" font-size="11">0,64</text><text class="big" x="129" y="150" text-anchor="middle" fill="var(--surface)">02</text><text x="129" y="208" text-anchor="middle" font-size="10" fill="var(--severe)">0,5 km</text></g>
-       <g><rect x="160" y="96" width="38" height="96" rx="3" fill="var(--warm)" opacity=".7"/><text x="179" y="88" text-anchor="middle" font-size="11">0,86</text><text class="big" x="179" y="150" text-anchor="middle" fill="var(--surface)">03</text><text x="179" y="208" text-anchor="middle" font-size="10">1 km</text></g>
-       <g><rect x="210" y="96" width="38" height="96" rx="3" fill="var(--warm)" opacity=".55"/><text x="229" y="88" text-anchor="middle" font-size="11">1,37</text><text class="big" x="229" y="150" text-anchor="middle" fill="var(--surface)">04</text><text x="229" y="208" text-anchor="middle" font-size="10">2 km</text></g>
-       <g><rect x="260" y="96" width="38" height="96" rx="3" fill="var(--warm)" opacity=".55"/><text x="279" y="88" text-anchor="middle" font-size="11">1,6</text><text class="big" x="279" y="150" text-anchor="middle" fill="var(--surface)">05</text><text x="279" y="208" text-anchor="middle" font-size="10">1 km</text></g>
-       <g><rect x="310" y="96" width="38" height="96" rx="3" fill="var(--warm)" opacity=".55"/><text x="329" y="88" text-anchor="middle" font-size="11">2,2</text><text class="big" x="329" y="150" text-anchor="middle" fill="var(--surface)">06</text><text x="329" y="208" text-anchor="middle" font-size="10">2 km</text></g>
-       <g><rect x="360" y="96" width="38" height="96" rx="3" fill="var(--cold)" opacity=".55"/><text x="379" y="88" text-anchor="middle" font-size="11">3,9</text><text class="big" x="379" y="150" text-anchor="middle" fill="var(--surface)">07</text><text x="379" y="208" text-anchor="middle" font-size="10">2 km</text></g>
-       <g><rect x="410" y="96" width="38" height="96" rx="3" fill="var(--cold)"/><rect x="406" y="92" width="46" height="104" rx="5" fill="none" stroke="var(--severe)" stroke-width="2.4"/><text x="429" y="88" text-anchor="middle" font-size="11">6,2</text><text class="big" x="429" y="150" text-anchor="middle" fill="var(--surface)">08</text><text x="429" y="208" text-anchor="middle" font-size="10">2 km</text></g>
-       <g><rect x="460" y="96" width="38" height="96" rx="3" fill="var(--cold)"/><rect x="456" y="92" width="46" height="104" rx="5" fill="none" stroke="var(--severe)" stroke-width="2.4"/><text x="479" y="88" text-anchor="middle" font-size="11">6,9</text><text class="big" x="479" y="150" text-anchor="middle" fill="var(--surface)">09</text><text x="479" y="208" text-anchor="middle" font-size="10">2 km</text></g>
-       <g><rect x="510" y="96" width="38" height="96" rx="3" fill="var(--cold)"/><rect x="506" y="92" width="46" height="104" rx="5" fill="none" stroke="var(--severe)" stroke-width="2.4"/><text x="529" y="88" text-anchor="middle" font-size="11">7,3</text><text class="big" x="529" y="150" text-anchor="middle" fill="var(--surface)">10</text><text x="529" y="208" text-anchor="middle" font-size="10">2 km</text></g>
-       <g><rect x="560" y="96" width="38" height="96" rx="3" fill="var(--cold)" opacity=".55"/><text x="579" y="88" text-anchor="middle" font-size="11">8,4</text><text class="big" x="579" y="150" text-anchor="middle" fill="var(--surface)">11</text><text x="579" y="208" text-anchor="middle" font-size="10">2 km</text></g>
-       <g><rect x="610" y="96" width="38" height="96" rx="3" fill="var(--cold)" opacity=".55"/><text x="629" y="88" text-anchor="middle" font-size="11">9,6</text><text class="big" x="629" y="150" text-anchor="middle" fill="var(--surface)">12</text><text x="629" y="208" text-anchor="middle" font-size="10">2 km</text></g>
-       <g><rect x="660" y="96" width="38" height="96" rx="3" fill="var(--cold)"/><rect x="656" y="92" width="46" height="104" rx="5" fill="none" stroke="var(--severe)" stroke-width="2.4"/><text x="679" y="88" text-anchor="middle" font-size="11">10,3</text><text class="big" x="679" y="150" text-anchor="middle" fill="var(--surface)">13</text><text x="679" y="208" text-anchor="middle" font-size="10">2 km</text></g>
-       <g><rect x="710" y="96" width="38" height="96" rx="3" fill="var(--cold)" opacity=".55"/><text x="729" y="88" text-anchor="middle" font-size="11">11,2</text><text class="big" x="729" y="150" text-anchor="middle" fill="var(--surface)">14</text><text x="729" y="208" text-anchor="middle" font-size="10">2 km</text></g>
-       <g><rect x="760" y="96" width="38" height="96" rx="3" fill="var(--cold)" opacity=".55"/><text x="779" y="88" text-anchor="middle" font-size="11">12,3</text><text class="big" x="779" y="150" text-anchor="middle" fill="var(--surface)">15</text><text x="779" y="208" text-anchor="middle" font-size="10">2 km</text></g>
-       <g><rect x="810" y="96" width="38" height="96" rx="3" fill="var(--cold)" opacity=".55"/><text x="829" y="88" text-anchor="middle" font-size="11">13,3</text><text class="big" x="829" y="150" text-anchor="middle" fill="var(--surface)">16</text><text x="829" y="208" text-anchor="middle" font-size="10">2 km</text></g>
-     </g>
-     <text x="60" y="76" font-size="10.5">λ central (µm)</text>
-
-     <g>
-       <line x1="106" y1="238" x2="152" y2="238" stroke="var(--severe)" stroke-width="2.4"/>
-       <text class="big" x="60" y="268" fill="var(--severe)">Las cinco que más importan para convección severa</text>
-       <text x="60" y="288">B02 textura y sombras del tope (solo de día) · B08/09/10 vapor de agua, revelan la circulación</text>
-       <text x="60" y="304">en niveles medios-altos aunque no haya nubes · B13 ventana limpia, el termómetro del tope nuboso.</text>
-     </g>
-   </svg>
-   <figcaption><b>Dieciséis bandas, una imagen de disco completo cada 10 minutos, las 24 horas.</b> Las diferencias entre bandas son tan informativas como las bandas mismas: <b>BT(6,2) − BT(10,3) ≥ 0</b> es una señal fuerte de que el tope alcanzó o superó la tropopausa. El producto a usar es <code>ABI-L2-MCMIPF</code>, que trae las 16 bandas calibradas en <b>un solo archivo</b> — muchísimo más eficiente que 16 descargas separadas.</figcaption>
-  </figure>
-
-  <div class="measure prose">
-   <h4>La estructura de claves de GOES</h4>
-<pre><code>&lt;Producto&gt;/&lt;Año&gt;/&lt;DíaDelAño&gt;/&lt;Hora&gt;/&lt;Archivo&gt;
-
-OR_ABI-L1b-RadF-M3C02_G16_s20171671145342_e20171671156109_c20171671156144.nc
-   │                │   │  │              │              └─ creación del archivo
-   │                │   │  │              └─ fin del barrido
-   │                │   │  └─ <span class="ok">INICIO del barrido</span>: 2017, día 167, 11:45:34,2 UTC
-   │                │   └─ satélite (G16 / G19)
-   │                └─ M3 = modo de barrido · C02 = banda 2
-   └─ F = disco completo · C = CONUS · M1/M2 = mesoescala</code></pre>
-
-   <p><strong>Trampa práctica:</strong> el directorio se organiza por hora de observación, pero el sello <code>c</code> (creación) puede caer en la hora siguiente. Filtrar siempre por el campo <code>s</code>, nunca por <code>c</code>.</p>
-
-   <h4>Productos recomendados</h4>
-   <ul>
-    <li><code>ABI-L2-MCMIPF</code> — las 16 bandas en un archivo. <strong>El punto de partida natural.</strong></li>
-    <li><code>ABI-L2-ACHAF</code> — altura del tope nuboso. Imprescindible para la corrección de paralaje.</li>
-    <li><code>ABI-L2-DSIF</code> — índices de estabilidad derivados del satélite. Un contraste <em>independiente</em> de ERA5.</li>
-    <li><code>ABI-L2-DMWF</code> — vientos derivados del movimiento de las nubes: una observación real de viento en altura, con mucha más resolución que ERA5.</li>
-    <li><code>GLM-L2-LCFA</code> — rayos, en archivos cada 20 segundos.</li>
-   </ul>
-
-   <h3>Chile está en el borde del disco</h3>
-   <p>Éste es un punto técnico que hay que tomar en serio. El GOES-East está sobre el <strong>ecuador</strong>, y Chile llega hasta los <strong>56°S</strong>. El ángulo cenital local crece con la latitud, y con él dos problemas.</p>
-  </div>
-
-  <figure class="fig wide" style="margin-top:24px">
-   <svg viewBox="0 0 880 380" role="img" aria-label="Geometría de observación de GOES East sobre Chile: el ángulo cenital crece con la latitud, degradando el tamaño efectivo del píxel y desplazando los topes nubosos por paralaje hasta 20 kilómetros en Magallanes.">
-     <!-- satélite -->
-     <circle cx="120" cy="86" r="13" fill="var(--accent)"/>
-     <path d="M100 86 L78 86 M142 86 L164 86" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
-     <text class="big" x="120" y="54" text-anchor="middle" fill="var(--accent)">GOES-East</text>
-     <text x="120" y="118" text-anchor="middle">0° · 75,2°W</text>
-
-     <!-- líneas de visión -->
-     <g stroke="var(--muted)" stroke-width="1.3" opacity=".6" stroke-dasharray="5 4">
-       <line x1="132" y1="94" x2="330" y2="150"/>
-       <line x1="132" y1="94" x2="450" y2="216"/>
-       <line x1="132" y1="94" x2="570" y2="276"/>
-       <line x1="132" y1="94" x2="700" y2="330"/>
-     </g>
-
-     <!-- barras por latitud -->
-     <g>
-       <rect x="330" y="140" width="380" height="2" fill="var(--line)"/>
-       <circle cx="330" cy="150" r="6" fill="var(--accent)"/>
-       <text class="big" x="352" y="146" fill="var(--ink-2)">Arica · 18°S</text>
-       <text x="352" y="164">cenital ~20° · geometría cómoda</text>
-
-       <circle cx="450" cy="216" r="6" fill="var(--accent)"/>
-       <text class="big" x="472" y="212" fill="var(--ink-2)">Santiago · 33°S</text>
-       <text x="472" y="230">cenital ~40° · paralaje ≈ 10 km</text>
-
-       <circle cx="570" cy="276" r="6" fill="var(--warm)"/>
-       <text class="big" x="592" y="272" fill="var(--warm)">Chiloé · 42°S</text>
-       <text x="592" y="290">cenital ~50° · píxel notoriamente alargado</text>
-
-       <circle cx="700" cy="330" r="6" fill="var(--severe)"/>
-       <text class="big" x="546" y="352" fill="var(--severe)">Punta Arenas · 53°S</text>
-       <text x="546" y="368" fill="var(--severe)">cenital ~60° · píxel 2 km → 2 × 4 km · paralaje ≈ 20 km</text>
-     </g>
-
-     <!-- ilustración de paralaje -->
-     <g transform="translate(96,196)">
-       <rect x="0" y="0" width="200" height="150" rx="8" fill="var(--surface-2)" stroke="var(--line)"/>
-       <text class="big" x="100" y="24" text-anchor="middle" fill="var(--ink-2)">PARALAJE</text>
-       <line x1="24" y1="122" x2="176" y2="122" stroke="var(--line)" stroke-width="1.6"/>
-       <path d="M78 52 C74 40 96 34 104 46 C118 40 126 52 118 58 L72 58 Z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/>
-       <line x1="96" y1="58" x2="96" y2="122" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="3 3"/>
-       <circle cx="96" cy="122" r="4.5" fill="var(--accent)"/>
-       <text x="100" y="138" font-size="10">posición real</text>
-       <line x1="96" y1="56" x2="54" y2="122" stroke="var(--severe)" stroke-width="1.6"/>
-       <circle cx="54" cy="122" r="4.5" fill="var(--severe)"/>
-       <text x="50" y="138" font-size="10" text-anchor="end" fill="var(--severe)">aparente</text>
-       <text x="150" y="80" font-size="10" text-anchor="middle">h ≈ 12 km</text>
-     </g>
-   </svg>
-   <figcaption><b>El tope de una tormenta está a 12–15 km de altura y el satélite lo ve de lado.</b> Aparece desplazado respecto de su posición real en superficie, en dirección contraria al punto subsatelital, por <b>≈ h · tan(θ)</b>: unos 10 km a 40°S y 20 km a 53°S. Eso es <b>varias celdas de grilla</b>. Superponer ingenuamente una imagen GOES con una posición de tornado reportada, o con la grilla de ERA5, introduce un error sistemático <b>mayor que el fenómeno que se quiere estudiar</b>. La corrección usa la altura de tope de <code>ACHAF</code> y los parámetros de <code>goes_imager_projection</code>, presentes en cada archivo.</figcaption>
-  </figure>
-
-  <div class="measure prose">
-   <div class="note warn">
-    <span class="note-t">Y el GLM no ve el extremo sur</span>
-    <p>El detector de rayos declara cobertura hasta unos <strong>52° de latitud</strong>: Magallanes queda en el borde o fuera del campo de visión, y entre Chiloé y Aysén la eficiencia de detección cae hacia el extremo bajo del rango 70–90 %. Es decir, <strong>la ausencia de rayos detectados en el extremo sur no significa ausencia de rayos</strong>. Ignorarlo genera un sesgo latitudinal que un modelo aprenderá con entusiasmo y por las razones equivocadas.</p>
-   </div>
-
-   <h3>El catálogo: ~100 positivos y ningún negativo</h3>
-   <p>La tercera fuente son los eventos confirmados desde 2015. Sus limitaciones definen buena parte del diseño del proyecto: <strong>incompletitud selectiva</strong> (la probabilidad de entrar al catálogo depende de la población, la hora y el año), <strong>incertidumbre en hora y lugar</strong> (un reporte de prensa rara vez da la hora al minuto — y con GOES cada 10 min, un error de ±1 hora son ±6 imágenes), <strong>ausencia de negativos confiables</strong> y <strong>mezcla de fenómenos</strong>: tornados supercelulares, trombas marinas, <em>landspouts</em> y probablemente algún <em>downburst</em> mal clasificado conviven en la misma lista.</p>
-   <p>Ninguna es fatal. Todas deben tratarse explícitamente.</p>
-  </div>
- </div>
-</section>
-
-<!-- ══════════ 5 · VARIABLES ══════════ -->
-<section class="band" id="features">
- <div class="wrap">
-  <div class="measure prose">
-   <span class="sec-num">Sección 5</span>
-   <h2>Las variables que conviene calcular</h2>
-   <p class="dek">Donde la física se convierte en columnas de una tabla. Con ~100 ejemplos positivos, cada variable bien construida es conocimiento del dominio inyectado gratis al modelo.</p>
-   <p>Los campos crudos de ERA5 contienen la información, pero en una forma que un modelo con tan pocas etiquetas no va a poder extraer por sí solo. Aquí la ingeniería de variables basada en física no es un lujo: es una necesidad.</p>
-  </div>
-
-  <div class="wide">
-   <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
-
-    <div class="card">
-     <span class="tag s">Prioridad máxima</span>
-     <h4>Cinemáticos</h4>
-     <p style="margin-bottom:12px"><strong>Cizalle de capa (<i>bulk shear</i>)</strong> — la diferencia <em>vectorial</em> del viento entre dos niveles, no la diferencia de rapideces: un viento que gira 90° sin cambiar de magnitud tiene cizalle grande. Calcular <strong>0–1 km</strong> (el discriminante en Chile), 0–3 km y 0–6 km.</p>
-     <p style="margin-bottom:12px"><strong>SRH — helicidad relativa a la tormenta.</strong> Mide exactamente la vorticidad <em>alineada con el flujo</em> disponible para ser inclinada: el mecanismo de la sección 2, cuantificado. Probablemente la variable más informativa del conjunto. Capas 0–500 m, 0–1 km y 0–3 km.</p>
-     <p style="margin-bottom:12px"><strong>Forma del hodógrafo</strong> — curvatura integrada, longitud de arco, área encerrada en los primeros 3 km, <strong>ángulo crítico</strong> (≈90° en los casos chilenos).</p>
-     <p><strong>Vorticidad relativa</strong> en 850/700/500 hPa; <strong>vorticidad potencial</strong> en 300–500 hPa para detectar intrusiones estratosféricas y bajas segregadas; <strong>jet de bajo nivel</strong>; <strong>convergencia</strong> en 925/850 hPa y <strong>divergencia</strong> en 200–300 hPa.</p>
-    </div>
-
-    <div class="card">
-     <span class="tag">Termodinámicos</span>
-     <h4>La energía disponible</h4>
-     <p style="margin-bottom:12px"><strong>CAPE</strong> en sus variantes SBCAPE, MLCAPE y MUCAPE — y, sobre todo, <strong>CAPE de 0–3 km</strong>: para tornados, la que importa es la de los primeros kilómetros, porque controla el <em>estiramiento</em> de la vorticidad cerca del suelo. En un régimen de CAPE total bajo, puede ser mucho más discriminante que el integrado.</p>
-     <p style="margin-bottom:12px"><strong>Altura del LCL</strong> — uno de los discriminantes tornádicos más robustos de la literatura. <strong>CIN</strong>, <strong>LFC</strong>, nivel de equilibrio, <em>lapse rates</em> en 0–3 km y 700–500 hPa.</p>
-     <p style="margin-bottom:12px"><strong>Temperatura en 500 hPa</strong> — indicador simple pero muy útil del aire frío en altura, el mecanismo dominante de inestabilización en Chile.</p>
-     <p><strong>DCAPE</strong> (energía de las descendentes, ligada a la RFD), <strong>depresión del rocío en 700 hPa</strong>, agua precipitable, y <strong>temperatura superficial del mar</strong> con su gradiente respecto al aire.</p>
-    </div>
-
-    <div class="card">
-     <span class="tag s">Recalibrar</span>
-     <h4>Índices compuestos</h4>
-     <p style="margin-bottom:12px">Combinan cizalle e inestabilidad en un número. Son atajos operacionales, no leyes físicas, y <strong>todos vienen calibrados para el hemisferio norte y para CAPE alto</strong>.</p>
-     <p style="margin-bottom:12px"><strong>VGP₀₋₁ = √CAPE × cizalle₀₋₁</strong> — el mejor discriminante disponible para Chile. <strong>SHERBE</strong>, diseñado precisamente para entornos HSLC. <strong>STP</strong> con rama <em>left-mover</em> y umbral ≤ −0,3. También EHI, SCP y el número de Richardson.</p>
-     <p>Dado que el STP clásico <em>no</em> habría detectado el brote de 2019, conviene calcular SHERBE y VGP desde el principio — no como añadido — y reajustar los coeficientes del STP con datos chilenos en vez de heredar los originales. <strong>Un "STP austral" bien calibrado sería un resultado publicable por sí solo.</strong></p>
-    </div>
-
-    <div class="card">
-     <span class="tag">GOES · estáticos</span>
-     <h4>La firma del tope</h4>
-     <p style="margin-bottom:12px"><strong>Temperatura de brillo mínima</strong> en la banda 13: qué tan alto llegó el tope. Más frío = más alto = ascenso más potente. <strong>Diferencia tropopausa − tope</strong>, usando la tropopausa de ERA5.</p>
-     <p style="margin-bottom:12px"><strong>Topes penetrantes</strong>: mínimos locales de temperatura rodeados de yunque más cálido. <strong>Diferencias entre bandas</strong>: BT(6,2)−BT(10,3), BT(11,2)−BT(10,3), BT(13,3)−BT(10,3).</p>
-     <p><strong>Firma en V o U fría</strong> en el infrarrojo; <strong>pluma de cirros sobre el yunque</strong>, uno de los mejores precursores satelitales conocidos; <strong>textura del yunque</strong> (varianza y gradiente local de la banda 2): el yunque burbujeante de una tormenta vigorosa frente a la superficie lisa de una en decaimiento.</p>
-    </div>
-
-    <div class="card" style="border-color:var(--accent); border-width:2px">
-     <span class="tag">GOES · dinámicos</span>
-     <h4>Las tendencias son lo valioso</h4>
-     <p style="margin-bottom:12px">Aquí es donde la cadencia de 10 minutos justifica su existencia. Un tope frío no dice mucho; <strong>un tope que se enfría rápido dice muchísimo</strong>, porque mide directamente la aceleración del ascenso.</p>
-     <p style="margin-bottom:12px"><strong>dBT/dt</strong> en ventanas de 10, 30 y 60 min — enfriamientos más rápidos que <strong>−4 K / 15 min</strong> son un indicador establecido. Tasa de expansión del yunque frío; crecimiento del tope penetrante.</p>
-     <p style="margin-bottom:12px"><strong>Flujo óptico</strong> entre imágenes consecutivas: su <em>rotacional</em> es una medida directa de la rotación del yunque. Para un mesociclón bien desarrollado, <strong>el yunque rota de forma visible en un <i>loop</i> de satélite</strong> — y eso es exactamente lo que una red convolucional puede aprender.</p>
-     <p><strong>Salto de rayos</strong> (<i>lightning jump</i>): un aumento súbito en la frecuencia de descargas precede al tiempo severo en superficie por varios minutos. Uno de los indicadores de <em>nowcasting</em> mejor validados que existen.</p>
-    </div>
-
-    <div class="card" style="border-color:var(--severe); border-width:2px">
-     <span class="tag s">El detector más directo</span>
-     <h4>Desviación del viento medio</h4>
-     <p style="margin-bottom:12px">Velocidad y dirección de propagación de la tormenta, y su <strong>desviación respecto del viento medio de la capa</strong>.</p>
-     <p>Una tormenta que se desvía sistemáticamente <strong>a la izquierda</strong> del viento medio en el hemisferio sur es, casi por definición, una candidata a supercélula. Esta variable, calculable con solo rastrear celdas en GOES y comparar con ERA5, <strong>podría ser el detector de mesociclones más directo disponible en todo el conjunto de datos</strong> — y no depende en absoluto del catálogo de tornados.</p>
-    </div>
-
-    <div class="card">
-     <span class="tag">Control</span>
-     <h4>Geográficos y temporales</h4>
-     <p style="margin-bottom:12px">Distancia a la costa y a los Andes, altura y pendiente del terreno. <strong>Ángulo cenital del satélite</strong> (para que el modelo compense la degradación geométrica) y <strong>ángulo cenital solar</strong> (las bandas visibles solo existen de día). Hora del día y día del año, codificados con seno y coseno.</p>
-     <p><strong>Densidad de población</strong> — no como predictor físico, sino como <strong>variable de control del sesgo de reporte</strong>. Incluirla explícitamente permite que el modelo separe <em>"aquí ocurren tornados"</em> de <em>"aquí se ven tornados"</em>.</p>
-    </div>
-
-   </div>
-  </div>
-
-  <div class="measure prose">
-   <h3>Tres enfoques posibles</h3>
-   <div class="tw"><table>
-    <thead><tr><th>Enfoque</th><th>Descripción</th><th>Cuándo conviene</th></tr></thead>
-    <tbody>
-     <tr><td><strong>Basado en variables</strong></td><td>Decenas de índices físicos → modelo tabular (<i>gradient boosting</i>)</td><td>Con ~100 positivos, el más robusto e interpretable. <strong>Empezar aquí.</strong></td></tr>
-     <tr><td><i>End-to-end</i></td><td>Tensores crudos ERA5 4D + GOES → CNN 3D o transformer</td><td>Más potente en principio; con 100 ejemplos se sobreajusta sin remedio salvo con preentrenamiento</td></tr>
-     <tr><td><strong>Híbrido</strong></td><td>Variables físicas del entorno + CNN pequeña sobre recortes de GOES, concatenadas</td><td><strong>El mejor equilibrio.</strong> La ruta recomendada para el hackathon</td></tr>
-    </tbody>
-   </table></div>
-  </div>
- </div>
-</section>
-
-<!-- ══════════ 6 · MODELO ══════════ -->
-<section class="band" id="ml">
- <div class="wrap"><div class="measure prose">
-  <span class="sec-num">Sección 6</span>
-  <h2>Cómo plantear el modelo</h2>
-  <p class="dek">La formulación ingenua — "clasificador binario tornado / no tornado" — es incorrecta, y va a fallar de maneras sutiles.</p>
-
-  <h3>No es clasificación binaria</h3>
-  <p>Tenemos ~100 casos confirmados y <strong>ningún caso confirmado negativo</strong>. Un día sin reporte no es un día sin tornado. Esto corresponde exactamente al marco de <strong>PU learning</strong> (<i>Positive-Unlabeled learning</i>), un área bien estudiada.</p>
-  <p>La consecuencia central: un clasificador entrenado con "positivos vs. resto" no estima la probabilidad de que haya tornado, sino la de que haya <em>tornado reportado</em>:</p>
-
-<pre><code>P(reportado | entorno) = P(tornado | entorno) × P(reportado | tornado, lugar, hora, año)
-<span class="cmt">                          └── lo que queremos ──┘   └── observabilidad: modelable ──┘</span></code></pre>
-
-  <p>Si se modela explícitamente el segundo factor — con densidad de población, hora del día y año como covariables de observabilidad — se puede, bajo hipótesis razonables, <strong>separar el fenómeno de su detección</strong>. Técnicas aplicables: estimación de la constante de propensión de etiquetado (Elkan &amp; Noto), <i>bagging</i> de PU learning, o <strong>modelos de ocupación</strong> tomados prestados de la ecología, inventados precisamente para "especies que están pero no se ven".</p>
 
   <div class="note">
-   <span class="note-t">El resultado más valioso podría no ser el clasificador</span>
-   <p>Sino <strong>su lista de falsos positivos de mayor confianza</strong>: días y lugares donde el modelo está seguro de que hubo condiciones mesociclónicas y no existe reporte. Esos casos se pueden auditar uno a uno con las imágenes GOES, buscando la firma de rotación del yunque. <strong>Cada confirmación es un evento nuevo para el catálogo</strong> — y el catálogo ampliado permite reentrenar. Es un ciclo virtuoso.</p>
+    <p><b>El dato que justifica el proyecto.</b> Caballero-Morán &amp; Rondanelli (2025, <em>GRL</em>), analizando ERA5 entre 1959 y 2021, encontraron amplias zonas del <strong>sur austral con VGP, cizalle y helicidad perfectamente suficientes para generar tornados — y ningún registro documentado</strong>, atribuible a subregistro por baja densidad poblacional. No estamos especulando sobre eventos faltantes: la literatura revisada por pares ya señaló dónde buscarlos.</p>
   </div>
+</section>
 
-  <h3>Desbalance extremo</h3>
-  <p>Con ~100 eventos en 10 años sobre una grilla de miles de celdas horarias, la tasa base es del orden de <strong>10⁻⁶ a 10⁻⁷</strong>.</p>
+<section class="wrap">
+  <p class="eyebrow">Los datos</p>
+  <h2>Todo público, casi todo en S3</h2>
+  <p class="dek">Dos fuentes con naturalezas distintas: un reanálisis describe <em>el entorno</em>, un satélite describe <em>la tormenta</em>. La pregunta es si el entorno predice a la tormenta.</p>
+
+  <div class="tw"><table>
+   <thead><tr><th>Fuente</th><th>Qué aporta</th><th class="num">Resolución</th></tr></thead>
+   <tbody>
+    <tr><td><strong>ERA5</strong><br><code>s3://nsf-ncar-era5/</code></td><td>Campos 4D de viento y termodinámica: <code>u, v, w, t, q, z</code> en 37 niveles de presión, más CAPE y CIN</td><td class="num">0,25° · horaria<br>desde 1940</td></tr>
+    <tr><td><strong>GOES-East</strong><br><code>s3://noaa-goes19/</code></td><td>16 bandas del visible al infrarrojo térmico; altura y fase del tope nuboso, vientos derivados, rayos</td><td class="num">0,5–2 km<br>cada 10 min</td></tr>
+   </tbody>
+  </table></div>
+
+  <p>Tres trampas que conviene conocer antes de escribir la primera línea de código:</p>
   <ul>
-   <li><strong>La exactitud (<i>accuracy</i>) es inútil.</strong> Un modelo que diga "nunca" acierta el 99,9999 % de las veces.</li>
-   <li>Métricas adecuadas: <strong>AUC-PR</strong> (no AUC-ROC, engañosamente optimista con desbalance extremo), <strong>Brier score</strong>, <strong>curvas de fiabilidad</strong> (¿cuando el modelo dice 10 %, ocurre el 10 % de las veces?) y las métricas operacionales de la meteorología: <strong>POD</strong>, <strong>FAR</strong>, <strong>CSI</strong> y <strong>ETS</strong>.</li>
-   <li><strong>Muestreo negativo informado</strong>: en vez de negativos al azar, usar <em>negativos difíciles</em> — días con tormenta convectiva pero sin ningún indicio de rotación. Eso obliga al modelo a aprender qué distingue una tormenta <em>rotatoria</em> de una tormenta fuerte, que es la pregunta real.</li>
+    <li>El bucket <code>era5-pds</code> está <strong>deprecado</strong>: solo 18 variables de superficie, sin niveles de presión ni CAPE. Usar <code>nsf-ncar-era5</code>.</li>
+    <li>Cada archivo de nivel de presión pesa <strong>≈1,36 GB</strong> (una variable, un día, el globo entero) y no admite recorte del lado del servidor. Hay que leer por rangos de bytes.</li>
+    <li>GOES-East está sobre el ecuador: el <strong>paralaje</strong> desplaza los topes nubosos unos <strong>20 km a 53°S</strong> — varias celdas de grilla. Corregir con la altura de tope de <code>ACHAF</code>.</li>
   </ul>
-
-  <h3>La trampa de la fuga temporal</h3>
-  <p>Un <em>split</em> aleatorio <strong>destruye este problema</strong>. Dos horas consecutivas del mismo evento son prácticamente el mismo dato; si una cae en entrenamiento y otra en validación, el modelo parecerá excelente y no servirá para nada.</p>
-  <ul>
-   <li><strong>Separación por eventos completos</strong>, no por instantes: un brote entero va a entrenamiento o entero a validación.</li>
-   <li><strong>Validación cruzada por bloques temporales</strong> (dejar un año fuera cada vez), que además revela si el modelo es estable entre temporadas.</li>
-   <li><strong>Zonas de amortiguación espaciales</strong> si se valida por región.</li>
-   <li>Reservar <strong>un evento notorio como prueba final ciega</strong> — por ejemplo el brote de mayo de 2019 — y no mirarlo hasta el final.</li>
-  </ul>
-
-  <h3>Cómo estirar 100 ejemplos</h3>
-  <p><strong>1 · Preentrenamiento con otra región.</strong> Estados Unidos tiene decenas de miles de tornados catalogados, y Argentina y Uruguay tienen un régimen mucho más comparable al chileno. Entrenar en un dominio con muchas etiquetas y <strong>ajustar finamente sobre Chile</strong> es probablemente la mejor forma de aprovechar 100 ejemplos. <em>Ojo:</em> al transferir desde el hemisferio norte hay que <strong>reflejar el hemisferio</strong> — invertir el signo de la componente meridional del viento y de la helicidad — o el modelo aprenderá la quiralidad equivocada.</p>
-  <p><strong>2 · Aprendizaje auto-supervisado sobre GOES.</strong> Las imágenes no etiquetadas son esencialmente infinitas: 144 por día × 16 bandas × varios años. Preentrenar un codificador con predicción del fotograma siguiente o con métodos contrastivos transforma el problema de "100 ejemplos" en "100 ejemplos sobre una representación ya buena".</p>
-
-  <h3>Interpretabilidad</h3>
-  <p>En una aplicación de alerta temprana, un modelo que no se puede explicar no se va a usar. Conviene incluir desde el principio <strong>valores de SHAP</strong> sobre las variables físicas, <strong>mapas de saliencia</strong> sobre las imágenes GOES, y <strong>casos análogos</strong> ("este día se parece al 30 de mayo de 2019"). Si el modelo resulta apoyarse mayoritariamente en la SRH de niveles bajos y en la tasa de enfriamiento del tope, eso no solo da confianza: <strong>es un resultado científico</strong>.</p>
-
-  <h3>Arquitectura en AWS</h3>
-  <p>Los datos ya están en S3 dentro del programa de datos abiertos. <strong>Trabajar en la misma región que el bucket</strong> evita costos de transferencia — lo que sugiere procesar GOES en <code>us-east-1</code> y ERA5 en <code>us-west-2</code>. Los buckets de GOES publican avisos por <strong>SNS</strong> cuando llega un objeto nuevo, lo que habilita un canal casi en tiempo real vía Lambda o SQS.</p>
-  <p>El recorte sobre Chile es vergonzosamente paralelo: una tarea por día, con <strong>AWS Batch</strong> o Lambda. Conviene <strong>rematerializar el recuadro chileno como un Zarr propio</strong> en S3: una vez hecho, el acceso pasa de minutos a milisegundos y todo el resto del trabajo se acelera.</p>
-  <p>La parte dominante del costo es el cómputo de extracción, no el almacenamiento ni el entrenamiento. Empezar con un <strong>subconjunto deliberadamente pequeño</strong> — los ~100 eventos conocidos más 1.000 días de control, solo sobre 33°S–45°S — permite recorrer el flujo completo de punta a punta en horas en lugar de semanas.</p>
- </div></div>
+  <p>Con 31 km de resolución, <strong>ERA5 no resuelve un mesociclón</strong>: uno de 5 km cabe en una sola celda. Eso no es un defecto, es la premisa del proyecto.</p>
 </section>
 
-<!-- ══════════ 7 · PARTICIPAR ══════════ -->
-<section class="band" id="participar">
+<section class="wrap">
+  <p class="eyebrow">Participar</p>
+  <h2>Por dónde empezar</h2>
+  <p class="dek">El proyecto está abierto a cualquier persona interesada, con o sin formación en meteorología.</p>
+
+  <div class="grid">
+    <div class="card"><span class="tag">Accesible</span><h3>Curar el catálogo</h3><p>Homogeneizar fechas, horas UTC, coordenadas y tipo de evento. <strong>La tarea de mayor impacto por unidad de esfuerzo</strong>, y no requiere saber meteorología.</p></div>
+    <div class="card"><span class="tag">Accesible</span><h3>Animaciones GOES</h3><p>Construir <em>loops</em> de los eventos conocidos. Ver veinte casos en movimiento enseña más que cualquier documento.</p></div>
+    <div class="card"><span class="tag">Intermedia</span><h3>Índices con signo correcto</h3><p>Implementar la batería completa <strong>con los signos del hemisferio sur</strong> y validarla contra los casos conocidos. Sin esto, nada de lo que venga después significa algo.</p></div>
+    <div class="card"><span class="tag s">Avanzada</span><h3>Rotación del yunque</h3><p>Detectarla por flujo óptico en los <em>loops</em> de GOES: <strong>un detector de mesociclones que no depende del catálogo de tornados</strong>. Probablemente la idea de mayor potencial.</p></div>
+  </div>
+
+  <p>El documento completo desarrolla la física, los datos, unas cuarenta variables derivadas a calcular, cómo plantear el modelo con ~100 positivos y ningún negativo, la arquitectura en AWS y las diez tareas abiertas ordenadas por dificultad.</p>
+
+  <div class="cta">
+    <a class="primary" href="https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md">Leer el documento completo →</a>
+    <a href="https://github.com/fforster/aws-mesocyclonic">Repositorio</a>
+  </div>
+</section>
+
+<footer>
  <div class="wrap">
-  <div class="measure prose">
-   <span class="sec-num">Sección 7</span>
-   <h2>Por dónde empezar</h2>
-   <p class="dek">El proyecto está abierto a cualquier persona interesada, con o sin formación en meteorología. Estas son las líneas de trabajo, de menor a mayor dificultad.</p>
-  </div>
-
-  <div class="wide">
-   <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(290px,1fr))">
-    <div class="card">
-     <span class="tag">Accesible</span>
-     <h4>1 · Curar el catálogo</h4>
-     <p>Homogeneizar fechas, horas UTC, coordenadas, tipo de evento (supercelular / tromba marina / <i>landspout</i>), fuente y grado de confianza. <strong>La tarea de mayor impacto por unidad de esfuerzo</strong>, y no requiere saber meteorología.</p>
-    </div>
-    <div class="card">
-     <span class="tag">Accesible</span>
-     <h4>2 · Animaciones GOES</h4>
-     <p>Construir <i>loops</i> de los eventos conocidos. Ver veinte casos en movimiento enseña más sobre el problema que cualquier documento — y sirve de material divulgativo.</p>
-    </div>
-    <div class="card">
-     <span class="tag">Accesible</span>
-     <h4>3 · Visualizar el entorno</h4>
-     <p>Mapas de 500 hPa, sondeos y hodógrafos de cada caso conocido. Construye intuición y valida la cadena de datos de punta a punta.</p>
-    </div>
-    <div class="card">
-     <span class="tag">Intermedia</span>
-     <h4>4 · Extracción eficiente</h4>
-     <p>Leer el recuadro chileno desde ERA5 en S3 <strong>sin bajar el globo entero</strong>. Es el cuello de botella de todo lo demás.</p>
-    </div>
-    <div class="card">
-     <span class="tag">Intermedia</span>
-     <h4>5 · Índices con signo correcto</h4>
-     <p>Implementar la batería completa <strong>con los signos del hemisferio sur</strong> y validarla contra los casos conocidos. Sin esto, nada de lo que venga después significa algo.</p>
-    </div>
-    <div class="card">
-     <span class="tag">Intermedia</span>
-     <h4>6 · Negativos difíciles</h4>
-     <p>Construir el conjunto de días con convección profunda pero sin rotación. Es lo que convierte el problema en aprendible.</p>
-    </div>
-    <div class="card">
-     <span class="tag">Intermedia</span>
-     <h4>7 · Corrección de paralaje</h4>
-     <p>Implementarla para GOES sobre Chile usando <code>ACHAF</code>. Beneficia a todos los demás módulos.</p>
-    </div>
-    <div class="card" style="border-color:var(--severe)">
-     <span class="tag s">Avanzada</span>
-     <h4>8 · Rotación del yunque</h4>
-     <p>Detectarla por flujo óptico en los <i>loops</i> de GOES: <strong>un detector de mesociclones que no depende del catálogo de tornados</strong> y que podría generar miles de etiquetas nuevas. Probablemente la idea de mayor potencial del proyecto.</p>
-    </div>
-    <div class="card" style="border-color:var(--severe)">
-     <span class="tag s">Avanzada</span>
-     <h4>9 · PU learning</h4>
-     <p>Con modelado explícito del sesgo de reporte, para estimar dónde ocurren tornados y no solo dónde se ven.</p>
-    </div>
-    <div class="card" style="border-color:var(--severe)">
-     <span class="tag s">Avanzada</span>
-     <h4>10 · Preentrenamiento</h4>
-     <p>Auto-supervisado sobre el archivo GOES completo, y recalibración austral del STP y el SCP con datos chilenos.</p>
-    </div>
-   </div>
-  </div>
- </div>
-</section>
-
-<!-- ══════════ GLOSARIO + REFERENCIAS ══════════ -->
-<section class="band" id="refs">
- <div class="wrap">
-  <div class="measure prose">
-   <span class="sec-num">Apéndice</span>
-   <h2>Glosario y fuentes</h2>
-
-   <h3>Glosario mínimo</h3>
-   <div class="tw"><table>
-    <thead><tr><th>Término</th><th>Significado</th></tr></thead>
-    <tbody>
-     <tr><td><strong>ABI</strong></td><td><i>Advanced Baseline Imager</i>. El radiómetro de 16 bandas a bordo de GOES</td></tr>
-     <tr><td><strong>CAPE</strong></td><td>Energía potencial convectiva disponible (J/kg). El "combustible" de la tormenta</td></tr>
-     <tr><td><strong>Cizalladura</strong></td><td>Cambio del viento con la altura, en magnitud y/o dirección</td></tr>
-     <tr><td><strong>ERA5</strong></td><td>Reanálisis global del ECMWF: 0,25°, horario, desde 1940</td></tr>
-     <tr><td><strong>GLM</strong></td><td><i>Geostationary Lightning Mapper</i>. Detector óptico de rayos en GOES</td></tr>
-     <tr><td><strong>Hodógrafo</strong></td><td>Curva que traza la punta del vector viento al ascender en la vertical</td></tr>
-     <tr><td><strong>HSLC</strong></td><td><i>High Shear, Low CAPE</i>. El régimen chileno: mucho cizalle, poca energía</td></tr>
-     <tr><td><strong>LCL</strong></td><td>Nivel de condensación por ascenso. La altura de la base de la nube</td></tr>
-     <tr><td><strong>Mesociclón</strong></td><td>Columna rotatoria de 2–10 km dentro de una tormenta profunda</td></tr>
-     <tr><td><strong>Reanálisis</strong></td><td>Reconstrucción histórica del estado atmosférico con un modelo moderno</td></tr>
-     <tr><td><strong>RFD</strong></td><td>Corriente descendente del flanco trasero; clave en la tornadogénesis</td></tr>
-     <tr><td><strong>SRH</strong></td><td>Helicidad relativa a la tormenta. Mide la vorticidad alineada con el flujo</td></tr>
-     <tr><td><strong>Supercélula</strong></td><td>Tormenta con un mesociclón persistente</td></tr>
-     <tr><td><strong>Tope penetrante</strong></td><td>Cúpula que sobresale del yunque; señal de ascenso muy intenso</td></tr>
-     <tr><td><strong>Vorticidad</strong></td><td>Medida local de la rotación de un fluido</td></tr>
-    </tbody>
-   </table></div>
-
-   <h3>Literatura sobre convección severa en Chile</h3>
-   <p style="font-size:16px">Estas son las fuentes primarias del contenido de las secciones 3 y 5. Los dos primeros trabajos son el punto de partida obligatorio.</p>
-   <ul style="font-size:15.5px">
-    <li><strong>Vicencio, J., Rondanelli, R., Campos, D., Valenzuela, R., Garreaud, R., Reyes, A., Padilla, R., Abarca, R., Barahona, C., Delgado, R. &amp; Nicora, G. (2021).</strong> <em>The Chilean Tornado Outbreak of May 2019: Synoptic, Mesoscale, and Historical Contexts.</em> <strong>BAMS</strong>, 102(3), E611–E634. <a href="https://doi.org/10.1175/BAMS-D-19-0218.1">doi:10.1175/BAMS-D-19-0218.1</a> · <a href="https://dgf.uchile.cl/rene/PUBS/Tornado_chile_2019.pdf">PDF libre</a><br><span style="color:var(--muted)">Análisis completo del brote, contexto histórico del catálogo, y la propuesta del VGP de bajo nivel.</span></li>
-    <li><strong>Marín, J. C., Gutiérrez, F., Gensini, V. A., Barrett, B. S., Pozo, D., Jacques-Coper, M. &amp; Veloso-Aguila, D. (2024).</strong> <em>Climatological Aspects of Notable Tornado Events in Chile.</em> <strong>Monthly Weather Review</strong>, 152(8), 1803–1819. <a href="https://doi.org/10.1175/MWR-D-23-0249.1">doi:10.1175/MWR-D-23-0249.1</a><br><span style="color:var(--muted)">La fuente de los umbrales chilenos (SHERBE ≥ 1, STP ≤ −0,3) y de la climatología de índices 1959–2021 con ERA5. Metodológicamente, el trabajo más cercano a este proyecto.</span></li>
-    <li><strong>Barrett, B. S., Marín, J. C. &amp; Jacques-Coper, M. (2020).</strong> <em>A multiscale analysis of the tornadoes of 30–31 May 2019 in south-central Chile.</em> <strong>Atmospheric Research</strong>, 236, 104811. <a href="https://doi.org/10.1016/j.atmosres.2019.104811">doi</a></li>
-    <li><strong>Caballero-Morán, V. &amp; Rondanelli, R. (2025).</strong> <em>Tornado Seasonality in Central-Southern Chile.</em> <strong>GRL</strong>, 52, e2024GL110900. <a href="https://doi.org/10.1029/2024GL110900">doi</a><br><span style="color:var(--muted)">La temporada de ~4 semanas y la identificación de zonas australes con entorno favorable pero sin registros.</span></li>
-    <li><strong>Marín, J. C. et al. (2021).</strong> <em>The tornadoes of 30–31 May 2019 in south-central Chile: Sensitivity to topography and SST.</em> <strong>Atmospheric Research</strong>.<br><span style="color:var(--muted)">Experimentos WRF que demuestran causalmente el rol de los Andes en generar el cizalle.</span></li>
-    <li><strong>Aránguiz, R. et al. (2020).</strong> <em>Damage assessment of the May 31st, 2019, Talcahuano tornado, Chile.</em> <strong>IJDRR</strong>, 50, 101853. <a href="https://doi.org/10.1016/j.ijdrr.2020.101853">doi</a></li>
-    <li><strong>Vicencio, J. et al. (2019).</strong> <em>Informe Especial: Tornados en la Región del Biobío.</em> Dirección Meteorológica de Chile. <a href="https://blog.meteochile.gob.cl/2019/06/14/en-busqueda-de-las-huellas-del-tornado-los-angeles-y-talcahuano-concepcion/">Blog DMC</a></li>
-   </ul>
-
-   <h3>Contexto HSLC internacional</h3>
-   <p style="font-size:16px">Sherburn &amp; Parker (2014), origen del índice SHERB · Coffer et al. (2019), SRH 0–500 m como discriminante · Thompson et al. (2003), formulación del STP · Rasmussen &amp; Blanchard (1998), formulación del VGP · Hanstrum et al. (2002, Australia), Monteverdi et al. (2003, California) y Clark (2009, Inglaterra), los análogos de costa occidental.</p>
-
-   <h3>Física y fundamentos</h3>
-   <ul style="font-size:15.5px">
-    <li><strong>Markowski, P. &amp; Richardson, Y. (2010).</strong> <em>Mesoscale Meteorology in Midlatitudes.</em> Wiley. — El texto de referencia moderno.</li>
-    <li><strong>Bluestein, H. B. (2013).</strong> <em>Severe Convective Storms and Tornadoes.</em> Springer.</li>
-    <li><strong>Lemon, L. R. &amp; Doswell, C. A. III (1979).</strong> <em>Severe Thunderstorm Evolution and Mesocyclone Structure as Related to Tornadogenesis.</em> <strong>MWR</strong>, 107, 1184–1197. — El modelo conceptual clásico de la supercélula.</li>
-    <li><strong>Browning, K. A. &amp; Ludlam, F. H. (1962).</strong> <em>Airflow in convective storms.</em> <strong>QJRMS</strong>, 88, 117–135. — La primera supercélula descrita (Wokingham, 1959).</li>
-    <li><strong>Hersbach, H. et al. (2020).</strong> <em>The ERA5 global reanalysis.</em> <strong>QJRMS</strong>, 146, 1999–2049.</li>
-    <li>Wikipedia: <a href="https://es.wikipedia.org/wiki/Mesocicl%C3%B3n">Mesociclón</a> (ES) · <a href="https://en.wikipedia.org/wiki/Supercell">Supercell</a> (EN)</li>
-   </ul>
-
-   <h3>Datos y herramientas</h3>
-   <ul style="font-size:15.5px">
-    <li><strong>ERA5 en AWS</strong> — <code>s3://nsf-ncar-era5/</code> (us-west-2) · <a href="https://registry.opendata.aws/nsf-ncar-era5/">registro</a> · <a href="https://doi.org/10.5065/BH6N-5N20">DOI</a></li>
-    <li><strong>ERA5 · documentación ECMWF</strong> — <a href="https://confluence.ecmwf.int/display/CKB/ERA5%3A+data+documentation">confluence.ecmwf.int</a> · <a href="https://cds.climate.copernicus.eu/">Climate Data Store</a> (con recorte geográfico)</li>
-    <li><strong>GOES en AWS</strong> — <code>s3://noaa-goes19/</code>, <code>s3://noaa-goes16/</code> (us-east-1) · <a href="https://registry.opendata.aws/noaa-goes/">registro</a> · <a href="https://github.com/NOAA-Big-Data-Program/nodd-data-docs/tree/main/GOES">documentación NODD</a></li>
-    <li><strong>Especificaciones ABI y GLM</strong> — <a href="https://www.goes-r.gov/spacesegment/abi.html">goes-r.gov</a></li>
-    <li><strong>Herramientas</strong> — <a href="https://unidata.github.io/MetPy/">MetPy</a> (índices) · <a href="https://xarray.dev/">xarray</a> + <a href="https://fsspec.github.io/kerchunk/">kerchunk</a> (lectura desde S3) · <a href="https://satpy.readthedocs.io/">Satpy</a> y <a href="https://github.com/blaylockbk/goes2go">goes2go</a> (GOES)</li>
-   </ul>
-
-   <div class="note">
-    <span class="note-t">Sobre las figuras de esta página</span>
-    <p>Todos los diagramas son esquemáticos y están dibujados a mano en SVG para ilustrar los conceptos — <strong>no son imágenes de satélite ni gráficos generados a partir de los datos</strong>. Las cifras que aparecen en ellos provienen de las fuentes citadas; donde se reconstruyó una distribución a partir de proporciones publicadas, se indica en el pie de la figura correspondiente. Producir las visualizaciones reales a partir de ERA5 y GOES es, precisamente, la tarea 3 de la sección 7.</p>
-   </div>
-
-   <p style="color:var(--muted); font-size:15.5px; margin-top:34px">Documento preparado como material de contexto para el proyecto de predicción de tormentas mesociclónicas en Chile. Se agradecen correcciones, especialmente de la comunidad meteorológica chilena.</p>
-  </div>
- </div>
-</section>
-
-<footer style="border-top:1px solid var(--line); padding-block:34px; background:var(--surface)">
- <div class="wrap" style="display:flex; gap:18px; flex-wrap:wrap; align-items:baseline">
-  <div class="brand">Mesociclones <span>·</span> Chile</div>
-  <p style="margin:0; font-size:13.5px; color:var(--muted)">Proyecto abierto · AWS Hackathon · Datos: ERA5 (ECMWF / Copernicus) y GOES-R (NOAA / NASA), ambos en el AWS Open Data Program.</p>
+  <p style="margin:0 0 8px; font-size:13.5px; color:var(--muted); max-width:none">Fuentes principales: Vicencio et al. (2021, <em>BAMS</em>) · Marín et al. (2024, <em>MWR</em>) · Barrett et al. (2020, <em>Atmos. Res.</em>) · Caballero-Morán &amp; Rondanelli (2025, <em>GRL</em>). La lista completa está en el documento.</p>
+  <p style="margin:0; font-size:13px; color:var(--muted); max-width:none">Datos: ERA5 (ECMWF / Copernicus) y GOES-R (NOAA / NASA), ambos en el AWS Open Data Program. Las figuras son diagramas esquemáticos, no imágenes de satélite.</p>
  </div>
 </footer>
 
-<style>
-/* ── estados por etapa de la animación ───────────────────── */
-#mcSvg[data-stage="1"] .sp{ transform:translate(calc(244px + var(--i)*70px), 268px) rotate(90deg) }
-#mcSvg[data-stage="2"] .sp{ transform:translate(calc(328px + var(--i)*16px), calc(318px - var(--i)*32px)) rotate(45deg) }
-#mcSvg[data-stage="3"] .sp{ transform:translate(364px, calc(340px - var(--i)*50px)) rotate(0deg) scale(.88,1) }
-#mcSvg[data-stage="4"] .sp{ transform:translate(364px, calc(340px - var(--i)*50px)) rotate(0deg) scale(.64,1) }
-
-#mcSvg[data-stage="1"]{ --spd:7s }
-#mcSvg[data-stage="2"]{ --spd:4.6s }
-#mcSvg[data-stage="3"]{ --spd:2.4s }
-#mcSvg[data-stage="4"]{ --spd:1.2s }
-
-#mcSvg[data-stage="2"] #updraftG,
-#mcSvg[data-stage="3"] #updraftG,
-#mcSvg[data-stage="4"] #updraftG,
-#mcSvg[data-stage="3"] #cloudG,
-#mcSvg[data-stage="4"] #cloudG,
-#mcSvg[data-stage="3"] #convG,
-#mcSvg[data-stage="4"] #convG,
-#mcSvg[data-stage="4"] #funnelG,
-#mcSvg[data-stage="4"] #senseG{ opacity:1 }
-
-#mcSvg[data-stage="3"] #shearG,
-#mcSvg[data-stage="4"] #shearG{ opacity:0 }
-#mcSvg[data-stage="2"] #shearG{ opacity:.45 }
-</style>
-
 <script>
 (function(){
-  var svg = document.getElementById('mcSvg');
-  if(!svg) return;
-  var titleEl = document.getElementById('stTitle');
-  var textEl  = document.getElementById('stText');
-  var btns    = Array.prototype.slice.call(document.querySelectorAll('.ctrls [data-go]'));
-  var playBtn = document.getElementById('playBtn');
-
-  var STAGES = [
-    { t:'1 · La cizalladura pone a girar el aire',
-      d:'El viento sopla más fuerte arriba que abajo. Esa diferencia empuja el aire como a una ruedita de paletas y lo hace rotar sobre un eje <b>horizontal</b>, paralelo al suelo. Todavía no hay tormenta: solo un campo de viento con rotación latente.' },
-    { t:'2 · La corriente ascendente la pone de pie',
-      d:'Cuando el ascenso de la tormenta atraviesa la capa cizallada, <b>tuerce el eje de giro hacia la vertical</b>. La rotación que era “de rodillo” pasa a ser “de trompo”. Este paso solo es eficiente si la rotación estaba alineada con el flujo que entra a la tormenta — lo que mide la helicidad, SRH.' },
-    { t:'3 · La convergencia la estira y la acelera',
-      d:'El aire que converge hacia la base estira la columna. Por <b>conservación del momento angular</b> — el principio de la patinadora que cierra los brazos — al hacerse más alta y delgada, <b>gira más rápido</b>. Se forma un mínimo de presión en su eje que succiona más aire, que estira más, que acelera más.' },
-    { t:'4 · El mesociclón está formado',
-      d:'La rotación se organiza en un <b>vórtice único y coherente</b> de 2 a 10 km de diámetro: la supercélula ha madurado. Si luego la corriente descendente trasera penetra por detrás y aprieta esa rotación cerca del suelo, puede nacer un tornado. Solo <b>una de cada tres</b> supercélulas llega a ese punto.' }
+  var svg=document.getElementById('mcSvg'); if(!svg) return;
+  var titleEl=document.getElementById('stTitle'), textEl=document.getElementById('stText');
+  var btns=Array.prototype.slice.call(document.querySelectorAll('.ctrls [data-go]'));
+  var playBtn=document.getElementById('playBtn');
+  var STAGES=[
+    {t:'1 · La cizalladura pone a girar el aire',
+     d:'El viento sopla más fuerte arriba que abajo. Esa diferencia empuja el aire como a una ruedita de paletas y lo hace rotar sobre un eje <b>horizontal</b>, paralelo al suelo. Todavía no hay tormenta: solo un campo de viento con rotación latente.'},
+    {t:'2 · La corriente ascendente la pone de pie',
+     d:'Cuando el ascenso de la tormenta atraviesa la capa cizallada, <b>tuerce el eje de giro hacia la vertical</b>. La rotación que era “de rodillo” pasa a ser “de trompo”. Este paso solo es eficiente si la rotación estaba alineada con el flujo que entra a la tormenta — lo que mide la helicidad, SRH.'},
+    {t:'3 · La convergencia la estira y la acelera',
+     d:'El aire que converge hacia la base estira la columna. Por <b>conservación del momento angular</b> — el principio de la patinadora que cierra los brazos — al hacerse más alta y delgada, <b>gira más rápido</b>. Se forma un mínimo de presión en su eje que succiona más aire, que estira más, que acelera más.'},
+    {t:'4 · El mesociclón está formado',
+     d:'La rotación se organiza en un <b>vórtice único y coherente</b> de 2 a 10 km de diámetro: la supercélula ha madurado. Si luego la corriente descendente trasera penetra por detrás y aprieta esa rotación cerca del suelo, puede nacer un tornado.'}
   ];
-
-  var i = 0, timer = null;
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
+  var i=0, timer=null;
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function render(){
-    svg.setAttribute('data-stage', String(i+1));
-    titleEl.textContent = STAGES[i].t;
-    textEl.innerHTML = STAGES[i].d;
-    btns.forEach(function(b, k){ b.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+    svg.setAttribute('data-stage',String(i+1));
+    titleEl.textContent=STAGES[i].t; textEl.innerHTML=STAGES[i].d;
+    btns.forEach(function(b,k){b.setAttribute('aria-current',k===i?'true':'false');});
   }
-  function go(n){ i = ((n % STAGES.length) + STAGES.length) % STAGES.length; render(); }
-
-  function start(){
-    if(timer || reduce) return;
-    timer = setInterval(function(){ go(i+1); }, 5200);
-    playBtn.textContent = '⏸ Pausa';
-    playBtn.setAttribute('aria-label','Pausar animación');
-  }
-  function stop(){
-    if(timer){ clearInterval(timer); timer = null; }
-    playBtn.textContent = '▶ Reproducir';
-    playBtn.setAttribute('aria-label','Reproducir animación');
-  }
-
-  btns.forEach(function(b, k){
-    b.addEventListener('click', function(){ stop(); go(k); });
-  });
-  playBtn.addEventListener('click', function(){ timer ? stop() : start(); });
-
+  function go(n){ i=((n%STAGES.length)+STAGES.length)%STAGES.length; render(); }
+  function start(){ if(timer||reduce) return;
+    timer=setInterval(function(){go(i+1);},5200);
+    playBtn.textContent='⏸ Pausa'; playBtn.setAttribute('aria-label','Pausar animación'); }
+  function stop(){ if(timer){clearInterval(timer); timer=null;}
+    playBtn.textContent='▶ Reproducir'; playBtn.setAttribute('aria-label','Reproducir animación'); }
+  btns.forEach(function(b,k){ b.addEventListener('click',function(){stop(); go(k);}); });
+  playBtn.addEventListener('click',function(){ timer?stop():start(); });
   render();
-  if(reduce){
-    stop();
-  } else if('IntersectionObserver' in window){
-    // no gastar ciclos cuando la figura no está a la vista
-    new IntersectionObserver(function(entries){
-      entries.forEach(function(e){ e.isIntersecting ? start() : stop(); });
-    }, { threshold: 0.25 }).observe(svg);
-  } else {
-    start();
-  }
+  if(reduce){ stop(); }
+  else if('IntersectionObserver' in window){
+    new IntersectionObserver(function(es){ es.forEach(function(e){ e.isIntersecting?start():stop(); }); },{threshold:.25}).observe(svg);
+  } else { start(); }
 })();
 </script>
