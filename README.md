@@ -14,12 +14,24 @@ a partir del reanálisis **ERA5** y las imágenes multiespectrales del satélite
 
 | Ruta | Qué es |
 |---|---|
-| `docs/mesociclones_chile.pdf` | El mismo documento tipografiado en A4 (31 páginas), para leer o imprimir. |
+| `docs/mesociclones_chile.pdf` | El mismo documento tipografiado en A4 (33 páginas), con las figuras. |
+| `figs/` | Las cuatro figuras del documento, **generadas desde los datos reales**. |
+| `scripts/` | Los scripts que las producen: `figs_catalogo.py` (figshare), `figs_era5.py` (S3, lectura por rangos), `figs_goes.py` (S3). |
 | `docs/mesociclones_chile.md` | **El documento principal.** Contexto completo: el problema, la física, el caso chileno, los datos de entrada, las variables a calcular, cómo plantear el modelo, arquitectura en AWS y tareas abiertas. |
 | `web/index.html` | Sitio web autocontenido en español (abrir directamente en el navegador). Incluye 8 diagramas SVG y una animación de cuatro pasos de la mesociclogénesis. |
 | `web/artifact.html` | El mismo contenido sin el esqueleto `<html>/<head>`, para publicar como artifact. Derivado de `index.html`. |
 
-No hay dependencias: el sitio es un único archivo HTML con SVG y CSS en línea.
+El sitio es un único archivo HTML con SVG y CSS en línea, más dos figuras. Los scripts de
+figuras necesitan `pandas`, `matplotlib`, `geopandas`, `h5py`, `s3fs` y `scipy`.
+
+### Las figuras son datos reales, no esquemas
+
+`figs_era5.py` extrae una hora, 37 niveles de presión y el recuadro chileno desde archivos
+globales de 1,1–1,8 GB en `s3://nsf-ncar-era5/` **en unos 20 segundos por variable**, sin
+descargarlos completos — es la demostración práctica de la estrategia de lectura por rangos
+de bytes que recomienda el documento. `figs_goes.py` baja tres imágenes consecutivas de
+`ABI-L2-CMIPF` del 30 de mayo de 2019, implementa la proyección geoestacionaria del ABI y
+calcula la tendencia de temperatura de brillo en diez minutos.
 
 ## Las etiquetas
 

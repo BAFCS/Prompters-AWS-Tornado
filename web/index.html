@@ -75,7 +75,7 @@ li{margin-bottom:7px}
 /* figures */
 figure{margin:0; background:var(--surface); border:1px solid var(--line); border-radius:12px;
   box-shadow:var(--shadow); overflow:hidden}
-figure > svg{display:block; width:100%; height:auto; max-width:100%}
+figure > svg,figure > img{display:block; width:100%; height:auto; max-width:100%}
 figcaption{font-size:13.5px; color:var(--muted); padding:14px 18px; border-top:1px solid var(--line);
   background:var(--surface-2); line-height:1.5}
 figcaption b{color:var(--ink-2); font-weight:600}
@@ -363,6 +363,19 @@ footer{border-top:1px solid var(--line); padding-block:30px; background:var(--su
     <li>GOES-East está sobre el ecuador: el <strong>paralaje</strong> desplaza los topes nubosos unos <strong>20 km a 53°S</strong> — varias celdas de grilla. Corregir con la altura de tope de <code>ACHAF</code>.</li>
   </ul>
   <p>Con 31 km de resolución, <strong>ERA5 no resuelve un mesociclón</strong>: uno de 5 km cabe en una sola celda. Eso no es un defecto, es la premisa del proyecto.</p>
+
+  <h3 style="font-size:19px; margin:38px 0 6px">Así se ven los datos reales</h3>
+  <p>Las dos figuras siguientes no son esquemas: están generadas directamente desde los buckets, para el brote del 30 de mayo de 2019.</p>
+
+  <figure style="margin-top:18px">
+    <img src="figs/fig4_era5_20190530.jpg" alt="Cuatro mapas de ERA5 para el 30 de mayo de 2019 a las 21 UTC: temperatura y altura geopotencial en 500 hPa, viento en 850 hPa, cizalle de 0 a 1 km y cizalle de 0 a 6 km." loading="lazy">
+    <figcaption><b>ERA5, 21:00 UTC — el entorno.</b> Un núcleo frío de −24 °C en 500 hPa justo sobre la zona de los tornados (A); el jet del NW en 850 hPa frenándose contra la cordillera (B); una franja estrecha de cizalle 0–1 km por encima del umbral chileno de 12 m/s, alineada con la costa y el pie de monte, <b>exactamente donde ocurrieron los siete tornados</b> (C); y cizalle 0–6 km por encima de 18 m/s en casi todo el dominio (D) — que es justamente por qué <b>el cizalle profundo no discrimina</b> aquí. Leído por rangos de bytes desde <code>s3://nsf-ncar-era5/</code> en unos 20 s por variable.</figcaption>
+  </figure>
+
+  <figure style="margin-top:18px">
+    <img src="figs/fig3_goes_20190530.jpg" alt="Tres paneles de GOES-16 banda 13 sobre Chile centro-sur el 30 de mayo de 2019: temperatura de brillo a las 21:30 y 21:50 UTC, y el cambio en esos diez minutos." loading="lazy">
+    <figcaption><b>GOES-16, banda 13 — la tormenta.</b> Temperatura de brillo del tope nuboso con veinte minutos de diferencia; los triángulos marcan los tornados de ese día. El panel derecho es la <b>tendencia en diez minutos</b>, la variable que mide si un tope está creciendo. Los dipolos rojo–azul son en su mayoría desplazamiento de nubes, no desarrollo: separar advección de crecimiento real es lo que resuelve un flujo óptico.</figcaption>
+  </figure>
 </section>
 
 <section class="wrap">

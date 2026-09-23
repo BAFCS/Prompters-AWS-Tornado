@@ -247,6 +247,10 @@ Y mes a mes:
 
 En cuanto a la geografía, la base de datos sitúa **55 de los 102 eventos entre 38° y 42°S** y **36 entre 34° y 38°S**: juntos, el **89 %** del catálogo. Por región administrativa encabezan **Los Lagos (23)**, **La Araucanía (16)** y **Biobío (16)**, seguidas de Ñuble (9), Maule (7) y Los Ríos (7). La mediana de latitud es **38,7°S**.
 
+![Mapa de los 102 tornados y trombas marinas catalogados en Chile entre 1554 y 2025, con un histograma de latitud al costado. Los eventos se concentran entre los 34° y 42°S y no hay ningún registro al sur de los 42,4°S.](../figs/fig1_mapa_catalogo.png)
+
+**Figura 1.** Los 102 eventos del catálogo, coloreados por tipo y dimensionados por intensidad EF. La franja inferior sombreada marca los más de mil kilómetros de Chile austral sin un solo registro.
+
 Los dos extremos son instructivos. El evento más austral registrado es una tromba en **Meulín, Chiloé (42,4°S)** en julio de 2017: **no hay un solo registro al sur de los 42,4°S**, pese a que más de mil kilómetros de territorio chileno se extienden más allá. Y el más septentrional es **Tocopilla (22,1°S)**, en pleno desierto de Atacama, en agosto de 2020 — un recordatorio de que el fenómeno no está confinado al sur. Las **trombas marinas** son más típicas del invierno. La climatología de índices identifica dos focos:
 
 - **~38°S, 72°W**, entre la Cordillera de la Costa y los Andes — coincide con el máximo de tornados observados.
@@ -344,6 +348,12 @@ e5.oper.an.pl/202401/e5.oper.an.pl.128_060_pv.ll025sc.2024010100_2024010123.nc
 
 donde `128_060_pv` es tabla GRIB 128 / parámetro 60 / nombre corto `pv`, y `ll025sc` indica grilla 0,25° para campos escalares (`ll025uv` para campos vectoriales).
 
+![Cuatro mapas de ERA5 para el 30 de mayo de 2019 a las 21 UTC: temperatura y altura geopotencial en 500 hPa, viento en 850 hPa, cizalle de 0 a 1 km y cizalle de 0 a 6 km.](../figs/fig4_era5_20190530.png)
+
+**Figura 3.** El entorno del brote, reconstruido directamente desde `s3://nsf-ncar-era5/`. Cuatro cosas que el documento afirma y que aquí se ven: **(A)** un núcleo frío de −24 a −26 °C en 500 hPa justo sobre la zona de los tornados; **(B)** el jet del noroeste en 850 hPa, de 20–30 m/s, frenándose al chocar con la cordillera; **(C)** una franja estrecha de cizalle 0–1 km por encima del umbral chileno de 12 m/s, alineada con la costa y el pie de monte — exactamente donde ocurrieron los siete tornados; y **(D)** cizalle 0–6 km por encima de 18 m/s en casi todo el dominio, que es precisamente la razón por la cual **el cizalle profundo no discrimina** en Chile.
+
+> **Una trampa visible en el panel C.** En ERA5 el nivel de 1000 hPa está *bajo tierra* sobre los Andes, y sus valores son una extrapolación del modelo. Parte de la franja de cizalle intenso que sigue el pie de monte es, por tanto, artificio numérico y no viento real. Cualquier cálculo de cizalle de niveles bajos debe enmascarar los puntos donde la presión de superficie es menor que el nivel usado, o partir del viento a 10 m en lugar de 1000 hPa.
+
 > **Advertencia de volumen.** Cada archivo de nivel de presión contiene **una variable, un día completo (00–23 UTC), el globo entero y los 37 niveles: ≈ 1,36 GB**. No hay *subsetting* del lado del servidor. Bajar 10 años × 6 variables ingenuamente son decenas de terabytes. La estrategia correcta es leer con **lectura perezosa por rangos de bytes** (`xarray` + `fsspec` + `h5netcdf`, o `kerchunk`/`virtualizarr` para construir un índice y leer sólo los *chunks* del recuadro chileno). Sólo se necesita aproximadamente el recuadro **17°S–56°S, 80°W–66°W**, que es una fracción minúscula del globo.
 >
 > Alternativa: el **Climate Data Store (CDS)** de Copernicus sí ofrece recorte geográfico del lado del servidor, a costa de una cola de peticiones. Para un archivo histórico grande conviene S3; para prototipar, el CDS.
@@ -389,6 +399,10 @@ Todos en la región **us-east-1**.
 Las bandas que más importan para convección severa son la **2** (textura y sombras del tope, sólo de día), las **8/9/10** (vapor de agua: revelan la circulación de niveles medios-altos aunque no haya nubes), la **13** (temperatura de brillo del tope: el termómetro de qué tan alto llegó la tormenta) y los pares **13−11** y **13−16**, que discriminan topes penetrantes.
 
 **Cadencia.** En el **Modo 6** (operacional desde 2019): **disco completo cada 10 minutos**, CONUS cada 5 min, dominios de mesoescala cada 60 s. Chile está cubierto por el **disco completo**, es decir, **una imagen cada 10 minutos, 144 por día, las 24 horas**. Ésta es la resolución temporal que hace posible ver *cómo evoluciona* una tormenta.
+
+![Tres paneles de GOES-16 banda 13 sobre Chile centro-sur el 30 de mayo de 2019: la temperatura de brillo a las 21:30 y a las 21:50 UTC, y el cambio en esos diez minutos.](../figs/fig3_goes_20190530.png)
+
+**Figura 4.** Los mismos datos que usaría el modelo, tal como salen del bucket. A la izquierda y al centro, la temperatura de brillo de la banda 13 con veinte minutos de diferencia; los triángulos marcan los tornados de ese día. A la derecha, la **tendencia en diez minutos**: la variable de la sección 5.4 que mide directamente si un tope está creciendo. Los dipolos rojo–azul corresponden en su mayoría al desplazamiento de las nubes, no a desarrollo; separar advección de crecimiento real es justamente lo que un flujo óptico resuelve.
 
 **Estructura de claves:**
 
@@ -457,6 +471,10 @@ Es un único archivo `.xlsx` (una hoja, `Final_Table`) con **102 filas y 32 colu
 | `Hail`, `Electric Storm`, `Sound`, `Damage` | Fenómenos acompañantes | binarios |
 | `Fatalities`, `Injured` | Víctimas | — |
 | `Sources`, `Link to Documents`, `Comments` | Procedencia y notas | — |
+
+![Cuatro paneles con la estadística del catálogo: estacionalidad mensual con junio como máximo, distribución horaria con mediana a las 14:00 local, el reparto por períodos que muestra el sesgo de reporte, y la distribución de intensidades EF.](../figs/fig2_catalogo_paneles.png)
+
+**Figura 2.** El catálogo en cuatro cortes. El panel D merece atención: la mediana de ocurrencia es **las 14:00 hora local** (rango intercuartil 11:19–16:12), lo que confirma con datos la ventana de calentamiento diurno descrita en la sección 3.2.
 
 La distribución de intensidades está fuertemente sesgada a eventos débiles, como en todos los catálogos del mundo: **alrededor de 53 eventos EF0**, **28 EF1**, **9 EF2** y **4 EF3**. No hay ningún EF4 ni EF5 registrado en Chile.
 
@@ -757,5 +775,20 @@ El proyecto está abierto a cualquier persona interesada, con o sin formación e
 - [goes2go](https://github.com/blaylockbk/goes2go) — descarga simplificada de GOES desde AWS
 
 ---
+
+### Sobre las figuras
+
+Las cuatro figuras de este documento **están generadas a partir de los datos reales**, no son
+esquemas. Los scripts que las producen están en `scripts/` del repositorio:
+
+| Script | Produce | Fuente |
+|---|---|---|
+| `figs_catalogo.py` | Figuras 1 y 2 | el `.xlsx` de figshare |
+| `figs_era5.py` | Figura 3 | `s3://nsf-ncar-era5/`, lectura por rangos de bytes |
+| `figs_goes.py` | Figura 4 | `s3://noaa-goes16/ABI-L2-CMIPF/` |
+
+`figs_era5.py` es además una demostración práctica de la estrategia recomendada en la sección
+4.1: extrae una hora, 37 niveles y el recuadro chileno desde archivos globales de 1,1–1,8 GB
+**en unos 20 segundos por variable**, sin descargarlos completos.
 
 *Documento preparado como material de contexto para el proyecto de predicción de tormentas mesociclónicas en Chile. Se agradecen correcciones, especialmente de la comunidad meteorológica chilena.*
