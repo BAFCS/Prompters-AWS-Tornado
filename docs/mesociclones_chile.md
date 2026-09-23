@@ -25,7 +25,7 @@
 
 En Chile ocurren tornados. Durante mucho tiempo se los consideró una rareza casi anecdótica, hasta que el **30 y 31 de mayo de 2019** dos tornados golpearon en menos de 24 horas las ciudades de **Los Ángeles** y **Talcahuano/Concepción**, en la Región del Biobío, dejando daños estructurales severos, heridos y una víctima fatal. El episodio obligó a reconocer algo que la comunidad meteorológica chilena venía documentando de a poco: el centro-sur de Chile tiene un régimen de convección severa propio, distinto al del *Tornado Alley* norteamericano, y prácticamente sin sistemas de alerta temprana.
 
-Hoy existe un catálogo de **alrededor de 100 eventos tornádicos en Chile desde 2015**. Ese catálogo es la base de este proyecto, pero también su principal dificultad, porque:
+Hoy existe un catálogo formal y publicado: la base de datos **«Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile»** (Bastías-Curivil, Rondanelli, Vicencio et al., figshare, [doi:10.6084/m9.figshare.25119566](https://doi.org/10.6084/m9.figshare.25119566), CC BY 4.0). Reúne **102 eventos entre 1554 y 2025** — 70 marcados como tornado, 45 como tromba marina, 19 como ambos — de los cuales **68 ocurrieron desde 2015**. Ese catálogo es la base de este proyecto, pero también su principal dificultad, porque:
 
 > **El catálogo es una muestra de lo que se vio, no de lo que ocurrió.**
 
@@ -34,11 +34,11 @@ Un tornado solo entra a la base de datos si tocó tierra cerca de gente, si algu
 Esto define el desafío técnico con precisión:
 
 - **Entrada:** campos vectoriales 4D de viento y termodinámica del reanálisis **ERA5** (latitud × longitud × nivel de presión × tiempo), más imágenes multiespectrales de **16 bandas del satélite GOES** cada 10 minutos.
-- **Etiquetas:** ~100 casos positivos confirmados, sin negativos confiables.
+- **Etiquetas:** 102 casos positivos confirmados (68 desde 2015), sin negativos confiables.
 - **Objetivo:** estimar, para cada tormenta o cada celda de la grilla, la **probabilidad de que el sistema desarrolle rotación organizada de mesoescala** (un mesociclón), potencialmente tornádica.
 - **Producto final ideal:** un mapa de riesgo horario o sub-horario sobre Chile centro-sur, con antelación de algunas horas.
 
-No se trata solo de reproducir los ~100 casos conocidos. Un modelo verdaderamente útil debería **encontrar los eventos que faltan en el catálogo**: señalar, en el archivo histórico, días y lugares donde las condiciones fueron indistinguibles de las de un tornado documentado. Eso convierte el proyecto en algo más cercano a un problema de **descubrimiento** que de clasificación clásica.
+No se trata solo de reproducir los 102 casos conocidos. Un modelo verdaderamente útil debería **encontrar los eventos que faltan en el catálogo**: señalar, en el archivo histórico, días y lugares donde las condiciones fueron indistinguibles de las de un tornado documentado. Eso convierte el proyecto en algo más cercano a un problema de **descubrimiento** que de clasificación clásica.
 
 ---
 
@@ -223,21 +223,46 @@ Hay además un contraste mar–tierra marcado y útil: el cizalle 0–1 km es de
 
 Ésta es quizá la diferencia más llamativa respecto del imaginario común: **los tornados chilenos son un fenómeno de otoño e invierno**, no de verano.
 
-- **Otoño 46 % + invierno 43 % = 89 %** de los eventos catalogados.
-- **Mayo es el mes más frecuente**, y el pico está concentrado entre **mediados de mayo y mediados de junio** — una "temporada de tornados" de aproximadamente **cuatro semanas** (Caballero-Morán & Rondanelli 2025). La probabilidad se mantiene elevada hasta agosto.
+Contando directamente sobre los 102 eventos de la base de datos:
+
+| Estación | Eventos | Fracción |
+|---|---:|---:|
+| **Invierno** (jun–ago) | **56** | **54,9 %** |
+| **Otoño** (mar–may) | **32** | **31,4 %** |
+| Primavera (sep–nov) | 7 | 6,9 % |
+| Verano (dic–feb) | 7 | 6,9 % |
+
+Y mes a mes:
+
+| Ene | Feb | Mar | Abr | **May** | **Jun** | Jul | Ago | Sep | Oct | Nov | Dic |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 6 | 3 | 5 | **24** | **36** | 12 | 8 | 4 | 2 | 1 | 0 |
+
+- **Junio es el mes más frecuente (36 eventos), seguido de mayo (24).** Entre ambos concentran el **59 %** de todo el catálogo.
+- **Otoño e invierno suman el 86 %** de los eventos.
+- El pico está concentrado entre **mediados de mayo y mediados de junio** — una "temporada de tornados" de aproximadamente **cuatro semanas** (Caballero-Morán & Rondanelli 2025). La probabilidad se mantiene elevada hasta agosto.
+
+> **Nota sobre una discrepancia.** Vicencio et al. (2021) reportan otoño 46 % / invierno 43 % y mayo como mes máximo, sobre una recopilación de 43 eventos. La base de figshare, más amplia y más reciente, invierte el orden: **invierno por sobre otoño, y junio por sobre mayo**. No es una contradicción, sino el efecto de haber más que duplicado la muestra — y un recordatorio de que estas proporciones siguen moviéndose a medida que crece el catálogo.
 - La razón física es clara: es cuando llega **aire frío en altura sobre un océano y una superficie todavía relativamente cálidos y húmedos**. El máximo de CAPE ocurre a fines de mayo, el máximo de cizalle a fines de junio, y el máximo del VGP resulta del solapamiento de ambos, a comienzos de junio.
 
-En cuanto a la geografía, los tornados se concentran entre los **36° y 42°S**, con máximos de densidad de reportes cerca de los **37°S** (Ñuble y Biobío) y los **41°S** (Los Lagos). Las **trombas marinas** son más típicas del invierno. La climatología de índices identifica dos focos:
+En cuanto a la geografía, la base de datos sitúa **55 de los 102 eventos entre 38° y 42°S** y **36 entre 34° y 38°S**: juntos, el **89 %** del catálogo. Por región administrativa encabezan **Los Lagos (23)**, **La Araucanía (16)** y **Biobío (16)**, seguidas de Ñuble (9), Maule (7) y Los Ríos (7). La mediana de latitud es **38,7°S**.
+
+Los dos extremos son instructivos. El evento más austral registrado es una tromba en **Meulín, Chiloé (42,4°S)** en julio de 2017: **no hay un solo registro al sur de los 42,4°S**, pese a que más de mil kilómetros de territorio chileno se extienden más allá. Y el más septentrional es **Tocopilla (22,1°S)**, en pleno desierto de Atacama, en agosto de 2020 — un recordatorio de que el fenómeno no está confinado al sur. Las **trombas marinas** son más típicas del invierno. La climatología de índices identifica dos focos:
 
 - **~38°S, 72°W**, entre la Cordillera de la Costa y los Andes — coincide con el máximo de tornados observados.
 - **~42,7°S, 74°W**, Isla de Chiloé — coincide con el máximo de trombas marinas.
 
 ### 3.6 El sesgo de reporte, cuantificado
 
-El catálogo chileno reúne unos **43 eventos documentados entre 1633 y 2019** en la recopilación académica (y del orden de un centenar largo si se incluyen trombas marinas y las listas colaborativas más recientes). Pero su distribución temporal delata el problema:
+El catálogo reúne **102 eventos a lo largo de 471 años**, entre 1554 y 2025. Pero su distribución temporal delata el problema:
 
-- **86 % de los eventos son posteriores al año 2000.**
-- **69 % ocurrieron entre 2015 y 2019.**
+| Período | Duración | Eventos | Fracción |
+|---|---:|---:|---:|
+| 1554 – 1999 | 446 años | 23 | 22,5 % |
+| 2000 – 2014 | 15 años | 11 | 10,8 % |
+| **2015 – 2025** | **11 años** | **68** | **66,7 %** |
+
+Dicho de otro modo: **dos tercios de todos los tornados conocidos de la historia de Chile ocurrieron en los últimos once años**, y los últimos 26 años aportan más registros que los cuatro siglos anteriores juntos.
 
 Nadie sostiene que los tornados chilenos se hayan multiplicado por cinco en cinco años. Lo que cambió fue **la densidad de teléfonos con cámara y de redes sociales**. El catálogo no mide tornados: mide **testigos con conexión a internet**. (Puede haber además una señal climática real superpuesta, pero es imposible separarla sin corregir primero la observabilidad.)
 
@@ -414,14 +439,39 @@ También hay que notar que el **GLM** (detector de rayos) declara cobertura hast
 
 Por último: existe un reprocesamiento de **GOES-16 ABI L1b** (2018 – fines de 2024) con calibración radiométrica y geométrica mejorada y estabilidad de navegación corregida. Para una climatología multianual conviene usarlo.
 
-### 4.3 El catálogo de tornados: ~100 positivos y ningún negativo
+### 4.3 El catálogo de tornados: 102 positivos y ningún negativo
 
-La tercera fuente de datos es la lista de eventos confirmados en Chile desde 2015. Cada evento aporta, en el mejor de los casos, fecha, hora aproximada, coordenadas aproximadas y algún indicio de intensidad.
+La tercera fuente de datos es la base **«Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile»**, publicada en figshare con DOI y licencia **CC BY 4.0** por un equipo de doce autores encabezado por Cristian Bastías-Curivil, con Roberto Rondanelli y José Vicencio entre ellos. Está construida a partir de crónicas coloniales, prensa, redes sociales, literatura científica y libros, e incluye **solo los eventos calificados por los autores como «más probablemente que no» un tornado o una tromba**.
+
+Es un único archivo `.xlsx` (una hoja, `Final_Table`) con **102 filas y 32 columnas**. Las que importan para este proyecto:
+
+| Campo | Contenido | Cobertura |
+|---|---|---:|
+| `Latitude`, `Longitude` | Posición del evento | **102 / 102** |
+| `Date (Gregorian Calendar)` | Fecha | 102 / 102 |
+| `Hour (UTC)` | Hora UTC (a veces como rango) | **91 (89 %)** |
+| `Hour (local)` | Hora local | 95 (93 %) |
+| `Tornado` / `Waterspout` | Indicadores binarios de tipo | 70 / 45 |
+| `Max. EF Rating` | Intensidad en escala Fujita mejorada | 94 (92 %) |
+| `Register` | ¿Existe testimonio o material visual de la columna rotatoria? | 50 sí / 49 no |
+| `Hail`, `Electric Storm`, `Sound`, `Damage` | Fenómenos acompañantes | binarios |
+| `Fatalities`, `Injured` | Víctimas | — |
+| `Sources`, `Link to Documents`, `Comments` | Procedencia y notas | — |
+
+La distribución de intensidades está fuertemente sesgada a eventos débiles, como en todos los catálogos del mundo: **alrededor de 53 eventos EF0**, **28 EF1**, **9 EF2** y **4 EF3**. No hay ningún EF4 ni EF5 registrado en Chile.
+
+El impacto acumulado está dominado por dos eventos históricos: **Concepción, 27 de mayo de 1934** (27 fallecidos, 599 heridos) y **San Carlos, 18 de mayo de 1981** (2 fallecidos, 323 heridos). En total la base registra 38 fallecidos en 6 eventos y unos 1.020 heridos en 17.
+
+Tres columnas merecen atención especial para el diseño del modelo:
+
+- **`Register`** separa los eventos con evidencia visual directa de la columna rotatoria de aquellos inferidos solo por el daño. Es, en la práctica, **una variable de confianza de la etiqueta** — y un candidato natural para ponderar ejemplos o para definir un subconjunto de entrenamiento de alta pureza.
+- **`Tornado` y `Waterspout`** permiten separar las dos vías físicas de la sección 2.5. Con 19 eventos marcados como ambos (trombas que tocaron tierra), hay material para estudiar la transición mar–tierra que caracteriza al caso chileno.
+- **`Hour (UTC)`** es la que hace posible cruzar con GOES. Su cobertura del 89 % es mucho mejor de lo que suele encontrarse en catálogos construidos a partir de prensa.
 
 Sus limitaciones definen buena parte del diseño del proyecto:
 
 - **Incompletitud selectiva** (*reporting bias*). La probabilidad de que un evento entre al catálogo depende de la densidad de población, de la hora del día y del año de ocurrencia (aumenta con la penetración de los teléfonos con cámara y de las redes sociales). Hay **más eventos registrados cerca de Concepción que en la cordillera** — y eso no dice nada sobre dónde ocurren los tornados.
-- **Incertidumbre en hora y lugar.** Un reporte de prensa rara vez da la hora al minuto. Con GOES cada 10 minutos, un error de ±1 hora son ±6 imágenes.
+- **Incertidumbre en hora y lugar** — aunque menor de lo que cabría temer. **El 89 % de los eventos trae hora UTC y el 93 % hora local**, y los 102 tienen coordenadas. Aun así, varias horas están dadas como rango (`22-23:25`) o redondeadas, y con GOES cada 10 minutos un error de ±1 hora son ±6 imágenes. La posición es la del *daño observado*, no la del mesociclón.
 - **Ausencia de negativos confiables.** "No hubo tornado ese día en ese lugar" no está observado: es una inferencia basada en que nadie reportó nada.
 - **Mezcla de fenómenos.** Tornados supercelulares, trombas marinas, *landspouts* y probablemente algún *downburst* mal clasificado conviven en la misma lista.
 
@@ -525,7 +575,7 @@ Existe un eje de decisión importante:
 
 | Enfoque | Descripción | Cuándo conviene |
 |---|---|---|
-| **Basado en *features*** | Calcular decenas de índices físicos y alimentar un modelo tabular (gradient boosting) | Con ~100 positivos, es la opción más robusta y la más interpretable. **Empezar por aquí.** |
+| **Basado en *features*** | Calcular decenas de índices físicos y alimentar un modelo tabular (gradient boosting) | Con 102 positivos, es la opción más robusta y la más interpretable. **Empezar por aquí.** |
 | ***End-to-end*** | Dar los tensores crudos (ERA5 4D + imágenes GOES) a una red convolucional 3D o a un transformer | Más potente en principio, pero con 100 ejemplos se sobreajustará sin remedio salvo con preentrenamiento |
 | **Híbrido** | *Features* físicas del entorno (ERA5) + una CNN pequeña sobre recortes de GOES, concatenadas | Probablemente el mejor equilibrio. Es la ruta que recomendaríamos para el hackathon |
 
@@ -537,7 +587,7 @@ Existe un eje de decisión importante:
 
 ### 6.1 No es clasificación binaria: es aprendizaje con positivos y no etiquetados
 
-Tenemos ~100 casos confirmados y **ningún caso confirmado negativo**. Un día sin reporte no es un día sin tornado: es un día sin reporte. Esto corresponde exactamente al marco de **PU learning** (*Positive-Unlabeled learning*), un área bien estudiada.
+Tenemos 102 casos confirmados y **ningún caso confirmado negativo**. Un día sin reporte no es un día sin tornado: es un día sin reporte. Esto corresponde exactamente al marco de **PU learning** (*Positive-Unlabeled learning*), un área bien estudiada.
 
 La consecuencia central es que el clasificador entrenado con "positivos vs. resto" **no estima la probabilidad de que haya tornado**, sino la probabilidad de que haya *tornado reportado*, que es el producto de dos cosas:
 
@@ -551,7 +601,7 @@ Si se modela explícitamente el segundo factor — con densidad de población, h
 
 ### 6.2 Desbalance extremo
 
-Con ~100 eventos en 10 años sobre una grilla de miles de celdas horarias, la tasa base es del orden de **10⁻⁶ a 10⁻⁷**. Implicaciones:
+Con 68 eventos desde 2015 sobre una grilla de miles de celdas horarias, la tasa base es del orden de **10⁻⁶ a 10⁻⁷**. Implicaciones:
 
 - **La exactitud (*accuracy*) es inútil.** Un modelo que diga "nunca" acierta el 99,9999 % de las veces.
 - Métricas adecuadas: **AUC-PR** (no AUC-ROC, que es engañosamente optimista con desbalance extremo), ***Brier score***, **curvas de fiabilidad** (¿cuando el modelo dice 10 %, ocurre el 10 % de las veces?), y las métricas operacionales de la meteorología: **POD** (probabilidad de detección), **FAR** (tasa de falsas alarmas), **CSI** (*critical success index*) y **ETS**.
@@ -592,11 +642,11 @@ Una ruta pragmática, sin pretensión de ser la única:
 
 **Cálculo de *features*.** `MetPy` para los índices termodinámicos y cinemáticos (**recordando la corrección de signos del hemisferio sur**), `xarray` + `dask` para paralelizar. Guardar como Parquet particionado por año/mes.
 
-**Entrenamiento.** **SageMaker** para experimentos y búsqueda de hiperparámetros. Con ~100 positivos, el entrenamiento en sí es barato; lo caro es la preparación de datos.
+**Entrenamiento.** **SageMaker** para experimentos y búsqueda de hiperparámetros. Con 102 positivos, el entrenamiento en sí es barato; lo caro es la preparación de datos.
 
 **Servicio.** Endpoint de SageMaker o Lambda tras API Gateway; un mapa de riesgo en un sitio estático servido desde S3 + CloudFront.
 
-**Costo.** La parte dominante es el cómputo de extracción, no el almacenamiento ni el entrenamiento. Empezar con un **subconjunto deliberadamente pequeño** —por ejemplo los ~100 eventos conocidos más 1000 días de control, sólo sobre el recuadro 33°S–45°S— permite recorrer el flujo completo de punta a punta en horas en lugar de semanas. Sólo después conviene escalar al archivo completo.
+**Costo.** La parte dominante es el cómputo de extracción, no el almacenamiento ni el entrenamiento. Empezar con un **subconjunto deliberadamente pequeño** —por ejemplo los 102 eventos conocidos más 1000 días de control, sólo sobre el recuadro 33°S–45°S— permite recorrer el flujo completo de punta a punta en horas en lugar de semanas. Sólo después conviene escalar al archivo completo.
 
 ---
 
@@ -659,6 +709,11 @@ El proyecto está abierto a cualquier persona interesada, con o sin formación e
 - **Climate Data Store (Copernicus)** — [cds.climate.copernicus.eu](https://cds.climate.copernicus.eu/) (con recorte geográfico del lado del servidor)
 - **GOES en AWS** — `s3://noaa-goes19/`, `s3://noaa-goes16/` (us-east-1) · [Registro AWS](https://registry.opendata.aws/noaa-goes/) · [Documentación NODD](https://github.com/NOAA-Big-Data-Program/nodd-data-docs/tree/main/GOES)
 - **Especificaciones del ABI y del GLM** — [goes-r.gov](https://www.goes-r.gov/spacesegment/abi.html)
+
+**La base de datos** (el punto de partida práctico)
+
+- **Bastías-Curivil, C., Rondanelli, R., Vicencio, J., Matus, F., Caballero, V., Muñoz, F., Barraza, J., Campos, D., Valenzuela, R., de la Maza, A., Campos, J. & Trobok, I. (2024–2025).** *Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile.* **figshare**, Dataset, v5. [doi:10.6084/m9.figshare.25119566](https://doi.org/10.6084/m9.figshare.25119566) · Licencia **CC BY 4.0**
+  — 102 eventos, 1554–2025, con coordenadas, hora UTC, clasificación EF y procedencia documentada. Es la fuente de todas las cifras de catálogo de este documento.
 
 **Literatura sobre convección severa en Chile** (imprescindible)
 

@@ -12,6 +12,7 @@ data/
 *.grb
 *.zarr/
 *.parquet
+*.xlsx   # la base de figshare se descarga, no se versiona
 
 # credenciales
 .env

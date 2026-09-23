@@ -4,20 +4,52 @@ Proyecto abierto para el **AWS Hackathon**: estimar qué tormentas del centro-su
 desarrollan **rotación organizada de mesoescala** (un mesociclón), potencialmente tornádica,
 a partir del reanálisis **ERA5** y las imágenes multiespectrales del satélite **GOES**.
 
-> Chile tiene alrededor de **100 tornados registrados desde 2015**, ninguna red de radar
-> meteorológico operacional, y la certeza fundada de que **la mayoría de los eventos nunca
-> fue vista por nadie**. Este proyecto busca tanto anticipar las tormentas que vienen como
-> **encontrar en el archivo histórico las que faltan**.
+> Chile tiene **102 tornados y trombas catalogados entre 1554 y 2025** — dos tercios de ellos
+> en los últimos once años —, ninguna red de radar meteorológico operacional, y la certeza
+> fundada de que **la mayoría de los eventos nunca fue vista por nadie**. Este proyecto busca
+> tanto anticipar las tormentas que vienen como **encontrar en el archivo histórico las que
+> faltan**.
 
 ## Contenido
 
 | Ruta | Qué es |
 |---|---|
+| `docs/mesociclones_chile.pdf` | El mismo documento tipografiado en A4 (31 páginas), para leer o imprimir. |
 | `docs/mesociclones_chile.md` | **El documento principal.** Contexto completo: el problema, la física, el caso chileno, los datos de entrada, las variables a calcular, cómo plantear el modelo, arquitectura en AWS y tareas abiertas. |
 | `web/index.html` | Sitio web autocontenido en español (abrir directamente en el navegador). Incluye 8 diagramas SVG y una animación de cuatro pasos de la mesociclogénesis. |
 | `web/artifact.html` | El mismo contenido sin el esqueleto `<html>/<head>`, para publicar como artifact. Derivado de `index.html`. |
 
 No hay dependencias: el sitio es un único archivo HTML con SVG y CSS en línea.
+
+## Las etiquetas
+
+La base de datos de eventos es pública y tiene DOI:
+
+> **Bastías-Curivil, C., Rondanelli, R., Vicencio, J., Matus, F., Caballero, V., Muñoz, F.,
+> Barraza, J., Campos, D., Valenzuela, R., de la Maza, A., Campos, J. & Trobok, I.**
+> *Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile.* figshare, Dataset, v5.
+> [doi:10.6084/m9.figshare.25119566](https://doi.org/10.6084/m9.figshare.25119566) — **CC BY 4.0**
+
+Un `.xlsx` de **102 filas y 32 columnas**, 1554–2025. Lo esencial:
+
+| | |
+|---|---|
+| Tornados / trombas / ambos | 70 / 45 / 19 |
+| Con coordenadas | **102 (100 %)** |
+| Con hora UTC | **91 (89 %)** |
+| Con clasificación EF | 94 (92 %) |
+| Con registro visual (`Register`) | 50 |
+| Intensidades | ~53 EF0 · 28 EF1 · 9 EF2 · 4 EF3 · ningún EF4–EF5 |
+| Estacionalidad | invierno 54,9 % · otoño 31,4 % — **junio es el mes máximo (36)**, luego mayo (24) |
+| Reparto temporal | 22,5 % antes de 2000 · 10,8 % en 2000–2014 · **66,7 % en 2015–2025** |
+| Latitud | 89 % entre 34° y 42°S · **ningún registro al sur de 42,4°S** |
+
+Tres columnas merecen atención en el diseño del modelo: **`Register`** funciona como variable
+de confianza de la etiqueta; **`Tornado`/`Waterspout`** separan las dos vías físicas de
+formación; y **`Hour (UTC)`** es la que permite cruzar con las imágenes GOES.
+
+La base no se versiona en este repositorio: descárguela desde figshare y cítela como indica
+su licencia.
 
 ## Los tres hallazgos que definen el proyecto
 
@@ -39,7 +71,9 @@ supercélulas favorecidas son las ***left-movers***. Usar MetPy o SHARPpy tal cu
 **3 · Los eventos faltantes ya están señalados en la literatura.**
 Caballero-Morán & Rondanelli (2025, *GRL*) encontraron, con ERA5 1959–2021, amplias zonas
 del sur austral con VGP, cizalle y helicidad suficientes y **ningún registro documentado**,
-atribuible a subregistro por baja densidad poblacional.
+atribuible a subregistro por baja densidad poblacional. La propia base de datos lo confirma:
+**no contiene ni un solo evento al sur de los 42,4°S**, pese a que más de mil kilómetros de
+territorio chileno se extienden más allá.
 
 ## Datos
 
