@@ -21,8 +21,10 @@ a partir del reanálisis **ERA5** y las imágenes multiespectrales del satélite
 | `web/index.html` | Sitio web autocontenido en español (abrir directamente en el navegador). Incluye 8 diagramas SVG y una animación de cuatro pasos de la mesociclogénesis. |
 | `web/artifact.html` | El mismo contenido sin el esqueleto `<html>/<head>`, para publicar como artifact. Derivado de `index.html`. |
 
-El sitio es un único archivo HTML con SVG y CSS en línea, más dos figuras. Los scripts de
-figuras necesitan `pandas`, `matplotlib`, `geopandas`, `h5py`, `s3fs` y `scipy`.
+El sitio es un único archivo HTML con SVG y CSS en línea, más dos figuras. El entorno Python se
+gestiona con [uv](https://docs.astral.sh/uv/): `uv sync` instala todo y
+`uv run python scripts/figs_era5.py` ejecuta un script. Los datos de entrada van en `data/` (no se
+versiona); `AGENTS.md` explica de dónde bajar cada archivo.
 
 ### Las figuras son datos reales, no esquemas
 
@@ -123,6 +125,5 @@ La lista completa está en `docs/mesociclones_chile.md`.
 
 ---
 
-*Las figuras del sitio son diagramas esquemáticos dibujados a mano en SVG, no imágenes de
-satélite ni gráficos generados a partir de los datos. Generar las visualizaciones reales es
-una de las tareas abiertas.*
+*Los diagramas del sitio son esquemas dibujados a mano en SVG; las cuatro figuras de `figs/` sí
+se generan desde los datos reales con los scripts de `scripts/`.*
