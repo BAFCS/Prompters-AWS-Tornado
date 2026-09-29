@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""GOES-16 ABI banda 13 sobre Chile centro-sur durante el brote del 30-may-2019."""
+"""Figura 3: GOES-16 ABI banda 13 sobre Chile centro-sur durante el brote del 30 de mayo de 2019.
+
+Lee imágenes consecutivas de ``ABI-L2-CMIPF`` (disco completo, 2 km, cada 10 min) desde
+``data/goes/*.nc``, recorta Chile centro-sur con la proyección geoestacionaria del ABI implementada
+aquí y dibuja la temperatura de brillo de la primera y la última imagen, más su tendencia en diez
+minutos. Produce ``figs/fig3_goes_20190530.png``. Uso: ``uv run python scripts/figs_goes.py``.
+"""
 
 import glob
 import re
@@ -41,13 +47,14 @@ REQ, RPOL, HSAT, LON_0 = 6378137.0, 6356752.31414, 42164160.0, -75.0
 E2 = 1 - (RPOL**2 / REQ**2)
 
 
-def unpack(ds):
+def unpack(ds: h5py.Dataset) -> np.ndarray:
+    """Lee ``ds`` completo y le aplica ``scale_factor`` y ``add_offset`` si los tiene."""
     v = ds[:].astype("f8")
     return v * ds.attrs.get("scale_factor", [1.0])[0] + ds.attrs.get("add_offset", [0.0])[0]
 
 
-def fwd(lat, lon):
-    """lat/lon (deg) -> angulos de barrido x,y (rad)."""
+def fwd(lat: np.ndarray, lon: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Convierte latitud/longitud (grados) en ángulos de barrido x, y del ABI (radianes)."""
     lat, lon = np.radians(lat), np.radians(lon)
     latc = np.arctan((RPOL**2 / REQ**2) * np.tan(lat))
     rc = RPOL / np.sqrt(1 - E2 * np.cos(latc) ** 2)
@@ -57,8 +64,11 @@ def fwd(lat, lon):
     return np.arcsin(-sy / np.sqrt(sx**2 + sy**2 + sz**2)), np.arctan(sz / sx)
 
 
-def inv(x, y):
-    """angulos de barrido -> lat/lon (deg); NaN fuera del disco."""
+def inv(x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Convierte la grilla de ángulos de barrido ``x`` × ``y`` (radianes) en latitud/longitud.
+
+    Devuelve dos arreglos 2D en grados, con NaN en los píxeles fuera del disco terrestre.
+    """
     X, Y = np.meshgrid(x, y)
     a = np.sin(X) ** 2 + np.cos(X) ** 2 * (np.cos(Y) ** 2 + (REQ**2 / RPOL**2) * np.sin(Y) ** 2)
     b = -2 * HSAT * np.cos(X) * np.cos(Y)
@@ -76,12 +86,18 @@ def inv(x, y):
 
 
 def dataset(h: h5py.File, name: str) -> h5py.Dataset:
+    """Devuelve el dataset ``name`` de ``h``, fallando si es un grupo u otro tipo de objeto."""
     obj = h[name]
     assert isinstance(obj, h5py.Dataset), f"{name} no es un dataset"
     return obj
 
 
-def leer(f):
+def leer(f: str) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+    """Lee el archivo GOES ``f`` recortado al recuadro ``LAT0..LAT1`` × ``LON0..LON1``.
+
+    Devuelve la temperatura de brillo (K, NaN bajo 150 K), la latitud y la longitud de cada píxel,
+    y el instante ``t`` del archivo (segundos desde el 1-ene-2000 12 UTC).
+    """
     with h5py.File(f, "r") as h:
         x, y = unpack(dataset(h, "x")), unpack(dataset(h, "y"))
         xa, _ = fwd(np.array([LAT0, LAT1, LAT0, LAT1]), np.array([LON0, LON0, LON1, LON1]))
@@ -106,7 +122,8 @@ def leer(f):
 fs = sorted(glob.glob(str(DATA / "goes" / "*.nc")))
 
 
-def stamp(f):
+def stamp(f: str) -> str:
+    """Extrae del nombre del archivo GOES la hora de inicio del barrido, como "HH:MM UTC"."""
     m = re.search(r"_s(\d{4})(\d{3})(\d{2})(\d{2})(\d{2})", f)
     assert m, f"nombre de archivo GOES inesperado: {f}"
     return f"{m.group(3)}:{m.group(4)} UTC"

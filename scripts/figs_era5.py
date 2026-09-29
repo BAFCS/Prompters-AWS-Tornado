@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""ERA5 sobre Chile centro-sur, 30-may-2019 21 UTC — leído por rangos desde S3."""
+"""Figura 4: el entorno ERA5 del brote tornádico del 30 de mayo de 2019, 21 UTC.
+
+Lee U, V, T y Z en 37 niveles de presión desde ``s3://nsf-ncar-era5/`` (acceso anónimo). Solo baja
+el recuadro chileno de una hora, leyendo el HDF5 por rangos de bytes con s3fs + h5py, sin descargar
+los archivos globales completos (~1,4 GB cada uno).
+
+Produce ``figs/fig4_era5_20190530.png`` (500 hPa, viento en 850 hPa, cizalle 0-1 y 0-6 km) y guarda
+los campos recortados en ``data/era5_cache.npy``. Uso: ``uv run python scripts/figs_era5.py``.
+"""
 
 import time
 import warnings
@@ -10,6 +18,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import s3fs
+from matplotlib.axes import Axes
 
 warnings.filterwarnings("ignore")
 matplotlib.use("Agg")
@@ -45,6 +54,7 @@ HOUR = 21
 
 
 def dataset(h: h5py.File, name: str) -> h5py.Dataset:
+    """Devuelve el dataset ``name`` de ``h``, fallando si es un grupo u otro tipo de objeto."""
     obj = h[name]
     assert isinstance(obj, h5py.Dataset), f"{name} no es un dataset"
     return obj
@@ -67,7 +77,8 @@ lev = D["lev"]
 lat, lon = D["lat"], D["lon"]
 
 
-def L(p):
+def L(p: float) -> int:
+    """Índice del nivel de presión más cercano a ``p`` hPa."""
     return int(np.argmin(np.abs(lev - p)))
 
 
@@ -75,11 +86,13 @@ i1000, i900, i850, i500 = L(1000), L(900), L(850), L(500)
 gz = D["z"] / 9.80665
 
 
-def spd(k):
+def spd(k: int) -> np.ndarray:
+    """Rapidez del viento (m/s) en el nivel de índice ``k``."""
     return np.hypot(D["u"][k], D["v"][k])
 
 
-def shear(a, b):
+def shear(a: int, b: int) -> np.ndarray:
+    """Magnitud del cizalle vectorial (m/s) entre los niveles de índice ``a`` y ``b``."""
     return np.hypot(D["u"][a] - D["u"][b], D["v"][a] - D["v"][b])
 
 
@@ -101,7 +114,8 @@ fig, axs = plt.subplots(1, 4, figsize=(13.4, 5.3))
 fig.subplots_adjust(left=0.042, right=0.99, top=0.775, bottom=0.10, wspace=0.10)
 
 
-def base(ax, ti, sub):
+def base(ax: Axes, ti: str, sub: str) -> None:
+    """Aplica a ``ax`` el recuadro, los ejes, el título ``ti``, el subtítulo ``sub`` y los tornados."""
     ax.set_xlim(-80, -66)
     ax.set_ylim(-46, -28)
     ax.set_aspect(1.25)

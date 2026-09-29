@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Figuras del catálogo de tornados y trombas de Chile (figshare 25119566)."""
+"""Figuras 1 y 2: el catálogo de tornados y trombas marinas de Chile.
+
+Lee la base de Bastías-Curivil et al. (figshare, doi:10.6084/m9.figshare.25119566) y produce:
+
+- ``figs/fig1_mapa_catalogo.png``: mapa de los 102 eventos con histograma por latitud.
+- ``figs/fig2_catalogo_paneles.png``: estacionalidad, hora del día, sesgo de reporte e intensidad EF.
+
+Entradas: ``data/tornados_chile.xlsx`` (hoja ``Final_Table``) y ``data/coast.zip`` (shapefile de
+costa, p. ej. Natural Earth 10m). Uso: ``uv run python scripts/figs_catalogo.py``.
+"""
 
 import datetime
 import re
@@ -11,6 +20,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 
 warnings.filterwarnings("ignore")
@@ -47,7 +57,11 @@ lat = pd.to_numeric(df["Latitude"], errors="coerce")
 lon = pd.to_numeric(df["Longitude"], errors="coerce")
 
 
-def flag(c):
+def flag(c: str) -> pd.Series:
+    """Convierte la columna ``c`` del catálogo en una bandera entera 0/1.
+
+    Acepta valores numéricos y también textos afirmativos ("yes", "sí", "x", "true", ...).
+    """
     s = df[c]
     return (
         pd.to_numeric(s, errors="coerce")
@@ -66,7 +80,11 @@ T, W = flag("Tornado"), flag("Waterspout")
 ef = df["Max. EF Rating"].astype(str).str.extract(r"(\d)")[0].astype(float)
 
 
-def hora(col):
+def hora(col: str) -> np.ndarray:
+    """Devuelve la columna horaria ``col`` como horas decimales (NaN si no se puede leer).
+
+    Acepta objetos ``datetime.time`` y textos como "14:30" o "14h".
+    """
     h = []
     for v in df[col]:
         if isinstance(v, datetime.time):
@@ -80,7 +98,8 @@ def hora(col):
 hl = hora("Hour (local)")
 
 
-def tag(ax, txt, sub=""):
+def tag(ax: Axes, txt: str, sub: str = "") -> None:
+    """Pone el título ``txt`` alineado a la izquierda de ``ax`` y, si hay, el subtítulo ``sub``."""
     ax.set_title(txt, loc="left", fontsize=10.5, fontweight="bold", color=INK, pad=16)
     if sub:
         ax.text(

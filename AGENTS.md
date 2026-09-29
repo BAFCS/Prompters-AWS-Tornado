@@ -21,8 +21,9 @@ partir de ellos. Todo el contenido, los comentarios y los mensajes de commit est
 
 Python gestionado con **uv** (`pyproject.toml`, `uv.lock`, `.python-version`); no es un paquete
 instalable (`tool.uv.package = false`). Lint y formato con **ruff** (reglas `E`, `W`, `F`, `I`, `B`,
-`UP`, `SIM`, `C4`, `NPY`; se ignoran `E501` y `C408`). Tipos con **pyright** (modo `basic`, solo
-`scripts/`, con `pandas-stubs`). Toda dependencia nueva se declara con `uv add`, nunca con `pip`.
+`UP`, `SIM`, `C4`, `NPY`, `ANN`; se ignoran `E501` y `C408`). Tipos con **pyright** (modo `basic`,
+solo `scripts/`, con `pandas-stubs`). Convención: se anotan parámetros y retornos de toda función o
+método (lo exige `ANN`), no las variables; cada módulo y función lleva docstring en español. Toda dependencia nueva se declara con `uv add`, nunca con `pip`.
 
 ```bash
 uv sync                              # crea .venv con dependencias + grupo dev

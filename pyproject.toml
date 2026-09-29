@@ -42,6 +42,7 @@ select = [
     "SIM",  # flake8-simplify
     "C4",   # flake8-comprehensions
     "NPY",  # reglas específicas de NumPy
+    "ANN",  # anotaciones de tipo en funciones y métodos
 ]
 ignore = [
     "E501",  # el largo de línea lo maneja ruff format
