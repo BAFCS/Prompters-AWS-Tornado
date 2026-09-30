@@ -103,7 +103,7 @@ td.num{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums
 .anim-head{padding:16px 18px 0}
 .anim-head h2{font-size:19px; margin:0}
 .anim-head p{margin:3px 0 0; font-size:13.5px; color:var(--muted)}
-.stage-label{padding:4px 18px 12px; min-height:74px}
+.stage-label{padding:4px 18px 12px; min-height:78px}
 .stage-label h3{font-size:16.5px; color:var(--accent); font-family:"Source Sans 3",sans-serif; font-weight:700}
 .stage-label p{margin:4px 0 0; font-size:14.5px; color:var(--ink-2); max-width:70ch}
 .ctrls{display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:12px 18px;
@@ -117,12 +117,11 @@ td.num{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums
 .sp{transform-box:view-box; transform-origin:0 0; transition:transform 1.5s cubic-bezier(.45,.05,.3,1)}
 .sp .fs{transform:scaleY(.30); transform-origin:0 0}
 .sp .orbit{fill:none; stroke:var(--severe); stroke-width:2.4; opacity:.45}
-.sp .spin{transform-origin:0 0; animation:spin var(--spd,7s) linear infinite}
+.sp .spin{transform-origin:0 0}
 .sp .spin circle{fill:var(--severe)}
-@keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}
 .lay{transition:opacity .9s ease}
 .lay.off{opacity:0}
-@media (prefers-reduced-motion:reduce){ .sp .spin{animation:none} .sp,.lay{transition-duration:.01ms} }
+@media (prefers-reduced-motion:reduce){ .sp,.lay{transition-duration:.01ms} }
 text{font-family:"JetBrains Mono",monospace; font-size:12px; fill:var(--muted)}
 text.lbl{font-size:12.5px; fill:var(--ink-2)}
 text.big{font-family:"Source Sans 3",sans-serif; font-size:14px; font-weight:600}
@@ -131,8 +130,6 @@ text.big{font-family:"Source Sans 3",sans-serif; font-size:14px; font-weight:600
 #mcSvg[data-stage="2"] .sp{ transform:translate(calc(328px + var(--i)*16px), calc(318px - var(--i)*32px)) rotate(45deg) }
 #mcSvg[data-stage="3"] .sp{ transform:translate(364px, calc(340px - var(--i)*50px)) rotate(0deg) scale(.88,1) }
 #mcSvg[data-stage="4"] .sp{ transform:translate(364px, calc(340px - var(--i)*50px)) rotate(0deg) scale(.64,1) }
-#mcSvg[data-stage="1"]{ --spd:7s } #mcSvg[data-stage="2"]{ --spd:4.6s }
-#mcSvg[data-stage="3"]{ --spd:2.4s } #mcSvg[data-stage="4"]{ --spd:1.2s }
 #mcSvg[data-stage="2"] #updraftG, #mcSvg[data-stage="3"] #updraftG, #mcSvg[data-stage="4"] #updraftG,
 #mcSvg[data-stage="3"] #cloudG, #mcSvg[data-stage="4"] #cloudG,
 #mcSvg[data-stage="3"] #convG, #mcSvg[data-stage="4"] #convG,
@@ -394,39 +391,87 @@ footer{border-top:1px solid var(--line); padding-block:30px; background:var(--su
 
 <script>
 (function(){
-  var svg=document.getElementById('mcSvg'); if(!svg) return;
-  var titleEl=document.getElementById('stTitle'), textEl=document.getElementById('stText');
-  var btns=Array.prototype.slice.call(document.querySelectorAll('.ctrls [data-go]'));
-  var playBtn=document.getElementById('playBtn');
-  var STAGES=[
-    {t:'1 · La cizalladura pone a girar el aire',
-     d:'El viento sopla más fuerte arriba que abajo. Esa diferencia empuja el aire como a una ruedita de paletas y lo hace rotar sobre un eje <b>horizontal</b>, paralelo al suelo. Todavía no hay tormenta: solo un campo de viento con rotación latente.'},
-    {t:'2 · La corriente ascendente la pone de pie',
-     d:'Cuando el ascenso de la tormenta atraviesa la capa cizallada, <b>tuerce el eje de giro hacia la vertical</b>. La rotación que era “de rodillo” pasa a ser “de trompo”. Este paso solo es eficiente si la rotación estaba alineada con el flujo que entra a la tormenta — lo que mide la helicidad, SRH.'},
-    {t:'3 · La convergencia la estira y la acelera',
-     d:'El aire que converge hacia la base estira la columna. Por <b>conservación del momento angular</b> — el principio de la patinadora que cierra los brazos — al hacerse más alta y delgada, <b>gira más rápido</b>. Se forma un mínimo de presión en su eje que succiona más aire, que estira más, que acelera más.'},
-    {t:'4 · El mesociclón está formado',
-     d:'La rotación se organiza en un <b>vórtice único y coherente</b> de 2 a 10 km de diámetro: la supercélula ha madurado. Si luego la corriente descendente trasera penetra por detrás y aprieta esa rotación cerca del suelo, puede nacer un tornado.'}
+  var svg = document.getElementById('mcSvg');
+  if(!svg) return;
+  var titleEl = document.getElementById('stTitle');
+  var textEl  = document.getElementById('stText');
+  var btns    = Array.prototype.slice.call(document.querySelectorAll('.ctrls [data-go]'));
+  var playBtn = document.getElementById('playBtn');
+  var reduce  = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var STAGES = [
+    { t:'1 · La cizalladura pone a girar el aire',
+      d:'El viento sopla más fuerte arriba que abajo. Esa diferencia empuja el aire como a una ruedita de paletas y lo hace rotar sobre un eje <b>horizontal</b>, paralelo al suelo. Todavía no hay tormenta: solo un campo de viento con rotación latente.' },
+    { t:'2 · La corriente ascendente la pone de pie',
+      d:'Cuando el ascenso de la tormenta atraviesa la capa cizallada, <b>tuerce el eje de giro hacia la vertical</b>. La rotación que era “de rodillo” pasa a ser “de trompo”. Este paso solo es eficiente si la rotación estaba alineada con el flujo que entra a la tormenta — lo que mide la helicidad, SRH.' },
+    { t:'3 · La convergencia la estira y la acelera',
+      d:'El aire que converge hacia la base estira la columna. Por <b>conservación del momento angular</b> — el principio de la patinadora que cierra los brazos — al hacerse más alta y delgada, <b>gira más rápido</b>. Se forma un mínimo de presión en su eje que succiona más aire, que estira más, que acelera más.' },
+    { t:'4 · El mesociclón está formado',
+      d:'La rotación se organiza en un <b>vórtice único y coherente</b> de 2 a 10 km de diámetro: la supercélula ha madurado. Si luego la corriente descendente trasera penetra por detrás y aprieta esa rotación cerca del suelo, puede nacer un tornado.' }
   ];
-  var i=0, timer=null;
-  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function render(){
-    svg.setAttribute('data-stage',String(i+1));
-    titleEl.textContent=STAGES[i].t; textEl.innerHTML=STAGES[i].d;
-    btns.forEach(function(b,k){b.setAttribute('aria-current',k===i?'true':'false');});
+
+  /* ── Rotación ──────────────────────────────────────────────────────
+     Arranca sola y no se detiene nunca: ni al cambiar de etapa, ni al
+     pausar, ni al desplazar la página. Antes la hacía una animación CSS
+     cuya duración cambiaba con la etapa, y al cambiarla el navegador
+     reinterpretaba el progreso y los puntos se congelaban justo cuando
+     aparecía el texto. Ahora el ángulo se integra a mano y la velocidad
+     se acerca suavemente a la de la etapa actual. */
+  var spins = Array.prototype.slice.call(svg.querySelectorAll('.spin'));
+  var VEL = [51, 78, 150, 300];            // grados por segundo, una por etapa
+  var i = 0, ang = 0, vel = VEL[0], last = null;
+
+  function frame(ts){
+    if(last === null) last = ts;
+    var dt = Math.min((ts - last) / 1000, 0.1); last = ts;
+    vel += (VEL[i] - vel) * Math.min(dt * 2.2, 1);
+    ang = (ang + vel * dt) % 360;
+    for(var k = 0; k < spins.length; k++){
+      spins[k].style.transform = 'rotate(' + ang.toFixed(2) + 'deg)';
+    }
+    requestAnimationFrame(frame);
   }
-  function go(n){ i=((n%STAGES.length)+STAGES.length)%STAGES.length; render(); }
-  function start(){ if(timer||reduce) return;
-    timer=setInterval(function(){go(i+1);},5200);
-    playBtn.textContent='⏸ Pausa'; playBtn.setAttribute('aria-label','Pausar animación'); }
-  function stop(){ if(timer){clearInterval(timer); timer=null;}
-    playBtn.textContent='▶ Reproducir'; playBtn.setAttribute('aria-label','Reproducir animación'); }
-  btns.forEach(function(b,k){ b.addEventListener('click',function(){stop(); go(k);}); });
-  playBtn.addEventListener('click',function(){ timer?stop():start(); });
-  render();
+  if(!reduce) requestAnimationFrame(frame);
+
+  /* ── Texto y etapas ────────────────────────────────────────────── */
+  var timer = null;
+
+  function pintar(){
+    titleEl.textContent = STAGES[i].t;
+    textEl.innerHTML    = STAGES[i].d;
+    btns.forEach(function(b, k){ b.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+  }
+  function render(){
+    svg.setAttribute('data-stage', String(i + 1));
+    pintar();                       // cambio inmediato, sin transición
+  }
+  function go(n){ i = ((n % STAGES.length) + STAGES.length) % STAGES.length; render(); }
+
+  function start(){
+    if(timer || reduce) return;
+    timer = setInterval(function(){ go(i + 1); }, 5600);
+    playBtn.textContent = '⏸ Pausa';
+    playBtn.setAttribute('aria-label', 'Pausar el avance automático');
+  }
+  function stop(){
+    if(timer){ clearInterval(timer); timer = null; }
+    playBtn.textContent = '▶ Reproducir';
+    playBtn.setAttribute('aria-label', 'Reanudar el avance automático');
+  }
+
+  btns.forEach(function(b, k){ b.addEventListener('click', function(){ stop(); go(k); }); });
+  playBtn.addEventListener('click', function(){ timer ? stop() : start(); });
+
+  svg.setAttribute('data-stage', '1');
+  pintar();
+
+  // El observador solo gobierna el avance automático de etapas.
+  // La rotación queda fuera de su alcance a propósito.
   if(reduce){ stop(); }
   else if('IntersectionObserver' in window){
-    new IntersectionObserver(function(es){ es.forEach(function(e){ e.isIntersecting?start():stop(); }); },{threshold:.25}).observe(svg);
+    new IntersectionObserver(function(es){
+      es.forEach(function(e){ e.isIntersecting ? start() : stop(); });
+    }, { threshold: 0.25 }).observe(svg);
   } else { start(); }
 })();
 </script>
