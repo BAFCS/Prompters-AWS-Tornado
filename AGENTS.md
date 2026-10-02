@@ -6,8 +6,8 @@ Guía para agentes de código (Claude Code, Codex, etc.) que trabajan en este re
 
 Proyecto abierto (AWS Hackathon) para predecir qué tormentas del centro-sur de Chile desarrollan
 un mesociclón, usando el reanálisis ERA5 y las imágenes GOES. Hoy el repo es sobre todo
-**documentación más tres scripts de figuras**; el plan es escribir nuevos scripts de análisis a
-partir de ellos. Todo el contenido, los comentarios y los mensajes de commit están en **español**.
+**documentación, tres scripts de figuras, scripts de descarga y procesamiento de datos y un visor
+interactivo**. Todo el contenido, los comentarios y los mensajes de commit están en **español**.
 
 - `docs/mesociclones_chile.md` es el documento principal y la fuente de verdad del proyecto
   (física, datos, variables, planteamiento del modelo, arquitectura AWS, tareas abiertas en la sección 8).
@@ -28,6 +28,7 @@ método (lo exige `ANN`), no las variables; cada módulo y función lleva docstr
 ```bash
 uv sync                              # crea .venv con dependencias + grupo dev
 uv run python scripts/figs_era5.py   # ejecutar un script
+uv run streamlit run scripts/visor.py  # visor interactivo ERA5 + GOES
 uv run ruff check scripts            # lint (uv run ruff check --fix para autocorregir)
 uv run ruff format scripts           # formato
 uv run pyright                       # chequeo de tipos
@@ -52,8 +53,48 @@ Comparten una paleta y `rcParams` copiados en cada archivo (`ACC`, `SEV`, `COLD`
 | `figs_era5.py` | fig4 | lee directo de `s3://nsf-ncar-era5/` (anónimo, s3fs + h5py); escribe `data/era5_cache.npy` |
 | `figs_goes.py` | fig3 | `data/goes/*.nc`: archivos GOES-16 `ABI-L2-CMIPF` banda 13 del 30-may-2019 (día 150) ~21:30–21:50 UTC |
 
+## Scripts de datos y visor
+
+A diferencia de los de figuras, son programas de línea de comandos con `main()` y `argparse`
+(`--help` muestra las opciones). Comparten `scripts/comun.py`, que se importa como módulo hermano
+(`import comun`, declarado *first-party* para isort): regiones (`REGIONES`, `--region`, `--bbox`),
+fechas (`--inicio`, `--fin`), rutas, acceso S3 anónimo y la proyección del ABI (`latlon_abi`).
+Escriben NetCDF comprimido (gzip + shuffle) en `data/recortes/<region>/`, saltan lo que ya existe
+(`--forzar` lo rehace) y reparten las lecturas en procesos con contexto `spawn` (s3fs no tolera
+`fork`). Ambas descargas leen el índice de bloques del HDF5 y piden a S3 solo los bytes necesarios.
+
+| Script | Hace | Salida |
+|---|---|---|
+| `descarga_era5.py` | ERA5 niveles de presión y superficie, recortado; un archivo por día | `era5_pl/era5_pl_AAAAMMDD.nc`, `era5_sfc/era5_sfc_AAAAMMDD.nc` |
+| `descarga_goes.py` | GOES `ABI-L2-MCMIPF` (16 bandas, 2 km), recortado en la grilla fija; un archivo por hora | `goes/AAAAMMDD/goes_AAAAMMDDHH.nc` |
+| `procesa_goes.py` | Reproyecta GOES a lat/lon regular (vecino más cercano, sin alterar valores) | `goes_latlon/AAAAMMDD/goes_AAAAMMDDHH.nc` |
+| `procesa_era5.py` | Índices australes por columna (cizalle, Bunkers *left-mover*, SRH, VGP₀₋₁, STP LM sin CIN, SHERBS3, LCL), vectorizados con las fórmulas de MetPy | `era5_indices/era5_idx_AAAAMMDD.nc` |
+| `visor.py` | App Streamlit de varias páginas (`st.navigation`); el código de las páginas vive en `scripts/visor_app/` | — |
+
+```bash
+uv run python scripts/descarga_era5.py --inicio 2019-05-30          # región centro-sur-austral
+uv run python scripts/descarga_goes.py --inicio 2019-05-30
+uv run python scripts/procesa_goes.py  --inicio 2019-05-30
+uv run python scripts/procesa_era5.py  --inicio 2019-05-30          # tras descarga_era5.py
+uv run streamlit run scripts/visor.py
+```
+
+**Visor** (`scripts/visor.py` + paquete `scripts/visor_app/`, importado como *first-party* igual que
+`comun`): páginas El caso, Mapas, Sondeo y Series. La barra lateral (región, día, regla de tiempo,
+evento, recorrido guiado) vive en `visor.py` para que sus widgets sobrevivan al cambio de página; el
+estado compartido está en `visor_app/estado.py` (`recuerda`/`guarda` copian los widgets de cada
+página bajo `_<clave>`). Los textos, umbrales y el recorrido guiado salen de `docs/` y están en
+`visor_app/textos.py`: si cambia el documento, hay que actualizarlos. El tema está en
+`.streamlit/config.toml` y `visor_app/tema.py` (paleta de `web/index.html`). `PRODUCT.md` y
+`.impeccable/` guardan el contexto de diseño del visor.
+
+GOES se guarda con su codificación original (`int16` con `scale_factor`/`add_offset`), así que no
+pierde precisión. Ninguno corrige paralaje todavía.
+
+## Datos
+
 `data/` y los formatos de datos (`*.nc`, `*.xlsx`, `*.zarr`, ...) están en `.gitignore`: los datos se
-descargan, nunca se versionan. No hay script de descarga; a mano:
+descargan, nunca se versionan. El catálogo, la costa y las imágenes de `figs_goes.py` se bajan a mano:
 
 ```bash
 mkdir -p data/goes
@@ -71,7 +112,8 @@ aws s3 cp --no-sign-request --recursive s3://noaa-goes16/ABI-L2-CMIPF/2019/150/2
   son `VGP₀₋₁ > 0,1 m/s²`, `SHERBE ≥ 1`, `STP` (rama *left-mover*) `≤ −0,3`.
 - **ERA5**: usar `s3://nsf-ncar-era5/` (`s3://era5-pds/` está deprecado y no tiene niveles de presión).
   Cada archivo de nivel de presión pesa ~1,4 GB (una variable, un día, el globo) y no admite recorte
-  en el servidor: leer por rangos de bytes con `s3fs` + `h5py` como en `figs_era5.py`. Sobre los Andes
+  en el servidor: cada hora es un bloque global de ~50–65 MB que hay que transferir entero y recortar
+  en memoria (`descarga_era5.py`). En superficie los bloques son pequeños y sí se lee solo el recuadro. Sobre los Andes
   el nivel de 1000 hPa está bajo tierra: enmascarar por presión de superficie o usar viento a 10 m.
 - **GOES**: Chile lo ve GOES-East (`noaa-goes16` dic 2017–abr 2025, `noaa-goes19` desde abr 2025,
   us-east-1). `figs_goes.py` implementa la proyección geoestacionaria del ABI a mano. El paralaje

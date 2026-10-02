@@ -1,0 +1,465 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-02T18:04:33+00:00",
+  "title": "Design System: Mesociclones en Chile · visor",
+  "extensions": {
+    "colorMeta": {
+      "niebla": {
+        "role": "neutral",
+        "displayName": "Niebla",
+        "canonical": "#E4E9EB",
+        "tonalRamp": [
+          "#21292C",
+          "#39484D",
+          "#52676F",
+          "#6B8690",
+          "#8CA1AA",
+          "#ADBCC3",
+          "#CFD8DB",
+          "#F0F3F4"
+        ]
+      },
+      "superficie": {
+        "role": "neutral",
+        "displayName": "Papel",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#262626",
+          "#434343",
+          "#616161",
+          "#7E7E7E",
+          "#9B9B9B",
+          "#B8B8B8",
+          "#D5D5D5",
+          "#F2F2F2"
+        ]
+      },
+      "superficie-2": {
+        "role": "neutral",
+        "displayName": "Papel gastado",
+        "canonical": "#F1F4F5",
+        "tonalRamp": [
+          "#20292D",
+          "#38494F",
+          "#506971",
+          "#698893",
+          "#8AA3AC",
+          "#ACBEC4",
+          "#CED9DC",
+          "#F0F3F4"
+        ]
+      },
+      "filete": {
+        "role": "neutral",
+        "displayName": "Filete",
+        "canonical": "#C9D3D6",
+        "tonalRamp": [
+          "#21292B",
+          "#3A484D",
+          "#53686E",
+          "#6C878F",
+          "#8DA2A9",
+          "#AEBDC2",
+          "#CFD8DB",
+          "#F1F3F4"
+        ]
+      },
+      "tinta": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#0C1518",
+        "tonalRamp": [
+          "#1A2D33",
+          "#2D4F5A",
+          "#407181",
+          "#5493A8",
+          "#79ACBC",
+          "#A0C4D0",
+          "#C7DCE3",
+          "#EEF4F7"
+        ]
+      },
+      "tinta-2": {
+        "role": "neutral",
+        "displayName": "Tinta media",
+        "canonical": "#33454B",
+        "tonalRamp": [
+          "#1F2A2E",
+          "#374A50",
+          "#4E6A73",
+          "#668A96",
+          "#88A4AE",
+          "#AABFC5",
+          "#CDD9DD",
+          "#F0F3F5"
+        ]
+      },
+      "apagado": {
+        "role": "neutral",
+        "displayName": "Apagado",
+        "canonical": "#64757B",
+        "tonalRamp": [
+          "#22282A",
+          "#3C474A",
+          "#57656A",
+          "#71848B",
+          "#90A0A5",
+          "#B1BBBF",
+          "#D1D7D9",
+          "#F1F3F4"
+        ]
+      },
+      "acento": {
+        "role": "primary",
+        "displayName": "Verde liquen",
+        "canonical": "#0E6A63",
+        "tonalRamp": [
+          "#09443F",
+          "#10776F",
+          "#17AB9F",
+          "#1DDECF",
+          "#4EE8DC",
+          "#82EEE6",
+          "#B5F5F0",
+          "#E8FCFB"
+        ]
+      },
+      "acento-suave": {
+        "role": "primary",
+        "displayName": "Liquen lavado",
+        "canonical": "#D6E8E5",
+        "tonalRamp": [
+          "#1B312D",
+          "#305650",
+          "#457C73",
+          "#5AA195",
+          "#7FB7AE",
+          "#A4CCC5",
+          "#C9E1DD",
+          "#EFF6F5"
+        ]
+      },
+      "severo": {
+        "role": "secondary",
+        "displayName": "Óxido de alerta",
+        "canonical": "#D2492A",
+        "tonalRamp": [
+          "#40160D",
+          "#702716",
+          "#A13820",
+          "#D1492A",
+          "#DE7158",
+          "#E79A89",
+          "#F1C3B9",
+          "#FBEDEA"
+        ]
+      },
+      "severo-suave": {
+        "role": "secondary",
+        "displayName": "Óxido lavado",
+        "canonical": "#F7E0D8",
+        "tonalRamp": [
+          "#3F1A0D",
+          "#702E17",
+          "#A04221",
+          "#D1562B",
+          "#DD7B59",
+          "#E7A189",
+          "#F1C8B9",
+          "#FBEEEA"
+        ]
+      },
+      "severo-texto": {
+        "role": "secondary",
+        "displayName": "Óxido profundo",
+        "canonical": "#9A2F17",
+        "tonalRamp": [
+          "#43140A",
+          "#752412",
+          "#A83319",
+          "#DB4321",
+          "#E56C51",
+          "#ED9783",
+          "#F4C1B6",
+          "#FCECE9"
+        ]
+      },
+      "frio": {
+        "role": "tertiary",
+        "displayName": "Azul de tope frío",
+        "canonical": "#4C7FB8",
+        "tonalRamp": [
+          "#162537",
+          "#264261",
+          "#375E8A",
+          "#477BB4",
+          "#7098C6",
+          "#99B6D7",
+          "#C3D4E7",
+          "#EDF2F8"
+        ]
+      },
+      "calido": {
+        "role": "tertiary",
+        "displayName": "Ocre templado",
+        "canonical": "#C98A3C",
+        "tonalRamp": [
+          "#3C2911",
+          "#6A471D",
+          "#97662A",
+          "#C58537",
+          "#D4A162",
+          "#E0BC90",
+          "#EDD8BD",
+          "#F9F3EB"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Título de página",
+        "purpose": "Solo el h1 de cada página (Fraunces 600)."
+      },
+      "headline": {
+        "displayName": "Subtítulo",
+        "purpose": "h2/h3 y nombre del visor en la barra lateral (Source Sans 3 700)."
+      },
+      "body": {
+        "displayName": "Cuerpo",
+        "purpose": "Texto de contexto y expansores."
+      },
+      "lede": {
+        "displayName": "Entradilla",
+        "purpose": "Una frase bajo el título, tinta media, máx. 68ch."
+      },
+      "nota": {
+        "displayName": "Nota",
+        "purpose": "Ayuda y advertencias al lado del dato, apagado, máx. 75ch."
+      },
+      "label": {
+        "displayName": "Etiqueta de tabla",
+        "purpose": "Encabezados de la ficha."
+      },
+      "datos": {
+        "displayName": "Datos medidos",
+        "purpose": "Valores, coordenadas y horas UTC con cifras tabulares, donde la plataforma lo permite."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": [
+      {
+        "name": "columnas-apiladas",
+        "value": "640px",
+        "note": "Umbral de st.columns de Streamlit, no fijado por el visor."
+      }
+    ],
+    "colorScales": [
+      {
+        "name": "ir-realzado",
+        "stops": [
+          [
+            0,
+            "#0C1518"
+          ],
+          [
+            0.1,
+            "#2B4A73"
+          ],
+          [
+            0.25,
+            "#4C7FB8"
+          ],
+          [
+            0.38,
+            "#A9C7E6"
+          ],
+          [
+            0.47,
+            "#F7F9FA"
+          ],
+          [
+            0.62,
+            "#AEBBBF"
+          ],
+          [
+            1,
+            "#26343A"
+          ]
+        ],
+        "purpose": "GOES infrarrojo (190–300 K); sin rojo."
+      },
+      {
+        "name": "visible",
+        "stops": [
+          [
+            0,
+            "#1A2428"
+          ],
+          [
+            1,
+            "#F7F9FA"
+          ]
+        ],
+        "purpose": "Bandas GOES 1–6."
+      },
+      {
+        "name": "secuencial",
+        "stops": [
+          [
+            0,
+            "#FFFFFF"
+          ],
+          [
+            0.35,
+            "#D6E8E5"
+          ],
+          [
+            0.7,
+            "#0E6A63"
+          ],
+          [
+            1,
+            "#0C1518"
+          ]
+        ],
+        "purpose": "Magnitudes ERA5 e índices no centrados."
+      },
+      {
+        "name": "divergente",
+        "stops": [
+          [
+            0,
+            "#4C7FB8"
+          ],
+          [
+            0.5,
+            "#F7F9FA"
+          ],
+          [
+            1,
+            "#C98A3C"
+          ]
+        ],
+        "purpose": "Variables con signo, centradas en cero."
+      }
+    ],
+    "platformLimits": [
+      "st.dataframe no permite fuente por columna: la hora UTC de la bitácora sale en sans.",
+      "El frontend de Streamlit ignora fondo y fuente de la plantilla plotly; graficos._estilo los fija en el layout de cada figura.",
+      "st.html sanea el SVG: la regla de tiempo es HTML y CSS."
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón primario",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal (Empezar recorrido, Siguiente).",
+      "html": "<button class=\"ds-btn-primary\">Empezar recorrido</button>",
+      "css": ".ds-btn-primary{background:#0E6A63;color:#fff;border:1px solid #0E6A63;border-radius:6px;padding:8px 16px;font:600 0.95rem 'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;cursor:pointer;width:100%} .ds-btn-primary:hover{background:#0B5852} .ds-btn-primary:focus-visible{outline:2px solid #0E6A63;outline-offset:2px}"
+    },
+    {
+      "name": "Botón secundario",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Acción secundaria (Anterior).",
+      "html": "<button class=\"ds-btn-sec\">Anterior</button>",
+      "css": ".ds-btn-sec{background:#fff;color:#0C1518;border:1px solid #C9D3D6;border-radius:6px;padding:8px 16px;font:400 0.95rem 'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;cursor:pointer} .ds-btn-sec:hover{border-color:#0E6A63;color:#0E6A63} .ds-btn-sec:focus-visible{outline:2px solid #0E6A63;outline-offset:2px}"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Hoja blanca con filete para gráficos, tablas y expansores, sobre la niebla.",
+      "html": "<div class=\"ds-mesa\"><div class=\"ds-panel\">GOES-16 · infrarrojo 10,3 µm · 20:10 UTC</div><p class=\"ds-nota\">Sin corrección de paralaje.</p></div>",
+      "css": ".ds-mesa{background:#E4E9EB;padding:16px;font-family:'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;color:#0C1518} .ds-panel{background:#fff;border:1px solid #C9D3D6;border-radius:6px;padding:10px 12px;font-size:15px;min-height:80px} .ds-nota{color:#64757B;font-size:0.86rem;line-height:1.45;margin:6px 0 0}"
+    },
+    {
+      "name": "Ficha de umbrales",
+      "kind": "custom",
+      "refersTo": "ficha-marca-supera",
+      "description": "Índices contra el umbral chileno; rojo solo si supera un umbral calibrado.",
+      "html": "<table class=\"ds-ficha\"><thead><tr><th>Índice</th><th class=\"r\">extremo zona</th><th class=\"r\">Umbral Chile o referencia</th><th></th></tr></thead><tbody><tr class=\"supera\"><td>VGP₀₋₁ <span class=\"u\">m/s²</span></td><td class=\"num v\">0,232</td><td class=\"num\">&gt; 0,1</td><td><span class=\"m\">supera</span></td></tr><tr class=\"bajo\"><td>STP left-mover</td><td class=\"num v\">−0,268</td><td class=\"num\">&lt; −0,3</td><td><span class=\"m\">bajo</span></td></tr><tr><td>SHERBS3</td><td class=\"num v\">1,27</td><td class=\"num\"><span class=\"ref\">Chile usa SHERBE ≥ 1</span></td><td></td></tr></tbody></table>",
+      "css": ".ds-ficha{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid #C9D3D6;border-radius:6px;overflow:hidden;font:0.92rem 'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;color:#0C1518} .ds-ficha th{text-align:left;font-weight:600;color:#64757B;font-size:0.78rem;border-bottom:1px solid #C9D3D6;padding:4px 6px} .ds-ficha th.r{text-align:right} .ds-ficha td{padding:6px;border-bottom:1px solid #F1F4F5} .ds-ficha .u{color:#64757B;font-size:0.86rem} .ds-ficha td.num{font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap} .ds-ficha .ref{font-family:'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;color:#64757B;font-size:0.8rem} .ds-ficha tr.supera td.v{color:#D2492A;font-weight:600} .ds-ficha .m{display:inline-block;min-width:4.6em;font-size:0.74rem;font-weight:600;padding:1px 6px;border-radius:3px;text-align:center} .ds-ficha tr.supera .m{background:#F7E0D8;color:#9A2F17} .ds-ficha tr.bajo .m{background:#F1F4F5;color:#64757B}"
+    },
+    {
+      "name": "Regla de tiempo",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Día con eventos como triángulos rojos y la hora elegida en acento; compartida por todas las páginas.",
+      "html": "<div class=\"ds-regla\"><div class=\"ds-pista\"><span class=\"ds-ev\" style=\"left:79%\"></span><span class=\"ds-ev\" style=\"left:84%\"></span><span class=\"ds-ev\" style=\"left:91%\"></span><span class=\"ds-ahora\" style=\"left:84%\"></span></div><div class=\"ds-horas\"><span>00:00</span><span>23:50 UTC</span></div></div>",
+      "css": ".ds-regla{background:#E4E9EB;padding:12px;width:220px} .ds-pista{position:relative;height:18px;margin:0 9px;border-bottom:1px solid #C9D3D6} .ds-ev{position:absolute;bottom:0;width:0;height:0;transform:translateX(-5px);border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid #D2492A} .ds-ahora{position:absolute;bottom:-4px;width:2px;height:20px;background:#0E6A63;transform:translateX(-1px);border-radius:1px} .ds-horas{display:flex;justify-content:space-between;margin:3px 9px 0;font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;font-size:0.72rem;color:#64757B}"
+    },
+    {
+      "name": "Tarjeta de paso",
+      "kind": "card",
+      "refersTo": "paso",
+      "description": "Paso del recorrido guiado en la barra lateral.",
+      "html": "<div class=\"ds-paso\"><b>PASO 2/6 · 18:30 UTC</b><br>El cizalle 0–1 km es el que discrimina en Chile.</div>",
+      "css": ".ds-paso{background:#fff;border:1px solid #C9D3D6;border-radius:6px;padding:10px 12px;font:0.92rem/1.45 'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;color:#0C1518;max-width:240px} .ds-paso b{font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;font-weight:600;color:#0E6A63;font-size:0.8rem}"
+    }
+  ],
+  "narrative": {
+    "northStar": "El cuaderno de campo",
+    "overview": "El visor es la libreta de un caso meteorológico: una mesa de niebla clara sobre la que se apoyan hojas blancas con filete fino (mapas, sondeos, tablas), cada una con su dato medido en tipografía de máquina y su nota al margen en gris. Nada flota ni brilla; la jerarquía la dan el papel, el filete y dos colores con trabajo asignado: el verde azulado señala lo que el usuario eligió o puede accionar, el rojo señala tornados del catálogo y umbrales chilenos.\n\nDensidad media-alta, de herramienta de trabajo: dos columnas en escritorio, explicación siempre al lado del dato y nunca encima. La identidad viene del sitio del proyecto (`web/index.html`, tema claro) y la construye Streamlit con tres capas: `.streamlit/config.toml` (widgets y fuentes), la plantilla plotly `cuaderno` y el CSS fino de `scripts/visor_app/tema.py`.",
+    "keyCharacteristics": [
+      "Fondo niebla en página y cabecera; superficies blancas con filete de 1 px y radio de 6 px.",
+      "Dos colores semánticos estrictos: acento = elección/acción, severo = eventos y umbral chileno.",
+      "Fraunces solo en el título de página; Source Sans 3 para todo lo demás; JetBrains Mono para cifras, coordenadas y horas.",
+      "Cifras con coma decimal y dígitos tabulares.",
+      "Sin sombras: profundidad por tono (niebla, blanco) y filete."
+    ],
+    "rules": [
+      {
+        "name": "La regla del rojo ganado",
+        "body": "El rojo solo aparece por un evento del catálogo o por un umbral chileno calibrado (su línea o un valor que lo cruza). Los índices sin umbral calibrado (SRH₀₋₁, SHERBS3, LCL, cizalle 0–6 km) no se pintan: llevan su referencia en texto apagado.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla del acento que responde",
+        "body": "En la interfaz, el verde azulado marca solo lo elegido o accionable. En los gráficos puede ser el tono de la escala secuencial y del punto elegido, nunca un estado de alarma.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla del infrarrojo sin rojo",
+        "body": "La escala IR realzada va de tinta (más frío, ≲ 200 K) por azules y blanco de nube a gris y suelo oscuro; no usa rojo, porque el rojo es de los eventos.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla de una sola serif",
+        "body": "Fraunces aparece una vez por página, en el h1.",
+        "section": "typography"
+      },
+      {
+        "name": "La regla del dato en mono",
+        "body": "Lo medido (valores, coordenadas, horas UTC) va en JetBrains Mono con cifras tabulares donde la plataforma lo permite; la prosa y las unidades no.",
+        "section": "typography"
+      },
+      {
+        "name": "La regla de la coma",
+        "body": "Separador decimal coma en ficha y gráficos (`separators=\", \"` en plotly; `_num` en la ficha), con 3 cifras significativas.",
+        "section": "typography"
+      },
+      {
+        "name": "La regla de la hoja sobre la mesa",
+        "body": "Todo contenido de datos (gráfico, tabla, ficha, expansor) es una hoja blanca con filete sobre la niebla; el texto corrido va directo sobre la niebla, sin hoja.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** poner todo dato sobre una hoja blanca con filete #C9D3D6 y radio 6 px encima de la niebla #E4E9EB.",
+      "**Do** reservar el rojo #D2492A para eventos del catálogo y umbrales chilenos calibrados; el resto de los índices lleva su referencia en texto apagado.",
+      "**Do** usar el verde azulado #0E6A63 para lo elegido y lo accionable.",
+      "**Do** escribir cifras con coma decimal y en JetBrains Mono tabular cuando la plataforma lo permita.",
+      "**Do** usar frío #4C7FB8 y cálido #C98A3C para escalas divergentes centradas en cero.",
+      "**Do** fijar fondo y fuente en el layout de cada figura plotly (`graficos._estilo`)."
+    ],
+    "donts": [
+      "**Don't** usar Fraunces fuera del h1 de página.",
+      "**Don't** meter rojo en escalas de color (el IR realzado y la divergente no lo llevan).",
+      "**Don't** pintar en rojo un índice sin umbral chileno calibrado ni usar umbrales norteamericanos.",
+      "**Don't** añadir sombras: la profundidad es tonal."
+    ]
+  }
+}
