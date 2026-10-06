@@ -5,6 +5,7 @@ eventos del catálogo y para las líneas de umbral chileno; el verde azulado mar
 """
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -14,6 +15,9 @@ from plotly.subplots import make_subplots
 import comun
 from visor_app import tema
 from visor_app.estado import Punto
+
+if TYPE_CHECKING:  # capas importa graficos (Encuadre): solo se usa para anotar
+    from visor_app.capas import Capa
 
 
 def _estilo(fig: go.Figure) -> go.Figure:
@@ -127,6 +131,157 @@ def mapa(
         clickmode="event+select", uirevision="mapa",
     )  # fmt: skip
     return _estilo(fig)
+
+
+# --- Grilla de Mapas -----------------------------------------------------------------------------
+def disposicion(n: int) -> tuple[int, int]:
+    """Filas y columnas de la grilla para ``n`` paneles: 1×1, 1×2, 2×2 (3–4) o 2×3 (5–6)."""
+    if n <= 2:
+        return 1, max(n, 1)
+    if n <= 4:
+        return 2, 2
+    return 2, 3
+
+
+def z_fondo(c: "Capa") -> np.ndarray:
+    """La matriz de ``c`` como entra a su traza: el RGB pasa a latitud creciente para ``go.Image``."""
+    if c.es_rgb and c.lat[0] > c.lat[-1]:
+        return c.z[::-1]
+    return c.z
+
+
+def _fondo(c: "Capa", barra: dict) -> go.Heatmap | go.Image:
+    """Traza de fondo de un panel: imagen RGB o mapa de calor con su barra de color."""
+    if c.es_rgb:
+        lat = c.lat[::-1] if c.lat[0] > c.lat[-1] else c.lat
+        return go.Image(
+            z=z_fondo(c), x0=float(c.lon[0]), dx=float(c.lon[1] - c.lon[0]), y0=float(lat[0]),
+            dy=float(lat[1] - lat[0]), hovertemplate="%{y:.2f}°, %{x:.2f}°<extra></extra>",
+        )  # fmt: skip
+    return go.Heatmap(
+        z=c.z, x=c.lon, y=c.lat, colorscale=c.escala, zmin=c.rango[0], zmax=c.rango[1],
+        zmid=0 if c.centro else None, colorbar=barra,
+        hovertemplate="%{y:.2f}°, %{x:.2f}°<br><b>%{z:.3g}</b> " + c.unidad + "<extra></extra>",
+    )  # fmt: skip
+
+
+def _umbral(c: "Capa", ancho: float) -> go.Contour:
+    """Línea del umbral chileno de ``c`` en rojo."""
+    return go.Contour(
+        z=c.z, x=c.lon, y=c.lat, showscale=False, hoverinfo="skip",
+        contours={"start": c.umbral, "end": c.umbral, "size": 1, "coloring": "none"},
+        line={"color": tema.SEVERE, "width": ancho},
+    )  # fmt: skip
+
+
+def _layout(fig: go.Figure, nombre: str) -> Any:  # noqa: ANN401
+    """Propiedad ``nombre`` del layout de ``fig`` (los stubs de plotly no tipan ``layout[...]``)."""
+    return fig.layout[nombre]
+
+
+def grilla(
+    capas: list["Capa"], contornos: list["Capa | None"], enc: Encuadre, costa: tuple[list, list],
+    *, eventos: pd.DataFrame | None = None, punto: Punto | None = None,
+    clic: tuple[np.ndarray, np.ndarray] | None = None, viento: tuple[list, list] | None = None,
+) -> tuple[go.Figure, list[int]]:  # fmt: skip
+    """Paneles en una figura con los ejes compartidos: el zoom y el desplazamiento van juntos.
+
+    ``contornos[i]`` es un campo ERA5 que se dibuja como isolíneas sobre el panel ``i`` (o ``None``).
+    ``clic`` es la grilla (lat, lon) de marcadores invisibles que hace clicable cada panel. Devuelve la
+    figura y el índice de la traza de fondo de cada panel, para animarla con ``go.Frame``.
+    """
+    filas, cols = disposicion(len(capas))
+    fig = make_subplots(
+        rows=filas, cols=cols, horizontal_spacing=0.09 if cols > 1 else 0.02,
+        vertical_spacing=0.08, subplot_titles=[c.titulo for c in capas],
+    )  # fmt: skip
+    fig.update_layout(template="cuaderno")
+    fondos: list[int] = []
+    for i, (c, cont) in enumerate(zip(capas, contornos, strict=True)):
+        r, k = i // cols + 1, i % cols + 1
+        xd, yd = (_layout(fig, f"{eje}axis{i + 1 if i else ''}").domain for eje in "xy")
+        barra = {
+            "title": {"text": c.unidad, "side": "right"}, "thickness": 10, "outlinewidth": 0,
+            "x": xd[1] + 0.004, "xanchor": "left", "y": (yd[0] + yd[1]) / 2, "len": (yd[1] - yd[0]) * 0.9,
+        }  # fmt: skip
+        fondos.append(len(fig.data))  # pyright: ignore[reportArgumentType]
+        fig.add_trace(_fondo(c, barra), row=r, col=k)
+        if c.umbral is not None and not c.es_rgb:
+            fig.add_trace(_umbral(c, 1.6), row=r, col=k)
+        if cont is not None:
+            fig.add_trace(
+                go.Contour(
+                    z=cont.z, x=cont.lon, y=cont.lat, showscale=False, hoverinfo="skip", ncontours=8,
+                    contours={"coloring": "lines", "showlabels": True,
+                              "labelfont": {"size": 10, "color": tema.INK_2}},
+                    colorscale=[[0, tema.INK_2], [1, tema.INK_2]], line={"width": 0.8},
+                ),
+                row=r, col=k,
+            )  # fmt: skip
+            if cont.umbral is not None:
+                fig.add_trace(_umbral(cont, 2.0), row=r, col=k)
+        xs, ys = costa
+        fig.add_trace(
+            go.Scatter(x=xs, y=ys, mode="lines", line={"color": tema.INK, "width": 0.9},
+                       hoverinfo="skip"),
+            row=r, col=k,
+        )  # fmt: skip
+        if viento is not None:
+            fig.add_trace(
+                go.Scatter(x=viento[0], y=viento[1], mode="lines", hoverinfo="skip",
+                           line={"color": tema.INK_2, "width": 1}),
+                row=r, col=k,
+            )  # fmt: skip
+        if clic is not None:
+            LA, LO = np.meshgrid(clic[0], clic[1], indexing="ij")
+            fig.add_trace(
+                go.Scatter(
+                    x=LO.ravel(), y=LA.ravel(), mode="markers", hoverinfo="skip",
+                    marker={"size": 9, "color": "rgba(0,0,0,0)"},
+                    selected={"marker": {"opacity": 0}}, unselected={"marker": {"opacity": 0}},
+                ),
+                row=r, col=k,
+            )  # fmt: skip
+        if eventos is not None and len(eventos):
+            fig.add_trace(
+                go.Scatter(
+                    x=eventos["lon"], y=eventos["lat"], mode="markers", text=eventos["texto"],
+                    hoverinfo="text",
+                    marker={"symbol": "triangle-up", "size": 11, "color": tema.SEVERE,
+                            "line": {"color": tema.SURFACE, "width": 1.2}},
+                    unselected={"marker": {"opacity": 1}},
+                ),
+                row=r, col=k,
+            )  # fmt: skip
+        if punto is not None:
+            fig.add_trace(
+                go.Scatter(
+                    x=[punto.lon], y=[punto.lat], mode="markers", hoverinfo="text",
+                    text=[f"<b>{punto.nombre}</b><br>{punto.lat:.2f}°, {punto.lon:.2f}°"],
+                    marker={"symbol": "circle-open", "size": 20, "color": tema.ACCENT,
+                            "line": {"width": 2.5}},
+                    unselected={"marker": {"opacity": 1}},
+                ),
+                row=r, col=k,
+            )  # fmt: skip
+    for i, a in enumerate(
+        _layout(fig, "annotations")
+    ):  # títulos alineados a la izquierda del panel
+        a.update(x=_layout(fig, f"xaxis{i + 1 if i else ''}").domain[0], xanchor="left",
+                 font={"family": tema.SANS, "size": 13, "color": tema.INK})  # fmt: skip
+    fig.update_xaxes(range=[enc.oeste, enc.este], showgrid=False, ticksuffix="°", title=None)
+    fig.update_yaxes(range=[enc.sur, enc.norte], showgrid=False, ticksuffix="°", title=None)
+    # Todos los ejes igualan a los del primer panel (zoom sincronizado); la proporción va solo en el
+    # primero, porque scaleanchor y matches en el mismo eje chocan en plotly.
+    for i in range(1, filas * cols):
+        _layout(fig, f"xaxis{i + 1}").matches = "x"
+        _layout(fig, f"yaxis{i + 1}").matches = "y"
+    fig.update_layout(
+        yaxis={"scaleanchor": "x", "scaleratio": enc.aspecto},
+        height=640 if filas == 1 else 470 * filas, showlegend=False, dragmode="pan",
+        clickmode="event+select", uirevision="grilla", margin={"t": 56, "r": 48},
+    )  # fmt: skip
+    return _estilo(fig), fondos
 
 
 # --- Sondeo --------------------------------------------------------------------------------------
