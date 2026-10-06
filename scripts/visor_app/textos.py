@@ -71,6 +71,13 @@ AYUDA = {
         "**C08 − C13 (vapor de agua menos ventana)**. Cerca de 0 o positivo: el tope alcanza o "
         "supera la tropopausa (topes penetrantes). Muy negativo: nube baja o aire seco en altura."
     ),
+    "airmass": (
+        "**RGB Airmass**: rojo = C08 − C10, verde = C12 − C13, azul = C08 invertido. Solo usa "
+        "infrarrojo, así que sirve de día y de noche. Rojizo: aire seco bajado de la estratósfera "
+        "(intrusión seca, cerca del chorro). Verde oliva: masa de aire cálida y húmeda. Azul y "
+        "violeta: aire frío polar. Blanco: topes altos y fríos. Sirve para ubicar la nube coma y el "
+        "borde de la intrusión seca, donde suele organizarse la convección."
+    ),
 }
 
 NOTA_AUSTRAL = (
@@ -138,8 +145,7 @@ class Paso:
     hora: str  # "HH:MM" UTC; se usa la imagen o la hora ERA5 más cercana
     texto: str
     evento: str | None = None  # parte del nombre del lugar en el catálogo
-    era5: str | None = None  # variable de la página Mapas
-    goes: str | None = None  # producto GOES de la página Mapas
+    paneles: tuple[str, ...] = ()  # claves de productos.catalogo para la grilla de Mapas
     extra: dict[str, str] = field(default_factory=dict)
 
 
@@ -154,13 +160,13 @@ RECORRIDOS = {
             "mapas", "18:30",
             "El cizalle 0–1 km es el que discrimina en Chile. Busca la franja sobre 12 m/s (línea "
             "roja) pegada a la costa y al pie de monte, donde ocurrirán los tornados.",
-            evento="Ángeles", era5="cizalle_01", goes="C13",
+            evento="Ángeles", paneles=("idx:cizalle_01", "goes:C13"),
         ),
         Paso(
             "mapas", "19:00",
             "Con algo de CAPE, el cizalle se vuelve VGP: donde supera 0,1 m/s² hay vorticidad lista "
             "para ser inclinada. A esta hora se reporta el primer tornado, en Quilelto.",
-            evento="Quilelto", era5="vgp_01", goes="C13",
+            evento="Quilelto", paneles=("idx:vgp_01", "goes:C13"),
         ),
         Paso(
             "sondeo", "20:00",
@@ -172,7 +178,7 @@ RECORRIDOS = {
             "mapas", "21:50",
             "Siete minutos antes del EF2 de Los Ángeles. A la derecha, el enfriamiento del tope en "
             "10 minutos: los azules marcan topes que todavía suben.",
-            evento="Ángeles", era5="srh_01", goes="dT",
+            evento="Ángeles", paneles=("idx:srh_01", "goes:dT"),
         ),
         Paso(
             "series", "21:50",

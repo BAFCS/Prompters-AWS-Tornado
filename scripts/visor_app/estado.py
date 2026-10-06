@@ -6,6 +6,7 @@ restaura antes de dibujar el widget. El recorrido escribe en esas mismas claves 
 que corre antes de que se dibuje ningún widget.
 """
 
+import dataclasses
 import datetime as dt
 from dataclasses import dataclass
 
@@ -95,6 +96,55 @@ def elige_punto(p: Punto) -> None:
     st.session_state["punto"] = p
 
 
+# --- Paneles de la página Mapas ------------------------------------------------------------------
+MAX_PANELES = 6
+
+
+@dataclass(frozen=True)
+class Panel:
+    """Un panel de la grilla de Mapas: producto del catálogo y sus opciones."""
+
+    id: int  # estable mientras el panel existe: nombra las claves de sus widgets
+    clave: str  # clave de ``productos.catalogo``
+    nivel: float | None = None  # hPa, solo productos de niveles de presión
+    contorno: str | None = None  # clave ERA5 dibujada como isolíneas (solo paneles GOES)
+
+
+def paneles() -> list[Panel] | None:
+    """Los paneles de la grilla, o ``None`` si todavía no se fijaron en esta sesión."""
+    ps = st.session_state.get("paneles")
+    return None if ps is None else list(ps)
+
+
+def fija_paneles(ps: list[Panel]) -> None:
+    """Reemplaza los paneles de la grilla."""
+    st.session_state["paneles"] = list(ps)
+
+
+def nuevo_panel(clave: str) -> Panel:
+    """Un panel con ``clave`` y un id que no se repite en la sesión."""
+    n = st.session_state.get("_sig_panel", 0)
+    st.session_state["_sig_panel"] = n + 1
+    return Panel(n, clave)
+
+
+def agrega_panel(clave: str) -> None:
+    """Callback: agrega un panel con ``clave`` al final (si no se llegó al tope)."""
+    ps = paneles() or []
+    if len(ps) < MAX_PANELES:
+        fija_paneles([*ps, nuevo_panel(clave)])
+
+
+def quita_panel(id_: int) -> None:
+    """Callback: quita el panel ``id_``."""
+    fija_paneles([p for p in paneles() or [] if p.id != id_])
+
+
+def cambia_panel(id_: int, **cambios: object) -> None:
+    """Callback: cambia campos del panel ``id_`` (``clave``, ``nivel`` o ``contorno``)."""
+    fija_paneles([dataclasses.replace(p, **cambios) if p.id == id_ else p for p in paneles() or []])
+
+
 def ir_a_evento(ev: pd.Series) -> None:
     """Callback: lleva la regla de tiempo a la hora del evento ``ev`` y lo fija como punto."""
     elige_punto(Punto(float(ev["lat"]), float(ev["lon"]), str(ev["lugar"]), str(ev["id"])))
@@ -116,7 +166,7 @@ def paso_actual() -> int | None:
 def aplica_paso(dia: dt.date, k: int | None, eventos: pd.DataFrame) -> None:
     """Callback: activa el paso ``k`` del recorrido (o lo termina con ``None``).
 
-    Mueve la hora, el punto, las capas de la página Mapas y pide el cambio de página; el cambio
+    Mueve la hora, el punto, los paneles de la página Mapas y pide el cambio de página; el cambio
     efectivo lo hace la página de entrada (``st.switch_page`` no funciona dentro de un callback).
     """
     pasos = recorrido(dia)
@@ -133,8 +183,6 @@ def aplica_paso(dia: dt.date, k: int | None, eventos: pd.DataFrame) -> None:
         if len(filas):
             ev = filas.iloc[0]
             elige_punto(Punto(float(ev["lat"]), float(ev["lon"]), str(ev["lugar"]), str(ev["id"])))
-    if p.era5:
-        fija("era5_var", p.era5)
-    if p.goes:
-        fija("goes_prod", p.goes)
+    if p.paneles:
+        fija_paneles([nuevo_panel(c) for c in p.paneles])
     st.session_state["ir_a"] = p.pagina
