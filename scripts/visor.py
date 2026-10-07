@@ -35,6 +35,7 @@ from visor_app import (
     p_series,
     p_sondeo,
     tema,
+    textos,
 )
 
 st.set_page_config(
@@ -187,7 +188,7 @@ if p is not None:
     )
 
 # --- Recorrido guiado ----------------------------------------------------------------------------
-pasos = estado.recorrido(fecha)
+pasos = textos.RECORRIDOS.get(fecha, ())
 if pasos:
     barra.divider()
     k = estado.paso_actual()

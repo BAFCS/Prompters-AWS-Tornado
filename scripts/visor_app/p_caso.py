@@ -144,7 +144,7 @@ def pagina() -> None:
         "marinas reportados y no proporciona una etiqueta directa de mesociclón. "
         "En la tabla, EF es una clasificación de intensidad basada en los daños observados."
     )
-    pasos = estado.recorrido(ctx.dia.fecha)
+    pasos = textos.RECORRIDOS.get(ctx.dia.fecha, ())
     if pasos and estado.paso_actual() is None:
         st.button(
             "Empezar recorrido guiado", icon=":material/play_arrow:", key="recorrido_caso",

@@ -170,11 +170,6 @@ def ir_a_evento(ev: pd.Series) -> None:
 
 
 # --- Recorrido guiado ----------------------------------------------------------------------------
-def recorrido(dia: dt.date) -> tuple[textos.Paso, ...]:
-    """Pasos del recorrido de ``dia`` (vacío si el día no tiene uno escrito)."""
-    return textos.RECORRIDOS.get(dia, ())
-
-
 def paso_actual() -> int | None:
     """Índice del paso del recorrido en curso, o ``None`` si no hay recorrido activo."""
     return st.session_state.get("paso")
@@ -186,7 +181,7 @@ def aplica_paso(dia: dt.date, k: int | None, eventos: pd.DataFrame) -> None:
     Mueve la hora, el punto, los paneles de la página Mapas y pide el cambio de página; el cambio
     efectivo lo hace la página de entrada (``st.switch_page`` no funciona dentro de un callback).
     """
-    pasos = recorrido(dia)
+    pasos = textos.RECORRIDOS.get(dia, ())
     if k is None or not pasos:
         st.session_state["paso"] = None
         return
