@@ -222,11 +222,6 @@ def instante(x: xr.DataArray) -> pd.Timestamp:
     return pd.Timestamp(str(x.values))
 
 
-def cercano(lat: np.ndarray, lon: np.ndarray, la: float, lo: float) -> tuple[int, int]:
-    """Índices (i, j) del punto de la grilla regular (``lat``, ``lon``) más cercano a (la, lo)."""
-    return int(np.abs(lat - la).argmin()), int(np.abs(lon - lo).argmin())
-
-
 def ventana(da: xr.DataArray, la: float, lo: float, radio: float) -> xr.DataArray:
     """Recorte de ``da`` a un cuadrado de ±``radio`` grados alrededor de (la, lo)."""
     lat = da["latitude"].values
