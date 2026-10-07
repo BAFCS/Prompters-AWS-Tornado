@@ -1,7 +1,7 @@
 """Estado compartido entre páginas: día, hora, punto elegido, recorrido y opciones de cada página.
 
 Streamlit borra el valor de un widget cuando su página deja de mostrarse. Para que las opciones de
-una página sobrevivan a un cambio de página, ``restore`` guarda una copia bajo ``_<clave>`` y la
+una página sobrevivan a un cambio de página, ``restore`` guarda una copia bajo ``_<key>`` y la
 restaura antes de dibujar el widget. El recorrido escribe en esas mismas claves desde un callback,
 que corre antes de que se dibuje ningún widget.
 """

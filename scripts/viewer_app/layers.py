@@ -170,23 +170,7 @@ def wind_850(
     for x0, y0, du, dv in zip(LO.ravel(), LA.ravel(), u.ravel(), v.ravel(), strict=True):
         x1, y1 = x0 + du * k, y0 + dv * k
         ang = np.arctan2(dv, du)
-        head = 0.25 * np.hypot(du, dv) * k
-        xs += [
-            x0,
-            x1,
-            x1 - head * np.cos(ang - 0.45),
-            None,
-            x1,
-            x1 - head * np.cos(ang + 0.45),
-            None,
-        ]
-        ys += [
-            y0,
-            y1,
-            y1 - head * np.sin(ang - 0.45),
-            None,
-            y1,
-            y1 - head * np.sin(ang + 0.45),
-            None,
-        ]
+        tip = 0.25 * np.hypot(du, dv) * k
+        xs += [x0, x1, x1 - tip * np.cos(ang - 0.45), None, x1, x1 - tip * np.cos(ang + 0.45), None]
+        ys += [y0, y1, y1 - tip * np.sin(ang - 0.45), None, y1, y1 - tip * np.sin(ang + 0.45), None]
     return xs, ys

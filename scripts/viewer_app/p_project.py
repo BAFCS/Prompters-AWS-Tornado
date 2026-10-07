@@ -44,7 +44,7 @@ def _links(key: str) -> None:
 def _cards(key: str, cards: list[tuple[str, Color, str, str]], n_columns: int = 2) -> None:
     """Tarjetas en una grilla: (insignia, color de la insignia, título, texto).
 
-    La grilla la arma el CSS de ``theme.py`` (clave ``tarjetas<n>_``): ``n_columns`` con ancho de sobra
+    La grilla la arma el CSS de ``theme.py`` (clave ``cards<n>_``): ``n_columns`` con ancho de sobra
     y menos columnas cuando la página es angosta, en vez de columnas que solo se apilan en teléfono.
     """
     with st.container(horizontal=True, key=f"cards{n_columns}_{key}"):

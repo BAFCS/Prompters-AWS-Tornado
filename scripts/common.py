@@ -105,7 +105,7 @@ def days(a: argparse.Namespace) -> list[dt.date]:
 
 
 def folder(region: str, source: str) -> Path:
-    """Carpeta de salida ``data/crops/<region>/<fuente>/``, creada si no existe."""
+    """Carpeta de salida ``data/crops/<region>/<source>/``, creada si no existe."""
     d = CROPS / region / source
     d.mkdir(parents=True, exist_ok=True)
     return d

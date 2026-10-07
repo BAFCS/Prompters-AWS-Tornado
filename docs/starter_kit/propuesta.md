@@ -238,7 +238,7 @@ sus widgets nativos:
 
 1. **Medir** los bytes leídos y el tiempo por día en ERA5 y GOES desde EC2, con 2–3 días de prueba.
    Con eso se confirman o ajustan el tamaño, el costo y el tiempo de las secciones 4–6.
-2. **Paquete:** `catalog`, `days`, `era5`, `goes`, `derived`, con tests. Reescribir `figs_*.py`
+2. **Paquete:** `catalogo`, `dias`, `era5`, `goes`, `derivados`, con tests. Reescribir `figs_*.py`
    sobre él y verificar que las figuras salen iguales.
 3. **Generación:** `generar_dataset.py` reanudable; probarlo en local con ~5 días.
 4. **Publicación:** resolver dónde (decisión abierta 2), generar el dataset completo en EC2 y

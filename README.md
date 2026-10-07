@@ -203,6 +203,19 @@ terminales nuevas se enteran. Si sigue sin aparecer, reinicia la sesión de tu c
 Falta el paso 5, o se ejecutó desde otra carpeta. Revisa que exista la carpeta
 `data/crops/south-central-austral/` dentro del repositorio.
 
+**Preparaste datos antes de que el código pasara a inglés (carpeta `data/recortes/`).**
+Cambiaron la carpeta, los nombres de las regiones y algunas variables. Los archivos ERA5 descargados
+sirven tal cual, así que no hace falta repetir la descarga lenta: mueve las carpetas y rehaz el resto
+con `--force` (ajusta las fechas a las que tengas).
+
+```bash
+mv data/recortes data/crops
+mv data/crops/centro-sur-austral data/crops/south-central-austral   # centro-sur → south-central, completo → full
+uv run python scripts/download_goes.py --start 2019-05-30 --force
+uv run python scripts/process_goes.py --start 2019-05-30 --force
+uv run python scripts/process_era5.py --start 2019-05-30 --force
+```
+
 **El mapa no muestra triángulos rojos de eventos ni la costa.**
 Falta el paso 4. Descarga los dos archivos, revisa que estén en la carpeta `data/` y recarga la
 página del navegador. El visor nota que los archivos son nuevos y los lee.

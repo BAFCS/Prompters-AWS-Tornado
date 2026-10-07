@@ -37,7 +37,7 @@ Con Playwright MCP (Chromium):
 
 Alterna con el botón "Cambiar a modo oscuro / claro" de la barra lateral (`theme.mode_button`); el
 vigía marca `<html data-theme>` y redibuja plotly sin recargar. Comprueba, en cada modo, que
-`document.documentElement.dataset.tema` cambió, que las figuras plotly cambiaron de fondo y que el
+`document.documentElement.dataset.theme` pasó de `light` a `dark` (o al revés), que las figuras plotly cambiaron de fondo y que el
 texto sigue legible. Ojo: `browser_emulate_media` cambia `prefers-color-scheme`, que no es lo mismo
 que el botón; prueba los dos caminos si tocaste `theme.py`.
 

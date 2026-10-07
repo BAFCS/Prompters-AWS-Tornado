@@ -39,7 +39,7 @@ import common
 STEP = 100.0  # m, resolución del perfil interpolado
 TOP = 6000.0  # m, altura máxima del perfil interpolado
 BUNKERS_DEVIATION = 7.5  # m/s, desviación de la tormenta respecto del viento medio 0–6 km
-SFC_HEIGHT = 10.0  # m, altura asignada a los datos de superficie (viento a 10 m)
+Z_10M = 10.0  # m, altura asignada a los datos de superficie (viento a 10 m)
 
 # Atributos de cada índice: descripción, unidad, umbral chileno (solo los que
 # docs/mesociclones_chile.md da como calibrados para Chile), sentido del peligro ("<" si los valores
@@ -92,8 +92,8 @@ def profile(agl: np.ndarray, field: np.ndarray, sfc: np.ndarray, heights: np.nda
     Los niveles bajo tierra (o por debajo de 10 m) se reemplazan por el valor de superficie a 10 m,
     así que el perfil arranca en el suelo y nunca usa datos extrapolados bajo los Andes.
     """
-    above = agl > SFC_HEIGHT
-    x = np.where(above, agl, SFC_HEIGHT)
+    above = agl > Z_10M
+    x = np.where(above, agl, Z_10M)
     y = np.where(above, field, sfc[None])
     return np.stack([interpolate(x, y, h) for h in heights])
 
@@ -108,7 +108,7 @@ def hourly_indices(pl: xr.Dataset, sfc: xr.Dataset) -> dict[str, np.ndarray]:
     h_sfc = interpolate(lnp, hgt, -np.log(sp))
     agl = hgt - h_sfc[None]
 
-    heights = np.arange(SFC_HEIGHT, TOP + STEP / 2, STEP)
+    heights = np.arange(Z_10M, TOP + STEP / 2, STEP)
     heights[1:] = np.round(heights[1:] / STEP) * STEP  # 10, 100, 200, …, 6000 m
     u = profile(agl, pl["u"].values, sfc["10u"].values, heights)
     v = profile(agl, pl["v"].values, sfc["10v"].values, heights)
@@ -129,8 +129,8 @@ def hourly_indices(pl: xr.Dataset, sfc: xr.Dataset) -> dict[str, np.ndarray]:
         return u[s].mean(axis=0), v[s].mean(axis=0)
 
     # Bunkers (2000): viento medio 0–6 km ± 7,5 m/s perpendicular al cizalle (0–0,5 → 5,5–6 km).
-    um, vm = mean(SFC_HEIGHT, 6000)
-    ub, vb = mean(SFC_HEIGHT, 500)
+    um, vm = mean(Z_10M, 6000)
+    ub, vb = mean(Z_10M, 500)
     ut, vt = mean(5500, 6000)
     su, sv = ut - ub, vt - vb
     mod = np.maximum(np.hypot(su, sv), 1e-6)
@@ -147,7 +147,7 @@ def hourly_indices(pl: xr.Dataset, sfc: xr.Dataset) -> dict[str, np.ndarray]:
     c01, c03, c06 = shear(1000), shear(3000), shear(6000)
     s01 = srh(1000)
     lcl = np.maximum(125.0 * (sfc["2t"].values - sfc["2d"].values), 0.0)
-    g03 = (t[0] - t[level_index(3000)]) / ((heights[level_index(3000)] - SFC_HEIGHT) / 1000)
+    g03 = (t[0] - t[level_index(3000)]) / ((heights[level_index(3000)] - Z_10M) / 1000)
     i7, i5 = int(np.argmin(np.abs(levels - 700))), int(np.argmin(np.abs(levels - 500)))
     g75 = (pl["t"].values[i7] - pl["t"].values[i5]) / ((hgt[i5] - hgt[i7]) / 1000)
 

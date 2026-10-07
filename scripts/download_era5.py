@@ -141,7 +141,7 @@ def read(path: str, reg: common.Region, h0: int, h1: int, block: int) -> dict:
         else:
             data = d[h0:h1, ..., si, sj]
         out = {
-            "datos": data.astype("f4"),
+            "data": data.astype("f4"),
             "time": EPOCH + common.dataset(h, "time")[h0:h1].astype("timedelta64[h]"),
             "lat": lat[si],
             "lon": lon[sj] - 360,
@@ -173,7 +173,7 @@ def save(res: dict[str, dict], out_file: Path, has_level: bool, reg: common.Regi
     if has_level:
         coords["level"] = xr.DataArray(r0["level"], dims="level", attrs={"units": "hPa"})
     ds = xr.Dataset(
-        {v: (dims, r["datos"], r["attrs"]) for v, r in res.items()},
+        {v: (dims, r["data"], r["attrs"]) for v, r in res.items()},
         coords=coords,
         attrs={
             "source": f"s3://{BUCKET}/ (ERA5, ECMWF; copia NSF NCAR, doi:10.5065/BH6N-5N20)",
@@ -195,7 +195,7 @@ def is_complete(out_file: Path, variables: list[str]) -> bool:
 def concat_parts(parts: list[dict]) -> dict:
     """Une las lecturas horarias ``parts`` de una variable en una sola, a lo largo del tiempo."""
     return parts[0] | {
-        "datos": np.concatenate([x["datos"] for x in parts]),
+        "data": np.concatenate([x["data"] for x in parts]),
         "time": np.concatenate([x["time"] for x in parts]),
     }
 

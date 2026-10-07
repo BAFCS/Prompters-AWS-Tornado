@@ -146,8 +146,8 @@ def read(path: str, v: dict, bands: list[int]) -> dict:
         for b, d in ds.items():
             n = len(plan[b][0])
             out["bands"][b] = {
-                "datos": crop(d, v, plan[b][0], raw_chunks[k : k + n]),
-                "escala": common.num(d, "scale_factor"),
+                "data": crop(d, v, plan[b][0], raw_chunks[k : k + n]),
+                "scale": common.num(d, "scale_factor"),
                 "offset": common.num(d, "add_offset"),
                 "unit": common.text(d.attrs["units"]),
                 "name": common.text(d.attrs["long_name"]),
@@ -161,9 +161,9 @@ def save(parts: list[dict], v: dict, out_file: Path, reg: common.Region) -> None
     parts = sorted(parts, key=lambda p: p["time"])
     data, encoding = {}, {}
     for b, b0 in parts[0]["bands"].items():
-        raw = np.stack([p["bands"][b]["datos"] for p in parts])
+        raw = np.stack([p["bands"][b]["data"] for p in parts])
         name = f"C{b:02d}"
-        physical = np.where(raw == -1, np.nan, raw * b0["escala"] + b0["offset"]).astype("f4")
+        physical = np.where(raw == -1, np.nan, raw * b0["scale"] + b0["offset"]).astype("f4")
         data[name] = (
             ("time", "y", "x"),
             physical,
@@ -171,7 +171,7 @@ def save(parts: list[dict], v: dict, out_file: Path, reg: common.Region) -> None
         )
         # Se vuelve a guardar como entero con la misma escala: sin pérdida respecto del original.
         encoding[name] = common.COMPRESSION | {
-            "dtype": "int16", "scale_factor": b0["escala"], "add_offset": b0["offset"], "_FillValue": -1,
+            "dtype": "int16", "scale_factor": b0["scale"], "add_offset": b0["offset"], "_FillValue": -1,
         }  # fmt: skip
     ds = xr.Dataset(
         data,
