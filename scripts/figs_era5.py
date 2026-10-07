@@ -17,8 +17,9 @@ import h5py
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import s3fs
 from matplotlib.axes import Axes
+
+import comun
 
 warnings.filterwarnings("ignore")
 matplotlib.use("Agg")
@@ -53,25 +54,18 @@ VARS = {
 HOUR = 21
 
 
-def dataset(h: h5py.File, name: str) -> h5py.Dataset:
-    """Devuelve el dataset ``name`` de ``h``, fallando si es un grupo u otro tipo de objeto."""
-    obj = h[name]
-    assert isinstance(obj, h5py.Dataset), f"{name} no es un dataset"
-    return obj
-
-
-fs = s3fs.S3FileSystem(anon=True)
+fs = comun.s3()
 D: dict[str, np.ndarray] = {}
 for nm, (code, grid, var) in VARS.items():
     t0 = time.time()
     with fs.open(BASE.format(code, grid), "rb", block_size=8 * 1024 * 1024) as f:
         h = h5py.File(f, "r")
         if "lat" not in D:
-            la, lo = dataset(h, "latitude")[:], dataset(h, "longitude")[:]
+            la, lo = comun.dataset(h, "latitude")[:], comun.dataset(h, "longitude")[:]
             i0, i1 = np.searchsorted(-la, [28, 46])
             j0, j1 = np.searchsorted(lo, [280, 295])
-            D["lat"], D["lon"], D["lev"] = la[i0:i1], lo[j0:j1] - 360, dataset(h, "level")[:]
-        D[nm] = dataset(h, var)[HOUR, :, i0:i1, j0:j1].astype("f4")
+            D["lat"], D["lon"], D["lev"] = la[i0:i1], lo[j0:j1] - 360, comun.dataset(h, "level")[:]
+        D[nm] = comun.dataset(h, var)[HOUR, :, i0:i1, j0:j1].astype("f4")
     print(f"  {nm}: {D[nm].shape} en {time.time() - t0:.0f} s")
 lev = D["lev"]
 lat, lon = D["lat"], D["lon"]
