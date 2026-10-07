@@ -71,8 +71,9 @@ class Referencia:
     url: str = ""
 
 
-# Todas salen de la sección 10 de docs/, salvo Bunkers (2000), citado en ``procesa_era5.py``, y las
-# formulaciones originales de SCP y BRN, que el documento nombra sin citar.
+# Todas salen de la sección 10 de docs/, salvo Bunkers (2000), citado en ``procesa_era5.py``, Thompson
+# et al. (2012), de quien es el STP de capa fija que calcula el visor, y la formulación del BRN, que el
+# documento nombra sin citar. Los DOI se verificaron contra doi.org (octubre de 2026).
 REFERENCIAS = {
     "era5-ncar": Referencia(
         "NSF NCAR (ERA5 en AWS)",
@@ -133,28 +134,41 @@ REFERENCIAS = {
         "Sherburn y Parker (2014)",
         "Sherburn, K. D. & Parker, M. D. (2014). Climatology and ingredients of significant severe "
         "convection in high-shear, low-CAPE environments. *Weather and Forecasting*, 29, 854–877.",
+        "https://doi.org/10.1175/WAF-D-13-00041.1",
     ),
     "thompson2003": Referencia(
         "Thompson et al. (2003)",
         "Thompson, R. L. et al. (2003). Close proximity soundings within supercell environments "
         "obtained from the Rapid Update Cycle. *Weather and Forecasting*, 18, 1243–1261. Formulación "
         "original del STP y del SCP.",
+        "https://doi.org/10.1175/1520-0434(2003)018<1243:CPSWSE>2.0.CO;2",
+    ),
+    "thompson2012": Referencia(
+        "Thompson et al. (2012)",
+        "Thompson, R. L., Smith, B. T., Grams, J. S., Dean, A. R. & Broyles, C. (2012). Convective modes "
+        "for significant severe thunderstorms in the contiguous United States. Part II: Supercell and "
+        "QLCS tornado environments. *Weather and Forecasting*, 27, 1136–1154. STP de capa fija y SCP "
+        "de capa efectiva.",
+        "https://doi.org/10.1175/WAF-D-11-00116.1",
     ),
     "rasmussen1998": Referencia(
         "Rasmussen y Blanchard (1998)",
         "Rasmussen, E. N. & Blanchard, D. O. (1998). A baseline climatology of sounding-derived "
         "supercell and tornado forecast parameters. *Weather and Forecasting*, 13, 1148–1164. "
         "Formulación original del VGP.",
+        "https://doi.org/10.1175/1520-0434(1998)013<1148:ABCOSD>2.0.CO;2",
     ),
     "bunkers2000": Referencia(
         "Bunkers et al. (2000)",
         "Bunkers, M. J. et al. (2000). Predicting supercell motion using a new hodograph technique. "
         "*Weather and Forecasting*, 15, 61–79.",
+        "https://doi.org/10.1175/1520-0434(2000)015<0061:PSMUAN>2.0.CO;2",
     ),
     "weisman1982": Referencia(
         "Weisman y Klemp (1982)",
         "Weisman, M. L. & Klemp, J. B. (1982). The dependence of numerically simulated convective storms "
         "on vertical wind shear and buoyancy. *Monthly Weather Review*, 110, 504–520. Formulación del BRN.",
+        "https://doi.org/10.1175/1520-0493(1982)110<0504:TDONSC>2.0.CO;2",
     ),
     "markowski2010": Referencia(
         "Markowski y Richardson (2010)",
@@ -666,8 +680,9 @@ VARIABLES = (
         importa="Es el índice compuesto estándar para tornados significativos. El STP clásico no habría "
         "detectado el brote de 2019: recalibrarlo con datos chilenos sería un resultado publicable.",
         formula=r"\mathrm{STP} = \frac{\mathrm{CAPE}}{1500}\cdot\frac{2000 - \mathrm{LCL}}{1000}\cdot\frac{\mathrm{SRH}_{0\text{–}1}}{150}\cdot\frac{\mathrm{BWD}_{0\text{–}6}}{20}",
-        calculo="El término del LCL se acota entre 0 y 1; el del cizalle vale 0 bajo 12,5 m/s y se "
-        "satura en 30 m/s. **Aproximación del visor**: usa la CAPE de ERA5 y omite el término de CIN.",
+        calculo="Es la versión de capa fija de Thompson et al. (2012). El término del LCL vale 1 bajo "
+        "1000 m y 0 sobre 2000 m; el del cizalle vale 0 bajo 12,5 m/s y se satura en 30 m/s. "
+        "**Aproximación del visor**: usa la CAPE de ERA5 y omite el término de CIN, (200 + CIN)/150.",
         umbral="≤ −0,3 con la rama *left-mover* (Marín et al. 2024), no el +1 norteamericano. Aplicarlo a "
         "esta aproximación sin CIN requiere validación.",
         cuidado="Con la SRH *left-mover* el STP austral es negativo.",
@@ -681,9 +696,9 @@ VARIABLES = (
         "energía (HSLC), como el chileno.",
         importa="Donde la CAPE es tan baja que los índices clásicos fallan, los gradientes térmicos "
         "capturan la inestabilidad.",
-        formula=r"\mathrm{SHERBS3} = \frac{\mathrm{BWD}_{0\text{–}3}}{27\ \mathrm{m\,s^{-1}}}\cdot\frac{\Gamma_{0\text{–}3}}{5{,}2\ \mathrm{K\,km^{-1}}}\cdot\frac{\Gamma_{700\text{–}500}}{5{,}6\ \mathrm{K\,km^{-1}}}",
-        calculo="Así lo calcula el visor. La variante **SHERBE** reemplaza el cizalle 0–3 km por el "
-        "cizalle de la capa efectiva.",
+        formula=r"\mathrm{SHERBS3} = \frac{\mathrm{BWD}_{0\text{–}3}}{26\ \mathrm{m\,s^{-1}}}\cdot\frac{\Gamma_{0\text{–}3}}{5{,}2\ \mathrm{K\,km^{-1}}}\cdot\frac{\Gamma_{700\text{–}500}}{5{,}6\ \mathrm{K\,km^{-1}}}",
+        calculo="La variante **SHERBE** usa el cizalle de la capa efectiva y lo normaliza por 27 m/s; "
+        "los gradientes térmicos son los mismos.",
         umbral="SHERBE ≥ 1 es el umbral propuesto para Chile. Corresponde a la variante efectiva: no es "
         "un umbral validado de SHERBS3.",
         insumos=("cizalle_03", "gamma_03", "gamma_75"), productos=("idx:sherbs3",),
@@ -700,7 +715,7 @@ VARIABLES = (
     Variable(
         "scp", "SCP", "Parámetro compuesto de supercélula", "", "era5-compuestos",
         "Combina la CAPE de la parcela más inestable, la helicidad y el cizalle de la capa efectiva "
-        "(versión de capa efectiva de Thompson y colaboradores).",
+        "(versión de capa efectiva de Thompson et al. 2012).",
         importa="Discrimina entornos de supercélula de los de tormentas ordinarias.",
         formula=r"\mathrm{SCP} = \frac{\mathrm{MUCAPE}}{1000}\cdot\frac{\mathrm{SRH}_{\mathrm{ef}}}{50}\cdot\frac{\mathrm{BWD}_{\mathrm{ef}}}{20}",
         cuidado="Calibrado para el hemisferio norte; en el sur hay que usar la helicidad *left-mover* y "
@@ -1037,8 +1052,8 @@ _REFS = {
     "cizalle_01": ("vicencio2021",), "cizalle_06": ("vicencio2021",), "bunkers": ("bunkers2000",),
     "srh_01": ("metpy", "vicencio2021"), "srh_03": ("metpy", "vicencio2021"), "llj": ("vicencio2021",),
     "lcl": ("vicencio2021",), "t500": ("vicencio2021",),
-    "vgp_01": ("rasmussen1998", "vicencio2021"), "stp_lm": ("thompson2003", "marin2024"),
-    "sherbs3": ("sherburn2014", "marin2024"), "scp": ("thompson2003",), "brn": ("weisman1982",),
+    "vgp_01": ("rasmussen1998", "vicencio2021"), "stp_lm": ("thompson2003", "thompson2012", "marin2024"),
+    "sherbs3": ("sherburn2014", "marin2024"), "scp": ("thompson2003", "thompson2012"), "brn": ("weisman1982",),
     "calendario": ("caballero2025",), "poblacion": ("bastias",), "ehi": ("documento",),
 }  # fmt: skip
 VARIABLES = tuple(replace(v, refs=_REFS.get(v.clave, ())) for v in VARIABLES)

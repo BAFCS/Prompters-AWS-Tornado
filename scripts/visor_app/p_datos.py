@@ -133,7 +133,7 @@ def _bibliografia() -> None:
     items = []
     for k, r in variables.REFERENCIAS.items():
         texto = r.url.removeprefix("https://").removeprefix("doi.org/")
-        enlace = f" <a href='{r.url}'>{html.escape(texto)}</a>" if r.url else ""
+        enlace = f" <a href='{html.escape(r.url)}'>{html.escape(texto)}</a>" if r.url else ""
         items.append(f"<li id='{_ancla_ref(k)}'>{_md_html(r.completa)}{enlace}</li>")
     st.markdown(f"<ul class='bibliografia'>{''.join(items)}</ul>", unsafe_allow_html=True)
 

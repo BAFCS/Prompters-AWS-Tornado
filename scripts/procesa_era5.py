@@ -173,7 +173,8 @@ def indices_hora(pl: xr.Dataset, sfc: xr.Dataset) -> dict[str, np.ndarray]:
         "gamma_75": g75,
         "vgp_01": np.sqrt(cape) * c01 / 1000.0,  # √CAPE × (ΔV / Δz) en m/s²
         "stp_lm": stp,
-        "sherbs3": (c03 / 27.0) * (g03 / 5.2) * (g75 / 5.6),
+        # Sherburn y Parker (2014): 26 m/s con el cizalle 0–3 km; 27 m/s es el de SHERBE (capa efectiva).
+        "sherbs3": (c03 / 26.0) * (g03 / 5.2) * (g75 / 5.6),
         "altura_sfc": h_sfc,
     }
 
