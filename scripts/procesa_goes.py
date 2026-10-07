@@ -83,9 +83,7 @@ def guarda(out: xr.Dataset, fuente: xr.Dataset, salida: Path) -> None:
         enc[v] = comun.COMPRESION | {
             "dtype": "int16", "scale_factor": e["scale_factor"], "add_offset": e["add_offset"], "_FillValue": -1,
         }  # fmt: skip
-    tmp = salida.with_suffix(".tmp")
-    out.to_netcdf(tmp, engine="h5netcdf", encoding=enc)
-    tmp.rename(salida)
+    comun.escribe(out, salida, enc)
 
 
 def main() -> None:

@@ -239,11 +239,7 @@ def main() -> None:
                 print(f"{dia}: faltan variables {sorted(faltan)}; descárgalas antes", flush=True)
                 continue
             out = procesa_dia(pl, sfc, reg)
-        tmp = salida.with_suffix(".tmp")
-        out.to_netcdf(
-            tmp, engine="h5netcdf", encoding=dict.fromkeys(out.data_vars, comun.COMPRESION)
-        )
-        tmp.rename(salida)
+        comun.escribe(out, salida)
         print(f"{salida.name}: {out.sizes['time']} horas en {time.time() - t0:.0f} s", flush=True)
 
 

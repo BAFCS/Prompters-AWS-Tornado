@@ -202,9 +202,7 @@ def guarda(partes: list[dict], v: dict, salida: Path, reg: comun.Region) -> None
     )
     for c in ("lat", "lon"):
         encoding[c] = comun.COMPRESION
-    tmp = salida.with_suffix(".tmp")
-    ds.to_netcdf(tmp, engine="h5netcdf", encoding=encoding)
-    tmp.rename(salida)
+    comun.escribe(ds, salida, encoding)
 
 
 def main() -> None:

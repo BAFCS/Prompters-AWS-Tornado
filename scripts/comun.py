@@ -15,6 +15,7 @@ from pathlib import Path
 import h5py
 import numpy as np
 import s3fs
+import xarray as xr
 from botocore.exceptions import BotoCoreError
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -101,6 +102,17 @@ def carpeta(region: str, fuente: str) -> Path:
     d = RECORTES / region / fuente
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+def escribe(ds: xr.Dataset, salida: Path, encoding: dict | None = None) -> None:
+    """Escribe ``ds`` en ``salida`` pasando por un ``.tmp``, para no dejar NetCDF a medias.
+
+    Sin ``encoding``, cada variable se comprime con ``COMPRESION``.
+    """
+    tmp = salida.with_suffix(".tmp")
+    enc = dict.fromkeys(ds.data_vars, COMPRESION) if encoding is None else encoding
+    ds.to_netcdf(tmp, engine="h5netcdf", encoding=enc)
+    tmp.rename(salida)
 
 
 def s3() -> s3fs.S3FileSystem:

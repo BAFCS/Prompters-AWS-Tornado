@@ -186,9 +186,7 @@ def guarda(res: dict[str, dict], salida: Path, con_nivel: bool, reg: comun.Regio
             "creado": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
         },
     )
-    tmp = salida.with_suffix(".tmp")
-    ds.to_netcdf(tmp, engine="h5netcdf", encoding=dict.fromkeys(res, comun.COMPRESION))
-    tmp.rename(salida)
+    comun.escribe(ds, salida)
 
 
 def completo(salida: Path, variables: list[str]) -> bool:
@@ -236,9 +234,7 @@ def une(partes: list[Path], salida: Path) -> None:
     """Une los archivos de una variable ``partes`` en ``salida`` y los borra."""
     ds = xr.merge([xr.load_dataset(f, engine="h5netcdf") for f in partes], combine_attrs="override")
     ds.attrs["creado"] = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
-    tmp = salida.with_suffix(".tmp")
-    ds.to_netcdf(tmp, engine="h5netcdf", encoding=dict.fromkeys(ds.data_vars, comun.COMPRESION))
-    tmp.rename(salida)
+    comun.escribe(ds, salida)
     for f in partes:
         f.unlink()
 
