@@ -53,3 +53,6 @@ toolbarMode = "viewer"  # el menú ⋮ trae el selector de tema; tema.boton_modo
 
 [server]
 headless = true
+
+[browser]
+gatherUsageStats = false  # sin estadísticas de uso hacia Streamlit
