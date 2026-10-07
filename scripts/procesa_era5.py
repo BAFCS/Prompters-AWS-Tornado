@@ -185,14 +185,9 @@ def procesa_dia(pl: xr.Dataset, sfc: xr.Dataset, reg: comun.Region) -> xr.Datase
     horas = [indices_hora(pl.sel(time=t).load(), sfc.sel(time=t).load()) for t in tiempos]
     dims = ("time", "latitude", "longitude")
     datos = {}
-    for v, (nombre, unidad, umbral, sentido, referencia) in ATRIBUTOS.items():
-        attrs = {"long_name": nombre, "units": unidad}
-        if umbral is not None:
-            attrs |= {"umbral_chile": umbral}
-        if sentido is not None:
-            attrs |= {"umbral_sentido": sentido}
-        if referencia is not None:
-            attrs |= {"referencia": referencia}
+    claves = ("long_name", "units", "umbral_chile", "umbral_sentido", "referencia")
+    for v, valores in ATRIBUTOS.items():
+        attrs = {k: x for k, x in zip(claves, valores, strict=True) if x is not None}
         datos[v] = (dims, np.stack([h[v] for h in horas]).astype("f4"), attrs)
     return xr.Dataset(
         datos,
