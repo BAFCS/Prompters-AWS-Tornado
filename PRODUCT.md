@@ -31,11 +31,14 @@ Chile, las imágenes GOES cada 10 minutos y los eventos del catálogo de tornado
 
 ## Operating Context
 
-- Herramienta local: `uv run streamlit run scripts/visor.py` sobre los recortes ya descargados en
-  `data/recortes/<region>/` por los scripts de descarga y procesamiento. Sin despliegue público por
-  ahora.
+- Hoy es una herramienta local: `uv run streamlit run scripts/viewer.py` sobre los recortes ya
+  descargados en `data/crops/<region>/` por los scripts de descarga y procesamiento. Se
+  desplegará en AWS más adelante; el cómo (servicio, acceso, datos) está sin decidir.
 - Solo muestra días ya descargados. Caso de referencia: brote del 30–31 de mayo de 2019 (Biobío).
-- Se usa en pantallas de escritorio, en sesiones de trabajo o en presentaciones de la hackathon.
+- La página El proyecto es la entrada por defecto y funciona sin ningún dato descargado: es lo
+  primero que ve quien llega al repo.
+- Se usa en escritorio, tablet y móvil (sesiones de trabajo, presentaciones de la hackathon,
+  consulta rápida); los tres son un compromiso, no un extra.
 
 ## Capabilities and Constraints
 
@@ -45,6 +48,10 @@ Chile, las imágenes GOES cada 10 minutos y los eventos del catálogo de tornado
   hemisferio sur; umbrales chilenos (VGP₀₋₁ > 0,1 m/s², SHERBE ≥ 1, STP *left-mover* ≤ −0,3);
   niveles bajos bajo tierra sobre los Andes; GOES sin corrección de paralaje.
 - Todo el contenido en español.
+- Pendiente: una página de catálogo de datos que explique las tres fuentes (ERA5, GOES, catálogo de
+  tornados) y las *features* derivadas de cada una (índices ERA5, productos GOES como el RGB
+  Airmass). Explicaciones claras, didácticas y fáciles de entender, pero rigurosas, con fórmulas
+  cuando hagan falta.
 
 ## Brand Commitments
 
@@ -64,7 +71,7 @@ Chile, las imágenes GOES cada 10 minutos y los eventos del catálogo de tornado
 
 - `docs/mesociclones_chile.md`: fuente de verdad (física, índices, umbrales, tareas abiertas).
 - `data/tornados_chile.xlsx` (figshare): catálogo de eventos con hora UTC, EF, tipo y confianza.
-- Recortes ERA5 y GOES del 30–31 de mayo de 2019 en `data/recortes/centro-sur-austral/`.
+- Recortes ERA5 y GOES del 30–31 de mayo de 2019 en `data/crops/south-central-austral/`.
 - No existe una etiqueta de "mesociclón" en el catálogo: no inventar confirmaciones de mesociclón;
   hablar de tornados reportados y de supercélulas reconstruidas por la literatura citada en docs/.
 

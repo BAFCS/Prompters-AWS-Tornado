@@ -7,7 +7,10 @@ Guía para agentes de código (Claude Code, Codex, etc.) que trabajan en este re
 Proyecto abierto (AWS Hackathon) para predecir qué tormentas del centro-sur de Chile desarrollan
 un mesociclón, usando el reanálisis ERA5 y las imágenes GOES. Hoy el repo es sobre todo
 **documentación, tres scripts de figuras, scripts de descarga y procesamiento de datos y un visor
-interactivo**. Todo el contenido, los comentarios y los mensajes de commit están en **español**.
+interactivo**. La documentación, los docstrings, los comentarios, los textos de la interfaz y los mensajes de commit
+están en **español**; el código va en **inglés**: módulos, identificadores, claves de estado, flags de la
+CLI, rutas de datos, variables y atributos NetCDF y clases CSS. Las URL visibles del visor (`url_path` de
+las páginas y anclas de El proyecto) siguen en español porque son parte de la interfaz.
 
 - `docs/mesociclones_chile.md` es el documento principal y la fuente de verdad del proyecto
   (física, datos, variables, planteamiento del modelo, arquitectura AWS, tareas abiertas en la sección 8).
@@ -25,7 +28,7 @@ método (lo exige `ANN`), no las variables; cada módulo y función lleva docstr
 ```bash
 uv sync                              # crea .venv con dependencias + grupo dev
 uv run python scripts/figs_era5.py   # ejecutar un script
-uv run streamlit run scripts/visor.py  # visor interactivo ERA5 + GOES
+uv run streamlit run scripts/viewer.py  # visor interactivo ERA5 + GOES
 uv run ruff check scripts            # lint (uv run ruff check --fix para autocorregir)
 uv run ruff format scripts           # formato
 uv run pyright                       # chequeo de tipos
@@ -36,8 +39,8 @@ uv add <pkg> / uv add --dev <pkg>    # añadir dependencias
 
 Claude Code (`.claude/settings.json`) y Codex (`.codex/hooks.json`) corren `.agents/hooks/ruff.sh` tras
 cada edición: aplica `ruff check --fix` y `ruff format` al `.py` editado y devuelve al agente lo que
-ruff no corrige solo. En Codex, el hook se aprueba una vez con `/hooks`. La skill `visor`
-(`.agents/skills/visor/`, enlazada desde `.claude/skills/`) explica cómo revisar el visor en el
+ruff no corrige solo. En Codex, el hook se aprueba una vez con `/hooks`. La skill `viewer`
+(`.agents/skills/viewer/`, enlazada desde `.claude/skills/`) explica cómo revisar el visor en el
 navegador con Playwright MCP.
 
 Las pruebas de regresión del visor viven en `tests/` y usan `unittest` y AppTest de Streamlit.
@@ -48,69 +51,69 @@ anterior (las figuras son deterministas: mismo entorno y datos dan los mismos p�
 ## Scripts de figuras
 
 Cada script es un programa lineal sin funciones `main` ni argumentos: carga datos, dibuja y guarda
-en `figs/`. Los accesos a HDF5 pasan por `comun.dataset()`, que acota el tipo a `h5py.Dataset`
-(`figs_era5.py` y `figs_goes.py` importan `comun`, como los scripts de datos). Las rutas son relativas a la raíz del repo (`ROOT`, `OUT = figs/`, `DATA = data/`).
+en `figs/`. Los accesos a HDF5 pasan por `common.dataset()`, que acota el tipo a `h5py.Dataset`
+(`figs_era5.py` y `figs_goes.py` importan `common`, como los scripts de datos). Las rutas son relativas a la raíz del repo (`ROOT`, `OUT = figs/`, `DATA = data/`).
 Comparten una paleta y `rcParams` copiados en cada archivo (`ACC`, `SEV`, `COLD`, `WARM`, `MUT`,
-`INK`, `LINE`), que coinciden con la paleta de `scripts/visor_app/tema.py` (salvo `MUT`: el visor usa
+`INK`, `LINE`), que coinciden con la paleta de `scripts/viewer_app/theme.py` (salvo `MUT`: el visor usa
 un apagado más oscuro porque va sobre fondo niebla).
 
 | Script | Figura | Entrada |
 |---|---|---|
-| `figs_catalogo.py` | fig1, fig2 | `data/tornados_chile.xlsx` (figshare, hoja `Final_Table`) y `data/coast.zip` (shapefile de costa; Natural Earth 10m reproduce la figura) |
+| `figs_catalog.py` | fig1, fig2 | `data/tornados_chile.xlsx` (figshare, hoja `Final_Table`) y `data/coast.zip` (shapefile de costa; Natural Earth 10m reproduce la figura) |
 | `figs_era5.py` | fig4 | lee directo de `s3://nsf-ncar-era5/` (anónimo, s3fs + h5py); escribe `data/era5_cache.npy` |
 | `figs_goes.py` | fig3 | `data/goes/*.nc`: archivos GOES-16 `ABI-L2-CMIPF` banda 13 del 30-may-2019 (día 150) ~21:30–21:50 UTC |
 
 ## Scripts de datos y visor
 
 A diferencia de los de figuras, son programas de línea de comandos con `main()` y `argparse`
-(`--help` muestra las opciones). Comparten `scripts/comun.py`, que se importa como módulo hermano
-(`import comun`, declarado *first-party* para isort): regiones (`REGIONES`, `--region`, `--bbox`),
-fechas (`--inicio`, `--fin`), rutas, acceso S3 anónimo y la proyección del ABI (`latlon_abi`).
-Escriben NetCDF comprimido (gzip + shuffle) en `data/recortes/<region>/`, saltan lo que ya existe
-(`--forzar` lo rehace) y reparten las lecturas en procesos con contexto `spawn` (s3fs no tolera
+(`--help` muestra las opciones). Comparten `scripts/common.py`, que se importa como módulo hermano
+(`import common`, declarado *first-party* para isort): regiones (`REGIONS`, `--region`, `--bbox`),
+fechas (`--start`, `--end`), rutas, acceso S3 anónimo y la proyección del ABI (`latlon_abi`).
+Escriben NetCDF comprimido (gzip + shuffle) en `data/crops/<region>/`, saltan lo que ya existe
+(`--force` lo rehace) y reparten las lecturas en procesos con contexto `spawn` (s3fs no tolera
 `fork`). Ambas descargas leen el índice de bloques del HDF5 y piden a S3 solo los bytes necesarios.
 
 | Script | Hace | Salida |
 |---|---|---|
-| `descarga_era5.py` | ERA5 niveles de presión y superficie, recortado; un archivo por día | `era5_pl/era5_pl_AAAAMMDD.nc`, `era5_sfc/era5_sfc_AAAAMMDD.nc` |
-| `descarga_goes.py` | GOES `ABI-L2-MCMIPF` (16 bandas, 2 km), recortado en la grilla fija; un archivo por hora | `goes/AAAAMMDD/goes_AAAAMMDDHH.nc` |
-| `procesa_goes.py` | Reproyecta GOES a lat/lon regular (vecino más cercano, sin alterar valores) | `goes_latlon/AAAAMMDD/goes_AAAAMMDDHH.nc` |
-| `procesa_era5.py` | Índices australes por columna (cizalle, Bunkers *left-mover*, SRH, VGP₀₋₁, STP LM sin CIN, SHERBS3, LCL), vectorizados con las fórmulas de MetPy | `era5_indices/era5_idx_AAAAMMDD.nc` |
-| `visor.py` | App Streamlit de varias páginas (`st.navigation`); el código de las páginas vive en `scripts/visor_app/` | — |
+| `download_era5.py` | ERA5 niveles de presión y superficie, recortado; un archivo por día | `era5_pl/era5_pl_AAAAMMDD.nc`, `era5_sfc/era5_sfc_AAAAMMDD.nc` |
+| `download_goes.py` | GOES `ABI-L2-MCMIPF` (16 bandas, 2 km), recortado en la grilla fija; un archivo por hora | `goes/AAAAMMDD/goes_AAAAMMDDHH.nc` |
+| `process_goes.py` | Reproyecta GOES a lat/lon regular (vecino más cercano, sin alterar valores) | `goes_latlon/AAAAMMDD/goes_AAAAMMDDHH.nc` |
+| `process_era5.py` | Índices australes por columna (cizalle, Bunkers *left-mover*, SRH, VGP₀₋₁, STP LM sin CIN, SHERBS3, LCL), vectorizados con las fórmulas de MetPy | `era5_indices/era5_idx_AAAAMMDD.nc` |
+| `viewer.py` | App Streamlit de varias páginas (`st.navigation`); el código de las páginas vive en `scripts/viewer_app/` | — |
 
 ```bash
-uv run python scripts/descarga_era5.py --inicio 2019-05-30          # región centro-sur-austral
-uv run python scripts/descarga_goes.py --inicio 2019-05-30
-uv run python scripts/procesa_goes.py  --inicio 2019-05-30
-uv run python scripts/procesa_era5.py  --inicio 2019-05-30          # tras descarga_era5.py
-uv run streamlit run scripts/visor.py
+uv run python scripts/download_era5.py --start 2019-05-30          # región south-central-austral
+uv run python scripts/download_goes.py --start 2019-05-30
+uv run python scripts/process_goes.py  --start 2019-05-30
+uv run python scripts/process_era5.py  --start 2019-05-30          # tras download_era5.py
+uv run streamlit run scripts/viewer.py
 ```
 
-**Visor** (`scripts/visor.py` + paquete `scripts/visor_app/`, importado como *first-party* igual que
-`comun`): páginas El proyecto, Datos, El caso, Mapas, Sondeo y Series. El proyecto (`visor_app/p_proyecto.py`,
-diagramas en `visor_app/diagramas.py`) presenta el proyecto con elementos de Streamlit: es la
-página por defecto y se muestra aunque no haya datos. Datos (`visor_app/p_datos.py`) es el catálogo
+**Visor** (`scripts/viewer.py` + paquete `scripts/viewer_app/`, importado como *first-party* igual que
+`common`): páginas El proyecto, Datos, El caso, Mapas, Sondeo y Series. El proyecto (`viewer_app/p_project.py`,
+diagramas en `viewer_app/diagrams.py`) presenta el proyecto con elementos de Streamlit: es la
+página por defecto y se muestra aunque no haya datos. Datos (`viewer_app/p_data.py`) es el catálogo
 de datos: una ficha por variable de docs §4–5 (qué es, por qué importa, fórmula, criterio chileno,
 cuidado, insumos y fuentes), también sin datos; `?v=<clave>` muestra una sola ficha. Las fichas, la
-bibliografía y el buscador viven en `visor_app/variables.py`, que es además la fuente de la ayuda
-«Qué estás viendo» de Mapas: todo producto nuevo de `productos.py` necesita su ficha
-(`tests/test_datos.py` lo comprueba). La barra lateral (región, día, regla de tiempo,
-evento, recorrido guiado) vive en `visor.py` para que sus widgets sobrevivan al cambio de página; el
-estado compartido está en `visor_app/estado.py` (`recuerda`/`guarda` copian los widgets de cada
-página bajo `_<clave>`). La página Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va
-sincronizado). Cada panel muestra un producto de `visor_app/productos.py` (claves `idx:`, `sfc:`, `pl:`,
-`goes:`, `rgb:`), calculado por `visor_app/capas.py` (incluye el RGB Airmass); la lista de paneles vive en
-`st.session_state["paneles"]` (`estado.Panel`), no en widgets, y el recorrido guiado la fija con `Paso.paneles`. Los textos, umbrales y el recorrido guiado salen de `docs/` y están en
-`visor_app/textos.py` y `visor_app/variables.py`: si cambia el documento o un cálculo, hay que
+bibliografía y el buscador viven en `viewer_app/variables.py`, que es además la fuente de la ayuda
+«Qué estás viendo» de Mapas: todo producto nuevo de `products.py` necesita su ficha
+(`tests/test_variables.py` lo comprueba). La barra lateral (región, día, regla de tiempo,
+evento, recorrido guiado) vive en `viewer.py` para que sus widgets sobrevivan al cambio de página; el
+estado compartido está en `viewer_app/state.py` (`restore`/`save` copian los widgets de cada
+página bajo `_<key>`). La página Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va
+sincronizado). Cada panel muestra un producto de `viewer_app/products.py` (claves `idx:`, `sfc:`, `pl:`,
+`goes:`, `rgb:`), calculado por `viewer_app/layers.py` (incluye el RGB Airmass); la lista de paneles vive en
+`st.session_state["panels"]` (`state.Panel`), no en widgets, y el recorrido guiado la fija con `Step.panels`. Los textos, umbrales y el recorrido guiado salen de `docs/` y están en
+`viewer_app/texts.py` y `viewer_app/variables.py`: si cambia el documento o un cálculo, hay que
 actualizarlos. El tema (claro y oscuro) está en
-`.streamlit/config.toml` (`[theme.light]`, `[theme.dark]`) y `visor_app/tema.py` (`CLARA`, `OSCURA`;
-`tema.colores()` da la paleta del modo activo): si cambia un color, hay que cambiarlo en los dos
-(`tests/test_escalas.py` comprueba que coinciden y que los textos cumplen WCAG AA).
+`.streamlit/config.toml` (`[theme.light]`, `[theme.dark]`) y `viewer_app/theme.py` (`LIGHT`, `DARK`;
+`theme.colors()` da la paleta del modo activo): si cambia un color, hay que cambiarlo en los dos
+(`tests/test_colorscales.py` comprueba que coinciden y que los textos cumplen WCAG AA).
 Streamlit no vuelve a ejecutar la app al cambiar de tema, así que el CSS usa variables de las dos
-paletas y un script (`tema._VIGIA`) marca `<html data-tema>` y pulsa un botón oculto para redibujar
-plotly; también lo pulsa si Python dibujó con otro modo que el del navegador (pasa en la primera carga). El botón de la barra (`tema.boton_modo`) alterna el modo eligiendo la opción del menú ⋮ de Streamlit (por eso `client.toolbarMode = "viewer"`). Las escalas de color de los mapas son estándar y viven en `visor_app/escalas.py`, por tipo de
-dato (`productos.Producto.tipo`); cada panel guarda la suya en `Panel.escala`. Las columnas de las
-páginas se piden con `tema.columnas(spec, clave)`, no con `st.columns`: se apilan cuando cada una
+paletas y un script (`theme._WATCHER`) marca `<html data-theme>` y pulsa un botón oculto para redibujar
+plotly; también lo pulsa si Python dibujó con otro modo que el del navegador (pasa en la primera carga). El botón de la barra (`theme.mode_button`) alterna el modo eligiendo la opción del menú ⋮ de Streamlit (por eso `client.toolbarMode = "viewer"`). Las escalas de color de los mapas son estándar y viven en `viewer_app/colorscales.py`, por tipo de
+dato (`products.Product.kind`); cada panel guarda la suya en `Panel.colorscale`. Las columnas de las
+páginas se piden con `theme.columns(spec, key)`, no con `st.columns`: se apilan cuando cada una
 quedaría con menos de 26rem, así que funcionan en tablet con la barra abierta. La excepción es la
 fila de controles de Mapas, que va alineada con los paneles de la figura. `PRODUCT.md` y
 `.impeccable/` guardan el contexto de diseño del visor.
@@ -140,10 +143,10 @@ aws s3 cp --no-sign-request --recursive s3://noaa-goes16/ABI-L2-CMIPF/2019/150/2
 - **ERA5**: usar `s3://nsf-ncar-era5/` (`s3://era5-pds/` está deprecado y no tiene niveles de presión).
   Cada archivo de nivel de presión pesa ~1,4 GB (una variable, un día, el globo) y no admite recorte
   en el servidor: cada hora es un bloque global de ~50–65 MB que hay que transferir entero y recortar
-  en memoria (`descarga_era5.py`). En superficie los bloques son pequeños y sí se lee solo el recuadro. Sobre los Andes
+  en memoria (`download_era5.py`). En superficie los bloques son pequeños y sí se lee solo el recuadro. Sobre los Andes
   el nivel de 1000 hPa está bajo tierra: enmascarar por presión de superficie o usar viento a 10 m.
 - **GOES**: Chile lo ve GOES-East (`noaa-goes16` dic 2017–abr 2025, `noaa-goes19` desde abr 2025,
-  us-east-1). `figs_goes.py` implementa a mano la proyección directa del ABI; la inversa es `comun.latlon`. El paralaje
+  us-east-1). `figs_goes.py` implementa a mano la proyección directa del ABI; la inversa es `common.latlon`. El paralaje
   desplaza los topes nubosos ~20 km a 53°S.
 - **Catálogo**: 102 eventos, solo positivos (sin negativos). Columnas clave: `Register` (confianza de
   la etiqueta), `Tornado`/`Waterspout` (dos vías físicas), `Hour (UTC)` (cruce con GOES).

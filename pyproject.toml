@@ -56,8 +56,8 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-# scripts/ no es un paquete: comun.py se importa como módulo hermano.
-known-first-party = ["comun", "visor_app"]
+# scripts/ no es un paquete: common.py se importa como módulo hermano.
+known-first-party = ["common", "viewer_app"]
 
 [tool.pyright]
 include = ["scripts"]
