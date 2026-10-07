@@ -1,215 +1,138 @@
-"""Página «Mapas»: el entorno ERA5 (crudo o índices australes) y la tormenta en GOES, lado a lado."""
+"""Página «Mapas»: una grilla de 1 a 6 paneles (ERA5, bandas GOES o RGB) con el zoom sincronizado."""
 
-import numpy as np
+import dataclasses
+
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-import xarray as xr
 
-from visor_app import componentes, datos, estado, graficos, tema, textos
+from visor_app import capas, datos, estado, graficos, productos, tema, textos
 
-DIVERGENTES = {"u", "v", "w", "vo", "d", "10u", "10v", "100u", "100v", "srh_01", "srh_03", "stp_lm"}
-OCULTOS = {"u_lm", "v_lm", "u_rm", "v_rm", "u_06", "v_06", "altura_sfc"}
-RANGOS = {  # rangos fijos para comparar horas y días; el resto usa percentiles 1–99
-    "vgp_01": (0.0, 0.3), "srh_01": (-300.0, 300.0), "srh_03": (-600.0, 600.0),
-    "cizalle_01": (0.0, 25.0), "cizalle_03": (0.0, 35.0), "cizalle_06": (0.0, 45.0),
-    "stp_lm": (-1.5, 1.5), "sherbs3": (0.0, 2.0), "lcl": (0.0, 2500.0),
-}  # fmt: skip
-RANGO_GOES = {
-    **dict.fromkeys(range(1, 7), (0.0, 1.0)),
-    7: (200.0, 320.0), 8: (200.0, 250.0), 9: (205.0, 265.0), 10: (210.0, 275.0),
-    **dict.fromkeys(range(11, 17), (190.0, 300.0)),
-}  # fmt: skip
-DERIVADOS = {
-    "dT": "Enfriamiento del tope en 10 min (ΔC13)",
-    "C08-C13": "C08 − C13 (tope en la tropopausa)",
-}
 PASO_ANIMACION = 3  # se dibuja uno de cada 3 píxeles GOES al animar
+MAX_ANIMADOS = 3  # paneles GOES que se animan a la vez
 
 
-def _rango(z: np.ndarray, centro: bool) -> tuple[float, float]:
-    """Rango de color entre los percentiles 1 y 99 de ``z`` (simétrico si ``centro``)."""
-    lo, hi = np.nanpercentile(z, [1, 99])
-    if centro:
-        m = float(max(abs(lo), abs(hi)))
-        return -m, m
-    return float(lo), float(hi)
-
-
-def _opciones_era5(d: datos.Dia) -> dict[str, str]:
-    """Campos ERA5 elegibles: clave → etiqueta. Índices primero, luego superficie y presión."""
-    out = {}
-    for prefijo, ruta, grupo in (("", d.idx, "Índice"), ("sfc:", d.sfc, "Superficie"),
-                                 ("pl:", d.pl, "Presión")):  # fmt: skip
-        if ruta is None:
-            continue
-        ds = datos.abre(ruta)
-        for v in ds.data_vars:
-            if v in OCULTOS:
-                continue
-            a = ds[v].attrs
-            out[f"{prefijo}{v}"] = (
-                f"{grupo} · {a.get('long_name', v)} [{componentes.unidad(a.get('units', ''))}]"
-            )
-    return out
-
-
-def _al_clic(clave: str) -> None:
-    """Callback del mapa ERA5: el punto clicado pasa a ser el punto elegido."""
-    puntos = st.session_state[clave].selection.points
+def _al_clic() -> None:
+    """Callback de la grilla: el punto clicado en cualquier panel pasa a ser el punto elegido."""
+    puntos = st.session_state["grilla"].selection.points
     if puntos:
         la, lo = float(puntos[0]["y"]), float(puntos[0]["x"])
         estado.elige_punto(estado.Punto(la, lo, f"{la:.2f}°, {lo:.2f}°"))
 
 
-def _vectores(fig: go.Figure, ds: xr.Dataset, t: pd.Timestamp, enc: graficos.Encuadre) -> None:
-    """Agrega flechas de viento en 850 hPa (una de cada tres celdas) sobre ``fig``."""
-    h = ds.sel(time=t, method="nearest").sel(level=850, method="nearest")
-    h = h.sel(latitude=slice(enc.norte, enc.sur), longitude=slice(enc.oeste, enc.este))
-    u, v = h["u"].values[::3, ::3], h["v"].values[::3, ::3]
-    LA, LO = np.meshgrid(h["latitude"].values[::3], h["longitude"].values[::3], indexing="ij")
-    k = 0.018  # grados por m/s
-    xs, ys = [], []
-    for x0, y0, du, dv in zip(LO.ravel(), LA.ravel(), u.ravel(), v.ravel(), strict=True):
-        x1, y1 = x0 + du * k, y0 + dv * k
-        ang = np.arctan2(dv, du)
-        ala = 0.25 * np.hypot(du, dv) * k
-        xs += [x0, x1, x1 - ala * np.cos(ang - 0.45), None, x1, x1 - ala * np.cos(ang + 0.45), None]
-        ys += [y0, y1, y1 - ala * np.sin(ang - 0.45), None, y1, y1 - ala * np.sin(ang + 0.45), None]
-    fig.add_trace(
-        go.Scatter(
-            x=xs, y=ys, mode="lines", hoverinfo="skip", name="viento 850 hPa",
-            line={"color": tema.INK_2, "width": 1},
-        )
+def _al_cambiar(id_: int, campo: str, clave_widget: str) -> None:
+    """Callback de los widgets de un panel: copia su valor al panel (``"—"`` significa ninguno)."""
+    v = st.session_state[clave_widget]
+    estado.cambia_panel(id_, **{campo: None if v == "—" else v})
+
+
+def _al_agregar(clave_widget: str) -> None:
+    """Callback de «Agregar panel»: agrega el producto elegido y deja el widget en blanco."""
+    clave = st.session_state[clave_widget]
+    if clave:
+        estado.agrega_panel(clave)
+    st.session_state[clave_widget] = None
+
+
+def _agregar(cat: dict[str, productos.Producto], n: int) -> None:
+    """Popover para agregar un panel: botonera de favoritos y la lista completa."""
+    lleno = n >= estado.MAX_PANELES
+    with st.popover("Agregar panel", icon=":material/add:", disabled=lleno, width="stretch",
+                    help=f"Hasta {estado.MAX_PANELES} paneles." if lleno else None):  # fmt: skip
+        st.pills(
+            "Favoritos", [k for k in productos.FAVORITOS if k in cat], key="agrega_fav",
+            format_func=lambda k: cat[k].corta, on_change=_al_agregar, args=("agrega_fav",),
+        )  # fmt: skip
+        st.selectbox(
+            "Otro producto", productos.ordenados(cat), index=None, key="agrega_otro",
+            placeholder="Escribe para buscar…", format_func=lambda k: cat[k].etiqueta,
+            on_change=_al_agregar, args=("agrega_otro",),
+        )  # fmt: skip
+
+
+def _controles(p: estado.Panel, n: int, cat: dict[str, productos.Producto], d: datos.Dia) -> None:
+    """Fila de controles del panel ``n``: producto, ◀ ▶, opciones y quitar."""
+    prod = cat[p.clave]
+    k_clave = f"p{p.id}_clave"
+    st.session_state[k_clave] = p.clave  # el panel es la fuente de verdad; el widget lo refleja
+    c1, c2, c3, c4, c5 = st.columns([8, 1, 1, 1, 1], gap="small", vertical_alignment="bottom")
+    c1.selectbox(
+        f"Panel {n}", productos.ordenados(cat), key=k_clave,
+        format_func=lambda k: ("★ " if k in productos.FAVORITOS else "") + cat[k].etiqueta,
+        on_change=_al_cambiar, args=(p.id, "clave", k_clave),
     )  # fmt: skip
+    for col, paso, icono, ayuda in ((c2, -1, ":material/chevron_left:", "Anterior"),
+                                    (c3, +1, ":material/chevron_right:", "Siguiente")):  # fmt: skip
+        col.button(
+            "", icon=icono, key=f"p{p.id}_{paso}", help=f"{ayuda} en «{prod.grupo}»",
+            on_click=estado.cambia_panel, args=(p.id,),
+            kwargs={"clave": productos.vecino(p.clave, cat, paso)},
+        )  # fmt: skip
+    indices = [k for k in cat if k.startswith("idx:")]
+    if prod.fuente == "pl" or (prod.es_goes and indices):
+        with c4.popover("", icon=":material/tune:", help="Nivel o contornos ERA5"):
+            if prod.fuente == "pl":
+                nv = capas.niveles(d)
+                k_nivel = f"p{p.id}_nivel"
+                st.session_state[k_nivel] = (
+                    p.nivel if p.nivel in nv else (850.0 if 850.0 in nv else nv[0])
+                )
+                st.select_slider("Nivel (hPa)", options=nv, key=k_nivel, on_change=_al_cambiar,
+                                 args=(p.id, "nivel", k_nivel))  # fmt: skip
+            else:
+                k_cont = f"p{p.id}_cont"
+                st.session_state[k_cont] = p.contorno or "—"
+                st.selectbox(
+                    "Contornos ERA5", ["—", *indices], key=k_cont,
+                    format_func=lambda k: k if k == "—" else cat[k].corta,
+                    on_change=_al_cambiar, args=(p.id, "contorno", k_cont),
+                    help="Isolíneas de un índice sobre la imagen; el umbral chileno en rojo.",
+                )  # fmt: skip
+    c5.button("", icon=":material/close:", key=f"p{p.id}_x", help="Quitar el panel",
+              on_click=estado.quita_panel, args=(p.id,))  # fmt: skip
 
 
-def _era5(ctx: estado.Contexto, t: pd.Timestamp, enc: graficos.Encuadre) -> str | None:
-    """Columna ERA5. Devuelve la clave del campo dibujado (para la ayuda) o ``None``."""
-    opciones = _opciones_era5(ctx.dia)
-    if not opciones:
-        st.info("Este día no tiene ERA5. Corre `descarga_era5.py` (y `procesa_era5.py`).")
-        return None
-    claves = list(opciones)
-    estado.recuerda("era5_var")
-    if st.session_state.get("era5_var") not in claves:
-        st.session_state["era5_var"] = "vgp_01" if "vgp_01" in claves else claves[0]
-    clave = st.selectbox(
-        "Entorno (ERA5)", claves, key="era5_var", format_func=lambda k: opciones[k]
-    )
-    estado.guarda("era5_var")
-
-    fuente, _, v = clave.rpartition(":")
-    ruta = {"": ctx.dia.idx, "sfc": ctx.dia.sfc, "pl": ctx.dia.pl}[fuente]
-    assert ruta is not None
-    ds = datos.abre(ruta)
-    da = ds[v].sel(time=t, method="nearest")
-    hora = datos.instante(da["time"])
-    nombre_v = componentes.CORTOS.get(v) or str(ds[v].attrs.get("long_name", v))
-    titulo = f"ERA5 · {nombre_v} · {hora:%H:%M} UTC"
-    if "level" in da.dims:
-        niveles = sorted(ds["level"].values.tolist(), reverse=True)
-        estado.recuerda("nivel")
-        if st.session_state.get("nivel") not in niveles:
-            st.session_state["nivel"] = 850 if 850 in niveles else niveles[0]
-        nivel = st.select_slider("Nivel (hPa)", options=niveles, key="nivel")
-        estado.guarda("nivel")
-        da = da.sel(level=nivel)
-        titulo += f" · {nivel:g} hPa"
-    centro = v in DIVERGENTES
-    z = da.values
-    umbral = ds[v].attrs.get("umbral_chile")
-    fig = graficos.mapa(
-        z, ds["latitude"].values, ds["longitude"].values, enc, datos.costa(ctx.reg),
-        titulo=titulo, unidad=componentes.unidad(ds[v].attrs.get("units", "")),
-        escala=tema.DIVERGENTE if centro else tema.SECUENCIAL,
-        rango=RANGOS.get(v) or _rango(z, centro), centro=centro, eventos=ctx.eventos,
-        punto=estado.punto(), umbral=None if umbral is None else float(umbral), clic=True,
-    )  # fmt: skip
-    if st.session_state.get("viento") and ctx.dia.pl is not None:
-        _vectores(fig, datos.abre(ctx.dia.pl), t, enc)
-    st.plotly_chart(
-        fig, width="stretch", theme=None, key="mapa_era5", on_select=lambda: _al_clic("mapa_era5"),
-        selection_mode="points",
-    )  # fmt: skip
-    notas = ["Clic en el mapa para elegir un punto (sondeo y series)."]
-    if umbral is not None:
-        notas.append(
-            f"Línea roja: umbral chileno ({ds[v].attrs.get('umbral_sentido', '')} {str(umbral).replace('.', ',')})."
-        )
-    if fuente == "pl":
-        notas.append("Sobre los Andes los niveles bajos están bajo tierra (valores extrapolados).")
-    st.caption(" ".join(notas))
-    return v
+def _capa_panel(
+    p: estado.Panel, n: int, cat: dict[str, productos.Producto], d: datos.Dia, t: pd.Timestamp,
+    enc: graficos.Encuadre, sub: int,
+) -> capas.Capa:  # fmt: skip
+    """La capa del panel ``n`` con su número en el título (vacía si falta la imagen anterior)."""
+    prod = cat[p.clave]
+    c = capas.capa(d, prod, t, sub=sub, nivel=p.nivel)
+    if c is None:
+        return capas.vacia(f"{n} · {prod.corta} · sin imagen anterior", enc)
+    return dataclasses.replace(c, titulo=f"{n} · {c.titulo}")
 
 
-def _goes_figura(
-    ctx: estado.Contexto, prod: str, t: pd.Timestamp, enc: graficos.Encuadre, sub: int
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, str, list, tuple[float, float], bool, str] | None:
-    """Datos del producto GOES ``prod`` en la imagen más cercana a ``t``, submuestreados ``sub``.
+def _animar(
+    fig: go.Figure, fondos: list[int], animados: list[int], visibles: list[estado.Panel],
+    cat: dict[str, productos.Producto], d: datos.Dia, t: pd.Timestamp, enc: graficos.Encuadre,
+) -> int:  # fmt: skip
+    """Agrega a ``fig`` un cuadro por imagen GOES en ±1 h para los paneles ``animados``.
 
-    Devuelve (z, lat, lon, título, escala, rango, centrado, unidad) o ``None`` si falta una imagen.
+    Devuelve cuántos cuadros quedaron (0 o 1 = no se anima).
     """
-    img = datos.imagen_en(ctx.dia, np.datetime64(t))
-    if img is None:
-        return None
-    ruta, ti = img
-    ds = datos.abre(ruta)
-    lat, lon = ds["latitude"].values[::sub], ds["longitude"].values[::sub]
-    hora = pd.Timestamp(ti)
-    if prod == "dT":
-        prev = datos.anterior(ctx.dia, ti)
-        if prev is None:
-            return None
-        r0, t0 = prev
-        z = ds["C13"].sel(time=ti).values - datos.abre(r0)["C13"].sel(time=t0).values
-        minutos = (hora - pd.Timestamp(t0)).total_seconds() / 60
-        titulo = f"GOES · ΔC13 en {minutos:.0f} min · {hora:%H:%M} UTC"
-        return z[::sub, ::sub], lat, lon, titulo, tema.DIVERGENTE, (-15.0, 15.0), True, "K"
-    if prod == "C08-C13":
-        z = ds["C08"].sel(time=ti).values - ds["C13"].sel(time=ti).values
-        escala = [[0.0, tema.SURFACE], [0.7, tema.COLD], [0.89, tema.INK], [1.0, tema.WARM]]
-        titulo = f"GOES · C08 − C13 · {hora:%H:%M} UTC"
-        return z[::sub, ::sub], lat, lon, titulo, escala, (-40.0, 5.0), False, "K"
-    n = int(prod[1:])
-    z = ds[prod].sel(time=ti).values[::sub, ::sub]
-    um = str(ds[prod].attrs.get("longitud_onda_um", "")).replace(".", ",")
-    titulo = f"GOES · {prod} {um} µm · {hora:%H:%M} UTC"
-    escala = tema.VISIBLE if n <= 6 else tema.IR
-    return (
-        z,
-        lat,
-        lon,
-        titulo,
-        escala,
-        RANGO_GOES[n],
-        False,
-        componentes.unidad(ds[prod].attrs.get("units", "")),
-    )
-
-
-def _animacion(ctx: estado.Contexto, prod: str, t: pd.Timestamp, enc: graficos.Encuadre) -> None:
-    """Loop de las imágenes GOES en ±1 hora alrededor de ``t``, con botón de reproducción."""
-    cerca = [
-        ti for ti, _ in datos.imagenes(ctx.dia) if abs(pd.Timestamp(ti) - t) <= pd.Timedelta("1h")
-    ]
-    cuadros = [
-        c for ti in cerca if (c := _goes_figura(ctx, prod, pd.Timestamp(ti), enc, PASO_ANIMACION))
-    ]
+    cerca = [ti for ti, _ in datos.imagenes(d) if abs(pd.Timestamp(ti) - t) <= pd.Timedelta("1h")]
+    titulos = fig.to_dict()["layout"].get("annotations", [])
+    cuadros, etiquetas = [], []
+    for ti in cerca:
+        cs = {i: capas.capa(d, cat[visibles[i].clave], pd.Timestamp(ti), sub=PASO_ANIMACION)
+              for i in animados}  # fmt: skip
+        if any(c is None for c in cs.values()):
+            continue
+        anots = [dict(a) for a in titulos]
+        datos_cuadro = []
+        for i, c in cs.items():
+            assert c is not None
+            anots[i]["text"] = f"{i + 1} · {c.titulo}"
+            z = graficos.z_fondo(c)
+            datos_cuadro.append(go.Image(z=z) if c.es_rgb else go.Heatmap(z=z))
+        cuadros.append(go.Frame(data=datos_cuadro, traces=[fondos[i] for i in cs],
+                                name=str(len(cuadros)), layout={"annotations": anots}))  # fmt: skip
+        etiquetas.append(pd.Timestamp(ti).strftime("%H:%M"))
     if len(cuadros) < 2:
-        st.info("No hay suficientes imágenes alrededor de esta hora para animar.")
-        return
-    z, lat, lon, titulo, escala, rango, centro, unidad = cuadros[0]
-    fig = graficos.mapa(
-        z, lat, lon, enc, datos.costa(ctx.reg), titulo=titulo, unidad=unidad, escala=escala,
-        rango=rango, centro=centro, eventos=ctx.eventos, punto=estado.punto(),
-    )  # fmt: skip
-    fig.frames = [
-        go.Frame(
-            data=[go.Heatmap(z=c[0])], traces=[0], name=str(i), layout={"title": {"text": c[3]}}
-        )
-        for i, c in enumerate(cuadros)
-    ]
+        return len(cuadros)
+    fig.frames = cuadros
     boton = {"frame": {"duration": 450, "redraw": True}, "fromcurrent": True,
              "transition": {"duration": 0}}  # fmt: skip
     fig.update_layout(
@@ -226,53 +149,13 @@ def _animacion(ctx: estado.Contexto, prod: str, t: pd.Timestamp, enc: graficos.E
         sliders=[{
             "x": 0.32, "len": 0.68, "y": -0.02, "currentvalue": {"visible": False},
             "bordercolor": tema.LINE, "tickcolor": tema.LINE, "font": {"family": tema.MONO, "size": 10},
-            "steps": [{"label": pd.Timestamp(ti).strftime("%H:%M"), "method": "animate",
+            "steps": [{"label": e, "method": "animate",
                        "args": [[str(i)], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate"}]}
-                      for i, ti in enumerate(cerca[: len(cuadros)])],
+                      for i, e in enumerate(etiquetas)],
         }],
         margin={"b": 70},
     )  # fmt: skip
-    st.plotly_chart(fig, width="stretch", theme=None, key="mapa_goes_anim")
-    st.caption(
-        f"{len(cuadros)} imágenes cada 10 min, un píxel de cada {PASO_ANIMACION} para que fluya."
-    )
-
-
-def _goes(ctx: estado.Contexto, t: pd.Timestamp, enc: graficos.Encuadre) -> str | None:
-    """Columna GOES. Devuelve la clave del producto dibujado (para la ayuda) o ``None``."""
-    if not ctx.dia.goes:
-        st.info("Este día no tiene GOES. Corre `descarga_goes.py` y `procesa_goes.py`.")
-        return None
-    bandas = [str(b) for b in datos.abre(ctx.dia.goes[0]).data_vars]
-    productos = [*bandas, *[k for k in DERIVADOS if {"C13", "C08"} <= set(bandas)]]
-    estado.recuerda("goes_prod")
-    if st.session_state.get("goes_prod") not in productos:
-        st.session_state["goes_prod"] = "C13" if "C13" in productos else productos[0]
-    ds0 = datos.abre(ctx.dia.goes[0])
-    prod = st.selectbox(
-        "Tormenta (GOES)", productos, key="goes_prod",
-        format_func=lambda x: DERIVADOS.get(x) or f"{x} · {str(ds0[x].attrs.get('longitud_onda_um', '')).replace('.', ',')} µm",
-    )  # fmt: skip
-    estado.guarda("goes_prod")
-    if st.session_state.get("animar"):
-        _animacion(ctx, prod, t, enc)
-        return prod
-    sub = int(st.session_state.get("sub", 2))
-    datos_fig = _goes_figura(ctx, prod, t, enc, sub)
-    if datos_fig is None:
-        st.info("No hay imagen anterior para calcular la tendencia a esta hora.")
-        return prod
-    z, lat, lon, titulo, escala, rango, centro, unidad = datos_fig
-    fig = graficos.mapa(
-        z, lat, lon, enc, datos.costa(ctx.reg), titulo=titulo, unidad=unidad, escala=escala,
-        rango=rango, centro=centro, eventos=ctx.eventos, punto=estado.punto(),
-    )  # fmt: skip
-    st.plotly_chart(fig, width="stretch", theme=None, key="mapa_goes")
-    st.caption(
-        "Hora de inicio del barrido; sin corrección de paralaje (topes desplazados 10–20 km "
-        "hacia el sur-suroeste)."
-    )
-    return prod
+    return len(cuadros)
 
 
 def pagina() -> None:
@@ -284,18 +167,28 @@ def pagina() -> None:
         st.info("Este día no tiene datos con hora.")
         return
     t = pd.Timestamp(t)
+    cat = productos.catalogo(ctx.dia)
+    if not cat:
+        st.info("Este día no tiene ERA5 ni GOES. Corre los scripts de descarga (ver AGENTS.md).")
+        return
+    if estado.paneles() is None:  # primera visita: un panel RGB, o el primer índice si no hay GOES
+        inicial = "rgb:airmass" if "rgb:airmass" in cat else productos.ordenados(cat)[0]
+        estado.fija_paneles([estado.nuevo_panel(inicial)])
+    ps = estado.paneles() or []
 
     for clave, defecto in (("encuadre", "Zona de eventos"), ("viento", False), ("sub", 2),
                            ("animar", False)):  # fmt: skip
         estado.recuerda(clave)
         st.session_state.setdefault(clave, defecto)
-    c1, c2, c3, c4 = st.columns([2, 1, 1, 1.3], vertical_alignment="bottom")
+    c1, c2, c3, c4, c5 = st.columns([2, 1.2, 1, 1, 1.3], vertical_alignment="bottom")
     vista = c1.segmented_control("Encuadre", ["Zona de eventos", "Región completa"], key="encuadre")
-    c2.toggle("Viento 850 hPa", key="viento", disabled=ctx.dia.pl is None,
-              help="Flechas del viento en 850 hPa sobre el mapa ERA5 (requiere niveles de presión).")  # fmt: skip
-    c3.toggle("Animar GOES ±1 h", key="animar", disabled=not ctx.dia.goes,
-              help="Loop de las imágenes de una hora antes a una hora después de la regla.")  # fmt: skip
-    c4.select_slider("Detalle GOES", options=[1, 2, 3, 4], key="sub",
+    with c2:
+        _agregar(cat, len(ps))
+    c3.toggle("Viento 850 hPa", key="viento", disabled=ctx.dia.pl is None,
+              help="Flechas del viento en 850 hPa sobre todos los paneles (requiere niveles de presión).")  # fmt: skip
+    c4.toggle("Animar GOES ±1 h", key="animar", disabled=not ctx.dia.goes,
+              help=f"Loop de los paneles GOES (hasta {MAX_ANIMADOS}) de una hora antes a una hora después.")  # fmt: skip
+    c5.select_slider("Detalle GOES", options=[1, 2, 3, 4], key="sub",
                      format_func=lambda s: {1: "máximo", 2: "alto", 3: "medio", 4: "bajo"}[s])  # fmt: skip
     for clave in ("encuadre", "viento", "sub", "animar"):
         estado.guarda(clave)
@@ -304,13 +197,71 @@ def pagina() -> None:
     else:
         enc = graficos.encuadre_eventos(ctx.eventos, ctx.reg)
 
-    izq, der = st.columns(2, gap="medium")
-    with izq:
-        v = _era5(ctx, t, enc)
-    with der:
-        g = _goes(ctx, t, enc)
+    visibles = [p for p in ps if p.clave in cat]
+    faltan = [p for p in ps if p.clave not in cat]
+    if not visibles:
+        st.info(
+            "No hay paneles. Agrega uno con «Agregar panel»: el RGB Airmass es un buen comienzo."
+        )
+        return
+    filas, cols = graficos.disposicion(len(visibles))
+    for f in range(filas):
+        columnas = st.columns(cols, gap="medium")
+        for j, p in enumerate(visibles[f * cols : (f + 1) * cols]):
+            with columnas[j]:
+                _controles(p, f * cols + j + 1, cat, ctx.dia)
 
-    ayudas = [textos.AYUDA[k] for k in (v, g) if k in textos.AYUDA]
+    animar = bool(st.session_state.get("animar"))
+    goes_idx = [i for i, p in enumerate(visibles) if cat[p.clave].es_goes]
+    animados = goes_idx[:MAX_ANIMADOS] if animar else []
+    sub = int(st.session_state.get("sub", 2))
+    lista = [
+        _capa_panel(p, i + 1, cat, ctx.dia, t, enc, PASO_ANIMACION if i in animados else sub)
+        for i, p in enumerate(visibles)
+    ]
+    contornos = [
+        capas.capa(ctx.dia, cat[p.contorno], t)
+        if p.contorno in cat and cat[p.clave].es_goes
+        else None
+        for p in visibles
+    ]
+    ref = datos.era5_ref(ctx.dia)
+    fig, fondos = graficos.grilla(
+        lista, contornos, enc, datos.costa(ctx.reg), eventos=ctx.eventos, punto=estado.punto(),
+        clic=None if ref is None else (ref["latitude"].values, ref["longitude"].values),
+        viento=capas.viento_850(ctx.dia, t, enc) if st.session_state.get("viento") else None,
+    )  # fmt: skip
+    n_cuadros = _animar(fig, fondos, animados, visibles, cat, ctx.dia, t, enc) if animados else 0
+    st.plotly_chart(
+        fig, width="stretch", theme=None, key="grilla", on_select=_al_clic,
+        selection_mode="points", config={"scrollZoom": True},
+    )  # fmt: skip
+
+    notas = ["Rueda o botones del gráfico para acercar; todos los paneles se mueven juntos."]
+    if ref is not None:
+        notas.append("Clic en cualquier panel para elegir un punto (sondeo y series).")
+    if any(c.umbral is not None for c in [*lista, *[c for c in contornos if c]]):
+        notas.append("Línea roja: umbral chileno.")
+    if goes_idx:
+        notas.append("GOES: hora de inicio del barrido, sin corrección de paralaje (topes desplazados "
+                     "10–20 km hacia el sur-suroeste).")  # fmt: skip
+    notas += sorted({c.nota for c in lista if c.nota})
+    if animar and animados:
+        notas.append(
+            f"Animación: {n_cuadros} imágenes cada 10 min, un píxel de cada {PASO_ANIMACION}."
+            if n_cuadros >= 2 else "No hay suficientes imágenes alrededor de esta hora para animar."
+        )  # fmt: skip
+        if len(goes_idx) > MAX_ANIMADOS:
+            notas.append(f"Se animan los primeros {MAX_ANIMADOS} paneles GOES.")
+    if faltan:
+        notas.append("Sin datos este día: " + ", ".join(p.clave for p in faltan) + ".")
+    st.caption(" ".join(notas))
+
+    vistos = dict.fromkeys(
+        [cat[p.clave].variable for p in visibles] + [cat[p.contorno].variable for p in visibles
+                                                     if p.contorno in cat]
+    )  # fmt: skip
+    ayudas = [textos.AYUDA[v] for v in vistos if v in textos.AYUDA]
     if ayudas:
         with st.expander("Qué estás viendo", expanded=estado.paso_actual() is not None):
             for a in ayudas:
