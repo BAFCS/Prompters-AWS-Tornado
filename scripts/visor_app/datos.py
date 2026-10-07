@@ -173,7 +173,11 @@ def eventos(dia: dt.date) -> pd.DataFrame:
     d["hora"] = [hora_utc(h, dia) for h in d["Hour (UTC)"]]
     d["hora_txt"] = d["Hour (UTC)"].astype(str).str.strip().str.replace(":00$", "", regex=True)
     tornado, tromba = d["Tornado"] == 1, d["Waterspout"] == 1
-    d["tipo"] = np.select([tornado & tromba, tornado], ["tornado y tromba", "tornado"], "tromba")
+    d["tipo"] = np.select(
+        [tornado & tromba, tornado, tromba],
+        ["tornado y tromba", "tornado", "tromba"],
+        "sin clasificación",
+    )
     d["ef"] = d["Max. EF Rating"].fillna("?").astype(str).str.replace(r"\.0$", "", regex=True)
     d["confianza"] = np.where(d["Register"] == 1, "registro confirmado", "registro débil")
     d = d.sort_values("hora", na_position="last").reset_index(drop=True)

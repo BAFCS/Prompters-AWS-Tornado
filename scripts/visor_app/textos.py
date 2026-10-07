@@ -9,80 +9,119 @@ from dataclasses import dataclass, field
 # --- Ayuda en contexto: qué mide, y qué valor importa en Chile -----------------------------------
 AYUDA = {
     "vgp_01": (
-        "**VGP₀₋₁ = √CAPE × cizalle 0–1 km.** Mide cuánta vorticidad horizontal de niveles bajos "
-        "puede inclinar la corriente ascendente. Es el mejor discriminante conocido para Chile: los "
-        "cinco días tornádicos analizados (2008–2019) superan **0,1 m/s²** y Los Ángeles 2019 supera "
-        "0,2 (Vicencio et al. 2021)."
+        "**Parámetro de generación de vorticidad (VGP₀₋₁).** Combina la energía potencial "
+        "convectiva disponible (CAPE) con el cambio del viento por unidad de altura. En esta app: "
+        "**VGP₀₋₁ = √CAPE × (ΔV₀₋₁ / 1.000 m)**, donde ΔV es la magnitud de la diferencia "
+        "vectorial del viento usada para la capa. El resultado se expresa en m/s². El documento "
+        "cita valores superiores a **0,1 m/s²** en los cinco días tornádicos analizados entre "
+        "2008 y 2019 (Vicencio et al. 2021). El alcance de ese criterio fuera de los casos "
+        "estudiados requiere evaluación."
     ),
     "srh_01": (
-        "**Helicidad relativa a la tormenta 0–1 km**, respecto de la supercélula *left-mover* de "
-        "Bunkers. Mide la vorticidad alineada con el flujo que entra a la tormenta. **En el "
-        "hemisferio sur los casos tornádicos dan SRH negativa**: en 2019 estuvo entre −100 y "
-        "−250 m²/s², con parches de −600."
+        "**Helicidad relativa a la tormenta (SRH) 0–1 km.** Describe la relación entre la "
+        "rotación del aire y el flujo que entra a la tormenta. Depende del perfil de viento y "
+        "del movimiento supuesto de la tormenta. Aquí se utiliza la rama *left-mover* de "
+        "Bunkers, una estimación de movimiento hacia la izquierda del viento medio. En los "
+        "casos australes descritos se observan valores negativos; el signo por sí solo no "
+        "confirma un entorno tornádico."
     ),
     "srh_03": (
-        "**Helicidad 0–3 km** (*left-mover*). Más ligada a la organización de la supercélula que al "
-        "tornado. En 2019: −253 a −688 m²/s². Negativa = favorable en el sur."
+        "**Helicidad relativa a la tormenta (SRH) 0–3 km.** Se calcula para la rama "
+        "*left-mover*, estimada hacia la izquierda del viento medio. Describe la relación entre "
+        "el perfil de viento de esta capa y el movimiento supuesto de la tormenta. Los casos "
+        "de 2019 citados presentan valores entre −253 y −688 m²/s². El signo negativo por sí "
+        "solo no confirma la presencia de un mesociclón ni de un tornado."
     ),
     "cizalle_01": (
-        "**Cizalle 0–1 km**: diferencia vectorial del viento entre 10 m y 1 km. En Chile **es el "
-        "cizalle que discrimina**: supera 12 m/s en los días tornádicos. Sobre el océano suele ser de "
-        "5–10 m/s y tierra adentro de 10–20 m/s, por eso la franja costera es crítica."
+        "**Cizalle 0–1 km**: magnitud de la diferencia vectorial del viento entre 10 m y 1 km. "
+        "Resume cuánto cambia la velocidad o la dirección del viento en esa capa. La línea "
+        "de 12 m/s es el valor de comparación citado para los días tornádicos estudiados. "
+        "Cumplir este criterio describe el entorno; no confirma un tornado."
     ),
     "cizalle_03": "**Cizalle 0–3 km**: diferencia vectorial del viento entre 10 m y 3 km.",
     "cizalle_06": (
-        "**Cizalle 0–6 km**: el discriminante clásico entre tormentas ordinarias y organizadas. "
-        "En Chile **no discrimina**: en invierno casi siempre supera 18 m/s."
+        "**Cizalle 0–6 km**: magnitud de la diferencia vectorial del viento entre 10 m y 6 km. "
+        "Ayuda a describir el entorno de organización de las tormentas. En el caso mostrado "
+        "es elevado en gran parte del área y distingue poco entre lugares dentro de esa "
+        "situación; esto no demuestra que carezca de utilidad en otros casos."
     ),
     "stp_lm": (
-        "**STP, rama left-mover.** El índice tornádico más usado en EE.UU., con la SRH austral: "
-        "aquí es negativo, y el umbral chileno es **≤ −0,3** (percentil 99 de 1959–2021, Marín et al. "
-        "2024), no +1. Versión aproximada: CAPE de ERA5 y sin término de CIN."
+        "**Parámetro significativo de tornado (STP), rama left-mover.** El cálculo del visor "
+        "es una aproximación: utiliza CAPE de ERA5 y omite la inhibición convectiva (CIN), "
+        "la barrera energética para iniciar el ascenso. Combina energía, cizalle, helicidad "
+        "relativa a la tormenta (SRH) y altura estimada de la base nubosa. El documento cita "
+        "**≤ −0,3** como criterio austral (Marín et al. 2024); su aplicación a esta "
+        "aproximación debe validarse antes de usarlo como criterio operativo."
     ),
     "sherbs3": (
-        "**SHERBS3** (Sherburn y Parker 2014): índice para entornos de mucho cizalle y poco CAPE "
-        "(HSLC), el régimen chileno. Combina el cizalle 0–3 km con los gradientes térmicos 0–3 km y "
-        "700–500 hPa. El umbral chileno (≥ 1) está definido para SHERBE, su variante con capa "
-        "efectiva: tómalo como referencia."
+        "**SHERBS3** (Sherburn y Parker 2014): índice para entornos de fuerte cizalle y baja "
+        "energía convectiva disponible, llamados HSLC por sus siglas en inglés. Combina "
+        "el cizalle 0–3 km con el cambio de temperatura con la altura en 0–3 km y entre los "
+        "niveles de presión de 700 y 500 hPa. El criterio **SHERBE ≥ 1** citado en el "
+        "documento corresponde a otra variante, calculada con la capa efectiva; no es un "
+        "umbral validado de SHERBS3."
     ),
     "lcl": (
-        "**Altura del LCL**, la base de la nube, estimada con la fórmula de Espy (125 m por grado de "
-        "diferencia entre temperatura y punto de rocío). Un LCL bajo es de los discriminantes "
-        "tornádicos más robustos; en 2019 estuvo por debajo de 650–713 m."
+        "**Nivel de condensación por ascenso (LCL).** Estima la altura a la que una porción de "
+        "aire que asciende comienza a condensarse y puede formar la base de una nube. Se usa "
+        "la aproximación de Espy: 125 m por grado de diferencia entre temperatura y punto "
+        "de rocío. El punto de rocío es la temperatura a la que el aire alcanzaría la "
+        "saturación. Los valores inferiores a 650–713 m citados corresponden al caso de 2019."
     ),
     "gamma_03": "**Gradiente térmico 0–3 km**: cuánto se enfría el aire por km de ascenso.",
-    "gamma_75": "**Gradiente térmico 700–500 hPa**: inestabilidad de niveles medios.",
+    "gamma_75": (
+        "**Gradiente térmico 700–500 hPa**: cuánto cambia la temperatura por kilómetro "
+        "de altura entre esos niveles de presión, expresados en hectopascales (hPa). "
+        "Ayuda a describir la inestabilidad de niveles medios."
+    ),
     "cape": (
-        "**CAPE** de ERA5: energía disponible para la convección. En Chile es bajo para estándares "
-        "norteamericanos (200–500 J/kg en 2019), pero el promedio de fines de mayo en el Biobío es "
-        "de 15–45 J/kg: los días tornádicos son los días en que aparece algo."
+        "**Energía potencial convectiva disponible (CAPE)** de ERA5: energía disponible para "
+        "el ascenso del aire, expresada en J/kg. Ayuda a describir la inestabilidad, pero no "
+        "confirma por sí sola que se desarrolle una tormenta. El documento presenta distintos "
+        "rangos para 2019; falta aclarar su fuente, cálculo y ámbito antes de compararlos "
+        "como una misma referencia."
     ),
     "C13": (
-        "**GOES banda 13 (10,3 µm)**: infrarrojo de ventana, la temperatura de brillo del tope. Más "
-        "frío = más alto = ascenso más potente. Las imágenes no tienen corrección de paralaje: los "
-        "topes aparecen desplazados 10–20 km hacia el sur-suroeste."
+        "**GOES banda 13 (10,3 µm)**: muestra temperatura de brillo, una medida derivada de "
+        "la radiación infrarroja recibida. Los valores más bajos pueden asociarse a nubes "
+        "más altas, pero no miden directamente su altura ni la intensidad del ascenso. "
+        "Las imágenes no tienen corrección de paralaje: el ángulo de observación puede "
+        "desplazar la posición aparente de las nubes respecto de su posición real."
     ),
     "dT": (
-        "**Enfriamiento del tope en 10 minutos** (C13 ahora menos C13 en la imagen anterior). "
-        "Valores negativos: el tope sube. Enfriamientos más rápidos que −4 K en 15 min indican "
-        "convección en rápido desarrollo."
+        "**Cambio de temperatura de brillo entre imágenes (ΔC13).** Se resta la temperatura "
+        "de la imagen anterior disponible a la actual. Los valores negativos indican "
+        "enfriamiento en el mismo píxel; pueden asociarse al crecimiento de la nube o a su "
+        "desplazamiento. Consulta el intervalo indicado en el título: no siempre es de "
+        "10 minutos."
     ),
     "C08-C13": (
-        "**C08 − C13 (vapor de agua menos ventana)**. Cerca de 0 o positivo: el tope alcanza o "
-        "supera la tropopausa (topes penetrantes). Muy negativo: nube baja o aire seco en altura."
+        "**C08 − C13**: diferencia de temperatura de brillo entre las bandas 8 y 13. Se "
+        "explora como señal de topes próximos a la tropopausa, el límite superior de la "
+        "troposfera. Su interpretación requiere contexto y verificación; un valor cercano "
+        "a cero o positivo no confirma por sí solo que una nube alcance o supere ese límite."
     ),
     "airmass": (
-        "**RGB Airmass**: rojo = C08 − C10, verde = C12 − C13, azul = C08 invertido. Solo usa "
-        "infrarrojo, así que sirve de día y de noche. Rojizo: aire seco bajado de la estratósfera "
-        "(intrusión seca, cerca del chorro). Verde oliva: masa de aire cálida y húmeda. Azul y "
-        "violeta: aire frío polar. Blanco: topes altos y fríos. Sirve para ubicar la nube coma y el "
-        "borde de la intrusión seca, donde suele organizarse la convección."
+        "**RGB Airmass** es una imagen compuesta que combina bandas infrarrojas para "
+        "distinguir estructuras de nubes y masas de aire. Puede utilizarse de día y de "
+        "noche. Los colores orientan la interpretación de humedad y temperatura, pero "
+        "deben leerse junto con otros datos. La «nube coma» es una estructura nubosa con "
+        "esa forma; una «intrusión seca» es una entrada de aire relativamente seco. "
+        "**Cálculo:** rojo = C08 − C10; verde = C12 − C13; azul = C08 invertido."
     ),
 }
 
+NOTA_STP = (
+    "El STP mostrado es una aproximación: usa CAPE de ERA5 y omite la inhibición convectiva "
+    "(CIN), la barrera energética para iniciar el ascenso. La aplicación del criterio citado "
+    "a esta variante requiere validación."
+)
+
 NOTA_AUSTRAL = (
-    "En el hemisferio sur la supercélula favorecida es la *left-mover* y la SRH tornádica es "
-    "**negativa**. MetPy o SHARPpy usados tal cual devuelven índices con el signo del norte."
+    "El proyecto utiliza la rama *left-mover*, una estimación de movimiento hacia la "
+    "izquierda del viento medio. En los casos australes descritos, la SRH de esta rama "
+    "es negativa. Al calcular los índices, comprueba la rama elegida y la convención "
+    "de signos; no basta con invertir todos los resultados."
 )
 
 
@@ -99,15 +138,17 @@ class Caso:
 CASOS = {
     dt.date(2019, 5, 30): Caso(
         "30 de mayo de 2019 · Biobío",
-        "El primer día del brote: cinco tornados reportados entre Ñuble y la Araucanía en la "
+        "El primer día del episodio: cinco tornados reportados entre Ñuble y la Araucanía en la "
         "tarde, entre ellos el EF2 que cruzó Los Ángeles a las 21:57 UTC.",
         (
-            "Una baja ocluida de ~995 hPa, casi inmóvil frente a la costa desde el 28 de mayo, "
-            "sostenía advección cálida del noroeste y un jet de bajo nivel de 20–25 m/s en 850 hPa.",
-            "El régimen fue de mucho cizalle y poco CAPE (HSLC): CAPE de 200–1.000 J/kg, cizalle "
-            "0–1 km de 12–20 m/s, SRH 0–1 km de −100 a −250 m²/s² y LCL muy bajo.",
-            "Chile no tenía radar meteorológico: que fueron supercélulas se reconstruyó después con "
-            "GOES-16 cada 10 minutos, rayos, aviones y simulaciones WRF (Vicencio et al. 2021).",
+            "Un sistema de baja presión permanecía casi inmóvil frente a la costa desde "
+            "el 28 de mayo. El viento del noroeste transportaba aire cálido y presentaba "
+            "una franja de velocidades elevadas en niveles bajos.",
+            "Los datos combinan fuerte cambio del viento con la altura y energía disponible "
+            "para el ascenso relativamente baja. Este régimen se denomina HSLC, por sus "
+            "siglas en inglés. El estudio citado reconstruyó las tormentas mediante imágenes "
+            "GOES-16, observaciones de rayos y aviones, y simulaciones atmosféricas "
+            "(Vicencio et al. 2021).",
         ),
     ),
     dt.date(2019, 5, 31): Caso(
@@ -115,11 +156,28 @@ CASOS = {
         "El segundo día: el tornado que nació como tromba marina y entró a Talcahuano a las "
         "18:00 UTC, con 17 km de trayecto, y otro en Chanco.",
         (
-            "Una nube coma con una mesobaja disparó una banda de celdas sobre el océano, separadas "
-            "unos 50 km, que fueron entrando a tierra una tras otra.",
+            "Una estructura nubosa con forma de coma y un centro de baja presión de menor "
+            "escala acompañaron una banda de tormentas sobre el océano. Las tormentas, "
+            "separadas unos 50 km, entraron a tierra de manera sucesiva.",
             "El tornado de Talcahuano pasó a 400–450 m de dos estaciones del aeropuerto Carriel "
             "Sur, que registraron una caída de presión de 2,1 hPa en 6 minutos.",
         ),
+    ),
+}
+
+DETALLES_CASOS = {
+    dt.date(2019, 5, 30): (
+        "El documento describe una baja ocluida de aproximadamente 995 hPa y viento de "
+        "20–25 m/s en el nivel de presión de 850 hPa. Las presiones en hPa permiten "
+        "referirse a distintos niveles atmosféricos. Una baja ocluida es un sistema de "
+        "baja presión cuyo frente frío ha alcanzado al cálido.",
+        "Se citan cizalle 0–1 km de 12–20 m/s, SRH 0–1 km de −100 a −250 m²/s² y "
+        "una altura de condensación baja. El rango de CAPE de 200–1.000 J/kg aparece "
+        "en el contexto del caso, mientras que otra referencia del documento presenta "
+        "200–500 J/kg. Falta aclarar la fuente, el cálculo y el ámbito de ambos rangos.",
+        "El estudio utilizó simulaciones con el modelo atmosférico WRF. El alcance de "
+        "la afirmación sobre la ausencia de radar meteorológico y la identificación "
+        "de supercélulas requiere revisión de la fuente.",
     ),
 }
 
@@ -153,37 +211,44 @@ RECORRIDOS = {
     dt.date(2019, 5, 30): (
         Paso(
             "caso", "18:30",
-            "Cinco tornados en cuatro horas, todos en la ventana del calentamiento diurno. La "
-            "bitácora los ordena por hora; cada fila lleva el visor a ese momento y lugar.",
+            "El catálogo reúne cinco tornados reportados para este día. Selecciona una fila "
+            "en la tabla para situar el visor en la hora y el lugar del evento. Este "
+            "recorrido explora un caso histórico; no demuestra una capacidad predictiva.",
         ),
         Paso(
             "mapas", "18:30",
-            "El cizalle 0–1 km es el que discrimina en Chile. Busca la franja sobre 12 m/s (línea "
-            "roja) pegada a la costa y al pie de monte, donde ocurrirán los tornados.",
+            "Compara la franja con cizalle 0–1 km superior a 12 m/s con las ubicaciones "
+            "reportadas. La línea roja marca ese valor de referencia. Revisa la hora "
+            "indicada en cada panel antes de comparar las dos fuentes.",
             evento="Ángeles", paneles=("idx:cizalle_01", "goes:C13"),
         ),
         Paso(
             "mapas", "19:00",
-            "Con algo de CAPE, el cizalle se vuelve VGP: donde supera 0,1 m/s² hay vorticidad lista "
-            "para ser inclinada. A esta hora se reporta el primer tornado, en Quilelto.",
+            "VGP combina CAPE con el cambio del viento por unidad de altura. Localiza "
+            "las zonas superiores a 0,1 m/s² y compáralas con el primer evento reportado, "
+            "en Quilelto.",
             evento="Quilelto", paneles=("idx:vgp_01", "goes:C13"),
         ),
         Paso(
             "sondeo", "20:00",
-            "El perfil sobre Coihueco: poca energía, base de nube baja y una hodógrafa larga. La "
-            "tormenta de referencia es la left-mover; la helicidad respecto de ella sale negativa.",
+            "En el perfil de Coihueco, observa el CAPE, la altura estimada de la base de "
+            "nube y el cambio del viento con la altura. El cálculo de SRH utiliza la rama "
+            "left-mover, una estimación del movimiento de la tormenta.",
             evento="Coihueco",
         ),
         Paso(
             "mapas", "21:50",
-            "Siete minutos antes del EF2 de Los Ángeles. A la derecha, el enfriamiento del tope en "
-            "10 minutos: los azules marcan topes que todavía suben.",
+            "La hora seleccionada es anterior al reporte de Los Ángeles. A la derecha, "
+            "los azules indican enfriamiento entre imágenes; comprueba el intervalo del "
+            "panel y considera también el desplazamiento de las nubes.",
             evento="Ángeles", paneles=("idx:srh_01", "goes:dT"),
         ),
         Paso(
             "series", "21:50",
-            "La evolución alrededor de Los Ángeles: entorno ERA5 hora a hora y la temperatura del "
-            "tope cada 10 minutos, con la hora del tornado marcada. ¿Qué cambió antes?",
+            "Compara VGP, cizalle, SRH y temperatura de brillo antes y después de la hora "
+            "reportada para Los Ángeles. Distingue los cambios observados de las "
+            "inferencias sobre la tormenta. Las series resumen un área fija; no siguen "
+            "automáticamente una misma nube.",
             evento="Ángeles",
         ),
     ),

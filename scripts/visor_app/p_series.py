@@ -1,9 +1,11 @@
-"""Página «Series»: el entorno ERA5 hora a hora y los topes GOES cada 10 minutos alrededor del punto."""
+"""Página «Series»: el entorno ERA5 hora a hora y las temperaturas de brillo GOES alrededor del punto."""
+
+import html
 
 import pandas as pd
 import streamlit as st
 
-from visor_app import datos, estado, graficos, tema
+from visor_app import componentes, datos, estado, graficos, tema
 
 
 def _serie_era5(
@@ -29,20 +31,27 @@ def pagina() -> None:
     st.title("Series")
     if p is None:
         st.info(
-            "Elige un evento en la barra lateral o haz clic en el mapa ERA5 de la página Mapas."
+            "Elige un evento en la barra lateral o haz clic en un panel de Mapas cuando haya datos ERA5."
         )
         return
     estado.recuerda("radio")
     st.session_state.setdefault("radio", 0.5)
     radio = st.select_slider(
-        "Ventana alrededor del punto", options=[0.25, 0.5, 0.75, 1.0], key="radio",
-        format_func=lambda r: f"±{r:g}° (~{r * 111:.0f} km)",
+        "Área de comparación alrededor del punto", options=[0.25, 0.5, 0.75, 1.0], key="radio",
+        format_func=lambda r: f"±{r:g}°".replace(".", ","),
+        help="Rectángulo que se extiende los grados elegidos en latitud y longitud. La distancia este-oeste depende de la latitud.",
     )  # fmt: skip
     estado.guarda("radio")
     st.html(
-        f"<p class='lede'>{p.nombre} · <span class='mono'>{p.lat:.2f}°, {p.lon:.2f}°</span>. "
-        "«Punto»: la celda ERA5 más cercana. «Ventana»: el valor más peligroso dentro del "
-        "cuadrado elegido, útil porque ERA5 y el catálogo no coinciden al kilómetro.</p>"
+        f"<p class='lede'>{html.escape(p.nombre)} · <span class='mono'>{componentes.coord(p.lat, p.lon)}</span>. "
+        "«Punto» es la celda ERA5 más cercana. «Área» muestra el máximo de VGP y cizalle, "
+        "o el mínimo de SRH, dentro del rectángulo elegido. La comparación permite explorar "
+        "diferencias espaciales alrededor del lugar reportado.</p>"
+    )
+
+    st.markdown(
+        "Las series GOES resumen una zona fija; no siguen automáticamente una misma nube. "
+        "El desplazamiento de tormentas puede cambiar los valores."
     )
 
     filas: list[graficos.Serie] = []
@@ -54,12 +63,12 @@ def pagina() -> None:
             ("cizalle_01", "Cizalle 0–1 km", "m/s", 12.0, ">"),
         ):
             s_p, s_v = _serie_era5(ctx, v, p, radio, peor)
-            filas.append(graficos.Serie(titulo, unidad, ((s_p, "punto", tema.ACCENT),
-                                                         (s_v, "ventana", tema.INK_2)), umbral))  # fmt: skip
+            filas.append(graficos.Serie(titulo, unidad, ((s_p, "punto", tema.colores().SELECCION),
+                                                         (s_v, "área", tema.colores().INK_2)), umbral))  # fmt: skip
             tabla[f"{v}_punto"], tabla[f"{v}_ventana"] = s_p, s_v
     else:
         st.info(
-            "Faltan los índices ERA5 de este día: corre "
+            "No hay índices ERA5 preparados para este día. Elige otro día disponible. Si ya descargaste ERA5, puedes calcularlos con "
             f"`uv run python scripts/procesa_era5.py --inicio {ctx.dia.fecha:%Y-%m-%d}`."
         )
     if ctx.dia.goes:
@@ -71,28 +80,39 @@ def pagina() -> None:
         g = g.reindex(pd.date_range(t0, t1, freq="10min"))
         tb = g["tb_min"] - 273.15
         filas.append(
-            graficos.Serie("Temperatura mínima del tope (C13)", "°C", ((tb, "ventana", tema.COLD),))
+            graficos.Serie(
+                "Temperatura de brillo mínima de C13 dentro del área",
+                "°C",
+                ((tb, "área GOES", tema.colores().WARM),),
+            )
         )
         filas.append(
             graficos.Serie(
-                "Área de topes más fríos que −50 °C", "km²", ((g["area_50"], "ventana", tema.COLD),)
+                "Área con temperatura de brillo inferior a −50 °C",
+                "km²",
+                ((g["area_50"], "área GOES", tema.colores().WARM),),
             )
         )
         tabla["tb_min_c13_C"], tabla["area_bajo_menos50_km2"] = tb, g["area_50"]
     if not filas:
-        st.info("Este día no tiene índices ni imágenes para armar series.")
+        st.info(
+            "No hay índices ni imágenes preparados para esta selección. Elige otra región o fecha disponible."
+        )
         return
 
     fig = graficos.series(filas, ctx.eventos, p.evento)
     t = estado.t_actual()
     if t is not None:
-        fig.add_vline(x=pd.Timestamp(t), line={"color": tema.ACCENT, "width": 1})
+        fig.add_vline(x=pd.Timestamp(t), line={"color": tema.colores().SELECCION, "width": 1})
     st.plotly_chart(fig, width="stretch", theme=None)
     st.caption(
         "Rojo continuo: la hora del evento elegido; punteado: los demás eventos del día. Línea "
-        "verde: la hora de la regla. Rayas rojas: umbral chileno (VGP y cizalle 0–1 km; la SRH no "
-        "tiene uno calibrado). Horas en UTC; las horas GOES sin descargar quedan como huecos. "
-        "Aquí la temperatura va en °C; en los mapas, en K (°C = K − 273,15)."
+        "verde: la hora seleccionada. Rayas rojas: valores de comparación de VGP y cizalle 0–1 km. "
+        "Para SRH no se dibuja un valor de comparación. Cumplir estos criterios no confirma un tornado."
+    )
+    st.caption(
+        "Horas en tiempo universal coordinado (UTC). Las horas GOES sin descargar quedan como huecos. "
+        "Aquí la temperatura de brillo se expresa en °C; en los mapas, en K (°C = K − 273,15)."
     )
     datos_csv = pd.DataFrame(tabla)
     datos_csv.index.name = "time_utc"

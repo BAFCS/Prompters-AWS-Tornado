@@ -49,7 +49,7 @@ SUELO = 10.0  # m, altura asignada a los datos de superficie (viento a 10 m)
 ATRIBUTOS = {
     "cizalle_01": ("Cizalle 0–1 km (magnitud de la diferencia vectorial)", "m s-1", 12.0, ">", None),
     "cizalle_03": ("Cizalle 0–3 km", "m s-1", None, None, None),
-    "cizalle_06": ("Cizalle 0–6 km", "m s-1", None, ">", "no discrimina en Chile"),
+    "cizalle_06": ("Cizalle 0–6 km", "m s-1", None, ">", "Sin criterio local de decisión"),
     "u_lm": ("Movimiento Bunkers left-mover, componente u", "m s-1", None, None, None),
     "v_lm": ("Movimiento Bunkers left-mover, componente v", "m s-1", None, None, None),
     "u_rm": ("Movimiento Bunkers right-mover, componente u", "m s-1", None, None, None),
@@ -67,7 +67,7 @@ ATRIBUTOS = {
     "vgp_01": ("Parámetro de generación de vorticidad 0–1 km (VGP)", "m s-2", 0.1, ">", None),
     "stp_lm": ("Significant Tornado Parameter, rama left-mover (sin CIN)", "1", -0.3, "<", None),
     "sherbs3": ("SHERBS3 (Sherburn y Parker 2014, cizalle 0–3 km)", "1", None, ">",
-                "Chile usa SHERBE ≥ 1"),
+                "SHERBE ≥ 1 corresponde a otra variante; no es un umbral de SHERBS3"),
     "altura_sfc": ("Altura del terreno estimada desde la presión de superficie", "m", None, None,
                    None),
 }  # fmt: skip
