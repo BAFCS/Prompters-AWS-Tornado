@@ -13,9 +13,6 @@ interactivo**. Todo el contenido, los comentarios y los mensajes de commit está
   (física, datos, variables, planteamiento del modelo, arquitectura AWS, tareas abiertas en la sección 8).
 - `docs/mesociclones_chile.pdf` se genera desde el `.md` con un conversor markdown→LaTeX que **no está
   en el repo**; no se puede regenerar desde aquí.
-- `web/index.html` es un sitio autocontenido (SVG y CSS en línea). `web/artifact.html` es el mismo
-  contenido sin `<html>/<head>`, derivado a mano de `index.html`: si se edita uno, hay que replicar el
-  cambio en el otro. `web/figs/*.jpg` son versiones comprimidas de `figs/*.png`.
 
 ## Entorno y comandos
 
@@ -32,11 +29,13 @@ uv run streamlit run scripts/visor.py  # visor interactivo ERA5 + GOES
 uv run ruff check scripts            # lint (uv run ruff check --fix para autocorregir)
 uv run ruff format scripts           # formato
 uv run pyright                       # chequeo de tipos
+uv run python -m unittest discover -s tests -v  # regresiones de fichas, catálogo y acceso sin datos
 uv run jupyter lab                   # notebooks (jupyterlab + ipywidgets en el grupo dev)
 uv add <pkg> / uv add --dev <pkg>    # añadir dependencias
 ```
 
-No hay tests. `ruff check`, `ruff format --check` y `pyright` pasan limpios: mantenerlo así.
+Las pruebas de regresión del visor viven en `tests/` y usan `unittest` y AppTest de Streamlit.
+`ruff check`, `ruff format --check` y `pyright` pasan limpios: mantenerlo así.
 Para validar un cambio en un script de figuras, regenerar la figura y compararla con la versión
 anterior (las figuras son deterministas: mismo entorno y datos dan los mismos píxeles).
 
@@ -45,7 +44,8 @@ anterior (las figuras son deterministas: mismo entorno y datos dan los mismos p�
 Cada script es un programa lineal sin funciones `main` ni argumentos: carga datos, dibuja y guarda
 en `figs/`. Los accesos a HDF5 pasan por un helper `dataset()` que acota el tipo a `h5py.Dataset`. Las rutas son relativas a la raíz del repo (`ROOT`, `OUT = figs/`, `DATA = data/`).
 Comparten una paleta y `rcParams` copiados en cada archivo (`ACC`, `SEV`, `COLD`, `WARM`, `MUT`,
-`INK`, `LINE`), que coinciden con las variables CSS de `web/index.html`.
+`INK`, `LINE`), que coinciden con la paleta de `scripts/visor_app/tema.py` (salvo `MUT`: el visor usa
+un apagado más oscuro porque va sobre fondo niebla).
 
 | Script | Figura | Entrada |
 |---|---|---|
@@ -80,15 +80,22 @@ uv run streamlit run scripts/visor.py
 ```
 
 **Visor** (`scripts/visor.py` + paquete `scripts/visor_app/`, importado como *first-party* igual que
-`comun`): páginas El caso, Mapas, Sondeo y Series. La barra lateral (región, día, regla de tiempo,
+`comun`): páginas El proyecto, El caso, Mapas, Sondeo y Series. El proyecto (`visor_app/p_proyecto.py`,
+diagramas en `visor_app/diagramas.py`) presenta el proyecto con elementos de Streamlit: es la
+página por defecto y se muestra aunque no haya datos. La barra lateral (región, día, regla de tiempo,
 evento, recorrido guiado) vive en `visor.py` para que sus widgets sobrevivan al cambio de página; el
 estado compartido está en `visor_app/estado.py` (`recuerda`/`guarda` copian los widgets de cada
 página bajo `_<clave>`). La página Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va
 sincronizado). Cada panel muestra un producto de `visor_app/productos.py` (claves `idx:`, `sfc:`, `pl:`,
 `goes:`, `rgb:`), calculado por `visor_app/capas.py` (incluye el RGB Airmass); la lista de paneles vive en
 `st.session_state["paneles"]` (`estado.Panel`), no en widgets, y el recorrido guiado la fija con `Paso.paneles`. Los textos, umbrales y el recorrido guiado salen de `docs/` y están en
-`visor_app/textos.py`: si cambia el documento, hay que actualizarlos. El tema está en
-`.streamlit/config.toml` y `visor_app/tema.py` (paleta de `web/index.html`). `PRODUCT.md` y
+`visor_app/textos.py`: si cambia el documento, hay que actualizarlos. El tema (claro y oscuro) está en
+`.streamlit/config.toml` (`[theme.light]`, `[theme.dark]`) y `visor_app/tema.py` (`CLARA`, `OSCURA`;
+`tema.colores()` da la paleta del modo activo): si cambia un color, hay que cambiarlo en los dos.
+Streamlit no vuelve a ejecutar la app al cambiar de tema, así que el CSS usa variables de las dos
+paletas y un script (`tema._VIGIA`) marca `<html data-tema>` y pulsa un botón oculto para redibujar
+plotly. El botón de la barra (`tema.boton_modo`) alterna el modo eligiendo la opción del menú ⋮ de Streamlit (por eso `client.toolbarMode = "viewer"`). Las escalas de color de los mapas son estándar y viven en `visor_app/escalas.py`, por tipo de
+dato (`productos.Producto.tipo`); cada panel guarda la suya en `Panel.escala`. `PRODUCT.md` y
 `.impeccable/` guardan el contexto de diseño del visor.
 
 GOES se guarda con su codificación original (`int16` con `scale_factor`/`add_offset`), así que no

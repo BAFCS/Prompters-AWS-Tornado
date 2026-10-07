@@ -17,13 +17,24 @@ Uso::
 """
 
 import datetime as dt
+import html
 
 import numpy as np
 import pandas as pd
 import streamlit as st
 
 import comun
-from visor_app import componentes, datos, estado, p_caso, p_mapas, p_series, p_sondeo, tema
+from visor_app import (
+    componentes,
+    datos,
+    estado,
+    p_caso,
+    p_mapas,
+    p_proyecto,
+    p_series,
+    p_sondeo,
+    tema,
+)
 
 st.set_page_config(
     page_title="Mesociclones en Chile · visor", page_icon=":material/storm:", layout="wide"
@@ -31,7 +42,8 @@ st.set_page_config(
 tema.aplica()
 
 PAGINAS = {
-    "caso": st.Page(p_caso.pagina, title="El caso", icon=":material/history_edu:", default=True),
+    "proyecto": st.Page(p_proyecto.pagina, title="El proyecto", icon=":material/info:", default=True),
+    "caso": st.Page(p_caso.pagina, title="El caso", icon=":material/history_edu:", url_path="caso"),
     "mapas": st.Page(p_mapas.pagina, title="Mapas", icon=":material/map:", url_path="mapas"),
     "sondeo": st.Page(p_sondeo.pagina, title="Sondeo", icon=":material/stacked_line_chart:",
                       url_path="sondeo"),
@@ -44,12 +56,31 @@ navegacion = st.navigation(list(PAGINAS.values()), position="top")
 # --- Región y día --------------------------------------------------------------------------------
 barra = st.sidebar
 barra.markdown("## Mesociclones en Chile")
+barra.caption(
+    "Selecciona la región, el día y la hora que quieres explorar. La selección se comparte "
+    "entre El caso, Mapas, Sondeo y Series. Las fechas y horas se expresan en tiempo universal "
+    "coordinado (UTC), que puede diferir de la hora local de Chile."
+)
+tema.boton_modo()
 nombres = datos.regiones()
+if not nombres and navegacion.url_path == PAGINAS["proyecto"].url_path:
+    navegacion.run()  # la descripción no usa datos
+    st.stop()
 if not nombres:
-    st.error(
-        "No hay recortes en `data/recortes/`. Descarga un día con `descarga_era5.py` y "
-        "`descarga_goes.py` (ver AGENTS.md) y recarga esta página."
-    )
+    st.error("No hay datos preparados para explorar. Puedes leer la descripción en El proyecto.")
+    st.page_link(PAGINAS["proyecto"], label="Leer El proyecto")
+    with st.expander("Preparar datos en la instalación local"):
+        st.markdown(
+            "Desde la raíz del repositorio, descarga y procesa un día. Los archivos se guardan "
+            "en `data/recortes/`. Después, recarga esta página."
+        )
+        st.code(
+            "uv run python scripts/descarga_era5.py --inicio 2019-05-30\n"
+            "uv run python scripts/descarga_goes.py --inicio 2019-05-30\n"
+            "uv run python scripts/procesa_goes.py --inicio 2019-05-30\n"
+            "uv run python scripts/procesa_era5.py --inicio 2019-05-30",
+            language="bash",
+        )
     st.stop()
 estado.recuerda("region")
 nombre = barra.selectbox(
@@ -59,7 +90,10 @@ nombre = barra.selectbox(
 estado.guarda("region")
 dias = datos.dias(nombre)
 if not dias:
-    st.error(f"La región {nombre} no tiene datos todavía.")
+    if navegacion.url_path == PAGINAS["proyecto"].url_path:
+        navegacion.run()
+        st.stop()
+    st.error(f"La región {nombre} no tiene días preparados. Elige otra región disponible.")
     st.stop()
 fechas = list(dias)
 estado.recuerda("dia")
@@ -78,7 +112,13 @@ if reg is None:  # región a medida: se deduce de las coordenadas de los datos
     if ref is None and dia.goes:
         ref = datos.abre(dia.goes[0])
     if ref is None:
-        st.error("No se pudo deducir la extensión de la región.")
+        if navegacion.url_path == PAGINAS["proyecto"].url_path:
+            navegacion.run()
+            st.stop()
+        st.error(
+            "Los archivos disponibles no permiten determinar los límites de la región. "
+            "Revisa sus coordenadas o selecciona otra región."
+        )
         st.stop()
     la, lo = ref["latitude"].values, ref["longitude"].values
     reg = comun.Region(nombre, float(la.max()), float(la.min()), float(lo.min()), float(lo.max()))
@@ -107,14 +147,16 @@ if ts:
     barra.select_slider(
         "Hora (UTC)", options=list(range(len(ts))), key="t_idx",
         format_func=lambda i: pd.Timestamp(ts[i]).strftime("%H:%M"),
-        help="Cada imagen GOES (10 min). ERA5 usa la hora en punto más cercana.",
+        help="Si hay imágenes GOES, puedes avanzar entre los barridos disponibles, normalmente "
+        "separados por 10 minutos. ERA5 muestra el registro horario más cercano. Comprueba la hora "
+        "indicada en cada gráfico.",
     )  # fmt: skip
     estado.guarda("t_idx")
     t = estado.t_actual()
     if t is not None:
         barra.html(componentes.regla(ts, eventos, t))
 else:
-    barra.info("Este día no tiene datos con hora.")
+    barra.info("No hay registros con hora para este día. Selecciona otro día disponible.")
 
 # --- Eventos -------------------------------------------------------------------------------------
 if len(eventos):
@@ -130,14 +172,14 @@ if len(eventos):
     st.session_state["ev_sel"] = elegido.evento if elegido and elegido.evento in opciones else "—"
     barra.selectbox(
         "Evento", opciones, key="ev_sel", on_change=al_elegir_evento,
-        format_func=lambda k: "—" if k == "—" else
+        format_func=lambda k: "Sin evento seleccionado" if k == "—" else
         f"{eventos.set_index('id').loc[k, 'hora_txt']} · {eventos.set_index('id').loc[k, 'lugar']}",
     )  # fmt: skip
 p = estado.punto()
 if p is not None:
     barra.html(
-        f"<p class='nota'>Punto elegido: <b>{p.nombre}</b> · "
-        f"<span class='mono'>{p.lat:.2f}°, {p.lon:.2f}°</span></p>"
+        f"<p class='nota'>Punto elegido: <b>{html.escape(p.nombre)}</b> · "
+        f"<span class='mono'>{componentes.coord(p.lat, p.lon)}</span></p>"
     )
 
 # --- Recorrido guiado ----------------------------------------------------------------------------
@@ -150,7 +192,10 @@ if pasos:
             "Empezar recorrido", icon=":material/play_arrow:", type="primary", width="stretch",
             on_click=estado.aplica_paso, args=(fecha, 0, eventos),
         )  # fmt: skip
-        barra.caption(f"{len(pasos)} pasos por el caso, de la mano de la regla de tiempo.")
+        barra.caption(
+            f"Recorrido de {len(pasos)} pasos por el caso del {fecha:%d-%m-%Y}. "
+            "Cada paso selecciona una página, una hora y los datos que se deben observar."
+        )
     else:
         paso = pasos[k]
         barra.html(

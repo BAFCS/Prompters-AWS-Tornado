@@ -15,7 +15,7 @@ esta especificación queda como registro de lo acordado).
 |---|---|
 | Vistas | Índices del entorno, sondeo + hodógrafo, animación y firmas GOES, series en el evento |
 | Explicación | Portada del caso, ayuda en contexto, recorrido guiado |
-| Tema | Claro "Cuaderno de campo": paleta y tipografías de `web/index.html` |
+| Tema | Claro "Cuaderno de campo": paleta y tipografías de `scripts/visor_app/tema.py` (IBM Plex Sans y Mono) |
 | Estructura | Páginas de Streamlit (`st.navigation`) con estado compartido en la barra lateral |
 | Índices | Script `procesa_era5.py` que escribe `era5_indices/`; el visor solo lee |
 
