@@ -247,7 +247,7 @@ Y mes a mes:
 
 En cuanto a la geografía, la base de datos sitúa **55 de los 102 eventos entre 38° y 42°S** y **36 entre 34° y 38°S**: juntos, el **89 %** del catálogo. Por región administrativa encabezan **Los Lagos (23)**, **La Araucanía (16)** y **Biobío (16)**, seguidas de Ñuble (9), Maule (7) y Los Ríos (7). La mediana de latitud es **38,7°S**.
 
-![Mapa de los 102 tornados y trombas marinas catalogados en Chile entre 1554 y 2025, con un histograma de latitud al costado. Los eventos se concentran entre los 34° y 42°S y no hay ningún registro al sur de los 42,4°S.](../figs/fig1_mapa_catalogo.png)
+![Mapa de los 102 tornados y trombas marinas catalogados en Chile entre 1554 y 2025, con un histograma de latitud al costado. Los eventos se concentran entre los 34° y 42°S y no hay ningún registro al sur de los 42,4°S.](../figs/fig1_catalog_map.png)
 
 **Figura 1.** Los 102 eventos del catálogo, coloreados por tipo y dimensionados por intensidad EF. La franja inferior sombreada marca los más de mil kilómetros de Chile austral sin un solo registro.
 
@@ -472,7 +472,7 @@ Es un único archivo `.xlsx` (una hoja, `Final_Table`) con **102 filas y 32 colu
 | `Fatalities`, `Injured` | Víctimas | — |
 | `Sources`, `Link to Documents`, `Comments` | Procedencia y notas | — |
 
-![Cuatro paneles con la estadística del catálogo: estacionalidad mensual con junio como máximo, distribución horaria con mediana a las 14:00 local, el reparto por períodos que muestra el sesgo de reporte, y la distribución de intensidades EF.](../figs/fig2_catalogo_paneles.png)
+![Cuatro paneles con la estadística del catálogo: estacionalidad mensual con junio como máximo, distribución horaria con mediana a las 14:00 local, el reparto por períodos que muestra el sesgo de reporte, y la distribución de intensidades EF.](../figs/fig2_catalog_panels.png)
 
 **Figura 2.** El catálogo en cuatro cortes. El panel D merece atención: la mediana de ocurrencia es **las 14:00 hora local** (rango intercuartil 11:19–16:12), lo que confirma con datos la ventana de calentamiento diurno descrita en la sección 3.2.
 
@@ -783,7 +783,7 @@ esquemas. Los scripts que las producen están en `scripts/` del repositorio:
 
 | Script | Produce | Fuente |
 |---|---|---|
-| `figs_catalogo.py` | Figuras 1 y 2 | el `.xlsx` de figshare |
+| `figs_catalog.py` | Figuras 1 y 2 | el `.xlsx` de figshare |
 | `figs_era5.py` | Figura 3 | `s3://nsf-ncar-era5/`, lectura por rangos de bytes |
 | `figs_goes.py` | Figura 4 | `s3://noaa-goes16/ABI-L2-CMIPF/` |
 

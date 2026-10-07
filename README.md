@@ -16,8 +16,8 @@ a partir del reanálisis **ERA5** y las imágenes multiespectrales del satélite
 |---|---|
 | `docs/mesociclones_chile.md` | **El documento principal.** El problema, la física, el caso chileno, los datos de entrada, las variables a calcular, cómo plantear el modelo, la arquitectura en AWS y las tareas abiertas. |
 | `docs/mesociclones_chile.pdf` | El mismo documento en A4 (33 páginas), con las figuras. |
-| `scripts/visor.py` y `scripts/visor_app/` | **El visor**: una aplicación web local para explorar un día de datos (mapas, sondeos y series). |
-| `scripts/descarga_*.py`, `scripts/procesa_*.py` | Descargan ERA5 y GOES recortados a Chile y calculan los índices que usa el visor. |
+| `scripts/viewer.py` y `scripts/viewer_app/` | **El visor**: una aplicación web local para explorar un día de datos (mapas, sondeos y series). |
+| `scripts/download_*.py`, `scripts/process_*.py` | Descargan ERA5 y GOES recortados a Chile y calculan los índices que usa el visor. |
 | `scripts/figs_*.py` | Generan las cuatro figuras de `figs/` desde los datos reales. |
 | `tests/` | Pruebas automáticas del visor. |
 
@@ -130,27 +130,27 @@ curl.exe -L -o data/coast.zip https://naciscdn.org/naturalearth/10m/physical/ne_
 ### Paso 5. Descargar y preparar un día de datos
 
 El visor no descarga nada por su cuenta: lee los archivos que dejan estos cuatro scripts en
-`data/recortes/`. Ejecútalos **en este orden**, porque cada uno usa lo que dejó el anterior:
+`data/crops/`. Ejecútalos **en este orden**, porque cada uno usa lo que dejó el anterior:
 
 ```bash
-uv run python scripts/descarga_era5.py --inicio 2019-05-30
-uv run python scripts/descarga_goes.py --inicio 2019-05-30
-uv run python scripts/procesa_goes.py --inicio 2019-05-30
-uv run python scripts/procesa_era5.py --inicio 2019-05-30
+uv run python scripts/download_era5.py --start 2019-05-30
+uv run python scripts/download_goes.py --start 2019-05-30
+uv run python scripts/process_goes.py --start 2019-05-30
+uv run python scripts/process_era5.py --start 2019-05-30
 ```
 
 Qué hace cada uno:
 
-1. `descarga_era5.py` baja del reanálisis ERA5 las variables de ese día (viento, temperatura,
+1. `download_era5.py` baja del reanálisis ERA5 las variables de ese día (viento, temperatura,
    humedad, presión, CAPE y otras), en altura y en superficie, recortadas al centro-sur y sur de Chile.
-2. `descarga_goes.py` baja las imágenes del satélite GOES de ese día, recortadas a la misma región.
-3. `procesa_goes.py` pasa las imágenes del satélite a una grilla de latitud y longitud, la misma
+2. `download_goes.py` baja las imágenes del satélite GOES de ese día, recortadas a la misma región.
+3. `process_goes.py` pasa las imágenes del satélite a una grilla de latitud y longitud, la misma
    forma que usa ERA5, para poder superponerlas.
-4. `procesa_era5.py` calcula los índices de tiempo severo (cizalle, helicidad, VGP, STP) con los
+4. `process_era5.py` calcula los índices de tiempo severo (cizalle, helicidad, VGP, STP) con los
    signos del hemisferio sur.
 
 > [!WARNING]
-> El paso más lento es `descarga_era5.py`. Los archivos de ERA5 en AWS cubren el planeta entero y
+> El paso más lento es `download_era5.py`. Los archivos de ERA5 en AWS cubren el planeta entero y
 > no se pueden pedir recortados, así que por cada hora del día se transfiere el bloque global y se
 > recorta en tu computador. Eso suma unos **11 GB de tráfico por día**, aunque en disco solo quedan
 > unos 70 MB. El volumen es el mismo desde cualquier lugar; solo se evita corriendo el script dentro
@@ -161,13 +161,13 @@ Qué hace cada uno:
 > ya están completos y siguen con los que faltan.
 
 Para preparar otro día, cambia la fecha (formato año-mes-día). Para varios días seguidos, agrega
-`--fin`, por ejemplo `--inicio 2019-05-30 --fin 2019-05-31`. Cada script explica todas sus opciones
-con `--help`, por ejemplo `uv run python scripts/descarga_goes.py --help`.
+`--end`, por ejemplo `--start 2019-05-30 --end 2019-05-31`. Cada script explica todas sus opciones
+con `--help`, por ejemplo `uv run python scripts/download_goes.py --help`.
 
 ### Paso 6. Abrir el visor
 
 ```bash
-uv run streamlit run scripts/visor.py
+uv run streamlit run scripts/viewer.py
 ```
 
 La terminal mostrará una dirección (`Local URL`). Ábrela en tu navegador. Casi siempre es
@@ -201,7 +201,20 @@ terminales nuevas se enteran. Si sigue sin aparecer, reinicia la sesión de tu c
 
 **El visor dice «No hay datos preparados para explorar».**
 Falta el paso 5, o se ejecutó desde otra carpeta. Revisa que exista la carpeta
-`data/recortes/centro-sur-austral/` dentro del repositorio.
+`data/crops/south-central-austral/` dentro del repositorio.
+
+**Preparaste datos antes de que el código pasara a inglés (carpeta `data/recortes/`).**
+Cambiaron la carpeta, los nombres de las regiones y algunas variables. Los archivos ERA5 descargados
+sirven tal cual, así que no hace falta repetir la descarga lenta: mueve las carpetas y rehaz el resto
+con `--force` (ajusta las fechas a las que tengas).
+
+```bash
+mv data/recortes data/crops
+mv data/crops/centro-sur-austral data/crops/south-central-austral   # centro-sur → south-central, completo → full
+uv run python scripts/download_goes.py --start 2019-05-30 --force
+uv run python scripts/process_goes.py --start 2019-05-30 --force
+uv run python scripts/process_era5.py --start 2019-05-30 --force
+```
 
 **El mapa no muestra triángulos rojos de eventos ni la costa.**
 Falta el paso 4. Descarga los dos archivos, revisa que estén en la carpeta `data/` y recarga la

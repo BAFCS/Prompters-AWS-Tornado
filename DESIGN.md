@@ -134,7 +134,7 @@ El visor es la libreta de un caso meteorológico: un fondo sobre el que se apoya
 
 La paleta sale de cinco colores fijados por el usuario (Strawberry Red, Honeydew, Frosted Blue, Steel Blue y Deep Space Blue); los demás tonos son mezclas entre ellos. Hay dos temas que el visitante alterna desde el menú de Streamlit: claro (Honeydew de fondo, hojas blancas, Deep Space oscurecido de tinta) y oscuro (hojas Deep Space sobre un fondo más hondo, Honeydew de tinta, Frosted Blue de acción). Los mapas no usan la paleta: usan escalas estándar según el tipo de dato.
 
-Densidad media-alta, de herramienta de trabajo: dos columnas en escritorio, explicación siempre al lado del dato y nunca encima. La identidad la construye Streamlit con cuatro capas: `.streamlit/config.toml` (widgets y fuentes, tablas `[theme.light]` y `[theme.dark]`), las plantillas plotly `cuaderno` y `cuaderno_oscuro`, el CSS fino de `scripts/visor_app/tema.py` (variables CSS de las dos paletas, conmutadas por `html[data-tema="oscuro"]`) y un vigía que detecta el cambio de tema y vuelve a ejecutar la página para redibujar los gráficos.
+Densidad media-alta, de herramienta de trabajo: dos columnas en escritorio, explicación siempre al lado del dato y nunca encima. La identidad la construye Streamlit con cuatro capas: `.streamlit/config.toml` (widgets y fuentes, tablas `[theme.light]` y `[theme.dark]`), las plantillas plotly `notebook` y `notebook_dark`, el CSS fino de `scripts/viewer_app/theme.py` (variables CSS de las dos paletas, conmutadas por `html[data-theme="dark"]`) y un vigía que detecta el cambio de tema y vuelve a ejecutar la página para redibujar los gráficos.
 
 **Key Characteristics:**
 - Fondo Honeydew (claro) o Deep Space hondo (oscuro); hojas con filete de 1 px y radio de 6 px.
@@ -167,10 +167,10 @@ Paleta fría de cinco colores de marca y sus mezclas, en dos temas con los mismo
 - **Filete** (filete): borde de 1 px de todo panel, ejes y encabezado de la ficha.
 - **Tinta** (tinta): texto, costa en los mapas, temperatura del Skew-T, capa 0–1 km del hodógrafo, valor que supera en la ficha, rótulo del evento propio en Series.
 - **Deep Space Blue** (tinta-2; menta pálida en oscuro): entradilla (lede), serie "área" en Series, viento medio del hodógrafo, contornos de geopotencial.
-- **Pizarra** (apagado): notas, captions, encabezados de tabla, referencias de índices sin umbral calibrado, horas de la regla, rótulo "valor de comparación", parcela del Skew-T, capa 6–10 km del hodógrafo, Bunkers right-mover. `tema.py` anula el 60 % de opacidad que Streamlit aplica a `st.caption`.
+- **Pizarra** (apagado): notas, captions, encabezados de tabla, referencias de índices sin umbral calibrado, horas de la regla, rótulo "valor de comparación", parcela del Skew-T, capa 6–10 km del hodógrafo, Bunkers right-mover. `theme.py` anula el 60 % de opacidad que Streamlit aplica a `st.caption`.
 
 ### Escalas de los mapas
-Las escalas de color de los mapas no son colores de marca: son escalas estándar con nombre de plotly, elegidas por el tipo de dato del producto (`Producto.tipo`, `Capa.tipo`) y cambiables por gráfico ("Escala de color" en el menú de ajuste de cada panel de Mapas y sobre cada mapa de El caso). Cada opción se rotula "apta" o "no apta para daltonismo".
+Las escalas de color de los mapas no son colores de marca: son escalas estándar con nombre de plotly, elegidas por el tipo de dato del producto (`Product.kind`, `Layer.kind`) y cambiables por gráfico ("Escala de color" en el menú de ajuste de cada panel de Mapas y sobre cada mapa de El caso). Cada opción se rotula "apta" o "no apta para daltonismo".
 - **Secuencial** (VGP, cizalle, CAPE, LCL, C08 − C13): Viridis por defecto; Cividis, Plasma, Magma, YlGnBu; Turbo (no apta).
 - **Divergente** (SRH, STP, viento, vorticidad, ΔC13; cero al centro): PuOr por defecto; RdBu invertida, BrBG, Balance; Picnic (no apta).
 - **Infrarrojo** (temperatura de brillo): grises con los topes fríos en blanco por defecto; Cividis y Viridis invertidas, Hielo; Turbo invertida (no apta).
@@ -183,7 +183,7 @@ Las escalas de color de los mapas no son colores de marca: son escalas estándar
 
 **Escalas estándar según el dato.** Un mapa se colorea con una escala estándar de su tipo de dato, nunca con colores de la marca. La predeterminada de cada tipo es siempre apta para daltonismo, y la divergente por defecto (PuOr) no lleva rojo, porque el rojo marca los eventos.
 
-**Los dos temas AA.** Tinta, entradilla, notas y acción alcanzan 4,5:1 sobre el fondo y sobre la hoja en los dos temas; también el texto del botón primario sobre la acción y la tinta sobre la píldora "Cumple el criterio". `tests/test_escalas.py` lo comprueba: un color nuevo de texto entra con su prueba.
+**Los dos temas AA.** Tinta, entradilla, notas y acción alcanzan 4,5:1 sobre el fondo y sobre la hoja en los dos temas; también el texto del botón primario sobre la acción y la tinta sobre la píldora "Cumple el criterio". `tests/test_colorscales.py` lo comprueba: un color nuevo de texto entra con su prueba.
 
 ## Typography
 
@@ -207,13 +207,13 @@ Las escalas de color de los mapas no son colores de marca: son escalas estándar
 
 **La regla del dato en mono.** Lo medido (valores, coordenadas, horas UTC) va en IBM Plex Mono con cifras tabulares donde la plataforma lo permite; la prosa y las unidades no.
 
-**La regla de la coma.** Separador decimal coma en ficha y gráficos (`separators=", "` en plotly; `_num` en la ficha), con 3 cifras significativas; las coordenadas salen de `componentes.coord` con signo menos tipográfico.
+**La regla de la coma.** Separador decimal coma en ficha y gráficos (`separators=", "` en plotly; `_num` en la ficha), con 3 cifras significativas; las coordenadas salen de `components.coord` con signo menos tipográfico.
 
 ## Layout
 
 Página ancha de Streamlit (`layout="wide"`) con barra lateral que lleva el estado compartido: región, día, hora UTC con la regla de tiempo debajo, evento, punto elegido y recorrido guiado. Navegación superior entre cinco páginas: El proyecto (por defecto, visible aunque no haya datos), El caso, Mapas, Sondeo y Series.
 
-Cada página: título, lede, y luego pares de columnas. El caso y Sondeo ponen mapas y gráficos lado a lado en dos columnas iguales (`gap="large"`) y el texto o las tablas en proporción 3:2, con `tema.columnas`: cada par se apila cuando una columna quedaría bajo 26rem (~416 px), lo que en tablet con la barra lateral abierta ocurre siempre; en teléfono la ficha se desplaza dentro de su caja. Mapas y Series ya son de una columna, y la fila de controles de Mapas no se apila porque va alineada con los paneles de la figura. Las páginas de datos conservan el tope de 68ch en párrafos: son notas al lado del dato, no lectura corrida. Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va sincronizado); sobre ella, una barra de controles por panel en contenedores horizontales (`st.container(horizontal=True)`) que se parten en pantallas angostas, con un menú de ajuste (escala de color, nivel, contornos). Nota bajo cada gráfico en apagado. Relleno superior del contenedor 2,2rem (1,6rem más en El proyecto). El proyecto ocupa el ancho disponible hasta 1400 px: si mide 880 px o más lleva un índice fijo de 220 px a la derecha; si no, el índice es un desplegable sobre el cuerpo (container query sobre `.st-key-proyecto`, para que cuente la barra lateral abierta o cerrada; con la barra abierta, el índice lateral aparece desde unos 1340 px de ventana). Párrafos sueltos hasta 90ch; en tarjetas, figuras y notas el texto llega al borde de su caja. Tarjetas y cifras se miden contra el cuerpo (`.st-key-proyecto_cuerpo`), no contra la página: las tarjetas van en una grilla de 3 o 2 columnas que baja a una cuando el cuerpo mide menos de 760 px (3) o 520 px (2), y las cuatro cifras pasan a 2×2 bajo 760 px. En móvil las columnas se apilan (comportamiento de `st.columns`).
+Cada página: título, lede, y luego pares de columnas. El caso y Sondeo ponen mapas y gráficos lado a lado en dos columnas iguales (`gap="large"`) y el texto o las tablas en proporción 3:2, con `theme.columns`: cada par se apila cuando una columna quedaría bajo 26rem (~416 px), lo que en tablet con la barra lateral abierta ocurre siempre; en teléfono la ficha se desplaza dentro de su caja. Mapas y Series ya son de una columna, y la fila de controles de Mapas no se apila porque va alineada con los paneles de la figura. Las páginas de datos conservan el tope de 68ch en párrafos: son notas al lado del dato, no lectura corrida. Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va sincronizado); sobre ella, una barra de controles por panel en contenedores horizontales (`st.container(horizontal=True)`) que se parten en pantallas angostas, con un menú de ajuste (escala de color, nivel, contornos). Nota bajo cada gráfico en apagado. Relleno superior del contenedor 2,2rem (1,6rem más en El proyecto). El proyecto ocupa el ancho disponible hasta 1400 px: si mide 880 px o más lleva un índice fijo de 220 px a la derecha; si no, el índice es un desplegable sobre el cuerpo (container query sobre `.st-key-project`, para que cuente la barra lateral abierta o cerrada; con la barra abierta, el índice lateral aparece desde unos 1340 px de ventana). Párrafos sueltos hasta 90ch; en tarjetas, figuras y notas el texto llega al borde de su caja. Tarjetas y cifras se miden contra el cuerpo (`.st-key-project_body`), no contra la página: las tarjetas van en una grilla de 3 o 2 columnas que baja a una cuando el cuerpo mide menos de 760 px (3) o 520 px (2), y las cuatro cifras pasan a 2×2 bajo 760 px. En móvil las columnas se apilan (comportamiento de `st.columns`).
 
 Los mapas conservan el aspecto real (escala y = 1/cos(latitud media)) y se encuadran por defecto en la zona de eventos con 2° de margen.
 
@@ -237,8 +237,8 @@ Esquinas apenas suavizadas: 6 px en widgets (`baseRadius`) y paneles, 3 px en la
 
 ### Paneles de gráfico
 - **Corner Style:** 6 px. **Background:** hoja. **Border:** 1 px filete. **Internal Padding:** 6px 4px 2px.
-- Las plantillas `cuaderno` y `cuaderno_oscuro`: título 15 px a la izquierda, grilla en hoja lavada, ejes en filete, sin ticks, hover en hoja con filete y mono 12 px, colorbar de 12 px sin contorno, colores categóricos selección, tinta, cálido, frío, apagado, entradilla.
-- Limitación: el frontend de Streamlit ignora fondo y fuente de la plantilla, por eso `graficos._estilo` los fija en el layout de cada figura con la paleta del modo activo.
+- Las plantillas `notebook` y `notebook_dark`: título 15 px a la izquierda, grilla en hoja lavada, ejes en filete, sin ticks, hover en hoja con filete y mono 12 px, colorbar de 12 px sin contorno, colores categóricos selección, tinta, cálido, frío, apagado, entradilla.
+- Limitación: el frontend de Streamlit ignora fondo y fuente de la plantilla, por eso `charts._style` los fija en el layout de cada figura con la paleta del modo activo.
 
 ### Ficha "entorno contra umbral chileno"
 La firma de los datos. Tabla HTML en hoja con filete y radio 6 px: índice (con unidad en nota), valor en el punto y extremo de la zona en mono alineado a la derecha, umbral ("> 0,1") en mono o referencia en sans apagada de 0,8rem, y una columna Resultado con píldora en todas las filas: "Cumple el criterio" (fresa lavada, texto tinta) solo cuando un umbral calibrado se cruza; "No cumple el criterio", "Sin criterio de decisión" o "Sin datos" en hoja lavada con texto apagado. El valor que supera pasa a tinta 700 con un triángulo rojo delante.
@@ -265,16 +265,16 @@ Hoja con filete, radio 6 px, relleno 10px 12px, 0,92rem. Primera línea con el c
 - **Do** poner todo dato sobre una hoja con filete y radio 6 px encima del fondo, en los dos temas.
 - **Do** reservar el Strawberry Red #E63946 (#E7434E en oscuro, con 5 % de Honeydew para llegar a 3:1 sobre la hoja) para glifos y líneas de eventos del catálogo y umbrales chilenos calibrados; las alertas en tinta con el triángulo rojo al lado.
 - **Do** usar el color de acción (#376284 en claro, #A8DADC en oscuro) para lo accionable y el de selección (#457B9D en claro, #A8DADC en oscuro) para lo elegido dentro de un gráfico.
-- **Do** colorear los mapas con la escala estándar de su tipo de dato (`escalas.TIPOS`) y dejar que la predeterminada sea apta para daltonismo.
+- **Do** colorear los mapas con la escala estándar de su tipo de dato (`colorscales.KINDS`) y dejar que la predeterminada sea apta para daltonismo.
 - **Do** usar el azul y el naranja de Okabe-Ito para series categóricas que la paleta no cubre.
 - **Do** escribir cifras con coma decimal y en IBM Plex Mono tabular cuando la plataforma lo permita.
-- **Do** tomar los colores de `tema.colores()` y la plantilla de `tema.plantilla()`, y fijar fondo y fuente en el layout de cada figura plotly (`graficos._estilo`).
-- **Do** añadir a `tests/test_escalas.py` todo color nuevo de texto, con su contraste AA en claro y oscuro.
+- **Do** tomar los colores de `theme.colors()` y la plantilla de `theme.template()`, y fijar fondo y fuente en el layout de cada figura plotly (`charts._style`).
+- **Do** añadir a `tests/test_colorscales.py` todo color nuevo de texto, con su contraste AA en claro y oscuro.
 
 ### Don't:
 - **Don't** escribir texto en rojo, ni siquiera en tamaño grande o en un diagrama.
 - **Don't** introducir una serif ni una segunda sans junto a IBM Plex.
 - **Don't** colorear un mapa con colores de la marca ni poner por defecto una escala con rojo o no apta para daltonismo.
 - **Don't** marcar en rojo un índice sin umbral chileno calibrado ni usar umbrales norteamericanos.
-- **Don't** fijar un hex en un gráfico o en el CSS fuera de `Paleta`: el color tiene que cambiar con el tema.
+- **Don't** fijar un hex en un gráfico o en el CSS fuera de `Palette`: el color tiene que cambiar con el tema.
 - **Don't** añadir sombras: la profundidad es tonal.

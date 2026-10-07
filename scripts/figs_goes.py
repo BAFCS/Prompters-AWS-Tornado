@@ -3,7 +3,7 @@
 
 Lee imágenes consecutivas de ``ABI-L2-CMIPF`` (disco completo, 2 km, cada 10 min) desde
 ``data/goes/*.nc``, recorta Chile centro-sur con la proyección geoestacionaria del ABI (la directa,
-``fwd``, está aquí; la inversa es ``comun.latlon``) y dibuja la temperatura de brillo de la primera y la última imagen, más su tendencia en diez
+``fwd``, está aquí; la inversa es ``common.latlon``) y dibuja la temperatura de brillo de la primera y la última imagen, más su tendencia en diez
 minutos. Produce ``figs/fig3_goes_20190530.png``. Uso: ``uv run python scripts/figs_goes.py``.
 """
 
@@ -19,7 +19,7 @@ import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from scipy.ndimage import median_filter
 
-import comun
+import common
 
 warnings.filterwarnings("ignore")
 matplotlib.use("Agg")
@@ -60,14 +60,14 @@ def fwd(lat: np.ndarray, lon: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return np.arcsin(-sy / np.sqrt(sx**2 + sy**2 + sz**2)), np.arctan(sz / sx)
 
 
-def leer(f: str) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+def read(f: str) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
     """Lee el archivo GOES ``f`` recortado al recuadro ``LAT0..LAT1`` × ``LON0..LON1``.
 
     Devuelve la temperatura de brillo (K, NaN bajo 150 K), la latitud y la longitud de cada píxel,
     y el instante ``t`` del archivo (segundos desde el 1-ene-2000 12 UTC).
     """
     with h5py.File(f, "r") as h:
-        x, y = comun.eje(h, "x"), comun.eje(h, "y")
+        x, y = common.axis(h, "x"), common.axis(h, "y")
         xa, ya = fwd(np.array([LAT0, LAT1, LAT0, LAT1]), np.array([LON0, LON0, LON1, LON1]))
         i0, i1 = np.searchsorted(x, [xa.min(), xa.max()])
         j = np.argsort(y)
@@ -75,11 +75,11 @@ def leer(f: str) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
         k0, k1 = np.searchsorted(ys, [ya.min(), ya.max()])
         j0, j1 = len(y) - k1 - 1, len(y) - k0 + 1
         i0, i1, j0, j1 = max(i0 - 4, 0), min(i1 + 4, len(x)), max(j0 - 4, 0), min(j1 + 4, len(y))
-        cmi = comun.dataset(h, "CMI")
-        bt = cmi[j0:j1, i0:i1] * comun.num(cmi, "scale_factor") + comun.num(cmi, "add_offset")
+        cmi = common.dataset(h, "CMI")
+        bt = cmi[j0:j1, i0:i1] * common.num(cmi, "scale_factor") + common.num(cmi, "add_offset")
         bt[bt < 150] = np.nan
-        lat, lon = comun.latlon(x[i0:i1], y[j0:j1], comun.dataset(h, "goes_imager_projection"))
-        t = comun.dataset(h, "t")[()]
+        lat, lon = common.latlon(x[i0:i1], y[j0:j1], common.dataset(h, "goes_imager_projection"))
+        t = common.dataset(h, "t")[()]
     return bt, lat, lon, t
 
 
@@ -93,8 +93,8 @@ def stamp(f: str) -> str:
     return f"{m.group(3)}:{m.group(4)} UTC"
 
 
-datos = [leer(f) for f in fs]
-print("recorte:", datos[0][0].shape, "| BT min:", np.nanmin(datos[-1][0]))
+data = [read(f) for f in fs]
+print("recorte:", data[0][0].shape, "| BT min:", np.nanmin(data[-1][0]))
 
 # escala IR: gris para topes cálidos, color para los muy fríos
 cols = [
@@ -124,7 +124,7 @@ gs = fig.add_gridspec(
     1, 3, width_ratios=[1, 1, 1.06], wspace=0.08, left=0.045, right=0.985, top=0.795, bottom=0.09
 )
 axes = [fig.add_subplot(gs[0, i]) for i in range(3)]
-for ax, (bt, lat, lon, _t), f in zip(axes[:2], [datos[0], datos[-1]], [fs[0], fs[-1]], strict=True):
+for ax, (bt, lat, lon, _t), f in zip(axes[:2], [data[0], data[-1]], [fs[0], fs[-1]], strict=True):
     m = ax.pcolormesh(
         lon, lat, bt, cmap=cmap, vmin=VMIN, vmax=VMAX, shading="auto", rasterized=True
     )
@@ -169,11 +169,11 @@ axes[0].annotate(
 )
 
 # tendencia dBT/dt
-bt0, bt1 = datos[-2][0], datos[-1][0]
+bt0, bt1 = data[-2][0], data[-1][0]
 d = median_filter(np.nan_to_num(bt1 - bt0), size=3)
 d[np.isnan(bt1) | np.isnan(bt0)] = np.nan
 mm = axes[2].pcolormesh(
-    datos[-1][2], datos[-1][1], d, cmap="RdBu", vmin=-12, vmax=12, shading="auto", rasterized=True
+    data[-1][2], data[-1][1], d, cmap="RdBu", vmin=-12, vmax=12, shading="auto", rasterized=True
 )
 axes[2].text(
     0.03,

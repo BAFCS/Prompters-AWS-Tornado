@@ -1,6 +1,6 @@
-# Tema del visor (scripts/visor.py): claro y oscuro, alternables desde el menú de Streamlit o el botón de la barra.
+# Tema del visor (scripts/viewer.py): claro y oscuro, alternables desde el menú de Streamlit o el botón de la barra.
 # Paleta de cinco colores (Strawberry Red, Honeydew, Frosted Blue, Steel Blue, Deep Space Blue) y
-# mezclas entre ellos; los valores coinciden con scripts/visor_app/tema.py. El rojo solo marca.
+# mezclas entre ellos; los valores coinciden con scripts/viewer_app/theme.py. El rojo solo marca.
 [theme]
 showWidgetBorder = true
 baseRadius = "6px"
@@ -49,7 +49,7 @@ backgroundColor = "#172A46"
 secondaryBackgroundColor = "#1D3557"
 
 [client]
-toolbarMode = "viewer"  # el menú ⋮ trae el selector de tema; tema.boton_modo lo usa
+toolbarMode = "viewer"  # el menú ⋮ trae el selector de tema; theme.mode_button lo usa
 
 [server]
 headless = true
