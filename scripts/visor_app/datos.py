@@ -147,7 +147,7 @@ def coordenada(v: object) -> float:
 def hora_utc(v: object, dia: dt.date) -> pd.Timestamp | None:
     """Primera hora ``HH:MM`` de la celda ``Hour (UTC)`` (``22-23:25`` → 22:00), o ``None``."""
     m = re.match(r"\s*(\d{1,2})(?::(\d{2}))?", str(v))
-    if not m or str(v).strip() in {"-", "nan", ""}:
+    if not m:
         return None
     h, mi = int(m.group(1)), int(m.group(2) or 0)
     if h > 23 or mi > 59:
