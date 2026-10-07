@@ -293,16 +293,13 @@ def _indice() -> str:
 
 
 def pagina() -> None:
-    """Dibuja el índice y el cuerpo de la página.
+    """Dibuja el cuerpo de la página y su índice.
 
-    Con ancho de sobra el índice va en una columna fija a la izquierda; en pantallas más angostas
+    Con ancho de sobra el índice va en una columna fija a la derecha; en pantallas más angostas
     (tablet, teléfono) se ve un desplegable sobre el cuerpo. El CSS de ``tema.py`` elige cuál mostrar
     según el ancho de ``.st-key-proyecto``.
     """
     with st.container(key="proyecto"), st.container(horizontal=True, wrap=False, gap="large"):
-        with st.container(width=220, key="indice_lateral"):
-            _antetitulo("En esta página")
-            st.markdown(_indice(), unsafe_allow_html=True)
         with st.container(key="proyecto_cuerpo"):
             with st.expander("En esta página", key="indice_compacto", icon=":material/toc:"):
                 st.markdown(_indice(), unsafe_allow_html=True)
@@ -312,3 +309,6 @@ def pagina() -> None:
             _dificultad()
             _datos()
             _participar()
+        with st.container(width=220, key="indice_lateral"):
+            _antetitulo("En esta página")
+            st.markdown(_indice(), unsafe_allow_html=True)

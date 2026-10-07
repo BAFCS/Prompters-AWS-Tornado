@@ -270,7 +270,7 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 [data-testid="stMain"] .st-key-proyecto [class*="st-key-hoja_"] [data-testid="stMarkdownContainer"] > p,
 [data-testid="stMain"] .st-key-proyecto [class*="st-key-hoja_"] [data-testid="stMarkdownContainer"] li,
 .st-key-proyecto .nota {{ max-width: none; }}
-/* Índice: columna fija a la izquierda si la página mide 1000 px o más; si no, desplegable arriba. */
+/* Índice: columna fija a la derecha si la página mide 1000 px o más; si no, desplegable arriba. */
 /* Streamlit envuelve el contenedor de ancho fijo en un stLayoutWrapper: ese es el que se oculta y se fija. */
 [data-testid="stLayoutWrapper"]:has(> .st-key-indice_lateral) {{ display: none; position: sticky; top: 4.5rem;
   align-self: flex-start; }}
