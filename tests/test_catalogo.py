@@ -2,6 +2,7 @@
 
 import datetime as dt
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -32,11 +33,26 @@ class CatalogoTest(unittest.TestCase):
         )
         # Se sustituye solo la lectura externa; la transformación es la función real.
         with patch.object(datos, "catalogo", return_value=catalogo):
-            eventos = datos.eventos.__wrapped__(dia)
+            eventos = datos._eventos.__wrapped__(dia, 0.0)
         self.assertEqual(
             eventos["tipo"].tolist(),
             ["tornado", "tromba", "tornado y tromba", "sin clasificación"],
         )
+
+    def test_catalogo_descargado_con_el_visor_abierto_se_lee(self) -> None:
+        """Si falta el catálogo y luego se descarga, la siguiente lectura lo ve (no queda vacío en caché)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            ruta = Path(tmp) / "tornados_chile.xlsx"
+            with patch.object(datos, "CATALOGO", ruta):
+                self.assertTrue(datos.catalogo().empty)
+                pd.DataFrame(
+                    {
+                        "Date (Gregorian Calendar)": ["2019-05-30"],
+                        "Latitude": ["-36,8"],
+                        "Longitude": ["-73,0"],
+                    }
+                ).to_excel(ruta, sheet_name="Final_Table", index=False)
+                self.assertEqual(len(datos.catalogo()), 1)
 
 
 if __name__ == "__main__":

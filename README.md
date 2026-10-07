@@ -31,7 +31,8 @@ Lo que necesitas:
 
 - Un computador con Linux, macOS o Windows.
 - Conexión a internet.
-- Unos 2 GB libres en disco: el programa y sus librerías, más unos 700 MB por cada día de datos.
+- Unos 5 GB libres en disco: el programa y sus librerías ocupan cerca de 2 GB, y cada día de datos
+  unos 1,5 GB (casi todo son las imágenes GOES de las 24 horas).
 
 > [!NOTE]
 > Los comandos de esta guía se escriben en una **terminal**, una ventana donde se escriben órdenes
@@ -81,7 +82,11 @@ cd aws-mesocyclonic
 
 Si no tienes git, abre la página del repositorio en GitHub, pulsa el botón verde **Code** y luego
 **Download ZIP**. Descomprime el archivo y, en la terminal, entra a la carpeta con `cd` seguido de
-su ubicación, por ejemplo `cd Descargas/aws-mesocyclonic-main`.
+su ubicación. Por ejemplo, si quedó en la carpeta de descargas:
+
+- macOS y Windows: `cd Downloads/aws-mesocyclonic-main` (la carpeta se llama así aunque el
+  sistema esté en español).
+- Linux en español: `cd Descargas/aws-mesocyclonic-main`.
 
 > [!IMPORTANT]
 > Todos los comandos que siguen se ejecutan **desde la carpeta del repositorio** (la que contiene
@@ -147,8 +152,9 @@ Qué hace cada uno:
 > [!WARNING]
 > El paso más lento es `descarga_era5.py`. Los archivos de ERA5 en AWS cubren el planeta entero y
 > no se pueden pedir recortados, así que por cada hora del día se transfiere el bloque global y se
-> recorta en tu computador. Desde Chile eso suma unos **8 GB de tráfico por día**, aunque en disco
-> solo quedan unos 70 MB. Según tu conexión puede tardar de varios minutos a más de una hora.
+> recorta en tu computador. Eso suma unos **11 GB de tráfico por día**, aunque en disco solo quedan
+> unos 70 MB. El volumen es el mismo desde cualquier lugar; solo se evita corriendo el script dentro
+> de AWS, en la región us-west-2, donde están los datos. Según tu conexión puede tardar de varios minutos a más de una hora.
 
 > [!TIP]
 > Si una descarga se corta, vuelve a ejecutar el mismo comando. Los scripts saltan los archivos que
@@ -164,8 +170,9 @@ con `--help`, por ejemplo `uv run python scripts/descarga_goes.py --help`.
 uv run streamlit run scripts/visor.py
 ```
 
-La terminal mostrará una dirección. Ábrela en tu navegador:
-**<http://localhost:8501>**
+La terminal mostrará una dirección (`Local URL`). Ábrela en tu navegador. Casi siempre es
+**<http://localhost:8501>**, pero si ese puerto ya está ocupado Streamlit elige otro, por ejemplo
+8502, así que usa la que aparece en la terminal.
 
 El visor queda funcionando mientras la terminal siga abierta. Para cerrarlo, vuelve a la terminal y
 pulsa <kbd>Ctrl</kbd> + <kbd>C</kbd>.
@@ -197,17 +204,13 @@ Falta el paso 5, o se ejecutó desde otra carpeta. Revisa que exista la carpeta
 `data/recortes/centro-sur-austral/` dentro del repositorio.
 
 **El mapa no muestra triángulos rojos de eventos ni la costa.**
-Falta el paso 4. Descarga los dos archivos y recarga la página del navegador.
+Falta el paso 4. Descarga los dos archivos, revisa que estén en la carpeta `data/` y recarga la
+página del navegador. El visor nota que los archivos son nuevos y los lee.
 
-**La terminal dice que el puerto 8501 está ocupado.**
-Ya hay otro visor (u otra aplicación de Streamlit) abierto. Ciérralo con <kbd>Ctrl</kbd> +
-<kbd>C</kbd> en su terminal, o abre este en otro puerto:
-
-```bash
-uv run streamlit run scripts/visor.py --server.port 8502
-```
-
-y entra a <http://localhost:8502>.
+**El navegador muestra un visor viejo o una aplicación que no es esta.**
+Había otro programa de Streamlit abierto en el puerto 8501, y este visor se abrió en otro puerto sin
+avisar. Abre la dirección `Local URL` que muestra la terminal, por ejemplo <http://localhost:8502>.
+Si no necesitas el programa anterior, ciérralo con <kbd>Ctrl</kbd> + <kbd>C</kbd> en su terminal.
 
 **Una descarga falla con un error de red.**
 Vuelve a ejecutar el mismo comando; retoma donde quedó.

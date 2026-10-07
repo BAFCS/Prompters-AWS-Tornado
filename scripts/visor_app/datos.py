@@ -112,10 +112,28 @@ def tiempos(d: Dia) -> list[np.datetime64]:
     return [] if ref is None else list(ref["time"].values)
 
 
-@st.cache_data
+COSTA = comun.DATA / "coast.zip"
+CATALOGO = comun.DATA / "tornados_chile.xlsx"
+
+
+def _version(ruta: Path) -> float:
+    """Fecha de modificación de ``ruta`` (0 si no existe), para separar entradas de caché.
+
+    Así, un archivo descargado con el visor abierto se lee al recargar la página, en vez de seguir
+    sirviendo el resultado vacío que se guardó cuando faltaba.
+    """
+    return ruta.stat().st_mtime if ruta.exists() else 0.0
+
+
 def costa(reg: comun.Region) -> tuple[list[float | None], list[float | None]]:
     """Líneas de costa de ``data/coast.zip`` dentro de ``reg``, como listas x/y separadas por None."""
-    ruta = comun.DATA / "coast.zip"
+    return _costa(reg, _version(COSTA))
+
+
+@st.cache_data
+def _costa(reg: comun.Region, version: float) -> tuple[list[float | None], list[float | None]]:
+    """Lee y recorta la costa; ``version`` (mtime) solo separa entradas de caché."""
+    ruta = COSTA
     if not ruta.exists():
         return [], []
     g = gpd.read_file(f"zip://{ruta}").clip(box(reg.oeste, reg.sur, reg.este, reg.norte))
@@ -149,10 +167,15 @@ def hora_utc(v: object, dia: dt.date) -> pd.Timestamp | None:
     return pd.Timestamp(dt.datetime.combine(dia, dt.time(h, mi)))
 
 
-@st.cache_data
 def catalogo() -> pd.DataFrame:
     """Catálogo completo de tornados y trombas (vacío si falta ``data/tornados_chile.xlsx``)."""
-    ruta = comun.DATA / "tornados_chile.xlsx"
+    return _catalogo(_version(CATALOGO))
+
+
+@st.cache_data
+def _catalogo(version: float) -> pd.DataFrame:
+    """Lee el catálogo; ``version`` (mtime) solo separa entradas de caché."""
+    ruta = CATALOGO
     if not ruta.exists():
         return pd.DataFrame()
     d = pd.read_excel(ruta, sheet_name="Final_Table")
@@ -162,9 +185,14 @@ def catalogo() -> pd.DataFrame:
     return d
 
 
-@st.cache_data
 def eventos(dia: dt.date) -> pd.DataFrame:
     """Eventos del catálogo en ``dia``, ordenados por hora, con columnas listas para mostrar."""
+    return _eventos(dia, _version(CATALOGO))
+
+
+@st.cache_data
+def _eventos(dia: dt.date, version: float) -> pd.DataFrame:
+    """Calcula los eventos de ``dia``; ``version`` (mtime del catálogo) solo separa entradas de caché."""
     c = catalogo()
     if c.empty:
         return c
