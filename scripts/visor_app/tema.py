@@ -261,7 +261,9 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
   border-radius: 6px; line-height: 1.5; max-width: 68ch; }}
 .aviso b {{ color: {p.ACCENT}; }}
 [class*="st-key-hoja_"] {{ background: {p.SURFACE}; }}
-.st-key-proyecto {{ padding-top: 1.6rem; max-width: 1400px; container-type: inline-size; }}
+.st-key-proyecto {{ padding-top: 1.6rem; max-width: 1400px; container: proyecto / inline-size; }}
+/* El cuerpo es su propio contenedor: tarjetas y cifras se acomodan al espacio que les deja el índice. */
+.st-key-proyecto_cuerpo {{ container: cuerpo / inline-size; }}
 .st-key-proyecto h1, .st-key-proyecto h2, .st-key-proyecto h3 {{ scroll-margin-top: 4.5rem; }}
 /* El proyecto: párrafos sueltos hasta 90ch; en tarjetas, figuras y notas el texto llega al borde. */
 [data-testid="stMain"] .st-key-proyecto [data-testid="stMarkdownContainer"] > p,
@@ -270,30 +272,30 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 [data-testid="stMain"] .st-key-proyecto [class*="st-key-hoja_"] [data-testid="stMarkdownContainer"] > p,
 [data-testid="stMain"] .st-key-proyecto [class*="st-key-hoja_"] [data-testid="stMarkdownContainer"] li,
 .st-key-proyecto .nota {{ max-width: none; }}
-/* Índice: columna fija a la derecha si la página mide 1000 px o más; si no, desplegable arriba. */
+/* Índice: columna fija a la derecha si la página mide 880 px o más; si no, desplegable arriba. */
 /* Streamlit envuelve el contenedor de ancho fijo en un stLayoutWrapper: ese es el que se oculta y se fija. */
 [data-testid="stLayoutWrapper"]:has(> .st-key-indice_lateral) {{ display: none; position: sticky; top: 4.5rem;
   align-self: flex-start; }}
 /* El bloque horizontal trae overflow: auto, que vuelve inútil el sticky de su hijo. */
 [data-testid="stHorizontalBlock"]:has(> [data-testid="stLayoutWrapper"] > .st-key-indice_lateral) {{ overflow: visible; }}
-@container (min-width: 1000px) {{
+@container proyecto (min-width: 880px) {{
   [data-testid="stLayoutWrapper"]:has(> .st-key-indice_lateral) {{ display: flex; }}
   .st-key-indice_compacto {{ display: none; }}
 }}
-/* Tarjetas: grilla de n columnas que baja a una (o a dos) cuando la página es angosta. */
+/* Tarjetas: grilla de n columnas que baja a una cuando el cuerpo es angosto. */
 .st-key-proyecto [class*="st-key-tarjetas"] {{ display: grid; gap: 1rem; align-items: stretch; }}
 .st-key-proyecto [class*="st-key-tarjetas3_"] {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
 .st-key-proyecto [class*="st-key-tarjetas2_"] {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
 .st-key-proyecto [class*="st-key-tarjetas"] > * {{ width: auto; height: 100%; }}
-@container (max-width: 760px) {{
+@container cuerpo (max-width: 760px) {{
   .st-key-proyecto [class*="st-key-tarjetas3_"] {{ grid-template-columns: minmax(0, 1fr); }}
 }}
-@container (max-width: 520px) {{
+@container cuerpo (max-width: 520px) {{
   .st-key-proyecto [class*="st-key-tarjetas2_"] {{ grid-template-columns: minmax(0, 1fr); }}
 }}
 /* Cifras de la portada: cuatro en fila o dos por dos, nunca una fila a medias. */
 .st-key-proyecto .cifras {{ grid-template-columns: repeat(4, 1fr); }}
-@container (max-width: 760px) {{ .st-key-proyecto .cifras {{ grid-template-columns: repeat(2, 1fr); }} }}
+@container cuerpo (max-width: 760px) {{ .st-key-proyecto .cifras {{ grid-template-columns: repeat(2, 1fr); }} }}
 .indice ol {{ list-style: none; margin: 0.6rem 0 0; padding: 0; border-left: 1px solid {p.LINE}; }}
 [data-testid="stMain"] .indice li {{ margin: 0; padding: 0; }}
 .indice a {{ display: block; margin-left: -1px; padding: 5px 0 5px 12px; border-left: 2px solid transparent;

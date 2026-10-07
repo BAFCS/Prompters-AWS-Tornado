@@ -297,7 +297,7 @@ def pagina() -> None:
 
     Con ancho de sobra el índice va en una columna fija a la derecha; en pantallas más angostas
     (tablet, teléfono) se ve un desplegable sobre el cuerpo. El CSS de ``tema.py`` elige cuál mostrar
-    según el ancho de ``.st-key-proyecto``.
+    según el ancho de ``.st-key-proyecto`` (880 px).
     """
     with st.container(key="proyecto"), st.container(horizontal=True, wrap=False, gap="large"):
         with st.container(key="proyecto_cuerpo"):
