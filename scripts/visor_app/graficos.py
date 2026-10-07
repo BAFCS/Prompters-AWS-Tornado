@@ -1,9 +1,8 @@
 """Gráficos plotly del visor: grilla de mapas con costa y eventos, Skew-T, hodógrafo y series de tiempo.
 
-Todos salen por ``_estilo``, que les pone la plantilla ``cuaderno`` (o ``cuaderno_oscuro``) de ``tema.py``
-según el modo activo. El
-rojo se reserva para los glifos de los eventos del catálogo y las líneas de umbral chileno, nunca para
-texto; el color de selección marca el punto elegido.
+Todos salen por ``_estilo``, que les pone la plantilla ``cuaderno`` (o ``cuaderno_oscuro``) de
+``tema.py`` según el modo activo. El rojo se reserva para los glifos de los eventos del catálogo y las
+líneas de umbral chileno, nunca para texto; el color de selección marca el punto elegido.
 """
 
 from dataclasses import dataclass
