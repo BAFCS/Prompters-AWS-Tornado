@@ -1,5 +1,7 @@
 """Página «El caso»: eventos reportados y comparación de su entorno atmosférico."""
 
+import dataclasses
+
 import pandas as pd
 import streamlit as st
 
@@ -32,13 +34,16 @@ def _mapa(ctx: estado.Contexto, t: pd.Timestamp | None) -> None:
     """Mapa de la zona de los eventos: GOES C13 a la hora elegida (o el VGP si no hay GOES)."""
     cat = productos.catalogo(ctx.dia)
     c = capas.capa(ctx.dia, cat["goes:C13"], t) if t is not None and "goes:C13" in cat else None
-    es_goes = c is not None
+    es_goes = c is not None  # si no, se intenta el VGP y la escala es la secuencial
     if c is None and t is not None and "idx:vgp_01" in cat:
         c = capas.capa(ctx.dia, cat["idx:vgp_01"], t)
-    if c is None or c.tipo is None:
+    if (
+        c is None or c.tipo is None
+    ):  # tipo es None solo en RGB; la guarda acota el tipo para pyright
         st.info("Este día no tiene GOES ni índices ERA5 para dibujar el mapa.")
         return
     c = c.con_escala(_escala(c.tipo, "escala_caso_ir" if es_goes else "escala_caso_sec"))
+    c = dataclasses.replace(c, titulo=f"{c.titulo} UTC")
     enc = graficos.encuadre_eventos(ctx.eventos, ctx.reg, margen=1.3)
     fig, _ = graficos.grilla(
         [c], [None], enc, datos.costa(ctx.reg), eventos=ctx.eventos, punto=estado.punto(), alto=560
