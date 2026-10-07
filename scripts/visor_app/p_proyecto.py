@@ -8,7 +8,7 @@ from typing import Literal
 import streamlit as st
 
 import comun
-from visor_app import diagramas
+from visor_app import diagramas, estado
 
 DOCUMENTO = "https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md"
 REPOSITORIO = "https://github.com/fforster/aws-mesocyclonic"
@@ -173,19 +173,11 @@ def _datos() -> None:
         "| Fuente | Qué aporta | Resolución o cobertura |\n|---|---|---|\n| ERA5 | Viento, temperatura, humedad y altura de los niveles atmosféricos, además de CAPE y la inhibición convectiva (CIN), la barrera energética para iniciar el ascenso | 0,25° · registros horarios |\n| GOES-16 · caso de 2019 | Imágenes de 16 bandas del visible al infrarrojo. Los recortes utilizados por el visor se guardan a 2 km | 2 km · frecuencia nominal de 10 min |\n| Catálogo · figshare, CC BY 4.0 | 102 eventos con coordenadas, hora UTC cuando está disponible, tipo y clasificación EF basada en daños cuando está disponible. No proporciona una etiqueta directa de mesociclón | 1554–2025 · 102 eventos |"
     )
     st.markdown(
-        "ERA5 describe el entorno a una escala de unos 31 km, por lo que no representa directamente un mesociclón. Las imágenes GOES pueden mostrar las nubes desplazadas respecto de su posición real por el ángulo de observación; este efecto se llama paralaje. El visor todavía no aplica una corrección de paralaje.",
+        "Cada fuente tiene límites que el visor no oculta: ERA5 no resuelve un mesociclón, GOES no está corregido por paralaje y el catálogo solo tiene casos positivos. La página Datos explica cada variable cruda y cada variable derivada, con su fórmula, el criterio chileno cuando existe y sus fuentes."
     )
-    st.markdown(
-        "Los 102 registros históricos no equivalen a 102 casos comparables con GOES. El conjunto analizable depende de que coincidan la cobertura temporal de las fuentes, las coordenadas y una hora suficientemente precisa del evento."
+    st.page_link(
+        estado.pagina("datos"), label="Abrir el catálogo de datos", icon=":material/dataset:"
     )
-    with st.expander("Acceso y procesamiento de los archivos"):
-        st.markdown(
-            "- Los scripts del proyecto acceden a ERA5 en `s3://nsf-ncar-era5/`; no utilizan el archivo antiguo `era5-pds`. Los campos incluyen los códigos `u, v, w, t, q, z`.\n- Un archivo global de nivel de presión ocupa aproximadamente 1,4 GB por variable y día. Los scripts leen rangos de bytes y recortan los datos después de la lectura; no hay recorte en el servidor.\n- El caso de 2019 usa `s3://noaa-goes16/`. Para otros períodos hay que comprobar qué satélite y archivo corresponden.\n- Requiere verificación: confirmar la cobertura temporal de cada archivo antes de planificar una descarga. La cobertura general de ERA5 no debe confundirse con la del archivo S3 usado por el proyecto.\n- El producto de altura de tope nuboso ACHAF se menciona como una opción para estudiar la corrección de paralaje; hay que verificar su compatibilidad antes de incorporarlo."
-        )
-    with st.expander("Otros productos que podrían incorporarse"):
-        st.markdown(
-            "Los productos de altura y fase del tope nuboso, vientos derivados y rayos se describen como posibles fuentes adicionales. No forman parte de las imágenes multibanda que lee este visor. Requiere verificación: confirmar su disponibilidad, resolución y compatibilidad con el período seleccionado antes de incorporarlos."
-        )
     st.subheader("Datos del caso de mayo de 2019", anchor=False)
     st.markdown(
         "Las figuras siguientes se generaron con datos de los archivos públicos para el 30 de mayo de 2019. Las páginas Mapas, Sondeo y Series exploran el mismo caso."

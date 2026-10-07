@@ -6,7 +6,18 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from visor_app import capas, componentes, datos, escalas, estado, graficos, productos, tema, textos
+from visor_app import (
+    capas,
+    componentes,
+    datos,
+    escalas,
+    estado,
+    graficos,
+    productos,
+    tema,
+    textos,
+    variables,
+)
 
 PASO_ANIMACION = 3  # se dibuja uno de cada 3 píxeles GOES al animar
 MAX_ANIMADOS = 3  # paneles GOES que se animan a la vez
@@ -302,13 +313,16 @@ def pagina() -> None:
         if len(goes_idx) > MAX_ANIMADOS:
             st.caption(f"Se animan los primeros {MAX_ANIMADOS} paneles GOES.")
 
-    vistos = dict.fromkeys(
-        [cat[p.clave].variable for p in visibles] + [cat[p.contorno].variable for p in visibles
-                                                     if p.contorno in cat]
-    )  # fmt: skip
-    ayudas = [textos.AYUDA[v] for v in vistos if v in textos.AYUDA]
-    if ayudas:
+    vistos = [p.clave for p in visibles] + [p.contorno for p in visibles if p.contorno in cat]
+    fichas = list(
+        dict.fromkeys(variables.POR_PRODUCTO[k] for k in vistos if k in variables.POR_PRODUCTO)
+    )
+    if fichas:
         with st.expander("Qué estás viendo", expanded=estado.paso_actual() is not None):
-            for a in ayudas:
-                st.markdown(a)
+            for v in fichas:
+                st.markdown(variables.resumen(v))
+                st.button(
+                    f"Ficha completa de {v.simbolo}", key=f"ficha_{v.clave}", type="tertiary",
+                    icon=":material/arrow_forward:", on_click=estado.ir_a_ficha, args=(v.clave,),
+                )  # fmt: skip
             st.caption(textos.NOTA_AUSTRAL)

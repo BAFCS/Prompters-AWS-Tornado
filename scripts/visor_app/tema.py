@@ -256,17 +256,17 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 .aviso {{ border: 1px solid {p.LINE}; background: {p.SURFACE}; padding: 14px 18px; margin: 1rem 0;
   border-radius: 6px; line-height: 1.5; max-width: 68ch; }}
 [class*="st-key-hoja_"] {{ background: {p.SURFACE}; }}
-.st-key-proyecto {{ padding-top: 1.6rem; max-width: 1400px; container: proyecto / inline-size; }}
+:is(.st-key-proyecto, .st-key-datos) {{ padding-top: 1.6rem; max-width: 1400px; container: proyecto / inline-size; }}
 /* El cuerpo es su propio contenedor: tarjetas y cifras se acomodan al espacio que les deja el índice. */
-.st-key-proyecto_cuerpo {{ container: cuerpo / inline-size; }}
-.st-key-proyecto h1, .st-key-proyecto h2, .st-key-proyecto h3 {{ scroll-margin-top: 4.5rem; }}
+:is(.st-key-proyecto_cuerpo, .st-key-datos_cuerpo) {{ container: cuerpo / inline-size; }}
+:is(.st-key-proyecto, .st-key-datos) h1, :is(.st-key-proyecto, .st-key-datos) h2, :is(.st-key-proyecto, .st-key-datos) h3 {{ scroll-margin-top: 4.5rem; }}
 /* El proyecto: párrafos sueltos hasta 90ch; en tarjetas, figuras y notas el texto llega al borde. */
-[data-testid="stMain"] .st-key-proyecto [data-testid="stMarkdownContainer"] > p,
-[data-testid="stMain"] .st-key-proyecto [data-testid="stMarkdownContainer"] li,
-.st-key-proyecto .lede {{ max-width: 90ch; }}
-[data-testid="stMain"] .st-key-proyecto [class*="st-key-hoja_"] [data-testid="stMarkdownContainer"] > p,
-[data-testid="stMain"] .st-key-proyecto [class*="st-key-hoja_"] [data-testid="stMarkdownContainer"] li,
-.st-key-proyecto .nota {{ max-width: none; }}
+[data-testid="stMain"] :is(.st-key-proyecto, .st-key-datos) [data-testid="stMarkdownContainer"] > p,
+[data-testid="stMain"] :is(.st-key-proyecto, .st-key-datos) [data-testid="stMarkdownContainer"] li,
+:is(.st-key-proyecto, .st-key-datos) .lede {{ max-width: 90ch; }}
+[data-testid="stMain"] :is(.st-key-proyecto, .st-key-datos) [class*="st-key-hoja_"] [data-testid="stMarkdownContainer"] > p,
+[data-testid="stMain"] :is(.st-key-proyecto, .st-key-datos) [class*="st-key-hoja_"] [data-testid="stMarkdownContainer"] li,
+:is(.st-key-proyecto, .st-key-datos) .nota {{ max-width: none; }}
 /* Índice: columna fija a la derecha si la página mide 880 px o más; si no, desplegable arriba. */
 /* Streamlit 1.64 envuelve el contenedor de ancho fijo en un stLayoutWrapper: ese es el que se oculta y
    se fija (selectores internos; revisarlos al actualizar Streamlit). El contenedor también se oculta
@@ -281,15 +281,15 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
   .st-key-indice_compacto {{ display: none; }}
 }}
 /* Tarjetas: grilla de n columnas que baja a una cuando el cuerpo es angosto. */
-.st-key-proyecto [class*="st-key-tarjetas"] {{ display: grid; gap: 1rem; align-items: stretch; }}
-.st-key-proyecto [class*="st-key-tarjetas3_"] {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
-.st-key-proyecto [class*="st-key-tarjetas2_"] {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-.st-key-proyecto [class*="st-key-tarjetas"] > * {{ width: auto; height: 100%; }}
+:is(.st-key-proyecto, .st-key-datos) [class*="st-key-tarjetas"] {{ display: grid; gap: 1rem; align-items: stretch; }}
+:is(.st-key-proyecto, .st-key-datos) [class*="st-key-tarjetas3_"] {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+:is(.st-key-proyecto, .st-key-datos) [class*="st-key-tarjetas2_"] {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+:is(.st-key-proyecto, .st-key-datos) [class*="st-key-tarjetas"] > * {{ width: auto; height: 100%; }}
 @container cuerpo (max-width: 760px) {{
-  .st-key-proyecto [class*="st-key-tarjetas3_"] {{ grid-template-columns: minmax(0, 1fr); }}
+  :is(.st-key-proyecto, .st-key-datos) [class*="st-key-tarjetas3_"] {{ grid-template-columns: minmax(0, 1fr); }}
 }}
 @container cuerpo (max-width: 520px) {{
-  .st-key-proyecto [class*="st-key-tarjetas2_"] {{ grid-template-columns: minmax(0, 1fr); }}
+  :is(.st-key-proyecto, .st-key-datos) [class*="st-key-tarjetas2_"] {{ grid-template-columns: minmax(0, 1fr); }}
 }}
 /* Columnas flexibles (``columnas``): se apilan cuando no caben dos de 26rem; el corte lo pone el contenido. */
 [class*="st-key-flex_"] [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {{ flex-wrap: wrap;
@@ -298,8 +298,8 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 /* La ficha no se encoge bajo ~400 px: en teléfono se desplaza dentro de su caja, no la página entera. */
 [data-testid="stHtml"]:has(> .ficha), [data-testid="stHtml"]:has(> * > .ficha) {{ overflow-x: auto; }}
 /* Cifras de la portada: cuatro en fila o dos por dos, nunca una fila a medias. */
-.st-key-proyecto .cifras {{ grid-template-columns: repeat(4, 1fr); }}
-@container cuerpo (max-width: 760px) {{ .st-key-proyecto .cifras {{ grid-template-columns: repeat(2, 1fr); }} }}
+:is(.st-key-proyecto, .st-key-datos) .cifras {{ grid-template-columns: repeat(4, 1fr); }}
+@container cuerpo (max-width: 760px) {{ :is(.st-key-proyecto, .st-key-datos) .cifras {{ grid-template-columns: repeat(2, 1fr); }} }}
 .indice ol {{ list-style: none; margin: 0.6rem 0 0; padding: 0; border-left: 1px solid {p.LINE}; }}
 [data-testid="stMain"] .indice li {{ margin: 0; padding: 0; }}
 .indice a {{ display: block; margin-left: -1px; padding: 5px 0 5px 12px; border-left: 1px solid transparent;
@@ -318,6 +318,27 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primary"] p,
 [data-testid="stBaseLinkButton-primary"], [data-testid="stBaseLinkButton-primary"] p {{ color: {p.SOBRE_ACCENT}; }}
 .paso b {{ font-family: {MONO}; font-weight: 600; color: {p.ACCENT}; font-size: 0.8rem; }}
+/* Datos: fichas de variables. El nombre es la ancla (?v= y el índice); el símbolo y la unidad, mono. */
+.ficha-nombre {{ font-size: 1.1rem; font-weight: 600; line-height: 1.3; margin: 0; padding: 0;
+  scroll-margin-top: 4.5rem; }}
+.ficha-meta {{ color: {p.MUTED}; font-size: 0.86rem; margin: 0.2rem 0 0.35rem; }}
+.rasgos {{ width: 100%; border-collapse: collapse; font-size: 0.92rem; }}
+.rasgos th {{ text-align: left; font-weight: 600; color: {p.MUTED}; white-space: nowrap; padding: 6px 16px 6px 0;
+  vertical-align: baseline; }}
+.rasgos td {{ padding: 6px 0; vertical-align: baseline; }}
+.rasgos tr + tr > * {{ border-top: 1px solid {p.SURFACE_2}; }}
+@container cuerpo (max-width: 520px) {{ .rasgos th, .rasgos td {{ display: block; padding: 0; border: 0; }}
+  .rasgos td {{ padding-bottom: 8px; }} .rasgos tr + tr > th {{ padding-top: 8px; }} }}
+[class*="st-key-umbral_"] p::before {{ content: ""; display: inline-block; {_TRIANGULO}
+  border-bottom: 9px solid {p.SEVERE}; margin-right: 8px; vertical-align: 0; }}
+/* Fórmulas largas: se desplazan dentro de la ficha en teléfono, no la página entera. */
+[data-testid="stMain"] .katex-display {{ overflow-x: auto; overflow-y: hidden; margin: 0.3rem 0; padding: 2px 0; }}
+.ficha-fuentes a, .bibliografia a {{ text-underline-offset: 2px; }}
+.bibliografia {{ padding-left: 1.1rem; }}
+[data-testid="stMain"] .bibliografia li {{ margin: 0.4rem 0; max-width: 90ch; line-height: 1.45; }}
+.bibliografia a {{ overflow-wrap: anywhere; }}
+.indice ol ol {{ margin: 0 0 0.35rem; border-left: none; }}
+.indice ol ol a {{ padding-left: 24px; font-size: 0.86rem; color: {p.MUTED}; }}
 </style>
 """
 

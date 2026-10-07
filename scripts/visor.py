@@ -30,6 +30,7 @@ from visor_app import (
     datos,
     estado,
     p_caso,
+    p_datos,
     p_mapas,
     p_proyecto,
     p_series,
@@ -45,6 +46,7 @@ tema.aplica()
 
 PAGINAS = {
     "proyecto": st.Page(p_proyecto.pagina, title="El proyecto", icon=":material/info:", default=True),
+    "datos": st.Page(p_datos.pagina, title="Datos", icon=":material/dataset:", url_path="datos"),
     "caso": st.Page(p_caso.pagina, title="El caso", icon=":material/history_edu:", url_path="caso"),
     "mapas": st.Page(p_mapas.pagina, title="Mapas", icon=":material/map:", url_path="mapas"),
     "sondeo": st.Page(p_sondeo.pagina, title="Sondeo", icon=":material/stacked_line_chart:",
@@ -67,9 +69,12 @@ tema.boton_modo()
 
 
 def sin_datos(mensaje: str, preparar: bool = False) -> NoReturn:
-    """Detiene la app sin datos: El proyecto se muestra igual; las demás páginas avisan con ``mensaje``."""
-    if navegacion.url_path == PAGINAS["proyecto"].url_path:
-        navegacion.run()  # la descripción no usa datos
+    """Detiene la app sin datos: El proyecto y Datos se muestran igual; las demás avisan con ``mensaje``."""
+    if navegacion.url_path in {PAGINAS["proyecto"].url_path, PAGINAS["datos"].url_path}:
+        st.session_state.pop(
+            "ctx", None
+        )  # Datos no debe ofrecer productos de un día ya no disponible
+        navegacion.run()  # no usan datos
         st.stop()
     st.error(mensaje)
     if preparar:

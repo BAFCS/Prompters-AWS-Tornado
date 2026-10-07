@@ -87,16 +87,22 @@ uv run streamlit run scripts/visor.py
 ```
 
 **Visor** (`scripts/visor.py` + paquete `scripts/visor_app/`, importado como *first-party* igual que
-`comun`): páginas El proyecto, El caso, Mapas, Sondeo y Series. El proyecto (`visor_app/p_proyecto.py`,
+`comun`): páginas El proyecto, Datos, El caso, Mapas, Sondeo y Series. El proyecto (`visor_app/p_proyecto.py`,
 diagramas en `visor_app/diagramas.py`) presenta el proyecto con elementos de Streamlit: es la
-página por defecto y se muestra aunque no haya datos. La barra lateral (región, día, regla de tiempo,
+página por defecto y se muestra aunque no haya datos. Datos (`visor_app/p_datos.py`) es el catálogo
+de datos: una ficha por variable de docs §4–5 (qué es, por qué importa, fórmula, criterio chileno,
+cuidado, insumos y fuentes), también sin datos; `?v=<clave>` muestra una sola ficha. Las fichas, la
+bibliografía y el buscador viven en `visor_app/variables.py`, que es además la fuente de la ayuda
+«Qué estás viendo» de Mapas: todo producto nuevo de `productos.py` necesita su ficha
+(`tests/test_datos.py` lo comprueba). La barra lateral (región, día, regla de tiempo,
 evento, recorrido guiado) vive en `visor.py` para que sus widgets sobrevivan al cambio de página; el
 estado compartido está en `visor_app/estado.py` (`recuerda`/`guarda` copian los widgets de cada
 página bajo `_<clave>`). La página Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va
 sincronizado). Cada panel muestra un producto de `visor_app/productos.py` (claves `idx:`, `sfc:`, `pl:`,
 `goes:`, `rgb:`), calculado por `visor_app/capas.py` (incluye el RGB Airmass); la lista de paneles vive en
 `st.session_state["paneles"]` (`estado.Panel`), no en widgets, y el recorrido guiado la fija con `Paso.paneles`. Los textos, umbrales y el recorrido guiado salen de `docs/` y están en
-`visor_app/textos.py`: si cambia el documento, hay que actualizarlos. El tema (claro y oscuro) está en
+`visor_app/textos.py` y `visor_app/variables.py`: si cambia el documento o un cálculo, hay que
+actualizarlos. El tema (claro y oscuro) está en
 `.streamlit/config.toml` (`[theme.light]`, `[theme.dark]`) y `visor_app/tema.py` (`CLARA`, `OSCURA`;
 `tema.colores()` da la paleta del modo activo): si cambia un color, hay que cambiarlo en los dos
 (`tests/test_escalas.py` comprueba que coinciden y que los textos cumplen WCAG AA).
