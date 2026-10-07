@@ -42,7 +42,8 @@ anterior (las figuras son deterministas: mismo entorno y datos dan los mismos p�
 ## Scripts de figuras
 
 Cada script es un programa lineal sin funciones `main` ni argumentos: carga datos, dibuja y guarda
-en `figs/`. Los accesos a HDF5 pasan por un helper `dataset()` que acota el tipo a `h5py.Dataset`. Las rutas son relativas a la raíz del repo (`ROOT`, `OUT = figs/`, `DATA = data/`).
+en `figs/`. Los accesos a HDF5 pasan por `comun.dataset()`, que acota el tipo a `h5py.Dataset`
+(`figs_era5.py` y `figs_goes.py` importan `comun`, como los scripts de datos). Las rutas son relativas a la raíz del repo (`ROOT`, `OUT = figs/`, `DATA = data/`).
 Comparten una paleta y `rcParams` copiados en cada archivo (`ACC`, `SEV`, `COLD`, `WARM`, `MUT`,
 `INK`, `LINE`), que coinciden con la paleta de `scripts/visor_app/tema.py` (salvo `MUT`: el visor usa
 un apagado más oscuro porque va sobre fondo niebla).
