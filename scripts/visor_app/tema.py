@@ -261,7 +261,6 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
   color: {p.ACCENT}; margin: 0 0 -0.4rem; }}
 .aviso {{ border: 1px solid {p.LINE}; background: {p.SURFACE}; padding: 14px 18px; margin: 1rem 0;
   border-radius: 6px; line-height: 1.5; max-width: 68ch; }}
-.aviso b {{ color: {p.ACCENT}; }}
 [class*="st-key-hoja_"] {{ background: {p.SURFACE}; }}
 .st-key-proyecto {{ padding-top: 1.6rem; max-width: 1400px; container: proyecto / inline-size; }}
 /* El cuerpo es su propio contenedor: tarjetas y cifras se acomodan al espacio que les deja el índice. */
