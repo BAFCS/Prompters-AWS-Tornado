@@ -87,7 +87,6 @@ def _animacion() -> None:
     st.subheader("Mesociclones, supercélulas y tornados", anchor="mesociclones")
     st.markdown(
         "Un mesociclón es una región de aire en rotación organizada dentro de una tormenta, de unos 2 a 10 km de diámetro. Una tormenta con un mesociclón persistente se denomina supercélula. Un tornado es un fenómeno de menor escala cuya circulación alcanza la superficie. Una supercélula puede desarrollar un tornado, pero esa evolución no es inevitable.",
-        unsafe_allow_html=True,
     )
     with st.container(border=True, key="hoja_animacion"):
         st.subheader("Cómo se organiza la rotación dentro de una tormenta", anchor=False)
@@ -159,7 +158,6 @@ def _dificultad() -> None:
     )
     st.markdown(
         "Estos valores orientan la comparación con los estudios citados. Requiere verificación: confirmar las variantes y el alcance de cada criterio antes de usarlo como umbral operativo. El visor calcula SHERBS3, una variante distinta de SHERBE, y una aproximación del STP; no deben trasladarse los criterios entre variantes sin validación.",
-        unsafe_allow_html=True,
     )
     with st.container(border=True, key="hoja_cape"):
         st.image(diagramas.cape_cizalle(), width="stretch")
@@ -186,7 +184,6 @@ def _datos() -> None:
     )
     st.markdown(
         "ERA5 describe el entorno a una escala de unos 31 km, por lo que no representa directamente un mesociclón. Las imágenes GOES pueden mostrar las nubes desplazadas respecto de su posición real por el ángulo de observación; este efecto se llama paralaje. El visor todavía no aplica una corrección de paralaje.",
-        unsafe_allow_html=True,
     )
     st.markdown(
         "Los 102 registros históricos no equivalen a 102 casos comparables con GOES. El conjunto analizable depende de que coincidan la cobertura temporal de las fuentes, las coordenadas y una hora suficientemente precisa del evento."
@@ -258,12 +255,10 @@ def _participar() -> None:
     )
     st.markdown(
         "El documento completo desarrolla la física, las fuentes de datos, las variables derivadas, el planteamiento del modelo, una arquitectura sugerida en AWS y las líneas de trabajo.",
-        unsafe_allow_html=True,
     )
     st.subheader("Por definir para la hackathon", anchor=False)
     st.markdown(
         "La organización debe precisar qué parte del objetivo general corresponde a la hackathon y qué resultado se espera de los equipos. Los siguientes puntos están pendientes de definición; no constituyen requisitos confirmados.",
-        unsafe_allow_html=True,
     )
     st.markdown(
         "- Unidad de predicción: qué representa cada caso que debe analizar el modelo.\n- Horizonte temporal: con cuánta anticipación se busca estimar el desarrollo del mesociclón.\n- Forma de validar mesociclones con las evidencias disponibles; el catálogo etiqueta tornados y trombas, no mesociclones.\n- Resultado que debe presentar cada equipo, criterios de evaluación y requisitos de uso de AWS."
