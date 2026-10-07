@@ -53,8 +53,32 @@ REGIONES = {
 }
 
 
-def args_region(p: argparse.ArgumentParser) -> None:
-    """Añade a ``p`` las opciones ``--region`` y ``--bbox`` para elegir la región de trabajo."""
+def region_de(a: argparse.Namespace) -> Region:
+    """Devuelve la región pedida en los argumentos ``a`` (predefinida o a medida con ``--bbox``)."""
+    if a.bbox:
+        n, s, o, e = a.bbox
+        assert n > s and e > o, "--bbox espera NORTE SUR OESTE ESTE con NORTE > SUR y ESTE > OESTE"
+        return Region(a.region, n, s, o, e)
+    if a.region not in REGIONES:
+        raise SystemExit(f"región desconocida {a.region!r}; usa una de {list(REGIONES)} o --bbox")
+    return REGIONES[a.region]
+
+
+def parser(doc: str | None, unidad: str) -> argparse.ArgumentParser:
+    """Parser de un script de datos con las opciones comunes.
+
+    Trae ``--inicio`` y ``--fin`` (fechas UTC, inclusive), ``--region`` y ``--bbox`` (región de
+    trabajo) y ``--forzar``, que rehace lo que ya existe (``unidad``: ``"los días"`` o ``"las horas"``).
+    """
+    p = argparse.ArgumentParser(
+        description=doc, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    p.add_argument(
+        "--inicio", type=dt.date.fromisoformat, required=True, help="primer día, AAAA-MM-DD"
+    )
+    p.add_argument(
+        "--fin", type=dt.date.fromisoformat, help="último día (inclusive); por defecto --inicio"
+    )
     p.add_argument(
         "--region",
         default="centro-sur-austral",
@@ -67,27 +91,8 @@ def args_region(p: argparse.ArgumentParser) -> None:
         metavar=("NORTE", "SUR", "OESTE", "ESTE"),
         help="región a medida en grados (p. ej. -30 -45 -76 -70); se guarda con el nombre de --region",
     )
-
-
-def region_de(a: argparse.Namespace) -> Region:
-    """Devuelve la región pedida en los argumentos ``a`` (predefinida o a medida con ``--bbox``)."""
-    if a.bbox:
-        n, s, o, e = a.bbox
-        assert n > s and e > o, "--bbox espera NORTE SUR OESTE ESTE con NORTE > SUR y ESTE > OESTE"
-        return Region(a.region, n, s, o, e)
-    if a.region not in REGIONES:
-        raise SystemExit(f"región desconocida {a.region!r}; usa una de {list(REGIONES)} o --bbox")
-    return REGIONES[a.region]
-
-
-def args_fechas(p: argparse.ArgumentParser) -> None:
-    """Añade a ``p`` las opciones ``--inicio`` y ``--fin`` (fechas UTC, inclusive)."""
-    p.add_argument(
-        "--inicio", type=dt.date.fromisoformat, required=True, help="primer día, AAAA-MM-DD"
-    )
-    p.add_argument(
-        "--fin", type=dt.date.fromisoformat, help="último día (inclusive); por defecto --inicio"
-    )
+    p.add_argument("--forzar", action="store_true", help=f"rehace {unidad} que ya existen")
+    return p
 
 
 def dias(a: argparse.Namespace) -> list[dt.date]:

@@ -28,7 +28,6 @@ Uso::
     uv run python scripts/procesa_era5.py --inicio 2019-05-30 --fin 2019-05-31 --forzar
 """
 
-import argparse
 import datetime as dt
 import time
 
@@ -203,12 +202,7 @@ def procesa_dia(pl: xr.Dataset, sfc: xr.Dataset, reg: comun.Region) -> xr.Datase
 
 def main() -> None:
     """Punto de entrada: calcula los índices de cada día que tenga ERA5 de presión y de superficie."""
-    p = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    comun.args_fechas(p)
-    comun.args_region(p)
-    p.add_argument("--forzar", action="store_true", help="rehace los días que ya existen")
+    p = comun.parser(__doc__, "los días")
     a = p.parse_args()
     reg = comun.region_de(a)
     base = comun.RECORTES / reg.nombre

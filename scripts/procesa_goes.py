@@ -17,7 +17,6 @@ Uso::
     uv run python scripts/procesa_goes.py --inicio 2019-05-30 --resolucion 0.04
 """
 
-import argparse
 import time
 from pathlib import Path
 
@@ -88,11 +87,7 @@ def guarda(out: xr.Dataset, fuente: xr.Dataset, salida: Path) -> None:
 
 def main() -> None:
     """Punto de entrada: reproyecta cada hora descargada de cada día pedido."""
-    p = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    comun.args_fechas(p)
-    comun.args_region(p)
+    p = comun.parser(__doc__, "las horas")
     p.add_argument(
         "--resolucion",
         type=float,
@@ -102,7 +97,6 @@ def main() -> None:
     p.add_argument(
         "--radio", type=float, default=0.05, help="distancia máxima al píxel más cercano, en grados"
     )
-    p.add_argument("--forzar", action="store_true", help="rehace las horas que ya existen")
     a = p.parse_args()
     reg = comun.region_de(a)
     lat, lon = grilla(reg, a.resolucion)

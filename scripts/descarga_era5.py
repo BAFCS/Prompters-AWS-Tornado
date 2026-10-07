@@ -22,7 +22,6 @@ Uso::
     uv run python scripts/descarga_era5.py --inicio 2019-05-29 --fin 2019-05-31 --pl u v t --sfc cape
 """
 
-import argparse
 import calendar
 import datetime as dt
 import multiprocessing as mp
@@ -249,11 +248,7 @@ def une(partes: list[Path], salida: Path) -> None:
 
 def main() -> None:
     """Punto de entrada: interpreta los argumentos y descarga cada día pedido."""
-    p = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    comun.args_fechas(p)
-    comun.args_region(p)
+    p = comun.parser(__doc__, "los días")
     p.add_argument(
         "--pl",
         nargs="*",
@@ -270,7 +265,6 @@ def main() -> None:
         default=4,
         help="lecturas simultáneas (por defecto 4; ~400 MB de RAM cada una)",
     )
-    p.add_argument("--forzar", action="store_true", help="rehace los días que ya existen")
     a = p.parse_args()
     reg = comun.region_de(a)
     ctx = mp.get_context("spawn")  # s3fs no tolera fork: cada proceso abre su propia conexión

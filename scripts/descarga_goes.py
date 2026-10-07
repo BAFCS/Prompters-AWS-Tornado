@@ -19,7 +19,6 @@ Uso::
     uv run python scripts/descarga_goes.py --inicio 2019-05-30 --bandas 8 13 --horas 18 23
 """
 
-import argparse
 import datetime as dt
 import multiprocessing as mp
 import re
@@ -202,11 +201,7 @@ def guarda(partes: list[dict], v: dict, salida: Path, reg: comun.Region) -> None
 
 def main() -> None:
     """Punto de entrada: interpreta los argumentos y descarga cada hora de cada día pedido."""
-    p = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    comun.args_fechas(p)
-    comun.args_region(p)
+    p = comun.parser(__doc__, "las horas")
     p.add_argument("--bandas", nargs="+", type=int, default=list(LAMBDA), choices=list(LAMBDA))
     p.add_argument(
         "--horas",
@@ -219,7 +214,6 @@ def main() -> None:
     p.add_argument(
         "--procesos", type=int, default=4, help="archivos leídos en paralelo (por defecto 4)"
     )
-    p.add_argument("--forzar", action="store_true", help="rehace las horas que ya existen")
     a = p.parse_args()
     reg = comun.region_de(a)
     ctx = mp.get_context("spawn")  # s3fs no tolera fork: cada proceso abre su propia conexión
