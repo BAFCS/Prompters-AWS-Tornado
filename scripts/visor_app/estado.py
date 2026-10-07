@@ -9,6 +9,7 @@ que corre antes de que se dibuje ningún widget.
 import dataclasses
 import datetime as dt
 from dataclasses import dataclass
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -119,11 +120,16 @@ def paneles() -> list[Panel] | None:
     return None if ps is None else [_al_dia(p) for p in ps]
 
 
-def _al_dia(p: Panel) -> Panel:
-    """``p`` como ``Panel`` actual: los de una sesión anterior a una recarga pueden no tener ``escala``."""
+def _al_dia(p: object) -> Panel:
+    """``p`` como ``Panel`` actual: los de una sesión anterior a una recarga pueden no tener ``escala``.
+
+    Tras recargar el módulo, la sesión guarda objetos de la clase ``Panel`` anterior, que ya no pasan
+    ``isinstance``: por eso se leen sus campos por nombre.
+    """
     if isinstance(p, Panel):
         return p
-    return Panel(p.id, p.clave, getattr(p, "nivel", None), getattr(p, "contorno", None),
+    viejo = cast(Any, p)
+    return Panel(viejo.id, viejo.clave, getattr(p, "nivel", None), getattr(p, "contorno", None),
                  getattr(p, "escala", None))  # fmt: skip
 
 

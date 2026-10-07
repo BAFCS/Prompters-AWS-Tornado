@@ -141,8 +141,16 @@ class PaletasTest(unittest.TestCase):
                 self.assertEqual(t["grayColor"], p.MUTED)
                 self.assertEqual(t["redColor"], p.SEVERE)
                 self.assertEqual(t["redTextColor"], p.INK)  # el rojo nunca escribe
+                self.assertEqual(t["orangeTextColor"], p.INK)
+                self.assertEqual(t["linkColor"], p.ACCENT)
+                self.assertEqual(t["greenColor"], p.ACCENT)
+                self.assertEqual(t["blueColor"], p.SELECCION)
                 self.assertEqual(t["sidebar"]["backgroundColor"], p.BARRA)
-                self.assertIn(p.WARM, t["chartCategoricalColors"])
+                self.assertEqual(t["sidebar"]["secondaryBackgroundColor"], p.SURFACE)
+                self.assertEqual(
+                    t["chartCategoricalColors"],
+                    [p.SELECCION, p.INK, p.WARM, p.COLD, p.MUTED, p.SEVERE],
+                )
 
     def test_css_define_todas_las_variables(self) -> None:
         """El CSS define cada color de la paleta en los dos modos."""

@@ -160,7 +160,8 @@ _VIGIA = """
   const modo = () => {
     const app = document.querySelector(".stApp");
     if (!app) return null;
-    const [r, g, b] = getComputedStyle(app).backgroundColor.match(/\\d+/g).map(Number);
+    const [r, g, b, a = 1] = getComputedStyle(app).backgroundColor.match(/[\\d.]+/g).map(Number);
+    if (a === 0) return null;  // fondo aún transparente durante la carga: no hay modo que leer
     return 0.2126 * r + 0.7152 * g + 0.0722 * b < 128 ? "oscuro" : "claro";
   };
   raiz.dataset.tema = modo() || raiz.dataset.tema || "claro";
@@ -274,13 +275,16 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 [data-testid="stMain"] .st-key-proyecto [class*="st-key-hoja_"] [data-testid="stMarkdownContainer"] li,
 .st-key-proyecto .nota {{ max-width: none; }}
 /* Índice: columna fija a la derecha si la página mide 880 px o más; si no, desplegable arriba. */
-/* Streamlit envuelve el contenedor de ancho fijo en un stLayoutWrapper: ese es el que se oculta y se fija. */
+/* Streamlit 1.64 envuelve el contenedor de ancho fijo en un stLayoutWrapper: ese es el que se oculta y
+   se fija (selectores internos; revisarlos al actualizar Streamlit). El contenedor también se oculta
+   por si una versión futura deja de envolverlo. */
 [data-testid="stLayoutWrapper"]:has(> .st-key-indice_lateral) {{ display: none; position: sticky; top: 4.5rem;
   align-self: flex-start; }}
+.st-key-indice_lateral {{ display: none; }}
 /* El bloque horizontal trae overflow: auto, que vuelve inútil el sticky de su hijo. */
 [data-testid="stHorizontalBlock"]:has(> [data-testid="stLayoutWrapper"] > .st-key-indice_lateral) {{ overflow: visible; }}
 @container proyecto (min-width: 880px) {{
-  [data-testid="stLayoutWrapper"]:has(> .st-key-indice_lateral) {{ display: flex; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-indice_lateral), .st-key-indice_lateral {{ display: flex; }}
   .st-key-indice_compacto {{ display: none; }}
 }}
 /* Tarjetas: grilla de n columnas que baja a una cuando el cuerpo es angosto. */

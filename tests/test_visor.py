@@ -35,6 +35,7 @@ class VisorTest(unittest.TestCase):
             app.run(timeout=30)
         self.assertEqual(len(app.exception), 0)
         self.assertEqual(len(app.error), 0)
+        self.assertEqual(len(app.selectbox), 0)  # sin_datos cortó antes de la barra de región y día
         self.assertIn("Predicción de tormentas mesociclónicas", app.title[0].value)
 
     def test_indice_enlaza_cada_seccion(self) -> None:

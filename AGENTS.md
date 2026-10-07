@@ -96,7 +96,10 @@ sincronizado). Cada panel muestra un producto de `visor_app/productos.py` (clave
 Streamlit no vuelve a ejecutar la app al cambiar de tema, así que el CSS usa variables de las dos
 paletas y un script (`tema._VIGIA`) marca `<html data-tema>` y pulsa un botón oculto para redibujar
 plotly; también lo pulsa si Python dibujó con otro modo que el del navegador (pasa en la primera carga). El botón de la barra (`tema.boton_modo`) alterna el modo eligiendo la opción del menú ⋮ de Streamlit (por eso `client.toolbarMode = "viewer"`). Las escalas de color de los mapas son estándar y viven en `visor_app/escalas.py`, por tipo de
-dato (`productos.Producto.tipo`); cada panel guarda la suya en `Panel.escala`. `PRODUCT.md` y
+dato (`productos.Producto.tipo`); cada panel guarda la suya en `Panel.escala`. Las columnas de las
+páginas se piden con `tema.columnas(spec, clave)`, no con `st.columns`: se apilan cuando cada una
+quedaría con menos de 26rem, así que funcionan en tablet con la barra abierta. La excepción es la
+fila de controles de Mapas, que va alineada con los paneles de la figura. `PRODUCT.md` y
 `.impeccable/` guardan el contexto de diseño del visor.
 
 GOES se guarda con su codificación original (`int16` con `scale_factor`/`add_offset`), así que no
