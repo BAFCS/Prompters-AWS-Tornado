@@ -36,9 +36,6 @@ _CSS_MC = """
 .lay{transition:opacity .9s ease}
 .lay.off{opacity:0}
 @media (prefers-reduced-motion:reduce){ .sp .spin{animation:none} .sp,.lay{transition-duration:.01ms} }
-text{font-family:"IBM Plex Mono",monospace; font-size:12px; fill:var(--muted)}
-text.lbl{font-size:12.5px; fill:var(--ink-2)}
-text.big{font-family:"IBM Plex Sans",sans-serif; font-size:14px; font-weight:600}
 
 #mcSvg[data-stage="1"] .sp{ transform:translate(calc(244px + var(--i)*70px), 268px) rotate(90deg) }
 #mcSvg[data-stage="2"] .sp{ transform:translate(calc(328px + var(--i)*16px), calc(318px - var(--i)*32px)) rotate(45deg) }
