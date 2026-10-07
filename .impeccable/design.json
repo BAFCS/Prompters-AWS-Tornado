@@ -499,7 +499,7 @@
       {
         "name": "vigia-tema",
         "value": "400ms",
-        "purpose": "Intervalo con que el vigía de tema.py lee el fondo de .stApp, marca html[data-tema] y pide una nueva ejecución si el modo cambió."
+        "purpose": "Intervalo con que el vigía de theme.py lee el fondo de .stApp, marca html[data-theme] y pide una nueva ejecución si el modo cambió."
       },
       {
         "name": "animacion-mapas",
@@ -515,13 +515,13 @@
       }
     ],
     "temas": {
-      "mecanismo": "config.toml define [theme.light] y [theme.dark]; tema.py inyecta las variables CSS de CLARA en :root y las de OSCURA en html[data-tema=\"oscuro\"]; las plantillas plotly son cuaderno y cuaderno_oscuro; tema.colores() y tema.plantilla() devuelven las del modo activo.",
+      "mecanismo": "config.toml define [theme.light] y [theme.dark]; theme.py inyecta las variables CSS de LIGHT en :root y las de DARK en html[data-theme=\"dark\"]; las plantillas plotly son notebook y notebook_dark; theme.colors() y theme.template() devuelven las del modo activo.",
       "sufijo": "Cada token claro tiene su par con sufijo -oscuro.",
       "leyenda": {
         "claro": "rgba(255,255,255,0.8)",
         "oscuro": "rgba(29,53,87,0.8)"
       },
-      "contraste": "tests/test_escalas.py exige ≥ 4,5:1 para INK, INK_2, MUTED y ACCENT sobre GROUND y SURFACE, para SOBRE_ACCENT sobre ACCENT y para INK sobre SEVERE_SOFT, en los dos temas."
+      "contraste": "tests/test_colorscales.py exige ≥ 4,5:1 para INK, INK_2, MUTED y ACCENT sobre GROUND y SURFACE, para ON_ACCENT sobre ACCENT y para INK sobre SEVERE_SOFT, en los dos temas."
     },
     "colorScales": [
       {
@@ -580,9 +580,9 @@
     ],
     "platformLimits": [
       "st.dataframe no permite fuente por columna: la hora UTC de la bitácora sale en sans.",
-      "El frontend de Streamlit ignora fondo y fuente de la plantilla plotly; graficos._estilo los fija en el layout de cada figura.",
+      "El frontend de Streamlit ignora fondo y fuente de la plantilla plotly; charts._style los fija en el layout de cada figura.",
       "st.html sanea el SVG: la regla de tiempo es HTML y CSS.",
-      "Streamlit no vuelve a ejecutar la app al cambiar de tema: el vigía de tema.py pulsa un botón oculto (vigia_tema) para redibujar los gráficos."
+      "Streamlit no vuelve a ejecutar la app al cambiar de tema: el vigía de theme.py pulsa un botón oculto (theme_watcher) para redibujar los gráficos."
     ]
   },
   "components": [
@@ -661,7 +661,7 @@
   ],
   "narrative": {
     "northStar": "El cuaderno de campo",
-    "overview": "El visor es la libreta de un caso meteorológico: un fondo sobre el que se apoyan hojas con filete fino (mapas, sondeos, tablas), cada una con su dato medido en tipografía de máquina y su nota al margen en gris. Nada flota ni brilla; la jerarquía la dan la hoja, el filete y pocos colores con trabajo asignado: el Steel Blue señala lo que el usuario puede accionar o eligió, el Strawberry Red marca tornados del catálogo y umbrales chilenos sin escribir nunca una palabra.\n\nLa paleta sale de cinco colores fijados por el usuario (Strawberry Red, Honeydew, Frosted Blue, Steel Blue y Deep Space Blue); los demás tonos son mezclas entre ellos. Hay dos temas que el visitante alterna desde el menú de Streamlit: claro (Honeydew de fondo, hojas blancas, Deep Space oscurecido de tinta) y oscuro (hojas Deep Space sobre un fondo más hondo, Honeydew de tinta, Frosted Blue de acción). Los mapas no usan la paleta: usan escalas estándar según el tipo de dato.\n\nDensidad media-alta, de herramienta de trabajo: dos columnas en escritorio, explicación siempre al lado del dato y nunca encima. La identidad la construye Streamlit con cuatro capas: `.streamlit/config.toml` (widgets y fuentes, tablas `[theme.light]` y `[theme.dark]`), las plantillas plotly `cuaderno` y `cuaderno_oscuro`, el CSS fino de `scripts/visor_app/tema.py` (variables CSS de las dos paletas, conmutadas por `html[data-tema=\"oscuro\"]`) y un vigía que detecta el cambio de tema y vuelve a ejecutar la página para redibujar los gráficos.",
+    "overview": "El visor es la libreta de un caso meteorológico: un fondo sobre el que se apoyan hojas con filete fino (mapas, sondeos, tablas), cada una con su dato medido en tipografía de máquina y su nota al margen en gris. Nada flota ni brilla; la jerarquía la dan la hoja, el filete y pocos colores con trabajo asignado: el Steel Blue señala lo que el usuario puede accionar o eligió, el Strawberry Red marca tornados del catálogo y umbrales chilenos sin escribir nunca una palabra.\n\nLa paleta sale de cinco colores fijados por el usuario (Strawberry Red, Honeydew, Frosted Blue, Steel Blue y Deep Space Blue); los demás tonos son mezclas entre ellos. Hay dos temas que el visitante alterna desde el menú de Streamlit: claro (Honeydew de fondo, hojas blancas, Deep Space oscurecido de tinta) y oscuro (hojas Deep Space sobre un fondo más hondo, Honeydew de tinta, Frosted Blue de acción). Los mapas no usan la paleta: usan escalas estándar según el tipo de dato.\n\nDensidad media-alta, de herramienta de trabajo: dos columnas en escritorio, explicación siempre al lado del dato y nunca encima. La identidad la construye Streamlit con cuatro capas: `.streamlit/config.toml` (widgets y fuentes, tablas `[theme.light]` y `[theme.dark]`), las plantillas plotly `notebook` y `notebook_dark`, el CSS fino de `scripts/viewer_app/theme.py` (variables CSS de las dos paletas, conmutadas por `html[data-theme=\"dark\"]`) y un vigía que detecta el cambio de tema y vuelve a ejecutar la página para redibujar los gráficos.",
     "keyCharacteristics": [
       "Fondo Honeydew (claro) o Deep Space hondo (oscuro); hojas con filete de 1 px y radio de 6 px.",
       "Roles de color estrictos: acción en la interfaz, selección dentro de los gráficos, rojo solo como marca de eventos y umbrales chilenos.",
@@ -688,7 +688,7 @@
       },
       {
         "name": "Los dos temas AA",
-        "body": "Tinta, entradilla, notas y acción alcanzan 4,5:1 sobre el fondo y sobre la hoja en los dos temas; también el texto del botón primario sobre la acción y la tinta sobre la píldora \"Cumple el criterio\". `tests/test_escalas.py` lo comprueba: un color nuevo de texto entra con su prueba.",
+        "body": "Tinta, entradilla, notas y acción alcanzan 4,5:1 sobre el fondo y sobre la hoja en los dos temas; también el texto del botón primario sobre la acción y la tinta sobre la píldora \"Cumple el criterio\". `tests/test_colorscales.py` lo comprueba: un color nuevo de texto entra con su prueba.",
         "section": "colors"
       },
       {
@@ -703,7 +703,7 @@
       },
       {
         "name": "La regla de la coma",
-        "body": "Separador decimal coma en ficha y gráficos (`separators=\", \"` en plotly; `_num` en la ficha), con 3 cifras significativas; las coordenadas salen de `componentes.coord` con signo menos tipográfico.",
+        "body": "Separador decimal coma en ficha y gráficos (`separators=\", \"` en plotly; `_num` en la ficha), con 3 cifras significativas; las coordenadas salen de `components.coord` con signo menos tipográfico.",
         "section": "typography"
       },
       {
@@ -716,18 +716,18 @@
       "**Do** poner todo dato sobre una hoja con filete y radio 6 px encima del fondo, en los dos temas.",
       "**Do** reservar el Strawberry Red #E63946 para glifos y líneas de eventos del catálogo y umbrales chilenos calibrados; las alertas en tinta con el triángulo rojo al lado.",
       "**Do** usar el color de acción (#376284 en claro, #A8DADC en oscuro) para lo accionable y el de selección (#457B9D en claro, #A8DADC en oscuro) para lo elegido dentro de un gráfico.",
-      "**Do** colorear los mapas con la escala estándar de su tipo de dato (`escalas.TIPOS`) y dejar que la predeterminada sea apta para daltonismo.",
+      "**Do** colorear los mapas con la escala estándar de su tipo de dato (`colorscales.KINDS`) y dejar que la predeterminada sea apta para daltonismo.",
       "**Do** usar el azul y el naranja de Okabe-Ito para series categóricas que la paleta no cubre.",
       "**Do** escribir cifras con coma decimal y en IBM Plex Mono tabular cuando la plataforma lo permita.",
-      "**Do** tomar los colores de `tema.colores()` y la plantilla de `tema.plantilla()`, y fijar fondo y fuente en el layout de cada figura plotly (`graficos._estilo`).",
-      "**Do** añadir a `tests/test_escalas.py` todo color nuevo de texto, con su contraste AA en claro y oscuro."
+      "**Do** tomar los colores de `theme.colors()` y la plantilla de `theme.template()`, y fijar fondo y fuente en el layout de cada figura plotly (`charts._style`).",
+      "**Do** añadir a `tests/test_colorscales.py` todo color nuevo de texto, con su contraste AA en claro y oscuro."
     ],
     "donts": [
       "**Don't** escribir texto en rojo, ni siquiera en tamaño grande o en un diagrama.",
       "**Don't** introducir una serif ni una segunda sans junto a IBM Plex.",
       "**Don't** colorear un mapa con colores de la marca ni poner por defecto una escala con rojo o no apta para daltonismo.",
       "**Don't** marcar en rojo un índice sin umbral chileno calibrado ni usar umbrales norteamericanos.",
-      "**Don't** fijar un hex en un gráfico o en el CSS fuera de `Paleta`: el color tiene que cambiar con el tema.",
+      "**Don't** fijar un hex en un gráfico o en el CSS fuera de `Palette`: el color tiene que cambiar con el tema.",
       "**Don't** añadir sombras: la profundidad es tonal."
     ]
   }

@@ -1,6 +1,6 @@
 ---
-name: visor
-description: Levanta el visor Streamlit del repo (scripts/visor.py) y lo revisa en el navegador con Playwright MCP, en modo claro y oscuro. Úsala para ver, probar o capturar el visor, o para confirmar en la app real un cambio en scripts/visor.py o scripts/visor_app/ (no basta con las pruebas de tests/). No la uses para los scripts de figuras ni de datos.
+name: viewer
+description: Levanta el visor Streamlit del repo (scripts/viewer.py) y lo revisa en el navegador con Playwright MCP, en modo claro y oscuro. Úsala para ver, probar o capturar el visor, o para confirmar en la app real un cambio en scripts/viewer.py o scripts/viewer_app/ (no basta con las pruebas de tests/). No la uses para los scripts de figuras ni de datos.
 ---
 
 # Revisar el visor en el navegador
@@ -12,7 +12,7 @@ Las pruebas de `tests/` (AppTest) no ejecutan el JavaScript ni el CSS del tema, 
 
 ```bash
 PUERTO=$(python3 -c 'import socket; s = socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')
-uv run streamlit run scripts/visor.py --server.headless true --server.port "$PUERTO" \
+uv run streamlit run scripts/viewer.py --server.headless true --server.port "$PUERTO" \
   > "${TMPDIR:-/tmp}/visor-$PUERTO.log" 2>&1 &
 ```
 
@@ -23,7 +23,7 @@ Lánzalo en segundo plano con un puerto libre (otra sesión o worktree puede ten
 ## 2. Recorrer
 
 Páginas (barra de navegación superior): `/` El proyecto (se ve aunque no haya datos), `/caso`,
-`/mapas`, `/sondeo`, `/series`. Las demás necesitan datos en `data/recortes/<region>/`; si no hay,
+`/mapas`, `/sondeo`, `/series`. Las demás necesitan datos en `data/crops/<region>/`; si no hay,
 muestran un aviso de "sin datos", que es el comportamiento esperado.
 
 Con Playwright MCP (Chromium):
@@ -31,15 +31,15 @@ Con Playwright MCP (Chromium):
   capturar. Plotly tarda un poco más que el resto.
 - Revisa la consola (`browser_console_messages`): no debe haber errores de JavaScript.
 - Captura a 1440×900 y a tablet (1024×768 con la barra lateral abierta): las columnas de
-  `tema.columnas` deben apilarse sin desbordar.
+  `theme.columns` deben apilarse sin desbordar.
 
 ## 3. Modo claro y oscuro
 
-Alterna con el botón "Cambiar a modo oscuro / claro" de la barra lateral (`tema.boton_modo`); el
-vigía marca `<html data-tema>` y redibuja plotly sin recargar. Comprueba, en cada modo, que
+Alterna con el botón "Cambiar a modo oscuro / claro" de la barra lateral (`theme.mode_button`); el
+vigía marca `<html data-theme>` y redibuja plotly sin recargar. Comprueba, en cada modo, que
 `document.documentElement.dataset.tema` cambió, que las figuras plotly cambiaron de fondo y que el
 texto sigue legible. Ojo: `browser_emulate_media` cambia `prefers-color-scheme`, que no es lo mismo
-que el botón; prueba los dos caminos si tocaste `tema.py`.
+que el botón; prueba los dos caminos si tocaste `theme.py`.
 
 ## 4. Cerrar
 
