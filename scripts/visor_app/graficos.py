@@ -372,13 +372,6 @@ def skewt(
     return _estilo(fig)
 
 
-def _capas() -> tuple[tuple[int, int, str, str], ...]:
-    """Capas del hodógrafo (desde, hasta en m, color, nombre) con los colores del modo activo."""
-    p = tema.colores()
-    return ((0, 1000, p.INK, "0–1 km"), (1000, 3000, p.COLD, "1–3 km"),
-            (3000, 6000, p.WARM, "3–6 km"), (6000, 10000, p.MUTED, "6–10 km"))  # fmt: skip
-
-
 def hodografo(
     h: np.ndarray, u: np.ndarray, v: np.ndarray, lm: tuple[float, float],
     rm: tuple[float, float], media: tuple[float, float], titulo: str,
@@ -394,7 +387,10 @@ def hodografo(
                 line={"color": tema.colores().SURFACE_2 if r % 20 else tema.colores().LINE, "width": 1},
             )
         )  # fmt: skip
-    for h0, h1, color, nombre in _capas():
+    p = tema.colores()
+    capas = ((0, 1000, p.INK, "0–1 km"), (1000, 3000, p.COLD, "1–3 km"),
+             (3000, 6000, p.WARM, "3–6 km"), (6000, 10000, p.MUTED, "6–10 km"))  # fmt: skip
+    for h0, h1, color, nombre in capas:
         k = (h >= h0) & (h <= h1)
         if k.sum() < 2:
             continue
