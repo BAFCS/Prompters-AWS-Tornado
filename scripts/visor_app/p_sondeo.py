@@ -9,9 +9,8 @@ import streamlit as st
 import xarray as xr
 from metpy.units import units
 
+import comun
 from visor_app import componentes, datos, estado, graficos, tema, textos
-
-G = 9.80665
 
 
 def _columna(ds: xr.Dataset, t: pd.Timestamp, p: estado.Punto) -> xr.Dataset:
@@ -74,9 +73,9 @@ def pagina() -> None:
     if ctx.dia.idx is not None:  # altura del terreno calculada por procesa_era5.py
         h_sfc = float(_columna(datos.abre(ctx.dia.idx), t, p)["altura_sfc"])
     else:
-        lnp, z = np.log(pl["level"].values[::-1]), (pl["z"].values / G)[::-1]
+        lnp, z = np.log(pl["level"].values[::-1]), (pl["z"].values / comun.G)[::-1]
         h_sfc = float(np.interp(np.log(sp), lnp, z))
-    agl = pl["z"].values[arriba] / G - h_sfc
+    agl = pl["z"].values[arriba] / comun.G - h_sfc
     alt = np.r_[10.0, agl]
     u = np.r_[float(sfc["10u"]), pl["u"].values[arriba]]
     v = np.r_[float(sfc["10v"]), pl["v"].values[arriba]]

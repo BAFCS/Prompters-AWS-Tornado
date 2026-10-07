@@ -37,7 +37,6 @@ import xarray as xr
 
 import comun
 
-G = 9.80665  # m/s², gravedad estándar (geopotencial → altura)
 PASO = 100.0  # m, resolución del perfil interpolado
 TOPE = 6000.0  # m, altura máxima del perfil interpolado
 DESVIO_BUNKERS = 7.5  # m/s, desviación de la tormenta respecto del viento medio 0–6 km
@@ -105,7 +104,7 @@ def indices_hora(pl: xr.Dataset, sfc: xr.Dataset) -> dict[str, np.ndarray]:
     pl = pl.sortby("level", ascending=False)  # de 1000 hPa hacia arriba: altura creciente
     niveles = pl["level"].values.astype(float)
     lnp = -np.log(niveles * 100.0)[:, None, None] * np.ones(pl["z"].shape)
-    hgt = pl["z"].values / G
+    hgt = pl["z"].values / comun.G
     sp = sfc["sp"].values
     h_sfc = interpola(lnp, hgt, -np.log(sp))
     agl = hgt - h_sfc[None]

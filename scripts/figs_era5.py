@@ -77,7 +77,7 @@ def L(p: float) -> int:
 
 
 i1000, i900, i850, i500 = L(1000), L(900), L(850), L(500)
-gz = D["z"] / 9.80665
+gz = D["z"] / comun.G
 
 
 def spd(k: int) -> np.ndarray:

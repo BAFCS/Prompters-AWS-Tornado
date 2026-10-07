@@ -21,6 +21,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 RECORTES = DATA / "recortes"
 
+G = 9.80665  # m/s², gravedad estándar (geopotencial → altura)
+
 # Compresión sin pérdida para todo lo que se escribe en NetCDF (gzip + shuffle).
 COMPRESION = {"zlib": True, "complevel": 4, "shuffle": True}
 
