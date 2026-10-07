@@ -114,8 +114,8 @@ eventos = datos.eventos(fecha)
 ts = datos.tiempos(dia)
 st.session_state["tiempos"] = ts
 
-reg = datos.region(nombre)
-if reg is None:  # región a medida: se deduce de las coordenadas de los datos
+reg = comun.REGIONES.get(nombre)
+if reg is None:  # región a medida (--bbox): se deduce de las coordenadas de los datos
     ref = datos.era5_ref(dia)
     if ref is None and dia.goes:
         ref = datos.abre(dia.goes[0])

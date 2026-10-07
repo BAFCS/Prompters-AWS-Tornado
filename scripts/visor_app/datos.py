@@ -35,11 +35,6 @@ def regiones() -> list[str]:
     return sorted(p.name for p in comun.RECORTES.glob("*") if p.is_dir())
 
 
-def region(nombre: str) -> comun.Region | None:
-    """La región predefinida ``nombre``, o ``None`` si es una región a medida (``--bbox``)."""
-    return comun.REGIONES.get(nombre)
-
-
 def _fecha(p: Path) -> dt.date:
     """Fecha ``AAAAMMDD`` que aparece en el nombre de ``p``."""
     return dt.datetime.strptime(re.findall(r"\d{8}", p.name)[-1], "%Y%m%d").date()
