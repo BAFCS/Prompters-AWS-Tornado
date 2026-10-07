@@ -257,8 +257,7 @@ html.cambia-tema [data-testid="stMainMenuPopover"] {{ visibility: hidden; }}
 h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-weight: 700; letter-spacing: 0; }}
 .paso {{ background: {p.SURFACE}; border: 1px solid {p.LINE}; border-radius: 6px; padding: 10px 12px;
   font-size: 0.92rem; line-height: 1.45; }}
-.antetitulo {{ font-family: {MONO}; font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase;
-  color: {p.ACCENT}; margin: 0 0 -0.4rem; }}
+.indice-titulo {{ font-size: 0.875rem; font-weight: 600; color: {p.INK_2}; margin: 0 0 -0.4rem; }}
 .aviso {{ border: 1px solid {p.LINE}; background: {p.SURFACE}; padding: 14px 18px; margin: 1rem 0;
   border-radius: 6px; line-height: 1.5; max-width: 68ch; }}
 .aviso b {{ color: {p.ACCENT}; }}

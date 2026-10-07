@@ -26,15 +26,9 @@ SECCIONES = (
 )
 
 
-def _antetitulo(texto: str) -> None:
-    """Rótulo corto en mayúsculas sobre el título de una sección."""
-    st.markdown(f"<p class='antetitulo'>{texto}</p>", unsafe_allow_html=True)
-
-
-def _seccion(ancla: str, antetitulo: str, titulo: str, bajada: str) -> None:
-    """Encabezado de sección: rótulo, título con ``ancla`` para el índice y una frase de contexto."""
+def _seccion(ancla: str, titulo: str, bajada: str) -> None:
+    """Encabezado de sección: título con ``ancla`` para el índice y una frase de contexto."""
     st.divider()
-    _antetitulo(antetitulo)
     st.header(titulo, anchor=ancla)
     st.markdown(f"<p class='lede'>{bajada}</p>", unsafe_allow_html=True)
 
@@ -68,10 +62,9 @@ def _tarjeta(clave: str, insignia: str, color: Color, titulo: str, texto: str) -
 
 def _portada() -> None:
     """Presenta el objetivo, las referencias del caso y los enlaces."""
-    _antetitulo("Proyecto abierto · AWS Hackathon")
     st.title("Predicción de tormentas mesociclónicas en el centro-sur de Chile", anchor="inicio")
     st.markdown(
-        '<p class="lede">Un desafío de análisis de datos meteorológicos para estudiar qué tormentas pueden desarrollar rotación organizada.</p>',
+        '<p class="lede">Proyecto abierto del AWS Hackathon. Un desafío de análisis de datos meteorológicos para estudiar qué tormentas pueden desarrollar rotación organizada.</p>',
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -116,7 +109,6 @@ def _problema() -> None:
     """Explica el caso de referencia y las limitaciones del catálogo."""
     _seccion(
         "problema",
-        "El problema",
         "Un catálogo de eventos reportados, sin casos negativos confirmados",
         "Disponemos de registros de tornados y trombas marinas. La ausencia de un reporte no permite asegurar que no ocurrió un evento.",
     )
@@ -130,7 +122,6 @@ def _dificultad() -> None:
     """Presenta las decisiones de cálculo y las referencias que deben validarse."""
     _seccion(
         "dificultad",
-        "Por qué es difícil",
         "Tres aspectos que deben adaptarse al contexto chileno",
         "El régimen atmosférico, el sentido de rotación y la cobertura del catálogo condicionan el cálculo de índices y el entrenamiento de modelos.",
     )
@@ -181,7 +172,6 @@ def _datos() -> None:
     """Describe los datos del visor y separa sus límites del acceso técnico."""
     _seccion(
         "datos",
-        "Los datos",
         "Tres fuentes de datos para estudiar las tormentas",
         "ERA5 es una reconstrucción histórica del estado de la atmósfera que combina observaciones y un modelo. GOES aporta imágenes satelitales para observar las nubes y su evolución. El catálogo aporta los eventos reportados con los que se comparan esos datos.",
     )
@@ -228,7 +218,6 @@ def _participar() -> None:
     """Propone tareas y hace explícitas las decisiones pendientes de la hackathon."""
     _seccion(
         "participar",
-        "Participar",
         "Por dónde empezar",
         "El proyecto está abierto a cualquier persona interesada, con o sin formación en meteorología.",
     )
@@ -310,5 +299,5 @@ def pagina() -> None:
             _datos()
             _participar()
         with st.container(width=220, key="indice_lateral"):
-            _antetitulo("En esta página")
+            st.markdown("<p class='indice-titulo'>En esta página</p>", unsafe_allow_html=True)
             st.markdown(_indice(), unsafe_allow_html=True)
