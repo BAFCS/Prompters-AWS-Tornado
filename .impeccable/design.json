@@ -219,8 +219,8 @@
       },
       "calido": {
         "role": "tertiary",
-        "displayName": "Naranja de Okabe-Ito",
-        "canonical": "#E69F00",
+        "displayName": "Naranja de Okabe-Ito oscurecido (3:1 sobre la hoja)",
+        "canonical": "#B07800",
         "tonalRamp": [
           "#130900",
           "#332102",
@@ -334,7 +334,7 @@
       "apagado-oscuro": {
         "role": "neutral",
         "displayName": "Niebla gris",
-        "canonical": "#9CABB2",
+        "canonical": "#A9B8BE",
         "tonalRamp": [
           "#030D12",
           "#1B272D",
@@ -366,8 +366,8 @@
       },
       "accion-suave-oscuro": {
         "role": "primary",
-        "displayName": "Steel Blue (selección de texto)",
-        "canonical": "#457B9D",
+        "displayName": "Steel Blue oscurecido (selección de texto)",
+        "canonical": "#3D6E8E",
         "tonalRamp": [
           "#000D18",
           "#02283D",
@@ -561,7 +561,7 @@
           "Greys",
           "Cividis_r",
           "Viridis_r",
-          "ice"
+          "ice_r"
         ],
         "noAptas": [
           "Turbo_r"
@@ -624,7 +624,7 @@
       "refersTo": "panel-oscuro",
       "description": "La hoja Deep Space sobre el fondo hondo del tema oscuro.",
       "html": "<div class=\"ds-mesa-osc\"><div class=\"ds-panel-osc\">ERA5 · VGP₀₋₁ · 18:00 UTC</div><p class=\"ds-nota-osc\">Celdas de ~31 km.</p></div>",
-      "css": ".ds-mesa-osc{background:#172A46;padding:16px;font-family:'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;color:#F1FAEE} .ds-panel-osc{background:#1D3557;border:1px solid #475C75;border-radius:6px;padding:10px 12px;font-size:15px;min-height:80px} .ds-nota-osc{color:#9CABB2;font-size:0.86rem;line-height:1.45;margin:6px 0 0}"
+      "css": ".ds-mesa-osc{background:#172A46;padding:16px;font-family:'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;color:#F1FAEE} .ds-panel-osc{background:#1D3557;border:1px solid #475C75;border-radius:6px;padding:10px 12px;font-size:15px;min-height:80px} .ds-nota-osc{color:#A9B8BE;font-size:0.86rem;line-height:1.45;margin:6px 0 0}"
     },
     {
       "name": "Ficha de umbrales",

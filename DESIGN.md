@@ -15,16 +15,16 @@ colors:
   severo: "#E63946"
   severo-suave: "#EFD7D0"
   frio: "#0072B2"
-  calido: "#E69F00"
+  calido: "#B07800"
   fondo-oscuro: "#172A46"
   hoja-oscuro: "#1D3557"
   hoja-2-oscuro: "#2C4362"
   filete-oscuro: "#475C75"
   tinta-oscuro: "#F1FAEE"
   tinta-2-oscuro: "#D4EDE7"
-  apagado-oscuro: "#9CABB2"
+  apagado-oscuro: "#A9B8BE"
   accion-oscuro: "#A8DADC"
-  accion-suave-oscuro: "#457B9D"
+  accion-suave-oscuro: "#3D6E8E"
   seleccion-oscuro: "#A8DADC"
   severo-oscuro: "#E63946"
   severo-suave-oscuro: "#593652"
@@ -158,7 +158,7 @@ Paleta fría de cinco colores de marca y sus mezclas, en dos temas con los mismo
 - **Fresa lavada** (severo-suave; en oscuro severo-suave-oscuro): fondo de la píldora "Cumple el criterio" de la ficha, con texto en tinta encima.
 
 ### Tertiary
-- **Azul de Okabe-Ito** (frio; frio-oscuro en oscuro) y **naranja de Okabe-Ito** (calido): series categóricas que la paleta no cubre, aptas para daltonismo. Frío: capa 1–3 km del hodógrafo. Cálido: punto de rocío del Skew-T, capa 3–6 km del hodógrafo, series "área GOES", flechas de cizalle y convergencia en los diagramas. Ninguno de los dos escribe texto largo; en los diagramas el frío rotula en tamaño grande.
+- **Azul de Okabe-Ito** (frio; frio-oscuro en oscuro) y **naranja de Okabe-Ito** (calido-oscuro en oscuro; en claro, oscurecido a `#B07800` para llegar a 3:1 sobre la hoja): series categóricas que la paleta no cubre, aptas para daltonismo. Frío: capa 1–3 km del hodógrafo. Cálido: punto de rocío del Skew-T, capa 3–6 km del hodógrafo, series "área GOES", flechas de cizalle y convergencia en los diagramas. Ninguno de los dos escribe texto largo; en los diagramas el frío rotula en tamaño grande.
 
 ### Neutral
 - **Honeydew** (fondo; fondo-oscuro en oscuro): página principal y cabecera. En el tema claro, la barra lateral va un tono más oscura, `#BEE4E1` (Honeydew + 70 % Frosted Blue), para separarse del fondo; en el oscuro comparte el fondo-oscuro.
@@ -177,7 +177,7 @@ Las escalas de color de los mapas no son colores de marca: son escalas estándar
 - **Visible** (reflectancia): grises por defecto; Cividis.
 
 ### Named Rules
-**El rojo marca, no escribe.** El Strawberry Red solo aparece como glifo o línea, y solo por un evento del catálogo o por un umbral chileno calibrado (su contorno, su línea o un valor que lo cruza). Nunca es texto, en ningún tamaño ni tema: las alertas van en tinta con el triángulo rojo al lado. Los índices sin umbral calibrado (SRH₀₋₁, SHERBS3, LCL, cizalle 0–6 km) no se marcan: llevan su referencia en texto apagado.
+**El rojo marca, no escribe.** El Strawberry Red solo aparece como glifo o línea, y solo por un evento del catálogo o por un umbral chileno calibrado (su contorno, su línea o un valor que lo cruza). Nunca es texto, en ningún tamaño ni tema: las alertas van en tinta con el triángulo rojo al lado, y `redTextColor` (igual que `orangeTextColor`) está fijado a la tinta en `config.toml`, así que `st.error` y las insignias escriben en tinta. Los índices sin umbral calibrado (SRH₀₋₁, SHERBS3, LCL, cizalle 0–6 km) no se marcan: llevan su referencia en texto apagado.
 
 **Acción y selección.** En la interfaz, el color de acción marca lo que se puede accionar (botón, slider, foco, "ahora"). Dentro de un gráfico, lo elegido (punto, serie del punto, hora actual) lleva el color de selección. Ninguno de los dos expresa alarma.
 

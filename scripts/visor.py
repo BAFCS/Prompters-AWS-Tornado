@@ -18,6 +18,7 @@ Uso::
 
 import datetime as dt
 import html
+from typing import NoReturn
 
 import numpy as np
 import pandas as pd
@@ -62,26 +63,37 @@ barra.caption(
     "coordinado (UTC), que puede diferir de la hora local de Chile."
 )
 tema.boton_modo()
+
+
+def sin_datos(mensaje: str, preparar: bool = False) -> NoReturn:
+    """Detiene la app sin datos: El proyecto se muestra igual; las demás páginas avisan con ``mensaje``."""
+    if navegacion.url_path == PAGINAS["proyecto"].url_path:
+        navegacion.run()  # la descripción no usa datos
+        st.stop()
+    st.error(mensaje)
+    if preparar:
+        st.page_link(PAGINAS["proyecto"], label="Leer El proyecto")
+        with st.expander("Preparar datos en la instalación local"):
+            st.markdown(
+                "Desde la raíz del repositorio, descarga y procesa un día. Los archivos se guardan "
+                "en `data/recortes/`. Después, recarga esta página."
+            )
+            st.code(
+                "uv run python scripts/descarga_era5.py --inicio 2019-05-30\n"
+                "uv run python scripts/descarga_goes.py --inicio 2019-05-30\n"
+                "uv run python scripts/procesa_goes.py --inicio 2019-05-30\n"
+                "uv run python scripts/procesa_era5.py --inicio 2019-05-30",
+                language="bash",
+            )
+    st.stop()
+
+
 nombres = datos.regiones()
-if not nombres and navegacion.url_path == PAGINAS["proyecto"].url_path:
-    navegacion.run()  # la descripción no usa datos
-    st.stop()
 if not nombres:
-    st.error("No hay datos preparados para explorar. Puedes leer la descripción en El proyecto.")
-    st.page_link(PAGINAS["proyecto"], label="Leer El proyecto")
-    with st.expander("Preparar datos en la instalación local"):
-        st.markdown(
-            "Desde la raíz del repositorio, descarga y procesa un día. Los archivos se guardan "
-            "en `data/recortes/`. Después, recarga esta página."
-        )
-        st.code(
-            "uv run python scripts/descarga_era5.py --inicio 2019-05-30\n"
-            "uv run python scripts/descarga_goes.py --inicio 2019-05-30\n"
-            "uv run python scripts/procesa_goes.py --inicio 2019-05-30\n"
-            "uv run python scripts/procesa_era5.py --inicio 2019-05-30",
-            language="bash",
-        )
-    st.stop()
+    sin_datos(
+        "No hay datos preparados para explorar. Puedes leer la descripción en El proyecto.",
+        preparar=True,
+    )
 estado.recuerda("region")
 nombre = barra.selectbox(
     "Región", nombres, key="region",
@@ -90,11 +102,7 @@ nombre = barra.selectbox(
 estado.guarda("region")
 dias = datos.dias(nombre)
 if not dias:
-    if navegacion.url_path == PAGINAS["proyecto"].url_path:
-        navegacion.run()
-        st.stop()
-    st.error(f"La región {nombre} no tiene días preparados. Elige otra región disponible.")
-    st.stop()
+    sin_datos(f"La región {nombre} no tiene días preparados. Elige otra región disponible.")
 fechas = list(dias)
 estado.recuerda("dia")
 if st.session_state.get("dia") not in fechas:
@@ -112,14 +120,10 @@ if reg is None:  # región a medida: se deduce de las coordenadas de los datos
     if ref is None and dia.goes:
         ref = datos.abre(dia.goes[0])
     if ref is None:
-        if navegacion.url_path == PAGINAS["proyecto"].url_path:
-            navegacion.run()
-            st.stop()
-        st.error(
+        sin_datos(
             "Los archivos disponibles no permiten determinar los límites de la región. "
             "Revisa sus coordenadas o selecciona otra región."
         )
-        st.stop()
     la, lo = ref["latitude"].values, ref["longitude"].values
     reg = comun.Region(nombre, float(la.max()), float(la.min()), float(lo.min()), float(lo.max()))
 st.session_state["ctx"] = estado.Contexto(nombre, reg, dia, eventos)

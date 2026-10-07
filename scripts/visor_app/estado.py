@@ -116,7 +116,15 @@ class Panel:
 def paneles() -> list[Panel] | None:
     """Los paneles de la grilla, o ``None`` si todavía no se fijaron en esta sesión."""
     ps = st.session_state.get("paneles")
-    return None if ps is None else list(ps)
+    return None if ps is None else [_al_dia(p) for p in ps]
+
+
+def _al_dia(p: Panel) -> Panel:
+    """``p`` como ``Panel`` actual: los de una sesión anterior a una recarga pueden no tener ``escala``."""
+    if isinstance(p, Panel):
+        return p
+    return Panel(p.id, p.clave, getattr(p, "nivel", None), getattr(p, "contorno", None),
+                 getattr(p, "escala", None))  # fmt: skip
 
 
 def fija_paneles(ps: list[Panel]) -> None:

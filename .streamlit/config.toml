@@ -20,7 +20,9 @@ blueColor = "#457B9D"
 orangeColor = "#E69F00"
 greenColor = "#376284"
 grayColor = "#465463"
-chartCategoricalColors = ["#457B9D", "#0E1A2C", "#E69F00", "#0072B2", "#465463", "#E63946"]
+redTextColor = "#0E1A2C"  # el rojo marca y nunca escribe: st.error escribe en tinta
+orangeTextColor = "#0E1A2C"  # insignias naranjas en tinta (AA)
+chartCategoricalColors = ["#457B9D", "#0E1A2C", "#B07800", "#0072B2", "#465463", "#E63946"]
 
 [theme.light.sidebar]
 backgroundColor = "#BEE4E1"  # Honeydew + 70 % Frosted Blue: la barra se separa del fondo
@@ -37,8 +39,10 @@ redColor = "#E63946"
 blueColor = "#A8DADC"
 orangeColor = "#E69F00"
 greenColor = "#A8DADC"
-grayColor = "#9CABB2"
-chartCategoricalColors = ["#A8DADC", "#F1FAEE", "#E69F00", "#56B4E9", "#9CABB2", "#E63946"]
+grayColor = "#A9B8BE"
+redTextColor = "#F1FAEE"
+orangeTextColor = "#F1FAEE"
+chartCategoricalColors = ["#A8DADC", "#F1FAEE", "#E69F00", "#56B4E9", "#A9B8BE", "#E63946"]
 
 [theme.dark.sidebar]
 backgroundColor = "#172A46"

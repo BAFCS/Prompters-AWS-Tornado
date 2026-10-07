@@ -27,6 +27,15 @@ class VisorTest(unittest.TestCase):
         self.assertEqual(len(app.title), 1)
         self.assertIn("Predicción de tormentas mesociclónicas", app.title[0].value)
 
+    def test_proyecto_se_muestra_sin_regiones(self) -> None:
+        """Sin ninguna región descargada, la página por defecto sigue siendo la descripción."""
+        app = AppTest.from_file(Path(__file__).resolve().parents[1] / "scripts" / "visor.py")
+        with patch.object(datos, "regiones", return_value=[]):
+            app.run(timeout=30)
+        self.assertEqual(len(app.exception), 0)
+        self.assertEqual(len(app.error), 0)
+        self.assertIn("Predicción de tormentas mesociclónicas", app.title[0].value)
+
 
 if __name__ == "__main__":
     unittest.main()

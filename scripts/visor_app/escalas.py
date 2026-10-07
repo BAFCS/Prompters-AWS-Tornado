@@ -47,7 +47,7 @@ TIPOS: dict[str, tuple[Escala, ...]] = {
         Escala("Greys", "Grises, fríos en blanco", True),
         Escala("Cividis_r", "Cividis invertida", True),
         Escala("Viridis_r", "Viridis invertida", True),
-        Escala("ice", "Hielo (cmocean)", True),
+        Escala("ice_r", "Hielo invertida (cmocean)", True),
         Escala("Turbo_r", "Turbo invertida", False),
     ),
     # Reflectancia visible: más brillante, más blanco.

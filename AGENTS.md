@@ -91,10 +91,11 @@ sincronizado). Cada panel muestra un producto de `visor_app/productos.py` (clave
 `st.session_state["paneles"]` (`estado.Panel`), no en widgets, y el recorrido guiado la fija con `Paso.paneles`. Los textos, umbrales y el recorrido guiado salen de `docs/` y están en
 `visor_app/textos.py`: si cambia el documento, hay que actualizarlos. El tema (claro y oscuro) está en
 `.streamlit/config.toml` (`[theme.light]`, `[theme.dark]`) y `visor_app/tema.py` (`CLARA`, `OSCURA`;
-`tema.colores()` da la paleta del modo activo): si cambia un color, hay que cambiarlo en los dos.
+`tema.colores()` da la paleta del modo activo): si cambia un color, hay que cambiarlo en los dos
+(`tests/test_escalas.py` comprueba que coinciden y que los textos cumplen WCAG AA).
 Streamlit no vuelve a ejecutar la app al cambiar de tema, así que el CSS usa variables de las dos
 paletas y un script (`tema._VIGIA`) marca `<html data-tema>` y pulsa un botón oculto para redibujar
-plotly. El botón de la barra (`tema.boton_modo`) alterna el modo eligiendo la opción del menú ⋮ de Streamlit (por eso `client.toolbarMode = "viewer"`). Las escalas de color de los mapas son estándar y viven en `visor_app/escalas.py`, por tipo de
+plotly; también lo pulsa si Python dibujó con otro modo que el del navegador (pasa en la primera carga). El botón de la barra (`tema.boton_modo`) alterna el modo eligiendo la opción del menú ⋮ de Streamlit (por eso `client.toolbarMode = "viewer"`). Las escalas de color de los mapas son estándar y viven en `visor_app/escalas.py`, por tipo de
 dato (`productos.Producto.tipo`); cada panel guarda la suya en `Panel.escala`. `PRODUCT.md` y
 `.impeccable/` guardan el contexto de diseño del visor.
 

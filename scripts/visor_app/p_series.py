@@ -107,7 +107,7 @@ def pagina() -> None:
     st.plotly_chart(fig, width="stretch", theme=None)
     st.caption(
         "Rojo continuo: la hora del evento elegido; punteado: los demás eventos del día. Línea "
-        "verde: la hora seleccionada. Rayas rojas: valores de comparación de VGP y cizalle 0–1 km. "
+        "azul: la hora seleccionada. Rayas rojas: valores de comparación de VGP y cizalle 0–1 km. "
         "Para SRH no se dibuja un valor de comparación. Cumplir estos criterios no confirma un tornado."
     )
     st.caption(

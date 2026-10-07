@@ -25,38 +25,40 @@ MONO = "'IBM Plex Mono', ui-monospace, Menlo, monospace"
 class Paleta:
     """Los colores con trabajo asignado en un modo (claro u oscuro)."""
 
-    GROUND: str  # fondo de página y barra lateral
+    GROUND: str  # fondo de página
+    BARRA: str  # fondo de la barra lateral (``[theme.*.sidebar]`` de config.toml)
     SURFACE: str  # hojas: gráficos, tablas, ficha
     SURFACE_2: str  # grilla de gráficos, separadores internos
     LINE: str  # filete de 1 px
     INK: str  # texto
     INK_2: str  # entradilla
-    MUTED: str  # notas y captions (≥ 4,5:1 sobre el fondo)
+    MUTED: str  # notas y captions (≥ 4,5:1 sobre fondo, barra, hoja y hoja lavada)
     ACCENT: str  # acción en la interfaz: botón primario, slider, foco, enlaces
-    ACCENT_SOFT: str  # selección de texto
+    ACCENT_SOFT: str  # selección de texto (tinta encima, ≥ 4,5:1)
     SELECCION: str  # lo elegido dentro de un gráfico: el punto, la serie «punto», la hora actual
     SEVERE: str  # eventos y umbrales: solo glifos y líneas, nunca texto
     SEVERE_SOFT: str  # fondo de la píldora «Cumple el criterio» (texto en tinta encima)
     COLD: str  # serie categórica (hodógrafo 1–3 km): azul de Okabe-Ito
     WARM: str  # serie categórica (punto de rocío, hodógrafo 3–6 km, series GOES): naranja de Okabe-Ito
+    # (oscurecido en claro para llegar a 3:1 sobre la hoja, el mínimo de un elemento gráfico)
     SOBRE_ACCENT: str  # texto del botón primario sobre ``ACCENT``
     LEYENDA: str  # fondo semitransparente de leyendas
 
 
-# Claro: Honeydew de fondo, hojas blancas, Deep Space oscurecido de tinta (16:1) y puro en la
+# Claro: Honeydew de fondo, barra Honeydew + 70 % Frosted Blue, hojas blancas, Deep Space oscurecido de tinta (16:1) y puro en la
 # entradilla, Steel Blue oscurecido para la acción.
 CLARA = Paleta(
-    GROUND="#F1FAEE", SURFACE="#FFFFFF", SURFACE_2="#EFF8F9", LINE="#BDD4D6",
+    GROUND="#F1FAEE", BARRA="#BEE4E1", SURFACE="#FFFFFF", SURFACE_2="#EFF8F9", LINE="#BDD4D6",
     INK="#0E1A2C", INK_2="#1D3557", MUTED="#465463",
     ACCENT="#376284", ACCENT_SOFT="#A8DADC", SELECCION="#457B9D",
     SEVERE="#E63946", SEVERE_SOFT="#EFD7D0",
-    COLD="#0072B2", WARM="#E69F00", SOBRE_ACCENT="#FFFFFF", LEYENDA="rgba(255,255,255,0.8)",
+    COLD="#0072B2", WARM="#B07800", SOBRE_ACCENT="#FFFFFF", LEYENDA="rgba(255,255,255,0.8)",
 )  # fmt: skip
 # Oscuro: Deep Space de hojas sobre un fondo más hondo, Honeydew de tinta, Frosted Blue de acento.
 OSCURA = Paleta(
-    GROUND="#172A46", SURFACE="#1D3557", SURFACE_2="#2C4362", LINE="#475C75",
-    INK="#F1FAEE", INK_2="#D4EDE7", MUTED="#9CABB2",
-    ACCENT="#A8DADC", ACCENT_SOFT="#457B9D", SELECCION="#A8DADC",
+    GROUND="#172A46", BARRA="#172A46", SURFACE="#1D3557", SURFACE_2="#2C4362", LINE="#475C75",
+    INK="#F1FAEE", INK_2="#D4EDE7", MUTED="#A9B8BE",
+    ACCENT="#A8DADC", ACCENT_SOFT="#3D6E8E", SELECCION="#A8DADC",
     SEVERE="#E63946", SEVERE_SOFT="#593652",
     COLD="#56B4E9", WARM="#E69F00", SOBRE_ACCENT="#1D3557", LEYENDA="rgba(29,53,87,0.8)",
 )  # fmt: skip
@@ -144,11 +146,15 @@ def _definiciones(p: Paleta) -> str:
 # Streamlit no vuelve a ejecutar la app al cambiar de tema desde su menú, así que el CSS inyectado y
 # los gráficos quedarían con la paleta anterior. Este script lee el fondo que pinta Streamlit, marca
 # el modo en <html data-tema> (las variables CSS cambian al instante) y, si el modo cambió, pulsa un
-# botón oculto para pedir una nueva ejecución: así plotly se redibuja con la paleta nueva.
+# botón oculto para pedir una nueva ejecución: así plotly se redibuja con la paleta nueva. También
+# lo pulsa si Python dibujó con otro modo que el del navegador: ``st.context.theme`` puede venir mal en
+# la primera carga de una sesión. Usa selectores internos de Streamlit (menú ⋮, opciones de tema)
+# probados con la versión 1.64; revisarlos al actualizar Streamlit.
 _VIGIA = """
 <script>
 (() => {
   const raiz = document.documentElement;
+  window.__temaServidor = "__SERVIDOR__";
   const modo = () => {
     const app = document.querySelector(".stApp");
     if (!app) return null;
@@ -177,10 +183,21 @@ _VIGIA = """
       }
     }, 25);
   }, true);
+  window.__vigiaPedido = 0;
+  window.__vigiaDesfases = 0;
   window.__vigiaTema = setInterval(() => {
     const m = modo();
-    if (m && m !== raiz.dataset.tema) {
-      raiz.dataset.tema = m;
+    if (!m) return;
+    const cambio = m !== raiz.dataset.tema;
+    raiz.dataset.tema = m;
+    if (m === window.__temaServidor) window.__vigiaDesfases = 0;
+    // Desfase con el servidor: se pide de nuevo como mucho cada 3 s y 5 veces, por si la ejecución
+    // tarda o Streamlit sigue informando el otro modo.
+    const desfase = m !== window.__temaServidor && window.__vigiaDesfases < 5
+      && Date.now() - window.__vigiaPedido > 3000;
+    if (cambio || desfase) {
+      if (!cambio) window.__vigiaDesfases++;
+      window.__vigiaPedido = Date.now();
       document.querySelector(".st-key-vigia_tema button")?.click();
     }
   }, 400);
@@ -272,6 +289,7 @@ def boton_modo() -> None:
 
 def aplica() -> None:
     """Inyecta el CSS fino, el vigía del modo y su botón oculto en la página actual."""
-    st.html(css() + _VIGIA, unsafe_allow_javascript=True)
+    vigia = _VIGIA.replace("__SERVIDOR__", "oscuro" if oscuro() else "claro")
+    st.html(css() + vigia, unsafe_allow_javascript=True)
     with st.container(key="vigia_tema"):  # oculto por CSS; el vigía lo pulsa al cambiar de tema
         st.button("Actualizar tema", key="vigia_tema_boton")
