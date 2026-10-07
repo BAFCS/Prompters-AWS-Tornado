@@ -9,7 +9,7 @@ import streamlit as st
 import xarray as xr
 from metpy.units import units
 
-from visor_app import componentes, datos, estado, graficos, textos
+from visor_app import componentes, datos, estado, graficos, tema, textos
 
 G = 9.80665
 
@@ -85,7 +85,7 @@ def pagina() -> None:
         pres, u * units("m/s"), v * units("m/s"), alt * units.m
     )
 
-    izq, der = st.columns(2, gap="large")
+    izq, der = tema.columnas(2, "sondeo_graficos")
     with izq:
         st.plotly_chart(
             graficos.skewt(
@@ -103,7 +103,7 @@ def pagina() -> None:
             width="stretch", theme=None,
         )  # fmt: skip
 
-    izq, der = st.columns([3, 2], gap="large")
+    izq, der = tema.columnas([3, 2], "sondeo_indices")
     with izq:
         st.subheader("Índices en este punto")
         filas = [

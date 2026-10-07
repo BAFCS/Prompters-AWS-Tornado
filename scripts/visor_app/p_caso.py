@@ -3,7 +3,7 @@
 import pandas as pd
 import streamlit as st
 
-from visor_app import componentes, datos, escalas, estado, graficos, textos
+from visor_app import componentes, datos, escalas, estado, graficos, tema, textos
 
 
 def _al_elegir_fila() -> None:
@@ -151,7 +151,7 @@ def pagina() -> None:
             on_click=estado.aplica_paso, args=(ctx.dia.fecha, 0, ctx.eventos),
         )  # fmt: skip
 
-    izq, der = st.columns(2, gap="large")
+    izq, der = tema.columnas(2, "caso_mapa")
     with izq:
         _mapa(ctx, None if t is None else pd.Timestamp(t))
     with der:
@@ -159,7 +159,7 @@ def pagina() -> None:
         _ficha(ctx, None if t is None else pd.Timestamp(t))
 
     st.divider()
-    izq, der = st.columns([3, 2], gap="large")
+    izq, der = tema.columnas([3, 2], "caso_contexto")
     with izq:
         if c.contexto:
             st.subheader("Contexto")

@@ -16,6 +16,7 @@ from dataclasses import dataclass, fields
 import plotly.graph_objects as go
 import plotly.io as pio
 import streamlit as st
+from streamlit.delta_generator import DeltaGenerator
 
 SANS = "'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif"
 MONO = "'IBM Plex Mono', ui-monospace, Menlo, monospace"
@@ -293,12 +294,18 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 @container cuerpo (max-width: 520px) {{
   .st-key-proyecto [class*="st-key-tarjetas2_"] {{ grid-template-columns: minmax(0, 1fr); }}
 }}
+/* Columnas flexibles (``columnas``): se apilan cuando no caben dos de 26rem; el corte lo pone el contenido. */
+[class*="st-key-flex_"] [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {{ flex-wrap: wrap;
+  row-gap: 1.5rem; }}
+[class*="st-key-flex_"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {{ min-width: min(100%, 26rem); }}
+/* La ficha no se encoge bajo ~400 px: en teléfono se desplaza dentro de su caja, no la página entera. */
+[data-testid="stHtml"]:has(> .ficha), [data-testid="stHtml"]:has(> * > .ficha) {{ overflow-x: auto; }}
 /* Cifras de la portada: cuatro en fila o dos por dos, nunca una fila a medias. */
 .st-key-proyecto .cifras {{ grid-template-columns: repeat(4, 1fr); }}
 @container cuerpo (max-width: 760px) {{ .st-key-proyecto .cifras {{ grid-template-columns: repeat(2, 1fr); }} }}
 .indice ol {{ list-style: none; margin: 0.6rem 0 0; padding: 0; border-left: 1px solid {p.LINE}; }}
 [data-testid="stMain"] .indice li {{ margin: 0; padding: 0; }}
-.indice a {{ display: block; margin-left: -1px; padding: 5px 0 5px 12px; border-left: 2px solid transparent;
+.indice a {{ display: block; margin-left: -1px; padding: 5px 0 5px 12px; border-left: 1px solid transparent;
   color: {p.INK_2}; font-size: 0.92rem; line-height: 1.35; text-decoration: none; }}
 .indice a:hover, .indice a:focus-visible {{ color: {p.ACCENT}; border-left-color: {p.ACCENT}; }}
 [data-testid="stMain"] [data-testid="stMarkdownContainer"] > p,
@@ -316,6 +323,16 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 .paso b {{ font-family: {MONO}; font-weight: 600; color: {p.ACCENT}; font-size: 0.8rem; }}
 </style>
 """
+
+
+def columnas(spec: int | list[float], clave: str) -> list[DeltaGenerator]:
+    """Columnas que se apilan cuando cada una quedaría con menos de 26rem (~416 px).
+
+    ``st.columns`` solo apila en pantallas de teléfono; con la barra lateral abierta en una tablet dejaba
+    mapas y tablas de 250 px. Úsese donde el contenido de cada columna necesita ancho propio, no en
+    filas que deben quedar alineadas con una figura (los controles de Mapas).
+    """
+    return st.container(key=f"flex_{clave}").columns(spec, gap="large")
 
 
 def boton_modo() -> None:
