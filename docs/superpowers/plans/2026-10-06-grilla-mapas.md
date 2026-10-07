@@ -100,7 +100,7 @@ y el desplazamiento quedan sincronizados). La lista de paneles vive en `st.sessi
   - `ordenados(cat: dict[str, Producto]) -> list[str]`
   - `vecino(clave: str, cat: dict[str, Producto], paso: int) -> str`
 
-- [ ] **Step 1: Escribir `productos.py`**
+- [x] **Step 1: Escribir `productos.py`**
 
 ```python
 """Catálogo único de lo que puede mostrar un panel de la página Mapas: ERA5, bandas GOES y derivados.
@@ -202,7 +202,7 @@ def vecino(clave: str, cat: dict[str, Producto], paso: int) -> str:
     return grupo[(grupo.index(clave) + paso) % len(grupo)]
 ```
 
-- [ ] **Step 2: Verificar el catálogo con datos reales**
+- [x] **Step 2: Verificar el catálogo con datos reales**
 
 ```bash
 uv run python - <<'EOF'
@@ -223,12 +223,12 @@ EOF
 
 Esperado: imprime unos 60–80 productos con los 11 favoritos primero, sin `AssertionError`.
 
-- [ ] **Step 3: Lint, formato y tipos**
+- [x] **Step 3: Lint, formato y tipos**
 
 Run: `uv run ruff check scripts && uv run ruff format scripts && uv run pyright`
 Expected: `All checks passed!` y `0 errors`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/visor_app/productos.py
@@ -257,7 +257,7 @@ git commit -m "Agregar el catálogo único de productos del visor (ERA5, GOES y 
   - `airmass(ds: xr.Dataset, ti: np.datetime64) -> np.ndarray`
   - `viento_850(d: datos.Dia, t: pd.Timestamp, enc: graficos.Encuadre) -> tuple[list[float | None], list[float | None]] | None`
 
-- [ ] **Step 1: Escribir `capas.py`**
+- [x] **Step 1: Escribir `capas.py`**
 
 La lógica de ERA5 y GOES es la de `_era5` y `_goes_figura` de `p_mapas.py`, separada del dibujo; el
 viento es el cálculo de `_vectores`. Los títulos son cortos porque van sobre cada subgráfico.
@@ -432,7 +432,7 @@ def viento_850(
 Nota: `capas` importa `graficos` solo por el tipo `Encuadre`; `graficos` **no** debe importar `capas` a nivel
 de módulo (Task 3 usa `TYPE_CHECKING`) para evitar el ciclo.
 
-- [ ] **Step 2: Verificar las capas con datos reales**
+- [x] **Step 2: Verificar las capas con datos reales**
 
 ```bash
 uv run python - <<'EOF'
@@ -466,12 +466,12 @@ Esperado: sin `AssertionError`. Las medias del Airmass deben ser tres números d
 (una imagen gris o negra uniforme indica la receta mal aplicada). Si `vgp.umbral` no es 0.1, revisar el
 atributo `umbral_chile` en `era5_idx_20190530.nc` y ajustar solo la aserción.
 
-- [ ] **Step 3: Lint, formato y tipos**
+- [x] **Step 3: Lint, formato y tipos**
 
 Run: `uv run ruff check scripts && uv run ruff format scripts && uv run pyright`
 Expected: limpio.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/visor_app/capas.py
@@ -493,7 +493,7 @@ git commit -m "Separar el cálculo de cada producto del dibujo y agregar el RGB 
   - `grilla(capas: list[Capa], contornos: list[Capa | None], enc: Encuadre, costa: tuple[list, list], *, eventos: pd.DataFrame | None = None, punto: Punto | None = None, clic: tuple[np.ndarray, np.ndarray] | None = None, viento: tuple[list, list] | None = None) -> tuple[go.Figure, list[int]]`
     — devuelve la figura y el índice de la traza de fondo de cada panel (para animar).
 
-- [ ] **Step 1: Agregar el import para tipos**
+- [x] **Step 1: Agregar el import para tipos**
 
 Al inicio de `graficos.py`, junto a los imports:
 
@@ -504,7 +504,7 @@ if TYPE_CHECKING:  # capas importa graficos (Encuadre): solo se usa para anotar
     from visor_app.capas import Capa
 ```
 
-- [ ] **Step 2: Agregar `disposicion`, `z_fondo` y `grilla`**
+- [x] **Step 2: Agregar `disposicion`, `z_fondo` y `grilla`**
 
 Claves del diseño:
 - `make_subplots(shared_xaxes="all", shared_yaxes="all")` hace que los ejes `x2…`, `y2…` igualen
@@ -657,7 +657,7 @@ def grilla(
     return _estilo(fig), fondos
 ```
 
-- [ ] **Step 3: Verificar la estructura de la figura y dejar un HTML para mirarla**
+- [x] **Step 3: Verificar la estructura de la figura y dejar un HTML para mirarla**
 
 ```bash
 uv run python - <<'EOF'
@@ -692,13 +692,13 @@ hueco vacío; Airmass con el norte arriba (la costa de Chile coincide con la del
 y la línea roja de 0,1 sobre el Airmass; al hacer zoom en un panel, los otros dos lo siguen. **Si el RGB
 sale invertido o desplazado, corregir solo `_fondo`/`z_fondo` antes de seguir.**
 
-- [ ] **Step 4: Lint, formato y tipos**
+- [x] **Step 4: Lint, formato y tipos**
 
 Run: `uv run ruff check scripts && uv run ruff format scripts && uv run pyright`
 Expected: limpio. Si pyright se queja de `sp.xaxis.domain` (los stubs de plotly no tipan `get_subplot`),
 anotar esa línea con `# pyright: ignore[reportAttributeAccessIssue]`, como ya se hace con `add_hline`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/visor_app/graficos.py
@@ -724,7 +724,7 @@ git commit -m "Agregar la grilla de mapas con ejes compartidos para sincronizar 
     `cambia_panel(id_: int, **cambios: object) -> None`
 - Produces (en `textos`): `Paso.paneles: tuple[str, ...]`; `AYUDA["airmass"]`.
 
-- [ ] **Step 1: Agregar la API de paneles a `estado.py`**
+- [x] **Step 1: Agregar la API de paneles a `estado.py`**
 
 Agregar `import dataclasses` arriba y, después de `elige_punto`, este bloque. La lista no es la clave de
 ningún widget, así que Streamlit no la borra al cambiar de página: no necesita `recuerda`/`guarda`.
@@ -779,7 +779,7 @@ def cambia_panel(id_: int, **cambios: object) -> None:
     fija_paneles([dataclasses.replace(p, **cambios) if p.id == id_ else p for p in paneles() or []])
 ```
 
-- [ ] **Step 2: El recorrido fija paneles**
+- [x] **Step 2: El recorrido fija paneles**
 
 En `estado.aplica_paso`, reemplazar:
 
@@ -799,7 +799,7 @@ por:
 
 y en su docstring cambiar «las capas de la página Mapas» por «los paneles de la página Mapas».
 
-- [ ] **Step 3: `Paso.paneles` y los pasos del recorrido en `textos.py`**
+- [x] **Step 3: `Paso.paneles` y los pasos del recorrido en `textos.py`**
 
 En `class Paso`, reemplazar los campos
 
@@ -823,7 +823,7 @@ y en `RECORRIDOS` cambiar los tres pasos de Mapas (los textos no cambian):
 El texto del paso de las 21:50 dice «A la derecha, el enfriamiento del tope»: sigue siendo cierto, porque
 con dos paneles el segundo queda a la derecha.
 
-- [ ] **Step 4: Ayuda del Airmass en `AYUDA`**
+- [x] **Step 4: Ayuda del Airmass en `AYUDA`**
 
 Agregar después de la entrada `"C08-C13"`:
 
@@ -837,17 +837,17 @@ Agregar después de la entrada `"C08-C13"`:
     ),
 ```
 
-- [ ] **Step 5: Verificar que nada más usa los campos viejos**
+- [x] **Step 5: Verificar que nada más usa los campos viejos**
 
 Run: `grep -rn "era5_var\|goes_prod\|\.era5\b\|\.goes\b" scripts/visor_app/estado.py scripts/visor_app/textos.py scripts/visor.py`
 Expected: sin resultados (las referencias que quedan en `p_mapas.py` se van en la Task 5).
 
-- [ ] **Step 6: Lint, formato y tipos**
+- [x] **Step 6: Lint, formato y tipos**
 
 Run: `uv run ruff check scripts && uv run ruff format scripts && uv run pyright`
 Expected: limpio.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add scripts/visor_app/estado.py scripts/visor_app/textos.py
@@ -868,7 +868,7 @@ git commit -m "Guardar los paneles de Mapas en el estado y llevar el recorrido a
   `datos.costa/era5_ref/imagenes`, `textos.AYUDA/NOTA_AUSTRAL`.
 - Produces: `pagina() -> None` (lo usa `visor.py`, sin cambios).
 
-- [ ] **Step 1: Escribir el nuevo `p_mapas.py`**
+- [x] **Step 1: Escribir el nuevo `p_mapas.py`**
 
 Reemplaza el archivo completo. La barra superior es Encuadre · Agregar panel · Viento · Animar · Detalle.
 Debajo van los controles de cada panel, en filas y columnas que siguen la grilla (control `n` arriba
@@ -1149,12 +1149,12 @@ Notas para quien implemente:
   permite que ◀ ▶ y el recorrido cambien el selector; **no** pasar `index=` a esos selectbox (Streamlit
   avisa si el valor llega por las dos vías).
 
-- [ ] **Step 2: Lint, formato y tipos**
+- [x] **Step 2: Lint, formato y tipos**
 
 Run: `uv run ruff check scripts && uv run ruff format scripts && uv run pyright`
 Expected: limpio.
 
-- [ ] **Step 3: Prueba de humo con AppTest (página Mapas, sin navegador)**
+- [x] **Step 3: Prueba de humo con AppTest (página Mapas, sin navegador)**
 
 ```bash
 uv run python - <<'EOF'
@@ -1199,7 +1199,7 @@ EOF
 Esperado: `tras ▶: goes:dT` (el siguiente del grupo «GOES derivados»), `paneles:` con 3 claves y `ok`.
 Si AppTest no deja escribir `agrega_otro` antes de `set_value`, quitar esa línea: basta con `set_value`.
 
-- [ ] **Step 4: Revisión de los casos borde (Review Focus)**
+- [x] **Step 4: Revisión de los casos borde (Review Focus)**
 
 Con el mismo esquema de AppTest, comprobar:
 1. `ΔC13` en la primera hora del día (`at.session_state["t_idx"] = 0`): sin excepción; el título del
@@ -1229,7 +1229,7 @@ EOF
 
 Esperado: `['idx:cizalle_01', 'goes:C13'] ['Mapas']`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/visor_app/p_mapas.py
@@ -1243,7 +1243,7 @@ git commit -m "Reemplazar el par ERA5 | GOES de Mapas por una grilla de paneles 
 **Files:**
 - Modify: `AGENTS.md` (párrafo **Visor**)
 
-- [ ] **Step 1: Actualizar el párrafo del visor en `AGENTS.md`**
+- [x] **Step 1: Actualizar el párrafo del visor en `AGENTS.md`**
 
 Después de «…estado compartido está en `visor_app/estado.py` (`recuerda`/`guarda` copian los widgets de
 cada página bajo `_<clave>`).», agregar:
@@ -1255,19 +1255,19 @@ sincronizado). Cada panel muestra un producto de `visor_app/productos.py` (clave
 `st.session_state["paneles"]` (`estado.Panel`), no en widgets, y el recorrido guiado la fija con `Paso.paneles`.
 ```
 
-- [ ] **Step 2: Verificación final**
+- [x] **Step 2: Verificación final**
 
 Run: `uv run ruff check scripts && uv run ruff format --check scripts && uv run pyright`
 Expected: limpio.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add AGENTS.md
 git commit -m "Documentar la grilla de mapas del visor"
 ```
 
-- [ ] **Step 4: Revisión visual de Pablo**
+- [x] **Step 4: Revisión visual de Pablo**
 
 Pedir a Pablo que corra `uv run streamlit run scripts/visor.py`, abra Mapas y revise: el Airmass inicial
 (colores plausibles, norte arriba, alineado con la costa), agregar hasta 6 paneles (la disposición cambia

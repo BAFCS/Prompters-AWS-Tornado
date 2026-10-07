@@ -83,7 +83,10 @@ uv run streamlit run scripts/visor.py
 `comun`): páginas El caso, Mapas, Sondeo y Series. La barra lateral (región, día, regla de tiempo,
 evento, recorrido guiado) vive en `visor.py` para que sus widgets sobrevivan al cambio de página; el
 estado compartido está en `visor_app/estado.py` (`recuerda`/`guarda` copian los widgets de cada
-página bajo `_<clave>`). Los textos, umbrales y el recorrido guiado salen de `docs/` y están en
+página bajo `_<clave>`). La página Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va
+sincronizado). Cada panel muestra un producto de `visor_app/productos.py` (claves `idx:`, `sfc:`, `pl:`,
+`goes:`, `rgb:`), calculado por `visor_app/capas.py` (incluye el RGB Airmass); la lista de paneles vive en
+`st.session_state["paneles"]` (`estado.Panel`), no en widgets, y el recorrido guiado la fija con `Paso.paneles`. Los textos, umbrales y el recorrido guiado salen de `docs/` y están en
 `visor_app/textos.py`: si cambia el documento, hay que actualizarlos. El tema está en
 `.streamlit/config.toml` y `visor_app/tema.py` (paleta de `web/index.html`). `PRODUCT.md` y
 `.impeccable/` guardan el contexto de diseño del visor.
