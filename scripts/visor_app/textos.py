@@ -4,7 +4,7 @@ Todo sale de ``docs/mesociclones_chile.md``; si se corrige allá, hay que correg
 """
 
 import datetime as dt
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 # --- Ayuda en contexto: qué mide, y qué valor importa en Chile -----------------------------------
 AYUDA = {
@@ -204,7 +204,6 @@ class Paso:
     texto: str
     evento: str | None = None  # parte del nombre del lugar en el catálogo
     paneles: tuple[str, ...] = ()  # claves de productos.catalogo para la grilla de Mapas
-    extra: dict[str, str] = field(default_factory=dict)
 
 
 RECORRIDOS = {
