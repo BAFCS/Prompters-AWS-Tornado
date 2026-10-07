@@ -130,7 +130,7 @@ aws s3 cp --no-sign-request --recursive s3://noaa-goes16/ABI-L2-CMIPF/2019/150/2
   en memoria (`descarga_era5.py`). En superficie los bloques son pequeños y sí se lee solo el recuadro. Sobre los Andes
   el nivel de 1000 hPa está bajo tierra: enmascarar por presión de superficie o usar viento a 10 m.
 - **GOES**: Chile lo ve GOES-East (`noaa-goes16` dic 2017–abr 2025, `noaa-goes19` desde abr 2025,
-  us-east-1). `figs_goes.py` implementa la proyección geoestacionaria del ABI a mano. El paralaje
+  us-east-1). `figs_goes.py` implementa a mano la proyección directa del ABI; la inversa es `comun.latlon`. El paralaje
   desplaza los topes nubosos ~20 km a 53°S.
 - **Catálogo**: 102 eventos, solo positivos (sin negativos). Columnas clave: `Register` (confianza de
   la etiqueta), `Tornado`/`Waterspout` (dos vías físicas), `Hour (UTC)` (cruce con GOES).

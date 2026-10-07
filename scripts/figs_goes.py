@@ -2,8 +2,8 @@
 """Figura 3: GOES-16 ABI banda 13 sobre Chile centro-sur durante el brote del 30 de mayo de 2019.
 
 Lee imágenes consecutivas de ``ABI-L2-CMIPF`` (disco completo, 2 km, cada 10 min) desde
-``data/goes/*.nc``, recorta Chile centro-sur con la proyección geoestacionaria del ABI implementada
-aquí y dibuja la temperatura de brillo de la primera y la última imagen, más su tendencia en diez
+``data/goes/*.nc``, recorta Chile centro-sur con la proyección geoestacionaria del ABI (la directa,
+``fwd``, está aquí; la inversa es ``comun.latlon``) y dibuja la temperatura de brillo de la primera y la última imagen, más su tendencia en diez
 minutos. Produce ``figs/fig3_goes_20190530.png``. Uso: ``uv run python scripts/figs_goes.py``.
 """
 
@@ -18,6 +18,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from scipy.ndimage import median_filter
+
+import comun
 
 warnings.filterwarnings("ignore")
 matplotlib.use("Agg")
@@ -47,12 +49,6 @@ REQ, RPOL, HSAT, LON_0 = 6378137.0, 6356752.31414, 42164160.0, -75.0
 E2 = 1 - (RPOL**2 / REQ**2)
 
 
-def unpack(ds: h5py.Dataset) -> np.ndarray:
-    """Lee ``ds`` completo y le aplica ``scale_factor`` y ``add_offset`` si los tiene."""
-    v = ds[:].astype("f8")
-    return v * ds.attrs.get("scale_factor", [1.0])[0] + ds.attrs.get("add_offset", [0.0])[0]
-
-
 def fwd(lat: np.ndarray, lon: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Convierte latitud/longitud (grados) en ángulos de barrido x, y del ABI (radianes)."""
     lat, lon = np.radians(lat), np.radians(lon)
@@ -64,34 +60,6 @@ def fwd(lat: np.ndarray, lon: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return np.arcsin(-sy / np.sqrt(sx**2 + sy**2 + sz**2)), np.arctan(sz / sx)
 
 
-def inv(x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Convierte la grilla de ángulos de barrido ``x`` × ``y`` (radianes) en latitud/longitud.
-
-    Devuelve dos arreglos 2D en grados, con NaN en los píxeles fuera del disco terrestre.
-    """
-    X, Y = np.meshgrid(x, y)
-    a = np.sin(X) ** 2 + np.cos(X) ** 2 * (np.cos(Y) ** 2 + (REQ**2 / RPOL**2) * np.sin(Y) ** 2)
-    b = -2 * HSAT * np.cos(X) * np.cos(Y)
-    c = HSAT**2 - REQ**2
-    disc = b**2 - 4 * a * c
-    bad = disc < 0
-    disc[bad] = np.nan
-    rs = (-b - np.sqrt(disc)) / (2 * a)
-    sx = rs * np.cos(X) * np.cos(Y)
-    sy = -rs * np.sin(X)
-    sz = rs * np.cos(X) * np.sin(Y)
-    lat = np.degrees(np.arctan((REQ**2 / RPOL**2) * sz / np.sqrt((HSAT - sx) ** 2 + sy**2)))
-    lon = np.degrees(np.radians(LON_0) - np.arctan(sy / (HSAT - sx)))
-    return lat, lon
-
-
-def dataset(h: h5py.File, name: str) -> h5py.Dataset:
-    """Devuelve el dataset ``name`` de ``h``, fallando si es un grupo u otro tipo de objeto."""
-    obj = h[name]
-    assert isinstance(obj, h5py.Dataset), f"{name} no es un dataset"
-    return obj
-
-
 def leer(f: str) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
     """Lee el archivo GOES ``f`` recortado al recuadro ``LAT0..LAT1`` × ``LON0..LON1``.
 
@@ -99,7 +67,7 @@ def leer(f: str) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
     y el instante ``t`` del archivo (segundos desde el 1-ene-2000 12 UTC).
     """
     with h5py.File(f, "r") as h:
-        x, y = unpack(dataset(h, "x")), unpack(dataset(h, "y"))
+        x, y = comun.eje(h, "x"), comun.eje(h, "y")
         xa, ya = fwd(np.array([LAT0, LAT1, LAT0, LAT1]), np.array([LON0, LON0, LON1, LON1]))
         i0, i1 = np.searchsorted(x, [xa.min(), xa.max()])
         j = np.argsort(y)
@@ -107,14 +75,11 @@ def leer(f: str) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
         k0, k1 = np.searchsorted(ys, [ya.min(), ya.max()])
         j0, j1 = len(y) - k1 - 1, len(y) - k0 + 1
         i0, i1, j0, j1 = max(i0 - 4, 0), min(i1 + 4, len(x)), max(j0 - 4, 0), min(j1 + 4, len(y))
-        cmi = dataset(h, "CMI")
-        bt = (
-            cmi[j0:j1, i0:i1].astype("f8") * np.asarray(cmi.attrs["scale_factor"])[0]
-            + np.asarray(cmi.attrs["add_offset"])[0]
-        )
+        cmi = comun.dataset(h, "CMI")
+        bt = cmi[j0:j1, i0:i1] * comun.num(cmi, "scale_factor") + comun.num(cmi, "add_offset")
         bt[bt < 150] = np.nan
-        lat, lon = inv(x[i0:i1], y[j0:j1])
-        t = dataset(h, "t")[()]
+        lat, lon = comun.latlon(x[i0:i1], y[j0:j1], comun.dataset(h, "goes_imager_projection"))
+        t = comun.dataset(h, "t")[()]
     return bt, lat, lon, t
 
 

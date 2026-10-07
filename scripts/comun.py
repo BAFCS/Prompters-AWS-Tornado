@@ -148,24 +148,21 @@ def num(obj: h5py.Dataset, nombre: str) -> float:
     return float(np.asarray(obj.attrs[nombre]).ravel()[0])
 
 
-def latlon_abi(h: h5py.File) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Coordenadas de la grilla fija del ABI de un archivo GOES abierto ``h``.
+def eje(h: h5py.File, nombre: str) -> np.ndarray:
+    """Eje ``nombre`` (``x`` o ``y``) del ABI en radianes, aplicando su escala y desplazamiento."""
+    d = dataset(h, nombre)
+    return d[:] * num(d, "scale_factor") + num(d, "add_offset")
 
-    Devuelve ``(x, y, lat, lon)``: los ángulos de barrido en radianes (1D) y la latitud y longitud
-    geodésicas en grados (2D, NaN fuera del disco). Implementa la proyección geoestacionaria del
-    GOES-R PUG (vol. 4, sección 4.2.8) con los parámetros de ``goes_imager_projection``.
+
+def latlon(x: np.ndarray, y: np.ndarray, pr: h5py.Dataset) -> tuple[np.ndarray, np.ndarray]:
+    """Latitud y longitud geodésicas (grados, 2D, NaN fuera del disco) de la grilla ``x`` × ``y``.
+
+    ``x`` e ``y`` son ángulos de barrido del ABI en radianes y ``pr`` es ``goes_imager_projection``.
+    Implementa la proyección geoestacionaria del GOES-R PUG (vol. 4, sección 4.2.8).
     """
-    pr = dataset(h, "goes_imager_projection")
     req, rpol = num(pr, "semi_major_axis"), num(pr, "semi_minor_axis")
     H = num(pr, "perspective_point_height") + req
     l0 = np.deg2rad(num(pr, "longitude_of_projection_origin"))
-
-    def eje(nombre: str) -> np.ndarray:
-        """Eje ``nombre`` (``x`` o ``y``) en radianes, aplicando su escala y desplazamiento."""
-        d = dataset(h, nombre)
-        return d[:] * num(d, "scale_factor") + num(d, "add_offset")
-
-    x, y = eje("x"), eje("y")
     X, Y = np.meshgrid(x, y)
     a = np.sin(X) ** 2 + np.cos(X) ** 2 * (np.cos(Y) ** 2 + req**2 / rpol**2 * np.sin(Y) ** 2)
     b = -2 * H * np.cos(X) * np.cos(Y)
@@ -175,4 +172,15 @@ def latlon_abi(h: h5py.File) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.nda
         sx, sy, sz = rs * np.cos(X) * np.cos(Y), -rs * np.sin(X), rs * np.cos(X) * np.sin(Y)
         lat = np.rad2deg(np.arctan(req**2 / rpol**2 * sz / np.sqrt((H - sx) ** 2 + sy**2)))
         lon = np.rad2deg(l0 - np.arctan(sy / (H - sx)))
+    return lat, lon
+
+
+def latlon_abi(h: h5py.File) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Coordenadas de la grilla fija del ABI de un archivo GOES abierto ``h``.
+
+    Devuelve ``(x, y, lat, lon)``: los ángulos de barrido en radianes (1D) y la latitud y longitud
+    geodésicas en grados (2D, ``float32``, NaN fuera del disco), calculadas con ``latlon``.
+    """
+    x, y = eje(h, "x"), eje(h, "y")
+    lat, lon = latlon(x, y, dataset(h, "goes_imager_projection"))
     return x, y, lat.astype("f4"), lon.astype("f4")
