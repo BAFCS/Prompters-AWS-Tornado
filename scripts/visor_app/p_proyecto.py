@@ -55,15 +55,10 @@ def _tarjetas(clave: str, tarjetas: list[tuple[str, Color, str, str]], n_columna
     """
     with st.container(horizontal=True, key=f"tarjetas{n_columnas}_{clave}"):
         for i, (insignia, color, titulo, texto) in enumerate(tarjetas):
-            _tarjeta(f"hoja_{clave}_{i}", insignia, color, titulo, texto)
-
-
-def _tarjeta(clave: str, insignia: str, color: Color, titulo: str, texto: str) -> None:
-    """Una tarjeta con borde: insignia, título en negrita y texto."""
-    with st.container(border=True, key=clave):
-        st.badge(insignia, color=color)
-        st.markdown(f"**{titulo}**")
-        st.markdown(texto)
+            with st.container(border=True, key=f"hoja_{clave}_{i}"):
+                st.badge(insignia, color=color)
+                st.markdown(f"**{titulo}**")
+                st.markdown(texto)
 
 
 def _portada() -> None:
