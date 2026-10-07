@@ -100,8 +100,7 @@ def leer(f: str) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
     """
     with h5py.File(f, "r") as h:
         x, y = unpack(dataset(h, "x")), unpack(dataset(h, "y"))
-        xa, _ = fwd(np.array([LAT0, LAT1, LAT0, LAT1]), np.array([LON0, LON0, LON1, LON1]))
-        _, ya = fwd(np.array([LAT0, LAT1, LAT0, LAT1]), np.array([LON0, LON0, LON1, LON1]))
+        xa, ya = fwd(np.array([LAT0, LAT1, LAT0, LAT1]), np.array([LON0, LON0, LON1, LON1]))
         i0, i1 = np.searchsorted(x, [xa.min(), xa.max()])
         j = np.argsort(y)
         ys = y[j]
