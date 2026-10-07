@@ -259,6 +259,8 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 :is(.st-key-project, .st-key-data) {{ padding-top: 1.6rem; max-width: 1400px; container: project / inline-size; }}
 /* El cuerpo es su propio contenedor: tarjetas y cifras se acomodan al espacio que les deja el índice. */
 :is(.st-key-project_body, .st-key-data_body) {{ container: body / inline-size; }}
+/* Datos sin índice (búsqueda o una ficha): el mismo ancho de lectura que con el índice al lado. */
+.st-key-data_body {{ max-width: 44rem; }}
 :is(.st-key-project, .st-key-data) h1, :is(.st-key-project, .st-key-data) h2, :is(.st-key-project, .st-key-data) h3 {{ scroll-margin-top: 4.5rem; }}
 /* El proyecto: párrafos sueltos hasta 90ch; en tarjetas, figuras y notas el texto llega al borde. */
 [data-testid="stMain"] :is(.st-key-project, .st-key-data) [data-testid="stMarkdownContainer"] > p,

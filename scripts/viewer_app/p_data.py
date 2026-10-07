@@ -140,7 +140,11 @@ def _bibliography() -> None:
 
 
 def _md_html(text: str) -> str:
-    """Las cursivas y el código de ``text`` (markdown) en HTML, para usarlo dentro de HTML propio."""
+    """Las cursivas y el código de ``text`` (markdown) en HTML, para usarlo dentro de HTML propio.
+
+    Solo entiende ``*cursiva*`` y ```código```: no usar negritas ni asteriscos sueltos en ``facts`` ni
+    en ``Reference.full`` (la prueba de ``variables`` lo comprueba).
+    """
     parts = html.escape(text).split("`")
     text = "".join(f"<code>{p}</code>" if i % 2 else p for i, p in enumerate(parts))
     parts = text.split("*")
@@ -161,8 +165,11 @@ def _toc() -> str:
     return f"<nav class='toc' aria-label='En esta página'><ol>{''.join(items)}</ol></nav>"
 
 
-def _body() -> None:
-    """Portada, buscador y fichas (todas, las que coinciden con la búsqueda, o una sola)."""
+def _body() -> bool:
+    """Portada, buscador y fichas (todas, las que coinciden con la búsqueda, o una sola).
+
+    Devuelve si se dibujó la lista completa: solo entonces existen todas las anclas del índice.
+    """
     st.title("Datos", anchor="inicio")
     st.markdown(
         f"<p class='lede'>Las {len(variables.VARIABLES)} variables del proyecto, ordenadas por linaje: "
@@ -178,12 +185,14 @@ def _body() -> None:
                   args=(None,))  # fmt: skip
         _variable(focus, available, suffix="_focus")
         _bibliography()
-        return
+        return False
 
+    state.restore("data_search")
     query = st.text_input(
         "Buscar una variable", key="data_search", icon=":material/search:",
         placeholder="CAPE, helicidad, C13, cizalle, Register…",
     )  # fmt: skip
+    state.save("data_search")
     if not available:
         st.caption(
             "No hay datos preparados para el día elegido: las fichas se leen igual, pero sin el botón "
@@ -197,13 +206,13 @@ def _body() -> None:
                 "o una palabra (helicidad, tropopausa)."
             )
             st.button("Borrar la búsqueda", icon=":material/close:", on_click=_clear_search)
-            return
+            return False
         st.caption(f"{len(found)} de {len(variables.VARIABLES)} variables.")
         for g in variables.GROUPS:
             in_group = [v for v in found if v.group == g.key]
             if in_group:
                 _group(g, in_group, available)
-        return
+        return False
 
     for s in variables.SOURCES:
         _source(s)
@@ -211,15 +220,18 @@ def _body() -> None:
             if g.source == s.key:
                 _group(g, [v for v in variables.VARIABLES if v.group == g.key], available)
     _bibliography()
+    return True
 
 
 def page() -> None:
     """Dibuja la página con el índice al costado (o desplegable arriba en pantallas angostas)."""
     with st.container(key="data"), st.container(horizontal=True, wrap=False, gap="large"):
         with st.container(key="data_body"):
-            with st.expander("En esta página", key="toc_compact", icon=":material/toc:"):
+            compact = st.empty()  # el índice va arriba, pero se decide después de dibujar el cuerpo
+            full = _body()
+        if full:
+            with compact.expander("En esta página", key="toc_compact", icon=":material/toc:"):
                 st.markdown(_toc(), unsafe_allow_html=True)
-            _body()
-        with st.container(width=220, key="toc_side"):
-            st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
-            st.markdown(_toc(), unsafe_allow_html=True)
+            with st.container(width=220, key="toc_side"):
+                st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
+                st.markdown(_toc(), unsafe_allow_html=True)

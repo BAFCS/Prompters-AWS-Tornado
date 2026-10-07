@@ -71,9 +71,8 @@ theme.mode_button()
 def no_data(message: str, prepare: bool = False) -> NoReturn:
     """Detiene la app sin datos: El proyecto y Datos se muestran igual; las demás avisan con ``message``."""
     if navigation.url_path in {PAGES["project"].url_path, PAGES["data"].url_path}:
-        st.session_state.pop(
-            "ctx", None
-        )  # Datos no debe ofrecer productos de un día ya no disponible
+        # Datos no debe ofrecer productos de un día ya no disponible.
+        st.session_state.pop("ctx", None)
         navigation.run()  # no usan datos
         st.stop()
     st.error(message)

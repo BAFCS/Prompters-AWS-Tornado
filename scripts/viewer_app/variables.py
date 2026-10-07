@@ -229,7 +229,7 @@ SOURCES = (
         ),
         "Chile está en el borde del disco. A 53°S un píxel de 2 km se comporta como uno de ~2 × 4 km, y el "
         "**paralaje** desplaza un tope de 12–15 km de altura unos 10 km a 40°S y 20 km a 53°S, hacia el "
-        "sur-suroeste: varias celdas de ERA5. **El visor todavía no corrige el paralaje.** El detector de "
+        "sur, alejándose del punto subsatelital: varias celdas de ERA5. **El visor todavía no corrige el paralaje.** El detector de "
         "rayos GLM declara cobertura hasta ~52°S: que no haya rayos en el extremo sur no significa que no "
         "los hubo. Filtra los archivos por la hora de inicio del barrido (`s`), nunca por la de creación.",
         refs=("goes-aws", "goes-abi"),
@@ -696,8 +696,8 @@ VARIABLES = (
         formula=r"\mathrm{SHERBS3} = \frac{\mathrm{BWD}_{0\text{–}3}}{26\ \mathrm{m\,s^{-1}}}\cdot\frac{\Gamma_{0\text{–}3}}{5{,}2\ \mathrm{K\,km^{-1}}}\cdot\frac{\Gamma_{700\text{–}500}}{5{,}6\ \mathrm{K\,km^{-1}}}",
         method="La variante **SHERBE** usa el cizalle de la capa efectiva y lo normaliza por 27 m/s; "
         "los gradientes térmicos son los mismos.",
-        threshold="SHERBE ≥ 1 es el umbral propuesto para Chile. Corresponde a la variante efectiva: no es "
-        "un umbral validado de SHERBS3.",
+        caveat="SHERBE ≥ 1 es el umbral propuesto para Chile, pero corresponde a la variante efectiva: "
+        "SHERBS3 no tiene un umbral validado.",
         inputs=("shear_03", "gamma_03", "gamma_75"), products=("idx:sherbs3",),
         synonyms="sherbe hslc",
     ),
@@ -834,10 +834,13 @@ VARIABLES = (
     ),
     Variable(
         "diferencias", "ΔBT", "Diferencias entre bandas", "K", "goes-imagen",
-        "Restas entre bandas infrarrojas: 13 − 11 y 13 − 16 discriminan topes penetrantes; 11,2 − 10,3 µm "
-        "y 13,3 − 10,3 µm completan el conjunto.",
+        "Restas de temperatura de brillo entre bandas infrarrojas. El documento cita los pares C13 − C11 "
+        "y C13 − C16 como discriminantes de topes penetrantes (§4.2), y además C14 − C13 (11,2 − 10,3 µm) "
+        "y C16 − C13 (13,3 − 10,3 µm) como variables por imagen (§5.4). C08 − C13 tiene ficha propia.",
         why="Cada banda ve una altura o una fase distinta; la resta aísla esa diferencia.",
-        formula=r"\Delta T_b = T_{b,13} - T_{b,11}, \qquad T_{b,13} - T_{b,16}",
+        formula=r"T_{b,13} - T_{b,11},\quad T_{b,13} - T_{b,16},\quad T_{b,14} - T_{b,13}",
+        method="C13 − C16 y C16 − C13 son el mismo par con el signo cambiado: al compararlas con la "
+        "literatura, revisa el orden de la resta.",
         inputs=("C11", "C13", "C14", "C16"), synonyms="diferencia bandas",
     ),
     Variable(
@@ -1053,7 +1056,7 @@ _REFS = {
     "sherbs3": ("sherburn2014", "marin2024"), "scp": ("thompson2003", "thompson2012"), "brn": ("weisman1982",),
     "calendario": ("caballero2025",), "poblacion": ("bastias",), "ehi": ("documento",),
 }  # fmt: skip
-VARIABLES = tuple(replace(v, refs=_REFS.get(v.key, ())) for v in VARIABLES)
+VARIABLES = tuple(replace(v, refs=(*v.refs, *_REFS.get(v.key, ()))) for v in VARIABLES)
 
 BY_KEY = {v.key: v for v in VARIABLES}
 # producto → la primera ficha que lo nombra (pl:t → «t», no «T₅₀₀»)
@@ -1087,5 +1090,6 @@ def references_of(v: Variable) -> list[str]:
 
 def summary(v: Variable) -> str:
     """La ayuda en contexto de Mapas: definición, criterio chileno y cuidado, en un párrafo."""
-    parts = [f"**{v.symbol} · {v.name}.** {v.what}", v.threshold, v.caveat]
+    threshold = f"**Criterio en Chile:** {v.threshold}" if v.threshold else ""
+    parts = [f"**{v.symbol} · {v.name}.** {v.what}", threshold, v.caveat]
     return " ".join(p for p in parts if p)
