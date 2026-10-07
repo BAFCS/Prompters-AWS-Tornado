@@ -74,7 +74,7 @@ def _controles(p: estado.Panel, n: int, cat: dict[str, productos.Producto], d: d
     if prod.tipo is not None or prod.fuente == "pl" or (prod.es_goes and indices):
         with botones.popover("", icon=":material/tune:", help="Escala de color, nivel o contornos"):
             if prod.tipo is not None:
-                ops = escalas.opciones(prod.tipo)
+                ops = escalas.TIPOS[prod.tipo]
                 k_esc = f"p{p.id}_escala"
                 st.session_state[k_esc] = escalas.elige(prod.tipo, p.escala).nombre
                 st.selectbox(

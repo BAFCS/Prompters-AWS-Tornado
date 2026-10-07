@@ -16,7 +16,7 @@ def _al_elegir_fila() -> None:
 
 def _escala(tipo: str, clave: str) -> str:
     """Selector de la escala de color de un mapa: las estándar de su tipo de dato, recordada por página."""
-    ops = escalas.opciones(tipo)
+    ops = escalas.TIPOS[tipo]
     estado.recuerda(clave)
     if st.session_state.get(clave) not in [e.nombre for e in ops]:
         st.session_state[clave] = ops[0].nombre

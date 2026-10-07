@@ -72,7 +72,7 @@ class EscalasTest(unittest.TestCase):
 
     def test_infrarrojo_pinta_frios_en_blanco(self) -> None:
         """Toda escala infrarroja empieza clara: los topes fríos (valores bajos) se ven blancos."""
-        for e in escalas.opciones("infrarrojo"):
+        for e in escalas.TIPOS["infrarrojo"]:
             primero, ultimo = pc.get_colorscale(e.nombre)[0][1], pc.get_colorscale(e.nombre)[-1][1]
             rgb = [
                 pc.unlabel_rgb(pc.convert_colors_to_same_type(c, "rgb")[0][0])
