@@ -1,0 +1,57 @@
+[project]
+name = "aws-mesocyclonic"
+version = "0.1.0"
+description = "Predicción de tormentas mesociclónicas en Chile a partir de ERA5 y GOES"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "geopandas>=1.2.0",
+    "h5py>=3.16.0",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.6",
+    "s3fs>=2026.9.0",
+    "scipy>=1.18.1",
+]
+
+[dependency-groups]
+dev = [
+    "ipywidgets>=8.1.9",
+    "jupyterlab>=4.6.4",
+    "pandas-stubs>=3.0.5.260914",
+    "pyright>=1.1.414",
+    "ruff>=0.16.9",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle (errores)
+    "W",    # pycodestyle (avisos)
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+    "C4",   # flake8-comprehensions
+    "NPY",  # reglas específicas de NumPy
+    "ANN",  # anotaciones de tipo en funciones y métodos
+]
+ignore = [
+    "E501",  # el largo de línea lo maneja ruff format
+    "C408",  # dict(...) es idiomático en los kwargs de matplotlib
+]
+
+[tool.pyright]
+include = ["scripts"]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+venvPath = "."
+venv = ".venv"
