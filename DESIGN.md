@@ -26,7 +26,7 @@ colors:
   accion-oscuro: "#A8DADC"
   accion-suave-oscuro: "#3D6E8E"
   seleccion-oscuro: "#A8DADC"
-  severo-oscuro: "#E63946"
+  severo-oscuro: "#E7434E"
   severo-suave-oscuro: "#593652"
   frio-oscuro: "#56B4E9"
   calido-oscuro: "#E69F00"
@@ -263,7 +263,7 @@ Hoja con filete, radio 6 px, relleno 10px 12px, 0,92rem. Primera línea con el c
 
 ### Do:
 - **Do** poner todo dato sobre una hoja con filete y radio 6 px encima del fondo, en los dos temas.
-- **Do** reservar el Strawberry Red #E63946 para glifos y líneas de eventos del catálogo y umbrales chilenos calibrados; las alertas en tinta con el triángulo rojo al lado.
+- **Do** reservar el Strawberry Red #E63946 (#E7434E en oscuro, con 5 % de Honeydew para llegar a 3:1 sobre la hoja) para glifos y líneas de eventos del catálogo y umbrales chilenos calibrados; las alertas en tinta con el triángulo rojo al lado.
 - **Do** usar el color de acción (#376284 en claro, #A8DADC en oscuro) para lo accionable y el de selección (#457B9D en claro, #A8DADC en oscuro) para lo elegido dentro de un gráfico.
 - **Do** colorear los mapas con la escala estándar de su tipo de dato (`escalas.TIPOS`) y dejar que la predeterminada sea apta para daltonismo.
 - **Do** usar el azul y el naranja de Okabe-Ito para series categóricas que la paleta no cubre.

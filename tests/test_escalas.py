@@ -122,8 +122,7 @@ class PaletasTest(unittest.TestCase):
     def test_series_categoricas_se_distinguen_de_la_hoja(self) -> None:
         """Las líneas de color alcanzan 3:1 sobre la hoja (WCAG 1.4.11, elementos gráficos)."""
         for nombre, p in (("claro", tema.CLARA), ("oscuro", tema.OSCURA)):
-            # SEVERE queda fuera: el Strawberry Red es un color fijo de la marca y en oscuro da 2,97:1.
-            for campo in ("COLD", "WARM", "SELECCION"):
+            for campo in ("COLD", "WARM", "SELECCION", "SEVERE"):
                 with self.subTest(tema=nombre, campo=campo):
                     self.assertGreaterEqual(_contraste(getattr(p, campo), p.SURFACE), 3.0)
 

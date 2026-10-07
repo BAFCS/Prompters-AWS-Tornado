@@ -35,14 +35,14 @@ secondaryBackgroundColor = "#2C4362"
 textColor = "#F1FAEE"
 linkColor = "#A8DADC"
 borderColor = "#475C75"
-redColor = "#E63946"
+redColor = "#E7434E"
 blueColor = "#A8DADC"
 orangeColor = "#E69F00"
 greenColor = "#A8DADC"
 grayColor = "#A9B8BE"
 redTextColor = "#F1FAEE"
 orangeTextColor = "#F1FAEE"
-chartCategoricalColors = ["#A8DADC", "#F1FAEE", "#E69F00", "#56B4E9", "#A9B8BE", "#E63946"]
+chartCategoricalColors = ["#A8DADC", "#F1FAEE", "#E69F00", "#56B4E9", "#A9B8BE", "#E7434E"]
 
 [theme.dark.sidebar]
 backgroundColor = "#172A46"

@@ -400,8 +400,8 @@
       },
       "severo-oscuro": {
         "role": "secondary",
-        "displayName": "Strawberry Red",
-        "canonical": "#E63946",
+        "displayName": "Strawberry Red + 5 % Honeydew (3:1 sobre la hoja)",
+        "canonical": "#E7434E",
         "tonalRamp": [
           "#1E0002",
           "#4D000A",

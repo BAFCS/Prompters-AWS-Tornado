@@ -55,11 +55,12 @@ CLARA = Paleta(
     COLD="#0072B2", WARM="#B07800", SOBRE_ACCENT="#FFFFFF", LEYENDA="rgba(255,255,255,0.8)",
 )  # fmt: skip
 # Oscuro: Deep Space de hojas sobre un fondo más hondo, Honeydew de tinta, Frosted Blue de acento.
+# El rojo lleva un 5 % de Honeydew para llegar a 3:1 sobre la hoja (WCAG 1.4.11).
 OSCURA = Paleta(
     GROUND="#172A46", BARRA="#172A46", SURFACE="#1D3557", SURFACE_2="#2C4362", LINE="#475C75",
     INK="#F1FAEE", INK_2="#D4EDE7", MUTED="#A9B8BE",
     ACCENT="#A8DADC", ACCENT_SOFT="#3D6E8E", SELECCION="#A8DADC",
-    SEVERE="#E63946", SEVERE_SOFT="#593652",
+    SEVERE="#E7434E", SEVERE_SOFT="#593652",
     COLD="#56B4E9", WARM="#E69F00", SOBRE_ACCENT="#1D3557", LEYENDA="rgba(29,53,87,0.8)",
 )  # fmt: skip
 
