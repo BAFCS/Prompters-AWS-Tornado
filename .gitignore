@@ -21,3 +21,7 @@ data/
 # sistema
 .DS_Store
 Thumbs.db
+
+# artefactos locales de herramientas de diseño (mockups y capturas)
+.superpowers/
+.impeccable/review/

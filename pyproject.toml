@@ -5,14 +5,20 @@ description = "Predicción de tormentas mesociclónicas en Chile a partir de ERA
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "botocore>=1.43.75",
     "geopandas>=1.2.0",
+    "h5netcdf>=1.8.1",
     "h5py>=3.16.0",
     "matplotlib>=3.11.2",
+    "metpy>=1.7.1",
     "numpy>=2.5.3",
     "openpyxl>=3.1.5",
     "pandas>=3.0.6",
+    "plotly>=7.1.0",
     "s3fs>=2026.9.0",
     "scipy>=1.18.1",
+    "streamlit>=1.64.0",
+    "xarray>=2026.9.0",
 ]
 
 [dependency-groups]
@@ -48,6 +54,10 @@ ignore = [
     "E501",  # el largo de línea lo maneja ruff format
     "C408",  # dict(...) es idiomático en los kwargs de matplotlib
 ]
+
+[tool.ruff.lint.isort]
+# scripts/ no es un paquete: comun.py se importa como módulo hermano.
+known-first-party = ["comun", "visor_app"]
 
 [tool.pyright]
 include = ["scripts"]

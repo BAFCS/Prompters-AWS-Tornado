@@ -1,0 +1,58 @@
+# Tema del visor (scripts/visor.py): claro y oscuro, alternables desde el menú de Streamlit o el botón de la barra.
+# Paleta de cinco colores (Strawberry Red, Honeydew, Frosted Blue, Steel Blue, Deep Space Blue) y
+# mezclas entre ellos; los valores coinciden con scripts/visor_app/tema.py. El rojo solo marca.
+[theme]
+showWidgetBorder = true
+baseRadius = "6px"
+font = "'IBM Plex Sans':https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap, sans-serif"
+headingFont = "'IBM Plex Sans':https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@600;700&display=swap, sans-serif"
+codeFont = "'IBM Plex Mono':https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap, monospace"
+
+[theme.light]
+primaryColor = "#376284"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#EFF8F9"
+textColor = "#0E1A2C"
+linkColor = "#376284"
+borderColor = "#BDD4D6"
+redColor = "#E63946"
+blueColor = "#457B9D"
+orangeColor = "#E69F00"
+greenColor = "#376284"
+grayColor = "#465463"
+redTextColor = "#0E1A2C"  # el rojo marca y nunca escribe: st.error escribe en tinta
+orangeTextColor = "#0E1A2C"  # insignias naranjas en tinta (AA)
+chartCategoricalColors = ["#457B9D", "#0E1A2C", "#B07800", "#0072B2", "#465463", "#E63946"]
+
+[theme.light.sidebar]
+backgroundColor = "#BEE4E1"  # Honeydew + 70 % Frosted Blue: la barra se separa del fondo
+secondaryBackgroundColor = "#FFFFFF"
+
+[theme.dark]
+primaryColor = "#A8DADC"
+backgroundColor = "#1D3557"
+secondaryBackgroundColor = "#2C4362"
+textColor = "#F1FAEE"
+linkColor = "#A8DADC"
+borderColor = "#475C75"
+redColor = "#E7434E"
+blueColor = "#A8DADC"
+orangeColor = "#E69F00"
+greenColor = "#A8DADC"
+grayColor = "#A9B8BE"
+redTextColor = "#F1FAEE"
+orangeTextColor = "#F1FAEE"
+chartCategoricalColors = ["#A8DADC", "#F1FAEE", "#E69F00", "#56B4E9", "#A9B8BE", "#E7434E"]
+
+[theme.dark.sidebar]
+backgroundColor = "#172A46"
+secondaryBackgroundColor = "#1D3557"
+
+[client]
+toolbarMode = "viewer"  # el menú ⋮ trae el selector de tema; tema.boton_modo lo usa
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false  # sin estadísticas de uso hacia Streamlit
