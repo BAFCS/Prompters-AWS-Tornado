@@ -25,3 +25,8 @@ Thumbs.db
 # artefactos locales de herramientas de diseño (mockups y capturas)
 .superpowers/
 .impeccable/review/
+
+# Agentes de código: artefactos de Playwright MCP y configuración personal
+.playwright-mcp/
+.codex/config.toml
+.claude/settings.local.json

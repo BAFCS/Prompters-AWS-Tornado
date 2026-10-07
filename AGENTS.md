@@ -34,6 +34,12 @@ uv run jupyter lab                   # notebooks (jupyterlab + ipywidgets en el 
 uv add <pkg> / uv add --dev <pkg>    # añadir dependencias
 ```
 
+Claude Code (`.claude/settings.json`) y Codex (`.codex/hooks.json`) corren `.agents/hooks/ruff.sh` tras
+cada edición: aplica `ruff check --fix` y `ruff format` al `.py` editado y devuelve al agente lo que
+ruff no corrige solo. En Codex, el hook se aprueba una vez con `/hooks`. La skill `visor`
+(`.agents/skills/visor/`, enlazada desde `.claude/skills/`) explica cómo revisar el visor en el
+navegador con Playwright MCP.
+
 Las pruebas de regresión del visor viven en `tests/` y usan `unittest` y AppTest de Streamlit.
 `ruff check`, `ruff format --check` y `pyright` pasan limpios: mantenerlo así.
 Para validar un cambio en un script de figuras, regenerar la figura y compararla con la versión
