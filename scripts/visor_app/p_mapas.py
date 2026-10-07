@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from visor_app import capas, datos, estado, graficos, productos, tema, textos
+from visor_app import capas, componentes, datos, escalas, estado, graficos, productos, tema, textos
 
 PASO_ANIMACION = 3  # se dibuja uno de cada 3 píxeles GOES al animar
 MAX_ANIMADOS = 3  # paneles GOES que se animan a la vez
@@ -17,7 +17,7 @@ def _al_clic() -> None:
     puntos = st.session_state["grilla"].selection.points
     if puntos:
         la, lo = float(puntos[0]["y"]), float(puntos[0]["x"])
-        estado.elige_punto(estado.Punto(la, lo, f"{la:.2f}°, {lo:.2f}°"))
+        estado.elige_punto(estado.Punto(la, lo, componentes.coord(la, lo)))
 
 
 def _al_cambiar(id_: int, campo: str, clave_widget: str) -> None:
@@ -37,14 +37,14 @@ def _al_agregar(clave_widget: str) -> None:
 def _agregar(cat: dict[str, productos.Producto], n: int) -> None:
     """Popover para agregar un panel: botonera de favoritos y la lista completa."""
     lleno = n >= estado.MAX_PANELES
-    with st.popover("Agregar panel", icon=":material/add:", disabled=lleno, width="stretch",
+    with st.popover("Agregar panel", icon=":material/add:", disabled=lleno, width="content",
                     help=f"Hasta {estado.MAX_PANELES} paneles." if lleno else None):  # fmt: skip
         st.pills(
-            "Favoritos", [k for k in productos.FAVORITOS if k in cat], key="agrega_fav",
+            "Selección sugerida", [k for k in productos.FAVORITOS if k in cat], key="agrega_fav",
             format_func=lambda k: cat[k].corta, on_change=_al_agregar, args=("agrega_fav",),
         )  # fmt: skip
         st.selectbox(
-            "Otro producto", productos.ordenados(cat), index=None, key="agrega_otro",
+            "Otra variable o imagen", productos.ordenados(cat), index=None, key="agrega_otro",
             placeholder="Escribe para buscar…", format_func=lambda k: cat[k].etiqueta,
             on_change=_al_agregar, args=("agrega_otro",),
         )  # fmt: skip
@@ -55,22 +55,34 @@ def _controles(p: estado.Panel, n: int, cat: dict[str, productos.Producto], d: d
     prod = cat[p.clave]
     k_clave = f"p{p.id}_clave"
     st.session_state[k_clave] = p.clave  # el panel es la fuente de verdad; el widget lo refleja
-    c1, c2, c3, c4, c5 = st.columns([8, 1, 1, 1, 1], gap="small", vertical_alignment="bottom")
-    c1.selectbox(
+    # Contenedor horizontal: en pantallas angostas los botones bajan juntos en una sola fila.
+    fila = st.container(horizontal=True, vertical_alignment="bottom", gap="small")
+    fila.selectbox(
         f"Panel {n}", productos.ordenados(cat), key=k_clave,
-        format_func=lambda k: ("★ " if k in productos.FAVORITOS else "") + cat[k].etiqueta,
-        on_change=_al_cambiar, args=(p.id, "clave", k_clave),
+        format_func=lambda k: cat[k].etiqueta,
+        on_change=_al_cambiar, args=(p.id, "clave", k_clave), width="stretch",
     )  # fmt: skip
-    for col, paso, icono, ayuda in ((c2, -1, ":material/chevron_left:", "Anterior"),
-                                    (c3, +1, ":material/chevron_right:", "Siguiente")):  # fmt: skip
-        col.button(
+    botones = fila.container(horizontal=True, gap="small", width="content")
+    for paso, icono, ayuda in ((-1, ":material/chevron_left:", "Anterior"),
+                               (+1, ":material/chevron_right:", "Siguiente")):  # fmt: skip
+        botones.button(
             "", icon=icono, key=f"p{p.id}_{paso}", help=f"{ayuda} en «{prod.grupo}»",
             on_click=estado.cambia_panel, args=(p.id,),
             kwargs={"clave": productos.vecino(p.clave, cat, paso)},
         )  # fmt: skip
     indices = [k for k in cat if k.startswith("idx:")]
-    if prod.fuente == "pl" or (prod.es_goes and indices):
-        with c4.popover("", icon=":material/tune:", help="Nivel o contornos ERA5"):
+    if prod.tipo is not None or prod.fuente == "pl" or (prod.es_goes and indices):
+        with botones.popover("", icon=":material/tune:", help="Escala de color, nivel o contornos"):
+            if prod.tipo is not None:
+                ops = escalas.opciones(prod.tipo)
+                k_esc = f"p{p.id}_escala"
+                st.session_state[k_esc] = escalas.elige(prod.tipo, p.escala).nombre
+                st.selectbox(
+                    "Escala de color", [e.nombre for e in ops], key=k_esc,
+                    format_func=lambda nombre: escalas.elige(str(prod.tipo), nombre).rotulo,
+                    on_change=_al_cambiar, args=(p.id, "escala", k_esc),
+                    help="Escalas estándar para este tipo de dato. La primera es la predeterminada.",
+                )  # fmt: skip
             if prod.fuente == "pl":
                 nv = capas.niveles(d)
                 k_nivel = f"p{p.id}_nivel"
@@ -78,17 +90,18 @@ def _controles(p: estado.Panel, n: int, cat: dict[str, productos.Producto], d: d
                     p.nivel if p.nivel in nv else (850.0 if 850.0 in nv else nv[0])
                 )
                 st.select_slider("Nivel (hPa)", options=nv, key=k_nivel, on_change=_al_cambiar,
-                                 args=(p.id, "nivel", k_nivel))  # fmt: skip
-            else:
+                                 args=(p.id, "nivel", k_nivel),
+                                 help="Nivel de presión, expresado en hectopascales (hPa).")  # fmt: skip
+            elif prod.es_goes and indices:
                 k_cont = f"p{p.id}_cont"
                 st.session_state[k_cont] = p.contorno or "—"
                 st.selectbox(
                     "Contornos ERA5", ["—", *indices], key=k_cont,
-                    format_func=lambda k: k if k == "—" else cat[k].corta,
+                    format_func=lambda k: "Sin contornos" if k == "—" else cat[k].corta,
                     on_change=_al_cambiar, args=(p.id, "contorno", k_cont),
-                    help="Isolíneas de un índice sobre la imagen; el umbral chileno en rojo.",
+                    help="Líneas que unen lugares con el mismo valor del índice. El valor de comparación se muestra en rojo.",
                 )  # fmt: skip
-    c5.button("", icon=":material/close:", key=f"p{p.id}_x", help="Quitar el panel",
+    botones.button("", icon=":material/close:", key=f"p{p.id}_x", help="Quitar el panel",
               on_click=estado.quita_panel, args=(p.id,))  # fmt: skip
 
 
@@ -101,7 +114,7 @@ def _capa_panel(
     c = capas.capa(d, prod, t, sub=sub, nivel=p.nivel)
     if c is None:
         return capas.vacia(f"{n} · {prod.corta} · sin imagen anterior", enc)
-    return dataclasses.replace(c, titulo=f"{n} · {c.titulo}")
+    return dataclasses.replace(c.con_escala(p.escala), titulo=f"{n} · {c.titulo}")
 
 
 def _animar(
@@ -138,8 +151,8 @@ def _animar(
     fig.update_layout(
         updatemenus=[{
             "type": "buttons", "direction": "left", "x": 0, "y": -0.04, "xanchor": "left",
-            "yanchor": "top", "showactive": False, "bgcolor": tema.SURFACE_2,
-            "bordercolor": tema.LINE, "font": {"family": tema.SANS, "size": 12},
+            "yanchor": "top", "showactive": False, "bgcolor": tema.colores().SURFACE_2,
+            "bordercolor": tema.colores().LINE, "font": {"family": tema.SANS, "size": 12},
             "buttons": [
                 {"label": "Reproducir", "method": "animate", "args": [None, boton]},
                 {"label": "Pausa", "method": "animate",
@@ -148,7 +161,7 @@ def _animar(
         }],
         sliders=[{
             "x": 0.32, "len": 0.68, "y": -0.02, "currentvalue": {"visible": False},
-            "bordercolor": tema.LINE, "tickcolor": tema.LINE, "font": {"family": tema.MONO, "size": 10},
+            "bordercolor": tema.colores().LINE, "tickcolor": tema.colores().LINE, "font": {"family": tema.MONO, "size": 10},
             "steps": [{"label": e, "method": "animate",
                        "args": [[str(i)], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate"}]}
                       for i, e in enumerate(etiquetas)],
@@ -163,13 +176,21 @@ def pagina() -> None:
     ctx = estado.contexto()
     t = estado.t_actual()
     st.title("Mapas")
+    st.markdown(
+        "Compara mapas del entorno ERA5 con imágenes GOES para la hora seleccionada. "
+        "Cada panel muestra una variable o imagen; el acercamiento se comparte entre todos los paneles."
+    )
     if t is None:
-        st.info("Este día no tiene datos con hora.")
+        st.info(
+            "No hay datos con hora para este día. Selecciona otra fecha disponible en la barra lateral."
+        )
         return
     t = pd.Timestamp(t)
     cat = productos.catalogo(ctx.dia)
     if not cat:
-        st.info("Este día no tiene ERA5 ni GOES. Corre los scripts de descarga (ver AGENTS.md).")
+        st.info(
+            "No hay datos ERA5 ni GOES preparados para esta selección. Elige otra región o fecha disponible."
+        )
         return
     if estado.paneles() is None:  # primera visita: un panel RGB, o el primer índice si no hay GOES
         inicial = "rgb:airmass" if "rgb:airmass" in cat else productos.ordenados(cat)[0]
@@ -180,16 +201,19 @@ def pagina() -> None:
                            ("animar", False)):  # fmt: skip
         estado.recuerda(clave)
         st.session_state.setdefault(clave, defecto)
-    c1, c2, c3, c4, c5 = st.columns([2, 1.2, 1, 1, 1.3], vertical_alignment="bottom")
-    vista = c1.segmented_control("Encuadre", ["Zona de eventos", "Región completa"], key="encuadre")
-    with c2:
+    # Fila horizontal: cada control toma el ancho de su rótulo y la fila se parte en pantallas angostas.
+    with st.container(horizontal=True, vertical_alignment="bottom", gap="medium"):
+        vista = st.segmented_control(
+            "Encuadre", ["Zona de eventos", "Región completa"], key="encuadre", width="content"
+        )
         _agregar(cat, len(ps))
-    c3.toggle("Viento 850 hPa", key="viento", disabled=ctx.dia.pl is None,
-              help="Flechas del viento en 850 hPa sobre todos los paneles (requiere niveles de presión).")  # fmt: skip
-    c4.toggle("Animar GOES ±1 h", key="animar", disabled=not ctx.dia.goes,
-              help=f"Loop de los paneles GOES (hasta {MAX_ANIMADOS}) de una hora antes a una hora después.")  # fmt: skip
-    c5.select_slider("Detalle GOES", options=[1, 2, 3, 4], key="sub",
-                     format_func=lambda s: {1: "máximo", 2: "alto", 3: "medio", 4: "bajo"}[s])  # fmt: skip
+        st.toggle("Viento 850 hPa", key="viento", disabled=ctx.dia.pl is None, width="content",
+                  help="Flechas del viento en 850 hPa sobre todos los paneles (requiere niveles de presión).")  # fmt: skip
+        st.toggle("Animar GOES ±1 h", key="animar", disabled=not ctx.dia.goes, width="content",
+                  help=f"Animación de los paneles GOES (hasta {MAX_ANIMADOS}) de una hora antes a una hora después.")  # fmt: skip
+        st.select_slider("Densidad de píxeles GOES", options=[1, 2, 3, 4], key="sub", width=220,
+                         format_func=lambda s: {1: "máxima", 2: "alta", 3: "media", 4: "baja"}[s],
+                         help="Una menor densidad muestra menos píxeles y reduce el tiempo de dibujo. No cambia los archivos originales.")  # fmt: skip
     for clave in ("encuadre", "viento", "sub", "animar"):
         estado.guarda(clave)
     if vista == "Región completa" or ctx.eventos.empty:
@@ -199,6 +223,18 @@ def pagina() -> None:
 
     visibles = [p for p in ps if p.clave in cat]
     faltan = [p for p in ps if p.clave not in cat]
+    if faltan:
+        nombres = []
+        for panel in faltan:
+            variable = panel.clave.partition(":")[2]
+            nombre = productos.DERIVADOS.get(panel.clave, (None, set()))[0]
+            nombres.append(nombre or componentes.CORTOS.get(variable, variable))
+        st.info(
+            "Sin datos este día: "
+            + ", ".join(nombres)
+            + ". Selecciona otra fecha o sustituye esos paneles."
+        )
+
     if not visibles:
         st.info(
             "No hay paneles. Agrega uno con «Agregar panel»: el RGB Airmass es un buen comienzo."
@@ -232,30 +268,39 @@ def pagina() -> None:
         viento=capas.viento_850(ctx.dia, t, enc) if st.session_state.get("viento") else None,
     )  # fmt: skip
     n_cuadros = _animar(fig, fondos, animados, visibles, cat, ctx.dia, t, enc) if animados else 0
+    st.caption(
+        "Usa la rueda del ratón o los botones del gráfico para acercar la vista. "
+        "Todos los paneles se mueven juntos."
+    )
+    if ref is not None:
+        st.caption(
+            "Haz clic en cualquier panel para seleccionar el punto que se usará en Sondeo y Series."
+        )
     st.plotly_chart(
         fig, width="stretch", theme=None, key="grilla", on_select=_al_clic,
         selection_mode="points", config={"scrollZoom": True},
     )  # fmt: skip
 
-    notas = ["Rueda o botones del gráfico para acercar; todos los paneles se mueven juntos."]
-    if ref is not None:
-        notas.append("Clic en cualquier panel para elegir un punto (sondeo y series).")
     if any(c.umbral is not None for c in [*lista, *[c for c in contornos if c]]):
-        notas.append("Línea roja: umbral chileno.")
+        st.caption(
+            "La línea roja marca el valor de comparación del índice; no confirma un tornado."
+        )
     if goes_idx:
-        notas.append("GOES: hora de inicio del barrido, sin corrección de paralaje (topes desplazados "
-                     "10–20 km hacia el sur-suroeste).")  # fmt: skip
-    notas += sorted({c.nota for c in lista if c.nota})
+        st.caption(
+            "GOES muestra la hora de inicio del barrido. Las imágenes no tienen corrección de "
+            "paralaje: el ángulo de observación puede desplazar la posición aparente de las nubes."
+        )
+    for nota in sorted({c.nota for c in lista if c.nota}):
+        st.caption(nota)
     if animar and animados:
-        notas.append(
-            f"Animación: {n_cuadros} imágenes cada 10 min, un píxel de cada {PASO_ANIMACION}."
-            if n_cuadros >= 2 else "No hay suficientes imágenes alrededor de esta hora para animar."
-        )  # fmt: skip
+        st.caption(
+            f"Animación: {n_cuadros} imágenes disponibles; se muestra un píxel de cada {PASO_ANIMACION}. "
+            "Consulta las horas de los cuadros para conocer el intervalo."
+            if n_cuadros >= 2
+            else "No hay suficientes imágenes alrededor de esta hora para animar."
+        )
         if len(goes_idx) > MAX_ANIMADOS:
-            notas.append(f"Se animan los primeros {MAX_ANIMADOS} paneles GOES.")
-    if faltan:
-        notas.append("Sin datos este día: " + ", ".join(p.clave for p in faltan) + ".")
-    st.caption(" ".join(notas))
+            st.caption(f"Se animan los primeros {MAX_ANIMADOS} paneles GOES.")
 
     vistos = dict.fromkeys(
         [cat[p.clave].variable for p in visibles] + [cat[p.contorno].variable for p in visibles

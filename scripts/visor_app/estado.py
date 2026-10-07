@@ -108,6 +108,9 @@ class Panel:
     clave: str  # clave de ``productos.catalogo``
     nivel: float | None = None  # hPa, solo productos de niveles de presión
     contorno: str | None = None  # clave ERA5 dibujada como isolíneas (solo paneles GOES)
+    escala: str | None = (
+        None  # escala de color estándar (``escalas``); ``None``: la del tipo de dato
+    )
 
 
 def paneles() -> list[Panel] | None:
@@ -141,7 +144,7 @@ def quita_panel(id_: int) -> None:
 
 
 def cambia_panel(id_: int, **cambios: object) -> None:
-    """Callback: cambia campos del panel ``id_`` (``clave``, ``nivel`` o ``contorno``)."""
+    """Callback: cambia campos del panel ``id_`` (``clave``, ``nivel``, ``contorno`` o ``escala``)."""
     fija_paneles([dataclasses.replace(p, **cambios) if p.id == id_ else p for p in paneles() or []])
 
 

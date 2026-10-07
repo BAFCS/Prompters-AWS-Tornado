@@ -48,10 +48,17 @@ Chile, las imágenes GOES cada 10 minutos y los eventos del catálogo de tornado
 
 ## Brand Commitments
 
-- Identidad visual del sitio del proyecto (`web/index.html`): tipografías Fraunces, Source Sans 3 y
-  JetBrains Mono; paleta clara con `--ground #E4E9EB`, `--ink #0C1518`, acento verde azulado
-  `#0E6A63`, severidad `#D2492A`, frío `#4C7FB8`, cálido `#C98A3C`. El visor usa el tema claro
-  ("Cuaderno de campo"), elegido explícitamente.
+- Identidad visual del proyecto: tipografías IBM Plex Sans y IBM Plex Mono; paleta de cinco
+  colores fijada por el usuario: Strawberry Red `#E63946`, Honeydew `#F1FAEE`, Frosted Blue
+  `#A8DADC`, Steel Blue `#457B9D` y Deep Space Blue `#1D3557`. Los demás tonos de la interfaz son
+  mezclas entre ellos (la tinta del tema claro es Deep Space oscurecido, `#0E1A2C`).
+- Dos temas, claro y oscuro, alternables desde el menú de Streamlit; los dos cumplen WCAG AA en
+  todo texto.
+- El rojo marca y nunca escribe: solo glifos y líneas de eventos del catálogo y de umbrales
+  chilenos. Los textos de alerta van en tinta, con el triángulo rojo al lado.
+- Los mapas usan escalas de color estándar (Viridis, ColorBrewer, cmocean) según el tipo de dato,
+  elegibles por gráfico y marcadas como aptas o no para daltonismo; la predeterminada siempre es
+  apta. Las series categóricas que la paleta no cubre usan el azul y el naranja de Okabe-Ito.
 
 ## Evidence on Hand
 

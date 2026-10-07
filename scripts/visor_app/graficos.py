@@ -1,7 +1,8 @@
 """Gráficos plotly del visor: mapa con costa y eventos, Skew-T, hodógrafo y series de tiempo.
 
-Todos usan la plantilla ``cuaderno`` de ``tema.py``. El rojo de severidad se reserva para los
-eventos del catálogo y para las líneas de umbral chileno; el verde azulado marca el punto elegido.
+Todos usan la plantilla ``cuaderno`` (o ``cuaderno_oscuro``) de ``tema.py`` según el modo activo. El
+rojo se reserva para los glifos de los eventos del catálogo y las líneas de umbral chileno, nunca para
+texto; el color de selección marca el punto elegido.
 """
 
 from dataclasses import dataclass
@@ -13,7 +14,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 import comun
-from visor_app import tema
+from visor_app import componentes, tema
 from visor_app.estado import Punto
 
 if TYPE_CHECKING:  # capas importa graficos (Encuadre): solo se usa para anotar
@@ -22,11 +23,12 @@ if TYPE_CHECKING:  # capas importa graficos (Encuadre): solo se usa para anotar
 
 def _estilo(fig: go.Figure) -> go.Figure:
     """Fija fondo y fuente en el layout de ``fig``: el frontend de Streamlit ignora los de la plantilla."""
+    p = tema.colores()
     fig.update_layout(
-        plot_bgcolor=tema.SURFACE, paper_bgcolor=tema.SURFACE, separators=", ",
-        font={"family": tema.SANS, "color": tema.INK, "size": 13},
-        hoverlabel={"bgcolor": tema.SURFACE, "bordercolor": tema.LINE,
-                    "font": {"family": tema.MONO, "size": 12, "color": tema.INK}},
+        template=tema.plantilla(), plot_bgcolor=p.SURFACE, paper_bgcolor=p.SURFACE, separators=", ",
+        font={"family": tema.SANS, "color": p.INK, "size": 13},
+        hoverlabel={"bgcolor": p.SURFACE, "bordercolor": p.LINE,
+                    "font": {"family": tema.MONO, "size": 12, "color": p.INK}},
     )  # fmt: skip
     return fig
 
@@ -58,9 +60,30 @@ def encuadre_eventos(ev: pd.DataFrame, reg: comun.Region, margen: float = 2.0) -
     )
 
 
+def _punto(punto: Punto, tam: int) -> list[go.Scatter]:
+    """El punto elegido como doble anillo: halo del color de la hoja y anillo de selección encima.
+
+    El halo lo separa de cualquier fondo, también de los topes fríos azules del infrarrojo.
+    """
+    p = tema.colores()
+    texto = [f"<b>{punto.nombre}</b><br>{componentes.coord(punto.lat, punto.lon)}"]
+    return [
+        go.Scatter(
+            x=[punto.lon], y=[punto.lat], mode="markers", hoverinfo="skip",
+            marker={"symbol": "circle-open", "size": tam, "color": p.SURFACE, "line": {"width": 5.5}},
+            unselected={"marker": {"opacity": 1}},
+        ),
+        go.Scatter(
+            x=[punto.lon], y=[punto.lat], mode="markers", hoverinfo="text", text=texto,
+            marker={"symbol": "circle-open", "size": tam, "color": p.SELECCION, "line": {"width": 2.5}},
+            unselected={"marker": {"opacity": 1}},
+        ),
+    ]  # fmt: skip
+
+
 def mapa(
     z: np.ndarray, lat: np.ndarray, lon: np.ndarray, enc: Encuadre, costa: tuple[list, list],
-    *, titulo: str, unidad: str, escala: list | str, rango: tuple[float, float],
+    *, titulo: str, unidad: str, escala: str, rango: tuple[float, float],
     centro: bool = False, eventos: pd.DataFrame | None = None, punto: Punto | None = None,
     umbral: float | None = None, alto: int = 640, clic: bool = False,
 ) -> go.Figure:  # fmt: skip
@@ -70,7 +93,7 @@ def mapa(
     para que un clic en el mapa seleccione el punto más cercano (plotly no selecciona en heatmaps).
     """
     fig = go.Figure(
-        layout={"template": "cuaderno"},
+        layout={"template": tema.plantilla()},
         data=go.Heatmap(
             z=z, x=lon, y=lat, colorscale=escala, zmin=rango[0], zmax=rango[1],
             zmid=0 if centro else None,
@@ -83,13 +106,17 @@ def mapa(
             go.Contour(
                 z=z, x=lon, y=lat, showscale=False, hoverinfo="skip", name="umbral chileno",
                 contours={"start": umbral, "end": umbral, "size": 1, "coloring": "none"},
-                line={"color": tema.SEVERE, "width": 1.6},
+                line={"color": tema.colores().SEVERE, "width": 1.6},
             )
         )  # fmt: skip
     xs, ys = costa
     fig.add_trace(
         go.Scatter(
-            x=xs, y=ys, mode="lines", line={"color": tema.INK, "width": 0.9}, hoverinfo="skip"
+            x=xs,
+            y=ys,
+            mode="lines",
+            line={"color": tema.colores().INK, "width": 0.9},
+            hoverinfo="skip",
         )
     )
     if clic:
@@ -106,21 +133,13 @@ def mapa(
             go.Scatter(
                 x=eventos["lon"], y=eventos["lat"], mode="markers", text=eventos["texto"],
                 hoverinfo="text", name="eventos",
-                marker={"symbol": "triangle-up", "size": 12, "color": tema.SEVERE,
-                        "line": {"color": tema.SURFACE, "width": 1.2}},
+                marker={"symbol": "triangle-up", "size": 12, "color": tema.colores().SEVERE,
+                        "line": {"color": tema.colores().SURFACE, "width": 1.2}},
                 unselected={"marker": {"opacity": 1}},
             )
         )  # fmt: skip
     if punto is not None:
-        fig.add_trace(
-            go.Scatter(
-                x=[punto.lon], y=[punto.lat], mode="markers", hoverinfo="text",
-                text=[f"<b>{punto.nombre}</b><br>{punto.lat:.2f}°, {punto.lon:.2f}°"],
-                marker={"symbol": "circle-open", "size": 22, "color": tema.ACCENT,
-                        "line": {"width": 2.5}},
-                unselected={"marker": {"opacity": 1}},
-            )
-        )  # fmt: skip
+        fig.add_traces(_punto(punto, 22))
     fig.update_xaxes(range=[enc.oeste, enc.este], showgrid=False, ticksuffix="°", title=None)
     fig.update_yaxes(
         range=[enc.sur, enc.norte], showgrid=False, ticksuffix="°", title=None,
@@ -170,7 +189,7 @@ def _umbral(c: "Capa", ancho: float) -> go.Contour:
     return go.Contour(
         z=c.z, x=c.lon, y=c.lat, showscale=False, hoverinfo="skip",
         contours={"start": c.umbral, "end": c.umbral, "size": 1, "coloring": "none"},
-        line={"color": tema.SEVERE, "width": ancho},
+        line={"color": tema.colores().SEVERE, "width": ancho},
     )  # fmt: skip
 
 
@@ -195,7 +214,7 @@ def grilla(
         rows=filas, cols=cols, horizontal_spacing=0.09 if cols > 1 else 0.02,
         vertical_spacing=0.08, subplot_titles=[c.titulo for c in capas],
     )  # fmt: skip
-    fig.update_layout(template="cuaderno")
+    fig.update_layout(template=tema.plantilla())
     fondos: list[int] = []
     for i, (c, cont) in enumerate(zip(capas, contornos, strict=True)):
         r, k = i // cols + 1, i % cols + 1
@@ -213,8 +232,8 @@ def grilla(
                 go.Contour(
                     z=cont.z, x=cont.lon, y=cont.lat, showscale=False, hoverinfo="skip", ncontours=8,
                     contours={"coloring": "lines", "showlabels": True,
-                              "labelfont": {"size": 10, "color": tema.INK_2}},
-                    colorscale=[[0, tema.INK_2], [1, tema.INK_2]], line={"width": 0.8},
+                              "labelfont": {"size": 10, "color": tema.colores().INK_2}},
+                    colorscale=[[0, tema.colores().INK_2], [1, tema.colores().INK_2]], line={"width": 0.8},
                 ),
                 row=r, col=k,
             )  # fmt: skip
@@ -222,14 +241,14 @@ def grilla(
                 fig.add_trace(_umbral(cont, 2.0), row=r, col=k)
         xs, ys = costa
         fig.add_trace(
-            go.Scatter(x=xs, y=ys, mode="lines", line={"color": tema.INK, "width": 0.9},
+            go.Scatter(x=xs, y=ys, mode="lines", line={"color": tema.colores().INK, "width": 0.9},
                        hoverinfo="skip"),
             row=r, col=k,
         )  # fmt: skip
         if viento is not None:
             fig.add_trace(
                 go.Scatter(x=viento[0], y=viento[1], mode="lines", hoverinfo="skip",
-                           line={"color": tema.INK_2, "width": 1}),
+                           line={"color": tema.colores().INK_2, "width": 1}),
                 row=r, col=k,
             )  # fmt: skip
         if clic is not None:
@@ -247,28 +266,19 @@ def grilla(
                 go.Scatter(
                     x=eventos["lon"], y=eventos["lat"], mode="markers", text=eventos["texto"],
                     hoverinfo="text",
-                    marker={"symbol": "triangle-up", "size": 11, "color": tema.SEVERE,
-                            "line": {"color": tema.SURFACE, "width": 1.2}},
+                    marker={"symbol": "triangle-up", "size": 11, "color": tema.colores().SEVERE,
+                            "line": {"color": tema.colores().SURFACE, "width": 1.2}},
                     unselected={"marker": {"opacity": 1}},
                 ),
                 row=r, col=k,
             )  # fmt: skip
         if punto is not None:
-            fig.add_trace(
-                go.Scatter(
-                    x=[punto.lon], y=[punto.lat], mode="markers", hoverinfo="text",
-                    text=[f"<b>{punto.nombre}</b><br>{punto.lat:.2f}°, {punto.lon:.2f}°"],
-                    marker={"symbol": "circle-open", "size": 20, "color": tema.ACCENT,
-                            "line": {"width": 2.5}},
-                    unselected={"marker": {"opacity": 1}},
-                ),
-                row=r, col=k,
-            )  # fmt: skip
+            fig.add_traces(_punto(punto, 20), rows=r, cols=k)
     for i, a in enumerate(
         _layout(fig, "annotations")
     ):  # títulos alineados a la izquierda del panel
         a.update(x=_layout(fig, f"xaxis{i + 1 if i else ''}").domain[0], xanchor="left",
-                 font={"family": tema.SANS, "size": 13, "color": tema.INK})  # fmt: skip
+                 font={"family": tema.SANS, "size": 13, "color": tema.colores().INK})  # fmt: skip
     fig.update_xaxes(range=[enc.oeste, enc.este], showgrid=False, ticksuffix="°", title=None)
     fig.update_yaxes(range=[enc.sur, enc.norte], showgrid=False, ticksuffix="°", title=None)
     # Todos los ejes igualan a los del primer panel (zoom sincronizado); la proporción va solo en el
@@ -298,13 +308,13 @@ def skewt(
     titulo: str,
 ) -> go.Figure:  # fmt: skip
     """Diagrama Skew-T log-p con temperatura, punto de rocío y la parcela de superficie."""
-    fig = go.Figure(layout={"template": "cuaderno"})
+    fig = go.Figure(layout={"template": tema.plantilla()})
     pp = np.geomspace(1050, 100, 60)
     for iso in range(-100, 50, 10):
         fig.add_trace(
             go.Scatter(
                 x=_x(np.full_like(pp, iso), pp), y=pp, mode="lines", hoverinfo="skip", showlegend=False,
-                line={"color": tema.SURFACE_2 if iso else tema.LINE, "width": 1},
+                line={"color": tema.colores().SURFACE_2 if iso else tema.colores().LINE, "width": 1},
             )
         )  # fmt: skip
     for theta in range(250, 470, 10):  # adiabáticas secas
@@ -312,7 +322,7 @@ def skewt(
         fig.add_trace(
             go.Scatter(
                 x=_x(tt, pp), y=pp, mode="lines", hoverinfo="skip", showlegend=False,
-                line={"color": "#EADBC6", "width": 0.8, "dash": "dot"},
+                line={"color": tema.colores().LINE, "width": 0.8, "dash": "dot"},
             )
         )  # fmt: skip
     hover = "%{customdata:.1f} °C · %{y:.0f} hPa<extra>%{fullData.name}</extra>"
@@ -320,32 +330,32 @@ def skewt(
         fig.add_trace(
             go.Scatter(
                 x=_x(parcela, p), y=p, customdata=parcela, name="parcela de superficie",
-                mode="lines", line={"color": tema.MUTED, "width": 1.6, "dash": "dash"},
+                mode="lines", line={"color": tema.colores().MUTED, "width": 1.6, "dash": "dash"},
                 hovertemplate=hover,
             )
         )  # fmt: skip
     fig.add_trace(
         go.Scatter(
             x=_x(td, p), y=p, customdata=td, name="punto de rocío", mode="lines",
-            line={"color": tema.ACCENT, "width": 2.4}, hovertemplate=hover,
+            line={"color": tema.colores().WARM, "width": 2.4}, hovertemplate=hover,
         )
     )  # fmt: skip
     fig.add_trace(
         go.Scatter(
             x=_x(t, p), y=p, customdata=t, name="temperatura", mode="lines",
-            line={"color": tema.INK, "width": 2.4}, hovertemplate=hover,
+            line={"color": tema.colores().INK, "width": 2.4}, hovertemplate=hover,
         )
     )  # fmt: skip
     if p_lcl is not None and np.isfinite(p_lcl):
         fig.add_trace(
             go.Scatter(
                 x=[-40, 50], y=[p_lcl, p_lcl], mode="lines", hoverinfo="skip", showlegend=False,
-                line={"color": tema.MUTED, "width": 1, "dash": "dot"},
+                line={"color": tema.colores().MUTED, "width": 1, "dash": "dot"},
             )
         )  # fmt: skip
         fig.add_annotation(  # en ejes log, las anotaciones van en log10
             x=48, y=np.log10(p_lcl), text=f"LCL {p_lcl:.0f} hPa", showarrow=False,
-            xanchor="right", yanchor="bottom", font={"size": 11, "color": tema.MUTED},
+            xanchor="right", yanchor="bottom", font={"size": 11, "color": tema.colores().MUTED},
         )  # fmt: skip
     ticks = [1000, 925, 850, 700, 500, 400, 300, 250, 200, 150, 100]
     fig.update_yaxes(
@@ -362,8 +372,11 @@ def skewt(
     return _estilo(fig)
 
 
-CAPAS = ((0, 1000, tema.INK, "0–1 km"), (1000, 3000, tema.COLD, "1–3 km"),
-         (3000, 6000, tema.WARM, "3–6 km"), (6000, 10000, tema.MUTED, "6–10 km"))  # fmt: skip
+def _capas() -> tuple[tuple[int, int, str, str], ...]:
+    """Capas del hodógrafo (desde, hasta en m, color, nombre) con los colores del modo activo."""
+    p = tema.colores()
+    return ((0, 1000, p.INK, "0–1 km"), (1000, 3000, p.COLD, "1–3 km"),
+            (3000, 6000, p.WARM, "3–6 km"), (6000, 10000, p.MUTED, "6–10 km"))  # fmt: skip
 
 
 def hodografo(
@@ -371,17 +384,17 @@ def hodografo(
     rm: tuple[float, float], media: tuple[float, float], titulo: str,
 ) -> go.Figure:  # fmt: skip
     """Hodógrafo coloreado por capas, con los movimientos de Bunkers y el viento medio 0–6 km."""
-    fig = go.Figure(layout={"template": "cuaderno"})
+    fig = go.Figure(layout={"template": tema.plantilla()})
     lim = max(10.0, float(np.nanmax(np.abs(np.r_[u, v, lm, rm]))) * 1.15)
     for r in range(10, int(lim) + 10, 10):
         a = np.linspace(0, 2 * np.pi, 120)
         fig.add_trace(
             go.Scatter(
                 x=r * np.cos(a), y=r * np.sin(a), mode="lines", hoverinfo="skip", showlegend=False,
-                line={"color": tema.SURFACE_2 if r % 20 else tema.LINE, "width": 1},
+                line={"color": tema.colores().SURFACE_2 if r % 20 else tema.colores().LINE, "width": 1},
             )
         )  # fmt: skip
-    for h0, h1, color, nombre in CAPAS:
+    for h0, h1, color, nombre in _capas():
         k = (h >= h0) & (h <= h1)
         if k.sum() < 2:
             continue
@@ -393,9 +406,9 @@ def hodografo(
             )
         )  # fmt: skip
     for (x, y), nombre, simbolo, color in (
-        (lm, "Bunkers left-mover (la del sur)", "diamond", tema.ACCENT),
-        (rm, "Bunkers right-mover", "diamond-open", tema.MUTED),
-        (media, "viento medio 0–6 km", "x-thin", tema.INK_2),
+        (lm, "Movimiento estimado: rama left-mover", "diamond", tema.colores().SELECCION),
+        (rm, "Movimiento estimado: rama right-mover", "diamond-open", tema.colores().MUTED),
+        (media, "viento medio 0–6 km", "x-thin", tema.colores().INK_2),
     ):
         fig.add_trace(
             go.Scatter(
@@ -405,9 +418,11 @@ def hodografo(
                 hovertemplate=f"{nombre}<br>u %{{x:.1f}}, v %{{y:.1f}} m/s<extra></extra>",
             )
         )  # fmt: skip
-    fig.update_xaxes(range=[-lim, lim], zeroline=True, showgrid=False, title=None)
+    fig.update_xaxes(
+        range=[-lim, lim], zeroline=True, showgrid=False, title="Viento este-oeste, u (m/s)"
+    )
     fig.update_yaxes(
-        range=[-lim, lim], zeroline=True, showgrid=False, title=None,
+        range=[-lim, lim], zeroline=True, showgrid=False, title="Viento norte-sur, v (m/s)",
         scaleanchor="x", scaleratio=1,
     )  # fmt: skip
     fig.update_layout(
@@ -436,6 +451,7 @@ def series(filas: list[Serie], eventos: pd.DataFrame, elegido: str | None) -> go
         rows=len(filas), cols=1, shared_xaxes=True, vertical_spacing=0.045,
         subplot_titles=[f"{f.titulo} ({f.unidad})" for f in filas],
     )  # fmt: skip
+    en_leyenda: set[str] = set()  # cada nombre una sola vez, aunque se repita en varias filas
     for i, f in enumerate(filas, start=1):
         for s, nombre, color in f.trazas:
             fig.add_trace(
@@ -443,16 +459,17 @@ def series(filas: list[Serie], eventos: pd.DataFrame, elegido: str | None) -> go
                     x=s.index, y=s.values, name=nombre, mode="lines+markers",
                     line={"color": color, "width": 2}, marker={"size": 4},
                     hovertemplate=f"{nombre}: %{{y:.3g}} {f.unidad}<extra></extra>",
-                    legendgroup=nombre, showlegend=i == 1 or nombre not in {"punto", "ventana"},
+                    legendgroup=nombre, showlegend=nombre not in en_leyenda,
                 ),
                 row=i, col=1,
             )  # fmt: skip
+            en_leyenda.add(nombre)
         if f.umbral is not None:
             fig.add_hline(  # row/col aceptan int aunque los stubs de plotly digan str
                 y=f.umbral, row=i, col=1,  # pyright: ignore[reportArgumentType]
-                line={"color": tema.SEVERE, "width": 1, "dash": "dash"},
-                annotation_text="umbral chileno", annotation_position="top left",
-                annotation_font={"size": 10, "color": tema.SEVERE},
+                line={"color": tema.colores().SEVERE, "width": 1, "dash": "dash"},
+                annotation_text="valor de comparación", annotation_position="top left",
+                annotation_font={"size": 10, "color": tema.colores().MUTED},
             )  # fmt: skip
     for _, ev in eventos.iterrows():
         if ev["hora"] is None or pd.isna(ev["hora"]):
@@ -461,7 +478,7 @@ def series(filas: list[Serie], eventos: pd.DataFrame, elegido: str | None) -> go
         fig.add_vline(
             x=ev["hora"],
             line={
-                "color": tema.SEVERE,
+                "color": tema.colores().SEVERE,
                 "width": 2 if propio else 1,
                 "dash": "solid" if propio else "dot",
             },
@@ -470,10 +487,10 @@ def series(filas: list[Serie], eventos: pd.DataFrame, elegido: str | None) -> go
         if propio:
             fig.add_annotation(
                 x=ev["hora"], y=1.0, yref="paper", text=f"{ev['lugar']} {ev['hora']:%H:%M}",
-                showarrow=False, yanchor="bottom", font={"size": 11, "color": tema.SEVERE},
+                showarrow=False, yanchor="bottom", font={"size": 11, "color": tema.colores().INK},
             )  # fmt: skip
     fig.update_layout(
-        template="cuaderno", height=190 * len(filas) + 80, hovermode="x unified",
+        template=tema.plantilla(), height=190 * len(filas) + 80, hovermode="x unified",
         legend={"orientation": "h", "y": 1.06, "x": 0, "yanchor": "bottom"},
         margin={"t": 70},
     )  # fmt: skip

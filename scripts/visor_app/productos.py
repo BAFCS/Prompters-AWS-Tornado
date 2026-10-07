@@ -22,8 +22,8 @@ RANGO_GOES = {
 }  # fmt: skip
 DERIVADOS = {  # clave → (etiqueta, bandas que necesita)
     "rgb:airmass": ("RGB Airmass", {"C08", "C10", "C12", "C13"}),
-    "goes:dT": ("Enfriamiento del tope en 10 min (ΔC13)", {"C13"}),
-    "goes:C08-C13": ("C08 − C13 (tope en la tropopausa)", {"C08", "C13"}),
+    "goes:dT": ("Cambio de temperatura de brillo entre imágenes (ΔC13)", {"C13"}),
+    "goes:C08-C13": ("Diferencia de temperatura de brillo C08 − C13", {"C08", "C13"}),
 }
 FAVORITOS = (
     "rgb:airmass", "goes:C13", "goes:dT", "goes:C08-C13", "goes:C02",
@@ -54,6 +54,18 @@ class Producto:
     def es_goes(self) -> bool:
         """Si el producto sale de las imágenes GOES (banda, derivado o RGB)."""
         return self.fuente in {"goes", "rgb"}
+
+    @property
+    def tipo(self) -> str | None:
+        """Tipo de dato que decide sus escalas de color (``escalas.TIPOS``); ``None`` si es RGB."""
+        v = self.variable
+        if self.fuente == "rgb":
+            return None
+        if v in DIVERGENTES or v == "dT":
+            return "divergente"
+        if self.fuente == "goes" and v.startswith("C") and v[1:].isdigit():
+            return "visible" if int(v[1:]) <= 6 else "infrarrojo"
+        return "secuencial"
 
 
 def catalogo(d: datos.Dia) -> dict[str, Producto]:

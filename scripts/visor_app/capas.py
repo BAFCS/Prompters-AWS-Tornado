@@ -3,13 +3,14 @@
 Separa el cálculo del dibujo: ``capa`` devuelve valores, escala y rango; ``graficos.grilla`` los pinta.
 """
 
+import dataclasses
 from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 import xarray as xr
 
-from visor_app import componentes, datos, graficos, productos, tema
+from visor_app import componentes, datos, escalas, graficos, productos
 
 # Receta Airmass (EUMETSAT/CIRA): (banda, banda que se resta, valor para 0, valor para 255), gamma 1.
 # El azul va de 243,9 a 208,5 K: C08 invertido, los topes y el aire frío salen azules.
@@ -25,11 +26,23 @@ class Capa:
     lon: np.ndarray
     titulo: str
     unidad: str = ""
-    escala: list | str | None = None
+    escala: str | None = None  # nombre plotly; se resuelve con ``tipo`` si falta
+    tipo: str | None = None  # tipo de dato de ``escalas.TIPOS``; ``None`` en RGB
     rango: tuple[float, float] = (0.0, 1.0)
     centro: bool = False
     umbral: float | None = None
     nota: str | None = None  # advertencia para el pie de la página
+
+    def __post_init__(self) -> None:
+        """Sin escala explícita, usa la predeterminada del tipo de dato."""
+        if self.escala is None and self.tipo is not None:
+            object.__setattr__(self, "escala", escalas.elige(self.tipo, None).nombre)
+
+    def con_escala(self, nombre: str | None) -> "Capa":
+        """La misma capa con la escala ``nombre`` (o la predeterminada si no vale para su tipo)."""
+        if self.tipo is None:
+            return self
+        return dataclasses.replace(self, escala=escalas.elige(self.tipo, nombre).nombre)
 
     @property
     def es_rgb(self) -> bool:
@@ -85,14 +98,14 @@ def _era5(d: datos.Dia, prod: productos.Producto, t: pd.Timestamp, nivel: float 
         nivel = nivel if nivel in nv else (850.0 if 850.0 in nv else nv[0])
         da = da.sel(level=nivel)
         titulo += f" · {nivel:g} hPa"
-        nota = "Sobre los Andes los niveles bajos están bajo tierra (valores extrapolados)."
+        nota = "Sobre los Andes, algunos niveles de presión pueden estar bajo el terreno; sus valores son extrapolados."
     centro = v in productos.DIVERGENTES
     z = da.values
     umbral = ds[v].attrs.get("umbral_chile")
     return Capa(
         z, ds["latitude"].values, ds["longitude"].values, titulo,
         unidad=componentes.unidad(str(ds[v].attrs.get("units", ""))),
-        escala=tema.DIVERGENTE if centro else tema.SECUENCIAL,
+        tipo=prod.tipo,
         rango=productos.RANGOS.get(v) or _rango(z, centro), centro=centro,
         umbral=None if umbral is None else float(umbral), nota=nota,
     )  # fmt: skip
@@ -118,17 +131,16 @@ def _goes(d: datos.Dia, prod: productos.Producto, t: pd.Timestamp, sub: int) -> 
         z = ds["C13"].sel(time=ti).values - datos.abre(r0)["C13"].sel(time=t0).values
         minutos = (hora - pd.Timestamp(t0)).total_seconds() / 60
         return Capa(z[::sub, ::sub], lat, lon, f"ΔC13 en {minutos:.0f} min · {hora:%H:%M}",
-                    unidad="K", escala=tema.DIVERGENTE, rango=(-15.0, 15.0), centro=True)  # fmt: skip
+                    unidad="K", tipo=prod.tipo, rango=(-15.0, 15.0), centro=True)  # fmt: skip
     if v == "C08-C13":
         z = ds["C08"].sel(time=ti).values - ds["C13"].sel(time=ti).values
-        escala = [[0.0, tema.SURFACE], [0.7, tema.COLD], [0.89, tema.INK], [1.0, tema.WARM]]
         return Capa(z[::sub, ::sub], lat, lon, f"C08 − C13 · {hora:%H:%M}", unidad="K",
-                    escala=escala, rango=(-40.0, 5.0))  # fmt: skip
+                    tipo=prod.tipo, rango=(-40.0, 5.0))  # fmt: skip
     n = int(v[1:])
     return Capa(
         ds[v].sel(time=ti).values[::sub, ::sub], lat, lon, f"{prod.corta} · {hora:%H:%M}",
         unidad=componentes.unidad(str(ds[v].attrs.get("units", ""))),
-        escala=tema.VISIBLE if n <= 6 else tema.IR, rango=productos.RANGO_GOES[n],
+        tipo=prod.tipo, rango=productos.RANGO_GOES[n],
     )  # fmt: skip
 
 

@@ -1,236 +1,485 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-02T18:04:33+00:00",
+  "generatedAt": "2026-10-07T15:52:39+00:00",
   "title": "Design System: Mesociclones en Chile · visor",
   "extensions": {
     "colorMeta": {
-      "niebla": {
+      "fondo": {
         "role": "neutral",
-        "displayName": "Niebla",
-        "canonical": "#E4E9EB",
+        "displayName": "Honeydew",
+        "canonical": "#F1FAEE",
         "tonalRamp": [
-          "#21292C",
-          "#39484D",
-          "#52676F",
-          "#6B8690",
-          "#8CA1AA",
-          "#ADBCC3",
-          "#CFD8DB",
-          "#F0F3F4"
-        ]
+          "#080D06",
+          "#21271F",
+          "#3D443B",
+          "#5C645A",
+          "#7D857A",
+          "#A0A89D",
+          "#C3CCC1",
+          "#E9F2E6"
+        ],
+        "tema": "claro",
+        "marca": "Color fijado por el usuario (PRODUCT.md, Brand Commitments)."
       },
-      "superficie": {
+      "hoja": {
         "role": "neutral",
-        "displayName": "Papel",
+        "displayName": "Hoja blanca",
         "canonical": "#FFFFFF",
         "tonalRamp": [
-          "#262626",
-          "#434343",
+          "#0B0B0B",
+          "#252525",
+          "#424242",
           "#616161",
-          "#7E7E7E",
-          "#9B9B9B",
-          "#B8B8B8",
-          "#D5D5D5",
-          "#F2F2F2"
-        ]
+          "#828282",
+          "#A5A5A5",
+          "#C9C9C9",
+          "#EEEEEE"
+        ],
+        "tema": "claro"
       },
-      "superficie-2": {
+      "hoja-2": {
         "role": "neutral",
-        "displayName": "Papel gastado",
-        "canonical": "#F1F4F5",
+        "displayName": "Hoja lavada",
+        "canonical": "#EFF8F9",
         "tonalRamp": [
-          "#20292D",
-          "#38494F",
-          "#506971",
-          "#698893",
-          "#8AA3AC",
-          "#ACBEC4",
-          "#CED9DC",
-          "#F0F3F4"
-        ]
+          "#070C0D",
+          "#202627",
+          "#3C4444",
+          "#5B6364",
+          "#7C8485",
+          "#9EA7A8",
+          "#C2CBCC",
+          "#E7F0F1"
+        ],
+        "tema": "claro"
       },
       "filete": {
         "role": "neutral",
-        "displayName": "Filete",
-        "canonical": "#C9D3D6",
+        "displayName": "Filete escarcha",
+        "canonical": "#BDD4D6",
         "tonalRamp": [
-          "#21292B",
-          "#3A484D",
-          "#53686E",
-          "#6C878F",
-          "#8DA2A9",
-          "#AEBDC2",
-          "#CFD8DB",
-          "#F1F3F4"
-        ]
+          "#000E10",
+          "#16292A",
+          "#324648",
+          "#516667",
+          "#728789",
+          "#94AAAC",
+          "#B7CED0",
+          "#DCF4F6"
+        ],
+        "tema": "claro"
       },
       "tinta": {
         "role": "neutral",
-        "displayName": "Tinta",
-        "canonical": "#0C1518",
+        "displayName": "Deep Space hondo",
+        "canonical": "#0E1A2C",
         "tonalRamp": [
-          "#1A2D33",
-          "#2D4F5A",
-          "#407181",
-          "#5493A8",
-          "#79ACBC",
-          "#A0C4D0",
-          "#C7DCE3",
-          "#EEF4F7"
-        ]
+          "#030B1B",
+          "#192538",
+          "#354357",
+          "#536278",
+          "#74839A",
+          "#96A6BE",
+          "#BACAE3",
+          "#E6EFFE"
+        ],
+        "tema": "claro"
       },
       "tinta-2": {
         "role": "neutral",
-        "displayName": "Tinta media",
-        "canonical": "#33454B",
+        "displayName": "Deep Space Blue",
+        "canonical": "#1D3557",
         "tonalRamp": [
-          "#1F2A2E",
-          "#374A50",
-          "#4E6A73",
-          "#668A96",
-          "#88A4AE",
-          "#AABFC5",
-          "#CDD9DD",
-          "#F0F3F5"
-        ]
+          "#000A21",
+          "#0D2545",
+          "#2A4366",
+          "#486288",
+          "#6884AB",
+          "#8AA7D0",
+          "#AECBF6",
+          "#E5EFFE"
+        ],
+        "tema": "claro",
+        "marca": "Color fijado por el usuario (PRODUCT.md, Brand Commitments)."
       },
       "apagado": {
         "role": "neutral",
-        "displayName": "Apagado",
-        "canonical": "#64757B",
+        "displayName": "Pizarra",
+        "canonical": "#465463",
         "tonalRamp": [
-          "#22282A",
-          "#3C474A",
-          "#57656A",
-          "#71848B",
-          "#90A0A5",
-          "#B1BBBF",
-          "#D1D7D9",
-          "#F1F3F4"
-        ]
+          "#030C17",
+          "#1A2633",
+          "#364352",
+          "#546372",
+          "#758494",
+          "#97A7B8",
+          "#BBCBDD",
+          "#E3F0FE"
+        ],
+        "tema": "claro"
       },
-      "acento": {
+      "accion": {
         "role": "primary",
-        "displayName": "Verde liquen",
-        "canonical": "#0E6A63",
+        "displayName": "Steel Blue hondo",
+        "canonical": "#376284",
         "tonalRamp": [
-          "#09443F",
-          "#10776F",
-          "#17AB9F",
-          "#1DDECF",
-          "#4EE8DC",
-          "#82EEE6",
-          "#B5F5F0",
-          "#E8FCFB"
-        ]
+          "#000C1A",
+          "#032741",
+          "#1A4666",
+          "#3B6688",
+          "#5B87AB",
+          "#7DABD0",
+          "#A1CFF6",
+          "#E1F1FE"
+        ],
+        "tema": "claro"
       },
-      "acento-suave": {
+      "accion-suave": {
         "role": "primary",
-        "displayName": "Liquen lavado",
-        "canonical": "#D6E8E5",
+        "displayName": "Frosted Blue",
+        "canonical": "#A8DADC",
         "tonalRamp": [
-          "#1B312D",
-          "#305650",
-          "#457C73",
-          "#5AA195",
-          "#7FB7AE",
-          "#A4CCC5",
-          "#C9E1DD",
-          "#EFF6F5"
-        ]
+          "#000E0F",
+          "#012B2D",
+          "#1A4A4C",
+          "#3B6A6C",
+          "#5C8C8E",
+          "#7FAFB1",
+          "#A2D4D6",
+          "#C7FAFC"
+        ],
+        "tema": "claro",
+        "marca": "Color fijado por el usuario (PRODUCT.md, Brand Commitments)."
+      },
+      "seleccion": {
+        "role": "primary",
+        "displayName": "Steel Blue",
+        "canonical": "#457B9D",
+        "tonalRamp": [
+          "#000D18",
+          "#02283D",
+          "#0B4766",
+          "#316788",
+          "#5389AC",
+          "#76ADD1",
+          "#99D1F7",
+          "#DFF2FF"
+        ],
+        "tema": "claro",
+        "marca": "Color fijado por el usuario (PRODUCT.md, Brand Commitments)."
       },
       "severo": {
         "role": "secondary",
-        "displayName": "Óxido de alerta",
-        "canonical": "#D2492A",
+        "displayName": "Strawberry Red",
+        "canonical": "#E63946",
         "tonalRamp": [
-          "#40160D",
-          "#702716",
-          "#A13820",
-          "#D1492A",
-          "#DE7158",
-          "#E79A89",
-          "#F1C3B9",
-          "#FBEDEA"
-        ]
+          "#1E0002",
+          "#4D000A",
+          "#7F0519",
+          "#B51029",
+          "#E43745",
+          "#FA7675",
+          "#FFB2AE",
+          "#FEE9E7"
+        ],
+        "tema": "claro",
+        "marca": "Color fijado por el usuario (PRODUCT.md, Brand Commitments)."
       },
       "severo-suave": {
         "role": "secondary",
-        "displayName": "Óxido lavado",
-        "canonical": "#F7E0D8",
+        "displayName": "Fresa lavada",
+        "canonical": "#EFD7D0",
         "tonalRamp": [
-          "#3F1A0D",
-          "#702E17",
-          "#A04221",
-          "#D1562B",
-          "#DD7B59",
-          "#E7A189",
-          "#F1C8B9",
-          "#FBEEEA"
-        ]
-      },
-      "severo-texto": {
-        "role": "secondary",
-        "displayName": "Óxido profundo",
-        "canonical": "#9A2F17",
-        "tonalRamp": [
-          "#43140A",
-          "#752412",
-          "#A83319",
-          "#DB4321",
-          "#E56C51",
-          "#ED9783",
-          "#F4C1B6",
-          "#FCECE9"
-        ]
+          "#150704",
+          "#31201B",
+          "#503D37",
+          "#705C56",
+          "#927D76",
+          "#B69F99",
+          "#DBC3BC",
+          "#FEE9E3"
+        ],
+        "tema": "claro"
       },
       "frio": {
         "role": "tertiary",
-        "displayName": "Azul de tope frío",
-        "canonical": "#4C7FB8",
+        "displayName": "Azul de Okabe-Ito",
+        "canonical": "#0072B2",
         "tonalRamp": [
-          "#162537",
-          "#264261",
-          "#375E8A",
-          "#477BB4",
-          "#7098C6",
-          "#99B6D7",
-          "#C3D4E7",
-          "#EDF2F8"
-        ]
+          "#000C1A",
+          "#032741",
+          "#0B466C",
+          "#0266A0",
+          "#2B89CB",
+          "#53ADF1",
+          "#98D0FE",
+          "#E1F1FE"
+        ],
+        "tema": "claro"
       },
       "calido": {
         "role": "tertiary",
-        "displayName": "Ocre templado",
-        "canonical": "#C98A3C",
+        "displayName": "Naranja de Okabe-Ito",
+        "canonical": "#E69F00",
         "tonalRamp": [
-          "#3C2911",
-          "#6A471D",
-          "#97662A",
-          "#C58537",
-          "#D4A162",
-          "#E0BC90",
-          "#EDD8BD",
-          "#F9F3EB"
-        ]
+          "#130900",
+          "#332102",
+          "#583C08",
+          "#7F5913",
+          "#AB7711",
+          "#D7971B",
+          "#FEBB4D",
+          "#FFECD0"
+        ],
+        "tema": "claro"
+      },
+      "fondo-oscuro": {
+        "role": "neutral",
+        "displayName": "Deep Space abismal",
+        "canonical": "#172A46",
+        "tonalRamp": [
+          "#000923",
+          "#122541",
+          "#2E4360",
+          "#4D6282",
+          "#6D84A5",
+          "#8FA7CA",
+          "#B2CBEF",
+          "#E5EFFE"
+        ],
+        "tema": "oscuro"
+      },
+      "hoja-oscuro": {
+        "role": "neutral",
+        "displayName": "Hoja Deep Space",
+        "canonical": "#1D3557",
+        "tonalRamp": [
+          "#000A21",
+          "#0D2545",
+          "#2A4366",
+          "#486288",
+          "#6884AB",
+          "#8AA7D0",
+          "#AECBF6",
+          "#E5EFFE"
+        ],
+        "tema": "oscuro",
+        "marca": "Color fijado por el usuario (PRODUCT.md, Brand Commitments)."
+      },
+      "hoja-2-oscuro": {
+        "role": "neutral",
+        "displayName": "Deep Space lavado",
+        "canonical": "#2C4362",
+        "tonalRamp": [
+          "#000A20",
+          "#0F2542",
+          "#2C4362",
+          "#4A6384",
+          "#6B84A7",
+          "#8CA7CB",
+          "#B0CBF1",
+          "#E5EFFE"
+        ],
+        "tema": "oscuro"
+      },
+      "filete-oscuro": {
+        "role": "neutral",
+        "displayName": "Filete de pizarra",
+        "canonical": "#475C75",
+        "tonalRamp": [
+          "#000B1F",
+          "#13263C",
+          "#2F435B",
+          "#4E637C",
+          "#6E849F",
+          "#90A7C3",
+          "#B4CCE9",
+          "#E4F0FE"
+        ],
+        "tema": "oscuro"
+      },
+      "tinta-oscuro": {
+        "role": "neutral",
+        "displayName": "Tinta Honeydew",
+        "canonical": "#F1FAEE",
+        "tonalRamp": [
+          "#080D06",
+          "#21271F",
+          "#3D443B",
+          "#5C645A",
+          "#7D857A",
+          "#A0A89D",
+          "#C3CCC1",
+          "#E9F2E6"
+        ],
+        "tema": "oscuro",
+        "marca": "Color fijado por el usuario (PRODUCT.md, Brand Commitments)."
+      },
+      "tinta-2-oscuro": {
+        "role": "neutral",
+        "displayName": "Menta pálida",
+        "canonical": "#D4EDE7",
+        "tonalRamp": [
+          "#000F0B",
+          "#152A25",
+          "#324742",
+          "#516762",
+          "#718883",
+          "#93ABA5",
+          "#B7CFCA",
+          "#DCF5EF"
+        ],
+        "tema": "oscuro"
+      },
+      "apagado-oscuro": {
+        "role": "neutral",
+        "displayName": "Niebla gris",
+        "canonical": "#9CABB2",
+        "tonalRamp": [
+          "#030D12",
+          "#1B272D",
+          "#37444A",
+          "#56646A",
+          "#77858C",
+          "#99A8AF",
+          "#BDCCD3",
+          "#E2F1F9"
+        ],
+        "tema": "oscuro"
+      },
+      "accion-oscuro": {
+        "role": "primary",
+        "displayName": "Frosted Blue (acción)",
+        "canonical": "#A8DADC",
+        "tonalRamp": [
+          "#000E0F",
+          "#012B2D",
+          "#1A4A4C",
+          "#3B6A6C",
+          "#5C8C8E",
+          "#7FAFB1",
+          "#A2D4D6",
+          "#C7FAFC"
+        ],
+        "tema": "oscuro",
+        "marca": "Color fijado por el usuario (PRODUCT.md, Brand Commitments)."
+      },
+      "accion-suave-oscuro": {
+        "role": "primary",
+        "displayName": "Steel Blue (selección de texto)",
+        "canonical": "#457B9D",
+        "tonalRamp": [
+          "#000D18",
+          "#02283D",
+          "#0B4766",
+          "#316788",
+          "#5389AC",
+          "#76ADD1",
+          "#99D1F7",
+          "#DFF2FF"
+        ],
+        "tema": "oscuro",
+        "marca": "Color fijado por el usuario (PRODUCT.md, Brand Commitments)."
+      },
+      "seleccion-oscuro": {
+        "role": "primary",
+        "displayName": "Frosted Blue (selección)",
+        "canonical": "#A8DADC",
+        "tonalRamp": [
+          "#000E0F",
+          "#012B2D",
+          "#1A4A4C",
+          "#3B6A6C",
+          "#5C8C8E",
+          "#7FAFB1",
+          "#A2D4D6",
+          "#C7FAFC"
+        ],
+        "tema": "oscuro",
+        "marca": "Color fijado por el usuario (PRODUCT.md, Brand Commitments)."
+      },
+      "severo-oscuro": {
+        "role": "secondary",
+        "displayName": "Strawberry Red",
+        "canonical": "#E63946",
+        "tonalRamp": [
+          "#1E0002",
+          "#4D000A",
+          "#7F0519",
+          "#B51029",
+          "#E43745",
+          "#FA7675",
+          "#FFB2AE",
+          "#FEE9E7"
+        ],
+        "tema": "oscuro",
+        "marca": "Color fijado por el usuario (PRODUCT.md, Brand Commitments)."
+      },
+      "severo-suave-oscuro": {
+        "role": "secondary",
+        "displayName": "Fresa en la noche",
+        "canonical": "#593652",
+        "tonalRamp": [
+          "#1A0016",
+          "#371732",
+          "#573450",
+          "#785370",
+          "#9B7492",
+          "#BF96B6",
+          "#E5BADB",
+          "#FFE6F9"
+        ],
+        "tema": "oscuro"
+      },
+      "frio-oscuro": {
+        "role": "tertiary",
+        "displayName": "Celeste de Okabe-Ito",
+        "canonical": "#56B4E9",
+        "tonalRamp": [
+          "#000D16",
+          "#01293C",
+          "#084765",
+          "#146992",
+          "#278CBF",
+          "#52B0E5",
+          "#8ED3FD",
+          "#DFF2FE"
+        ],
+        "tema": "oscuro"
+      },
+      "calido-oscuro": {
+        "role": "tertiary",
+        "displayName": "Naranja de Okabe-Ito",
+        "canonical": "#E69F00",
+        "tonalRamp": [
+          "#130900",
+          "#332102",
+          "#583C08",
+          "#7F5913",
+          "#AB7711",
+          "#D7971B",
+          "#FEBB4D",
+          "#FFECD0"
+        ],
+        "tema": "oscuro"
       }
     },
     "typographyMeta": {
       "display": {
         "displayName": "Título de página",
-        "purpose": "Solo el h1 de cada página (Fraunces 600)."
+        "purpose": "Solo el h1 de cada página (IBM Plex Sans 600)."
       },
       "headline": {
         "displayName": "Subtítulo",
-        "purpose": "h2/h3 y nombre del visor en la barra lateral (Source Sans 3 700)."
+        "purpose": "h2/h3 y nombre del visor en la barra lateral (IBM Plex Sans 700)."
       },
       "body": {
         "displayName": "Cuerpo",
-        "purpose": "Texto de contexto y expansores."
+        "purpose": "Texto de contexto y expansores; máx. 75ch en El proyecto."
       },
       "lede": {
         "displayName": "Entradilla",
-        "purpose": "Una frase bajo el título, tinta media, máx. 68ch."
+        "purpose": "Una frase bajo el título, en tinta-2, máx. 68ch."
       },
       "nota": {
         "displayName": "Nota",
@@ -246,7 +495,18 @@
       }
     },
     "shadows": [],
-    "motion": [],
+    "motion": [
+      {
+        "name": "vigia-tema",
+        "value": "400ms",
+        "purpose": "Intervalo con que el vigía de tema.py lee el fondo de .stApp, marca html[data-tema] y pide una nueva ejecución si el modo cambió."
+      },
+      {
+        "name": "animacion-mapas",
+        "value": "450ms",
+        "purpose": "Duración de cada cuadro al reproducir la animación horaria de Mapas; sin transición entre cuadros."
+      }
+    ],
     "breakpoints": [
       {
         "name": "columnas-apiladas",
@@ -254,100 +514,75 @@
         "note": "Umbral de st.columns de Streamlit, no fijado por el visor."
       }
     ],
+    "temas": {
+      "mecanismo": "config.toml define [theme.light] y [theme.dark]; tema.py inyecta las variables CSS de CLARA en :root y las de OSCURA en html[data-tema=\"oscuro\"]; las plantillas plotly son cuaderno y cuaderno_oscuro; tema.colores() y tema.plantilla() devuelven las del modo activo.",
+      "sufijo": "Cada token claro tiene su par con sufijo -oscuro.",
+      "leyenda": {
+        "claro": "rgba(255,255,255,0.8)",
+        "oscuro": "rgba(29,53,87,0.8)"
+      },
+      "contraste": "tests/test_escalas.py exige ≥ 4,5:1 para INK, INK_2, MUTED y ACCENT sobre GROUND y SURFACE, para SOBRE_ACCENT sobre ACCENT y para INK sobre SEVERE_SOFT, en los dos temas."
+    },
     "colorScales": [
       {
-        "name": "ir-realzado",
-        "stops": [
-          [
-            0,
-            "#0C1518"
-          ],
-          [
-            0.1,
-            "#2B4A73"
-          ],
-          [
-            0.25,
-            "#4C7FB8"
-          ],
-          [
-            0.38,
-            "#A9C7E6"
-          ],
-          [
-            0.47,
-            "#F7F9FA"
-          ],
-          [
-            0.62,
-            "#AEBBBF"
-          ],
-          [
-            1,
-            "#26343A"
-          ]
+        "tipo": "secuencial",
+        "uso": "Magnitudes que crecen desde cero (VGP, cizalle, CAPE, LCL, C08 − C13).",
+        "predeterminada": "Viridis",
+        "aptas": [
+          "Viridis",
+          "Cividis",
+          "Plasma",
+          "Magma",
+          "YlGnBu"
         ],
-        "purpose": "GOES infrarrojo (190–300 K); sin rojo."
+        "noAptas": [
+          "Turbo"
+        ]
       },
       {
-        "name": "visible",
-        "stops": [
-          [
-            0,
-            "#1A2428"
-          ],
-          [
-            1,
-            "#F7F9FA"
-          ]
+        "tipo": "divergente",
+        "uso": "Campos con signo centrados en cero (SRH, STP, viento, vorticidad, ΔC13). Sin rojo por defecto.",
+        "predeterminada": "PuOr",
+        "aptas": [
+          "PuOr",
+          "RdBu_r",
+          "BrBG",
+          "balance"
         ],
-        "purpose": "Bandas GOES 1–6."
+        "noAptas": [
+          "Picnic"
+        ]
       },
       {
-        "name": "secuencial",
-        "stops": [
-          [
-            0,
-            "#FFFFFF"
-          ],
-          [
-            0.35,
-            "#D6E8E5"
-          ],
-          [
-            0.7,
-            "#0E6A63"
-          ],
-          [
-            1,
-            "#0C1518"
-          ]
+        "tipo": "infrarrojo",
+        "uso": "Temperatura de brillo; topes fríos en blanco.",
+        "predeterminada": "Greys",
+        "aptas": [
+          "Greys",
+          "Cividis_r",
+          "Viridis_r",
+          "ice"
         ],
-        "purpose": "Magnitudes ERA5 e índices no centrados."
+        "noAptas": [
+          "Turbo_r"
+        ]
       },
       {
-        "name": "divergente",
-        "stops": [
-          [
-            0,
-            "#4C7FB8"
-          ],
-          [
-            0.5,
-            "#F7F9FA"
-          ],
-          [
-            1,
-            "#C98A3C"
-          ]
+        "tipo": "visible",
+        "uso": "Reflectancia; más brillante, más blanco.",
+        "predeterminada": "gray",
+        "aptas": [
+          "gray",
+          "Cividis"
         ],
-        "purpose": "Variables con signo, centradas en cero."
+        "noAptas": []
       }
     ],
     "platformLimits": [
       "st.dataframe no permite fuente por columna: la hora UTC de la bitácora sale en sans.",
       "El frontend de Streamlit ignora fondo y fuente de la plantilla plotly; graficos._estilo los fija en el layout de cada figura.",
-      "st.html sanea el SVG: la regla de tiempo es HTML y CSS."
+      "st.html sanea el SVG: la regla de tiempo es HTML y CSS.",
+      "Streamlit no vuelve a ejecutar la app al cambiar de tema: el vigía de tema.py pulsa un botón oculto (vigia_tema) para redibujar los gráficos."
     ]
   },
   "components": [
@@ -355,9 +590,17 @@
       "name": "Botón primario",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Acción principal (Empezar recorrido, Siguiente).",
+      "description": "Acción principal (Empezar recorrido, Siguiente), tema claro.",
       "html": "<button class=\"ds-btn-primary\">Empezar recorrido</button>",
-      "css": ".ds-btn-primary{background:#0E6A63;color:#fff;border:1px solid #0E6A63;border-radius:6px;padding:8px 16px;font:600 0.95rem 'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;cursor:pointer;width:100%} .ds-btn-primary:hover{background:#0B5852} .ds-btn-primary:focus-visible{outline:2px solid #0E6A63;outline-offset:2px}"
+      "css": ".ds-btn-primary{background:#376284;color:#FFFFFF;border:1px solid #376284;border-radius:6px;padding:8px 16px;font:600 0.95rem 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;cursor:pointer;width:100%} .ds-btn-primary:hover{filter:brightness(0.9)} .ds-btn-primary:focus-visible{outline:2px solid #376284;outline-offset:2px}"
+    },
+    {
+      "name": "Botón primario (oscuro)",
+      "kind": "button",
+      "refersTo": "button-primary-oscuro",
+      "description": "El mismo botón en el tema oscuro: Frosted Blue con texto Deep Space.",
+      "html": "<div class=\"ds-fondo-osc\"><button class=\"ds-btn-primary-osc\">Siguiente</button></div>",
+      "css": ".ds-fondo-osc{background:#172A46;padding:12px} .ds-btn-primary-osc{background:#A8DADC;color:#1D3557;border:1px solid #A8DADC;border-radius:6px;padding:8px 16px;font:600 0.95rem 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;cursor:pointer;width:100%} .ds-btn-primary-osc:hover{filter:brightness(1.08)} .ds-btn-primary-osc:focus-visible{outline:2px solid #A8DADC;outline-offset:2px}"
     },
     {
       "name": "Botón secundario",
@@ -365,31 +608,39 @@
       "refersTo": "button-secondary",
       "description": "Acción secundaria (Anterior).",
       "html": "<button class=\"ds-btn-sec\">Anterior</button>",
-      "css": ".ds-btn-sec{background:#fff;color:#0C1518;border:1px solid #C9D3D6;border-radius:6px;padding:8px 16px;font:400 0.95rem 'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;cursor:pointer} .ds-btn-sec:hover{border-color:#0E6A63;color:#0E6A63} .ds-btn-sec:focus-visible{outline:2px solid #0E6A63;outline-offset:2px}"
+      "css": ".ds-btn-sec{background:#FFFFFF;color:#0E1A2C;border:1px solid #BDD4D6;border-radius:6px;padding:8px 16px;font:400 0.95rem 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;cursor:pointer} .ds-btn-sec:hover{border-color:#376284;color:#376284} .ds-btn-sec:focus-visible{outline:2px solid #376284;outline-offset:2px}"
     },
     {
       "name": "Panel",
       "kind": "card",
       "refersTo": "panel",
-      "description": "Hoja blanca con filete para gráficos, tablas y expansores, sobre la niebla.",
+      "description": "Hoja con filete para gráficos, tablas y expansores, sobre el fondo Honeydew.",
       "html": "<div class=\"ds-mesa\"><div class=\"ds-panel\">GOES-16 · infrarrojo 10,3 µm · 20:10 UTC</div><p class=\"ds-nota\">Sin corrección de paralaje.</p></div>",
-      "css": ".ds-mesa{background:#E4E9EB;padding:16px;font-family:'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;color:#0C1518} .ds-panel{background:#fff;border:1px solid #C9D3D6;border-radius:6px;padding:10px 12px;font-size:15px;min-height:80px} .ds-nota{color:#64757B;font-size:0.86rem;line-height:1.45;margin:6px 0 0}"
+      "css": ".ds-mesa{background:#F1FAEE;padding:16px;font-family:'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;color:#0E1A2C} .ds-panel{background:#FFFFFF;border:1px solid #BDD4D6;border-radius:6px;padding:10px 12px;font-size:15px;min-height:80px} .ds-nota{color:#465463;font-size:0.86rem;line-height:1.45;margin:6px 0 0}"
+    },
+    {
+      "name": "Panel (oscuro)",
+      "kind": "card",
+      "refersTo": "panel-oscuro",
+      "description": "La hoja Deep Space sobre el fondo hondo del tema oscuro.",
+      "html": "<div class=\"ds-mesa-osc\"><div class=\"ds-panel-osc\">ERA5 · VGP₀₋₁ · 18:00 UTC</div><p class=\"ds-nota-osc\">Celdas de ~31 km.</p></div>",
+      "css": ".ds-mesa-osc{background:#172A46;padding:16px;font-family:'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;color:#F1FAEE} .ds-panel-osc{background:#1D3557;border:1px solid #475C75;border-radius:6px;padding:10px 12px;font-size:15px;min-height:80px} .ds-nota-osc{color:#9CABB2;font-size:0.86rem;line-height:1.45;margin:6px 0 0}"
     },
     {
       "name": "Ficha de umbrales",
       "kind": "custom",
       "refersTo": "ficha-marca-supera",
-      "description": "Índices contra el umbral chileno; rojo solo si supera un umbral calibrado.",
-      "html": "<table class=\"ds-ficha\"><thead><tr><th>Índice</th><th class=\"r\">extremo zona</th><th class=\"r\">Umbral Chile o referencia</th><th></th></tr></thead><tbody><tr class=\"supera\"><td>VGP₀₋₁ <span class=\"u\">m/s²</span></td><td class=\"num v\">0,232</td><td class=\"num\">&gt; 0,1</td><td><span class=\"m\">supera</span></td></tr><tr class=\"bajo\"><td>STP left-mover</td><td class=\"num v\">−0,268</td><td class=\"num\">&lt; −0,3</td><td><span class=\"m\">bajo</span></td></tr><tr><td>SHERBS3</td><td class=\"num v\">1,27</td><td class=\"num\"><span class=\"ref\">Chile usa SHERBE ≥ 1</span></td><td></td></tr></tbody></table>",
-      "css": ".ds-ficha{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid #C9D3D6;border-radius:6px;overflow:hidden;font:0.92rem 'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;color:#0C1518} .ds-ficha th{text-align:left;font-weight:600;color:#64757B;font-size:0.78rem;border-bottom:1px solid #C9D3D6;padding:4px 6px} .ds-ficha th.r{text-align:right} .ds-ficha td{padding:6px;border-bottom:1px solid #F1F4F5} .ds-ficha .u{color:#64757B;font-size:0.86rem} .ds-ficha td.num{font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap} .ds-ficha .ref{font-family:'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;color:#64757B;font-size:0.8rem} .ds-ficha tr.supera td.v{color:#D2492A;font-weight:600} .ds-ficha .m{display:inline-block;min-width:4.6em;font-size:0.74rem;font-weight:600;padding:1px 6px;border-radius:3px;text-align:center} .ds-ficha tr.supera .m{background:#F7E0D8;color:#9A2F17} .ds-ficha tr.bajo .m{background:#F1F4F5;color:#64757B}"
+      "description": "Índices contra el umbral chileno; el valor que cruza un umbral calibrado va en tinta 700 con triángulo rojo, nunca en rojo.",
+      "html": "<table class=\"ds-ficha\"><thead><tr><th>Índice</th><th class=\"r\">extremo zona</th><th class=\"r\">Criterio</th><th>Resultado</th></tr></thead><tbody><tr class=\"supera\"><td>VGP₀₋₁ <span class=\"u\">m/s²</span></td><td class=\"num v\">0,232</td><td class=\"num\">&gt; 0,1</td><td><span class=\"m\">Cumple el criterio</span></td></tr><tr class=\"bajo\"><td>STP left-mover</td><td class=\"num v\">−0,268</td><td class=\"num\">≤ −0,3</td><td><span class=\"m\">No cumple el criterio</span></td></tr><tr class=\"bajo\"><td>SHERBS3</td><td class=\"num v\">1,27</td><td class=\"num\"><span class=\"ref\">Chile usa SHERBE ≥ 1</span></td><td><span class=\"m\">Sin criterio de decisión</span></td></tr></tbody></table>",
+      "css": ".ds-ficha{width:100%;border-collapse:separate;border-spacing:0;background:#FFFFFF;border:1px solid #BDD4D6;border-radius:6px;overflow:hidden;font:0.92rem 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;color:#0E1A2C} .ds-ficha th{text-align:left;font-weight:600;color:#465463;font-size:0.78rem;border-bottom:1px solid #BDD4D6;padding:4px 6px} .ds-ficha th.r{text-align:right} .ds-ficha td{padding:6px;border-bottom:1px solid #EFF8F9;vertical-align:baseline} .ds-ficha .u{color:#465463;font-size:0.86rem} .ds-ficha td.num{font-family:'IBM Plex Mono', ui-monospace, Menlo, monospace;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap} .ds-ficha .ref{font-family:'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;color:#465463;font-size:0.8rem;display:inline-block;max-width:11em;line-height:1.35} .ds-ficha tr.supera td.v{font-weight:700} .ds-ficha tr.supera td.v::before{content:\"\";display:inline-block;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid #E63946;margin-right:6px;vertical-align:0} .ds-ficha .m{display:inline-block;min-width:4.6em;font-size:0.8rem;font-weight:600;padding:1px 6px;border-radius:3px;text-align:center} .ds-ficha tr.supera .m{background:#EFD7D0;color:#0E1A2C} .ds-ficha tr.bajo .m{background:#EFF8F9;color:#465463}"
     },
     {
       "name": "Regla de tiempo",
       "kind": "custom",
       "refersTo": null,
-      "description": "Día con eventos como triángulos rojos y la hora elegida en acento; compartida por todas las páginas.",
+      "description": "Día con eventos como triángulos rojos y la hora elegida en el color de acción; compartida por todas las páginas.",
       "html": "<div class=\"ds-regla\"><div class=\"ds-pista\"><span class=\"ds-ev\" style=\"left:79%\"></span><span class=\"ds-ev\" style=\"left:84%\"></span><span class=\"ds-ev\" style=\"left:91%\"></span><span class=\"ds-ahora\" style=\"left:84%\"></span></div><div class=\"ds-horas\"><span>00:00</span><span>23:50 UTC</span></div></div>",
-      "css": ".ds-regla{background:#E4E9EB;padding:12px;width:220px} .ds-pista{position:relative;height:18px;margin:0 9px;border-bottom:1px solid #C9D3D6} .ds-ev{position:absolute;bottom:0;width:0;height:0;transform:translateX(-5px);border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid #D2492A} .ds-ahora{position:absolute;bottom:-4px;width:2px;height:20px;background:#0E6A63;transform:translateX(-1px);border-radius:1px} .ds-horas{display:flex;justify-content:space-between;margin:3px 9px 0;font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;font-size:0.72rem;color:#64757B}"
+      "css": ".ds-regla{background:#F1FAEE;padding:12px;width:220px} .ds-pista{position:relative;height:18px;margin:0 9px;border-bottom:1px solid #BDD4D6} .ds-ev{position:absolute;bottom:0;transform:translateX(-5px);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid #E63946} .ds-ahora{position:absolute;bottom:-4px;width:2px;height:20px;background:#376284;transform:translateX(-1px);border-radius:1px} .ds-horas{display:flex;justify-content:space-between;margin:3px 9px 0;font-family:'IBM Plex Mono', ui-monospace, Menlo, monospace;font-size:0.75rem;color:#465463}"
     },
     {
       "name": "Tarjeta de paso",
@@ -397,68 +648,86 @@
       "refersTo": "paso",
       "description": "Paso del recorrido guiado en la barra lateral.",
       "html": "<div class=\"ds-paso\"><b>PASO 2/6 · 18:30 UTC</b><br>El cizalle 0–1 km es el que discrimina en Chile.</div>",
-      "css": ".ds-paso{background:#fff;border:1px solid #C9D3D6;border-radius:6px;padding:10px 12px;font:0.92rem/1.45 'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;color:#0C1518;max-width:240px} .ds-paso b{font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;font-weight:600;color:#0E6A63;font-size:0.8rem}"
+      "css": ".ds-paso{background:#FFFFFF;border:1px solid #BDD4D6;border-radius:6px;padding:10px 12px;font:0.92rem/1.45 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;color:#0E1A2C;max-width:240px} .ds-paso b{font-family:'IBM Plex Mono', ui-monospace, Menlo, monospace;font-weight:600;color:#376284;font-size:0.8rem}"
+    },
+    {
+      "name": "Punto elegido y evento",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Glifos de mapa: el punto elegido en doble anillo (halo de hoja y anillo de selección) y el evento como triángulo rojo con borde de hoja, sobre un tope frío.",
+      "html": "<svg class=\"ds-glifos\" width=\"160\" height=\"80\" viewBox=\"0 0 160 80\" role=\"img\" aria-label=\"Punto elegido y evento\"><rect width=\"160\" height=\"80\" fill=\"#2D708E\"/><circle cx=\"52\" cy=\"40\" r=\"11\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"5.5\"/><circle cx=\"52\" cy=\"40\" r=\"11\" fill=\"none\" stroke=\"#457B9D\" stroke-width=\"2.5\"/><path d=\"M108 32 L115 45 L101 45 Z\" fill=\"#E63946\" stroke=\"#FFFFFF\" stroke-width=\"1.2\"/></svg>",
+      "css": ".ds-glifos{display:block;border-radius:6px}"
     }
   ],
   "narrative": {
     "northStar": "El cuaderno de campo",
-    "overview": "El visor es la libreta de un caso meteorológico: una mesa de niebla clara sobre la que se apoyan hojas blancas con filete fino (mapas, sondeos, tablas), cada una con su dato medido en tipografía de máquina y su nota al margen en gris. Nada flota ni brilla; la jerarquía la dan el papel, el filete y dos colores con trabajo asignado: el verde azulado señala lo que el usuario eligió o puede accionar, el rojo señala tornados del catálogo y umbrales chilenos.\n\nDensidad media-alta, de herramienta de trabajo: dos columnas en escritorio, explicación siempre al lado del dato y nunca encima. La identidad viene del sitio del proyecto (`web/index.html`, tema claro) y la construye Streamlit con tres capas: `.streamlit/config.toml` (widgets y fuentes), la plantilla plotly `cuaderno` y el CSS fino de `scripts/visor_app/tema.py`.",
+    "overview": "El visor es la libreta de un caso meteorológico: un fondo sobre el que se apoyan hojas con filete fino (mapas, sondeos, tablas), cada una con su dato medido en tipografía de máquina y su nota al margen en gris. Nada flota ni brilla; la jerarquía la dan la hoja, el filete y pocos colores con trabajo asignado: el Steel Blue señala lo que el usuario puede accionar o eligió, el Strawberry Red marca tornados del catálogo y umbrales chilenos sin escribir nunca una palabra.\n\nLa paleta sale de cinco colores fijados por el usuario (Strawberry Red, Honeydew, Frosted Blue, Steel Blue y Deep Space Blue); los demás tonos son mezclas entre ellos. Hay dos temas que el visitante alterna desde el menú de Streamlit: claro (Honeydew de fondo, hojas blancas, Deep Space oscurecido de tinta) y oscuro (hojas Deep Space sobre un fondo más hondo, Honeydew de tinta, Frosted Blue de acción). Los mapas no usan la paleta: usan escalas estándar según el tipo de dato.\n\nDensidad media-alta, de herramienta de trabajo: dos columnas en escritorio, explicación siempre al lado del dato y nunca encima. La identidad la construye Streamlit con cuatro capas: `.streamlit/config.toml` (widgets y fuentes, tablas `[theme.light]` y `[theme.dark]`), las plantillas plotly `cuaderno` y `cuaderno_oscuro`, el CSS fino de `scripts/visor_app/tema.py` (variables CSS de las dos paletas, conmutadas por `html[data-tema=\"oscuro\"]`) y un vigía que detecta el cambio de tema y vuelve a ejecutar la página para redibujar los gráficos.",
     "keyCharacteristics": [
-      "Fondo niebla en página y cabecera; superficies blancas con filete de 1 px y radio de 6 px.",
-      "Dos colores semánticos estrictos: acento = elección/acción, severo = eventos y umbral chileno.",
-      "Fraunces solo en el título de página; Source Sans 3 para todo lo demás; JetBrains Mono para cifras, coordenadas y horas.",
+      "Fondo Honeydew (claro) o Deep Space hondo (oscuro); hojas con filete de 1 px y radio de 6 px.",
+      "Roles de color estrictos: acción en la interfaz, selección dentro de los gráficos, rojo solo como marca de eventos y umbrales chilenos.",
+      "IBM Plex Sans para títulos y texto; IBM Plex Mono para cifras, coordenadas y horas.",
       "Cifras con coma decimal y dígitos tabulares.",
-      "Sin sombras: profundidad por tono (niebla, blanco) y filete."
+      "Mapas con escalas estándar (Viridis, ColorBrewer, cmocean) elegibles por gráfico y marcadas según su aptitud para daltonismo.",
+      "Sin sombras: profundidad por tono (fondo, hoja) y filete."
     ],
     "rules": [
       {
-        "name": "La regla del rojo ganado",
-        "body": "El rojo solo aparece por un evento del catálogo o por un umbral chileno calibrado (su línea o un valor que lo cruza). Los índices sin umbral calibrado (SRH₀₋₁, SHERBS3, LCL, cizalle 0–6 km) no se pintan: llevan su referencia en texto apagado.",
+        "name": "El rojo marca, no escribe",
+        "body": "El Strawberry Red solo aparece como glifo o línea, y solo por un evento del catálogo o por un umbral chileno calibrado (su contorno, su línea o un valor que lo cruza). Nunca es texto, en ningún tamaño ni tema: las alertas van en tinta con el triángulo rojo al lado. Los índices sin umbral calibrado (SRH₀₋₁, SHERBS3, LCL, cizalle 0–6 km) no se marcan: llevan su referencia en texto apagado.",
         "section": "colors"
       },
       {
-        "name": "La regla del acento que responde",
-        "body": "En la interfaz, el verde azulado marca solo lo elegido o accionable. En los gráficos puede ser el tono de la escala secuencial y del punto elegido, nunca un estado de alarma.",
+        "name": "Acción y selección",
+        "body": "En la interfaz, el color de acción marca lo que se puede accionar (botón, slider, foco, \"ahora\"). Dentro de un gráfico, lo elegido (punto, serie del punto, hora actual) lleva el color de selección. Ninguno de los dos expresa alarma.",
         "section": "colors"
       },
       {
-        "name": "La regla del infrarrojo sin rojo",
-        "body": "La escala IR realzada va de tinta (más frío, ≲ 200 K) por azules y blanco de nube a gris y suelo oscuro; no usa rojo, porque el rojo es de los eventos.",
+        "name": "Escalas estándar según el dato",
+        "body": "Un mapa se colorea con una escala estándar de su tipo de dato, nunca con colores de la marca. La predeterminada de cada tipo es siempre apta para daltonismo, y la divergente por defecto (PuOr) no lleva rojo, porque el rojo marca los eventos.",
         "section": "colors"
       },
       {
-        "name": "La regla de una sola serif",
-        "body": "Fraunces aparece una vez por página, en el h1.",
+        "name": "Los dos temas AA",
+        "body": "Tinta, entradilla, notas y acción alcanzan 4,5:1 sobre el fondo y sobre la hoja en los dos temas; también el texto del botón primario sobre la acción y la tinta sobre la píldora \"Cumple el criterio\". `tests/test_escalas.py` lo comprueba: un color nuevo de texto entra con su prueba.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla de una sola familia",
+        "body": "Todo es IBM Plex: Sans para texto y títulos, Mono para datos. No se mezcla con serif ni con otra sans.",
         "section": "typography"
       },
       {
         "name": "La regla del dato en mono",
-        "body": "Lo medido (valores, coordenadas, horas UTC) va en JetBrains Mono con cifras tabulares donde la plataforma lo permite; la prosa y las unidades no.",
+        "body": "Lo medido (valores, coordenadas, horas UTC) va en IBM Plex Mono con cifras tabulares donde la plataforma lo permite; la prosa y las unidades no.",
         "section": "typography"
       },
       {
         "name": "La regla de la coma",
-        "body": "Separador decimal coma en ficha y gráficos (`separators=\", \"` en plotly; `_num` en la ficha), con 3 cifras significativas.",
+        "body": "Separador decimal coma en ficha y gráficos (`separators=\", \"` en plotly; `_num` en la ficha), con 3 cifras significativas; las coordenadas salen de `componentes.coord` con signo menos tipográfico.",
         "section": "typography"
       },
       {
         "name": "La regla de la hoja sobre la mesa",
-        "body": "Todo contenido de datos (gráfico, tabla, ficha, expansor) es una hoja blanca con filete sobre la niebla; el texto corrido va directo sobre la niebla, sin hoja.",
+        "body": "Todo contenido de datos (gráfico, tabla, ficha, expansor) es una hoja con filete sobre el fondo; el texto corrido de las páginas de datos va directo sobre el fondo, sin hoja.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "**Do** poner todo dato sobre una hoja blanca con filete #C9D3D6 y radio 6 px encima de la niebla #E4E9EB.",
-      "**Do** reservar el rojo #D2492A para eventos del catálogo y umbrales chilenos calibrados; el resto de los índices lleva su referencia en texto apagado.",
-      "**Do** usar el verde azulado #0E6A63 para lo elegido y lo accionable.",
-      "**Do** escribir cifras con coma decimal y en JetBrains Mono tabular cuando la plataforma lo permita.",
-      "**Do** usar frío #4C7FB8 y cálido #C98A3C para escalas divergentes centradas en cero.",
-      "**Do** fijar fondo y fuente en el layout de cada figura plotly (`graficos._estilo`)."
+      "**Do** poner todo dato sobre una hoja con filete y radio 6 px encima del fondo, en los dos temas.",
+      "**Do** reservar el Strawberry Red #E63946 para glifos y líneas de eventos del catálogo y umbrales chilenos calibrados; las alertas en tinta con el triángulo rojo al lado.",
+      "**Do** usar el color de acción (#376284 en claro, #A8DADC en oscuro) para lo accionable y el de selección (#457B9D en claro, #A8DADC en oscuro) para lo elegido dentro de un gráfico.",
+      "**Do** colorear los mapas con la escala estándar de su tipo de dato (`escalas.TIPOS`) y dejar que la predeterminada sea apta para daltonismo.",
+      "**Do** usar el azul y el naranja de Okabe-Ito para series categóricas que la paleta no cubre.",
+      "**Do** escribir cifras con coma decimal y en IBM Plex Mono tabular cuando la plataforma lo permita.",
+      "**Do** tomar los colores de `tema.colores()` y la plantilla de `tema.plantilla()`, y fijar fondo y fuente en el layout de cada figura plotly (`graficos._estilo`).",
+      "**Do** añadir a `tests/test_escalas.py` todo color nuevo de texto, con su contraste AA en claro y oscuro."
     ],
     "donts": [
-      "**Don't** usar Fraunces fuera del h1 de página.",
-      "**Don't** meter rojo en escalas de color (el IR realzado y la divergente no lo llevan).",
-      "**Don't** pintar en rojo un índice sin umbral chileno calibrado ni usar umbrales norteamericanos.",
+      "**Don't** escribir texto en rojo, ni siquiera en tamaño grande o en un diagrama.",
+      "**Don't** introducir una serif ni una segunda sans junto a IBM Plex.",
+      "**Don't** colorear un mapa con colores de la marca ni poner por defecto una escala con rojo o no apta para daltonismo.",
+      "**Don't** marcar en rojo un índice sin umbral chileno calibrado ni usar umbrales norteamericanos.",
+      "**Don't** fijar un hex en un gráfico o en el CSS fuera de `Paleta`: el color tiene que cambiar con el tema.",
       "**Don't** añadir sombras: la profundidad es tonal."
     ]
   }

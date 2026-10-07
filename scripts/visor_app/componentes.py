@@ -17,12 +17,12 @@ class Fila:
     punto: float | None
     zona: float | None
     umbral: float | None
-    sentido: str | None  # ">" o "<": hacia dónde está el peligro
-    referencia: str | None = None  # texto para índices sin umbral chileno calibrado
+    sentido: str | None  # ">" o "<": dirección del criterio de comparación
+    referencia: str | None = None  # referencia descriptiva para índices sin criterio
 
 
 def supera(v: float | None, umbral: float | None, sentido: str | None) -> bool:
-    """Si ``v`` está del lado peligroso de ``umbral``."""
+    """Indica si el valor cumple el criterio de comparación del índice."""
     if v is None or umbral is None or not np.isfinite(v):
         return False
     return v > umbral if sentido == ">" else v < umbral
@@ -36,19 +36,31 @@ def _num(v: float | None) -> str:
     return s.replace(".", ",")
 
 
+def coord(lat: float, lon: float) -> str:
+    """Coordenadas con 2 decimales, coma decimal y signo menos tipográfico: ``−36,73°, −71,81°``."""
+    return ", ".join(f"{v:.2f}°".replace(".", ",").replace("-", "−") for v in (lat, lon))
+
+
 def ficha(filas: list[Fila], col_punto: str, col_zona: str | None) -> str:
-    """Tabla HTML de índices contra el umbral chileno; se marca en rojo lo que lo supera."""
+    """Tabla de valores, criterios y referencias que distingue los datos ausentes."""
     cab = f"<th>Índice</th><th style='text-align:right'>{html.escape(col_punto)}</th>"
     if col_zona:
         cab += f"<th style='text-align:right'>{html.escape(col_zona)}</th>"
-    cab += "<th style='text-align:right'>Umbral Chile o referencia</th><th></th>"
+    cab += "<th style='text-align:right'>Criterio</th><th>Resultado</th>"
     cuerpo = []
     for f in filas:
         ref = f.zona if col_zona else f.punto
-        clase = "supera" if supera(ref, f.umbral, f.sentido) else "bajo"
-        marca = "supera" if clase == "supera" else ("bajo" if f.umbral is not None else "")
+        clase = "bajo"
+        if ref is None or not np.isfinite(ref):
+            marca = "Sin datos"
+        elif f.umbral is None:
+            marca = "Sin criterio de decisión"
+        elif supera(ref, f.umbral, f.sentido):
+            clase, marca = "supera", "Cumple el criterio"
+        else:
+            marca = "No cumple el criterio"
         if f.umbral is not None:
-            umbral = f"{f.sentido} {_num(f.umbral)}"
+            umbral = html.escape(f"{f.sentido} {_num(f.umbral)}")
         elif f.referencia:
             umbral = f"<span class='ref'>{html.escape(f.referencia)}</span>"
         else:
@@ -61,7 +73,7 @@ def ficha(filas: list[Fila], col_punto: str, col_zona: str | None) -> str:
             celdas.append(f"<td class='num valor'>{_num(f.zona)}</td>")
         celdas += [
             f"<td class='num'>{umbral}</td>",
-            f"<td>{'<span class=marca>' + marca + '</span>' if marca else ''}</td>",
+            f"<td><span class='marca'>{marca}</span></td>",
         ]
         cuerpo.append(f"<tr class='{clase}'>{''.join(celdas)}</tr>")
     return f"<table class='ficha'><thead><tr>{cab}</tr></thead><tbody>{''.join(cuerpo)}</tbody></table>"
@@ -73,7 +85,7 @@ UNIDADES = {"m s-1": "m/s", "m2 s-2": "m²/s²", "m s-2": "m/s²", "K km-1": "K/
 
 CORTOS = {"vgp_01": "VGP₀₋₁", "srh_01": "SRH₀₋₁ left-mover", "srh_03": "SRH₀₋₃ left-mover",
           "cizalle_01": "Cizalle 0–1 km", "cizalle_03": "Cizalle 0–3 km", "cizalle_06": "Cizalle 0–6 km",
-          "stp_lm": "STP left-mover", "sherbs3": "SHERBS3", "lcl": "Altura del LCL"}  # fmt: skip
+          "stp_lm": "STP aproximado left-mover (sin CIN)", "sherbs3": "SHERBS3", "lcl": "Altura del LCL"}  # fmt: skip
 
 
 def unidad(u: str) -> str:
@@ -83,6 +95,11 @@ def unidad(u: str) -> str:
 
 INDICES_FICHA = ("vgp_01", "srh_01", "cizalle_01", "stp_lm", "sherbs3", "lcl", "cizalle_06")
 
+REFERENCIAS = {
+    "cizalle_06": "Sin criterio local de decisión; comparar con el contexto del caso",
+    "sherbs3": "SHERBE ≥ 1 corresponde a otra variante; no es un umbral de SHERBS3",
+}
+
 
 def filas_indices(
     ds: xr.Dataset, t: np.datetime64 | pd.Timestamp, punto: tuple[float, float] | None,
@@ -91,7 +108,7 @@ def filas_indices(
     """Filas de la ficha para la hora ERA5 más cercana a ``t``.
 
     ``punto`` es (lat, lon); ``zona`` es (norte, sur, oeste, este) y da el extremo en el sentido del
-    peligro (máximo si el umbral es ``>``, mínimo si es ``<``).
+    comparación (máximo si el criterio es ``>``, mínimo si es ``<``).
     """
     h = ds.sel(time=t, method="nearest")
     filas = []
@@ -111,7 +128,7 @@ def filas_indices(
                 vz = float(r.max() if sentido != "<" else r.min())
         filas.append(
             Fila(
-                CORTOS.get(v) or str(a.get("long_name", v)), unidad(a.get("units", "")), vp, vz, None if umbral is None else float(umbral), sentido, a.get("referencia"),
+                CORTOS.get(v) or str(a.get("long_name", v)), unidad(a.get("units", "")), vp, vz, None if umbral is None else float(umbral), sentido, REFERENCIAS.get(v, a.get("referencia")),
             )
         )  # fmt: skip
     return filas
@@ -132,16 +149,21 @@ def regla(tiempos: list[np.datetime64], eventos: pd.DataFrame, actual: np.dateti
         """Posición horizontal (0–100 %) de ``t`` en la regla."""
         return 100 * min(max((t - t0).total_seconds() / span, 0.0), 1.0)
 
-    marcas = []
+    marcas, nombres = [], []
     for _, ev in eventos.iterrows():
         if ev["hora"] is None or pd.isna(ev["hora"]):
             continue
+        nombres.append(f"{ev['hora']:%H:%M} {ev['lugar']}")
         titulo = html.escape(f"{ev['hora']:%H:%M} UTC · {ev['lugar']}", quote=True)
         marcas.append(
             f'<span class="regla-ev" style="left:{x(pd.Timestamp(ev["hora"])):.2f}%" title="{titulo}"></span>'
         )
+    # El title de cada triángulo solo aparece al pasar el ratón: la lista completa va en la etiqueta.
+    etiqueta = f"Hora elegida {pd.Timestamp(actual):%H:%M} UTC. " + (
+        f"Eventos del día (UTC): {'; '.join(nombres)}." if nombres else "Sin eventos con hora."
+    )
     return (
-        '<div class="regla" role="img" aria-label="Eventos del día en la regla de tiempo">'
+        f'<div class="regla" role="img" aria-label="{html.escape(etiqueta, quote=True)}">'
         f'<div class="regla-pista">{"".join(marcas)}'
         f'<span class="regla-ahora" style="left:{x(pd.Timestamp(actual)):.2f}%"></span></div>'
         f'<div class="regla-horas"><span>{t0:%H:%M}</span><span>{t1:%H:%M} UTC</span></div></div>'

@@ -1,104 +1,277 @@
-"""Identidad visual del visor: la paleta de ``web/index.html``, la plantilla de plotly y el CSS fino.
+"""Identidad visual del visor: las paletas clara y oscura, las plantillas de plotly y el CSS fino.
 
-El tema base (colores y fuentes de los widgets) vive en ``.streamlit/config.toml``; aquí está lo que
-config.toml no alcanza: los gráficos y los detalles del navegador (selección de texto, cifras
-tabulares, la bitácora y la ficha de umbrales).
+El tema base (colores y fuentes de los widgets) vive en ``.streamlit/config.toml``, con una tabla
+``[theme.light]`` y otra ``[theme.dark]`` que el usuario alterna desde el menú de Streamlit. Aquí está
+lo que config.toml no alcanza: los gráficos y los detalles del navegador (selección de texto, cifras
+tabulares, la bitácora y la ficha de umbrales). ``colores()`` devuelve la paleta del modo activo.
+
+Las dos paletas salen de cinco colores (Strawberry Red, Honeydew, Frosted Blue, Steel Blue y Deep
+Space Blue) y de mezclas entre ellos. El rojo marca (glifos y líneas de eventos y umbrales); nunca es
+texto. Las series categóricas de los gráficos que la paleta no cubre usan el azul y el naranja de
+Okabe-Ito, aptos para daltonismo. Las escalas de los mapas son estándar y viven en ``escalas.py``.
 """
+
+from dataclasses import dataclass, fields
 
 import plotly.graph_objects as go
 import plotly.io as pio
 import streamlit as st
 
-GROUND, SURFACE, SURFACE_2, LINE = "#E4E9EB", "#FFFFFF", "#F1F4F5", "#C9D3D6"
-INK, INK_2, MUTED = "#0C1518", "#33454B", "#64757B"
-ACCENT, ACCENT_SOFT = "#0E6A63", "#D6E8E5"
-SEVERE, SEVERE_SOFT = "#D2492A", "#F7E0D8"
-COLD, WARM = "#4C7FB8", "#C98A3C"
+SANS = "'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif"
+MONO = "'IBM Plex Mono', ui-monospace, Menlo, monospace"
 
-SANS = "'Source Sans 3', -apple-system, 'Segoe UI', sans-serif"
-MONO = "'JetBrains Mono', ui-monospace, Menlo, monospace"
 
-# Infrarrojo realzado sin rojo (el rojo es de los eventos): suelo cálido oscuro, nube blanca,
-# topes fríos en azul frío y los más fríos (≲ 200 K) en tinta.
-IR = [
-    [0.00, INK],
-    [0.10, "#2B4A73"],
-    [0.25, COLD],
-    [0.38, "#A9C7E6"],
-    [0.47, "#F7F9FA"],
-    [0.62, "#AEBBBF"],
-    [1.00, "#26343A"],
-]
-VISIBLE = [[0.0, "#1A2428"], [1.0, "#F7F9FA"]]
-SECUENCIAL = [[0.0, SURFACE], [0.35, ACCENT_SOFT], [0.7, ACCENT], [1.0, INK]]
-DIVERGENTE = [[0.0, COLD], [0.5, "#F7F9FA"], [1.0, WARM]]
+@dataclass(frozen=True)
+class Paleta:
+    """Los colores con trabajo asignado en un modo (claro u oscuro)."""
 
-pio.templates["cuaderno"] = go.layout.Template(
-    layout={
-        "font": {"family": SANS, "color": INK, "size": 13},
-        "paper_bgcolor": SURFACE,
-        "plot_bgcolor": SURFACE,
-        "colorway": [ACCENT, SEVERE, COLD, WARM, MUTED, INK_2],
-        "title": {"font": {"family": SANS, "size": 15, "color": INK}, "x": 0, "xanchor": "left"},
-        "xaxis": {"gridcolor": SURFACE_2, "linecolor": LINE, "zerolinecolor": LINE, "ticks": ""},
-        "yaxis": {"gridcolor": SURFACE_2, "linecolor": LINE, "zerolinecolor": LINE, "ticks": ""},
-        "hoverlabel": {
-            "bgcolor": SURFACE,
-            "bordercolor": LINE,
-            "font": {"family": MONO, "size": 12, "color": INK},
-        },
-        "legend": {"font": {"size": 12}, "bgcolor": "rgba(255,255,255,0.8)"},
-        "margin": {"l": 56, "r": 10, "t": 44, "b": 36},
-    }
-)
+    GROUND: str  # fondo de página y barra lateral
+    SURFACE: str  # hojas: gráficos, tablas, ficha
+    SURFACE_2: str  # grilla de gráficos, separadores internos
+    LINE: str  # filete de 1 px
+    INK: str  # texto
+    INK_2: str  # entradilla
+    MUTED: str  # notas y captions (≥ 4,5:1 sobre el fondo)
+    ACCENT: str  # acción en la interfaz: botón primario, slider, foco, enlaces
+    ACCENT_SOFT: str  # selección de texto
+    SELECCION: str  # lo elegido dentro de un gráfico: el punto, la serie «punto», la hora actual
+    SEVERE: str  # eventos y umbrales: solo glifos y líneas, nunca texto
+    SEVERE_SOFT: str  # fondo de la píldora «Cumple el criterio» (texto en tinta encima)
+    COLD: str  # serie categórica (hodógrafo 1–3 km): azul de Okabe-Ito
+    WARM: str  # serie categórica (punto de rocío, hodógrafo 3–6 km, series GOES): naranja de Okabe-Ito
+    SOBRE_ACCENT: str  # texto del botón primario sobre ``ACCENT``
+    LEYENDA: str  # fondo semitransparente de leyendas
+
+
+# Claro: Honeydew de fondo, hojas blancas, Deep Space oscurecido de tinta (16:1) y puro en la
+# entradilla, Steel Blue oscurecido para la acción.
+CLARA = Paleta(
+    GROUND="#F1FAEE", SURFACE="#FFFFFF", SURFACE_2="#EFF8F9", LINE="#BDD4D6",
+    INK="#0E1A2C", INK_2="#1D3557", MUTED="#465463",
+    ACCENT="#376284", ACCENT_SOFT="#A8DADC", SELECCION="#457B9D",
+    SEVERE="#E63946", SEVERE_SOFT="#EFD7D0",
+    COLD="#0072B2", WARM="#E69F00", SOBRE_ACCENT="#FFFFFF", LEYENDA="rgba(255,255,255,0.8)",
+)  # fmt: skip
+# Oscuro: Deep Space de hojas sobre un fondo más hondo, Honeydew de tinta, Frosted Blue de acento.
+OSCURA = Paleta(
+    GROUND="#172A46", SURFACE="#1D3557", SURFACE_2="#2C4362", LINE="#475C75",
+    INK="#F1FAEE", INK_2="#D4EDE7", MUTED="#9CABB2",
+    ACCENT="#A8DADC", ACCENT_SOFT="#457B9D", SELECCION="#A8DADC",
+    SEVERE="#E63946", SEVERE_SOFT="#593652",
+    COLD="#56B4E9", WARM="#E69F00", SOBRE_ACCENT="#1D3557", LEYENDA="rgba(29,53,87,0.8)",
+)  # fmt: skip
+
+
+def oscuro() -> bool:
+    """Si el visitante está en el tema oscuro (Streamlit lo informa en ``st.context.theme``)."""
+    try:
+        return st.context.theme.type == "dark"
+    except Exception:  # fuera de una sesión (pruebas, scripts): tema claro
+        return False
+
+
+def colores() -> Paleta:
+    """La paleta del modo activo."""
+    return OSCURA if oscuro() else CLARA
+
+
+def _plantilla(p: Paleta) -> go.layout.Template:
+    """Plantilla plotly «cuaderno» con los colores de ``p``."""
+    return go.layout.Template(
+        layout={
+            "font": {"family": SANS, "color": p.INK, "size": 13},
+            "paper_bgcolor": p.SURFACE,
+            "plot_bgcolor": p.SURFACE,
+            "colorway": [p.SELECCION, p.INK, p.WARM, p.COLD, p.MUTED, p.INK_2],
+            "title": {
+                "font": {"family": SANS, "size": 15, "color": p.INK},
+                "x": 0,
+                "xanchor": "left",
+            },
+            "xaxis": {
+                "gridcolor": p.SURFACE_2,
+                "linecolor": p.LINE,
+                "zerolinecolor": p.LINE,
+                "ticks": "",
+            },
+            "yaxis": {
+                "gridcolor": p.SURFACE_2,
+                "linecolor": p.LINE,
+                "zerolinecolor": p.LINE,
+                "ticks": "",
+            },
+            "hoverlabel": {
+                "bgcolor": p.SURFACE,
+                "bordercolor": p.LINE,
+                "font": {"family": MONO, "size": 12, "color": p.INK},
+            },
+            "legend": {"font": {"size": 12}, "bgcolor": p.LEYENDA},
+            "margin": {"l": 56, "r": 10, "t": 44, "b": 36},
+        }
+    )
+
+
+pio.templates["cuaderno"] = _plantilla(CLARA)
+pio.templates["cuaderno_oscuro"] = _plantilla(OSCURA)
 pio.templates.default = "cuaderno"
 
-CSS = f"""
+
+def plantilla() -> str:
+    """Nombre de la plantilla plotly del modo activo."""
+    return "cuaderno_oscuro" if oscuro() else "cuaderno"
+
+
+# Triángulo de evento dibujado con bordes: el mismo glifo de los mapas y de la regla de tiempo.
+_TRIANGULO = (
+    "width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent;"
+)
+
+
+def _nombre_var(campo: str) -> str:
+    """Nombre de la variable CSS de un campo de ``Paleta``: ``INK_2`` → ``--ink-2``."""
+    return "--" + campo.lower().replace("_", "-")
+
+
+# La paleta como referencias a variables CSS: las reglas no cambian y el modo lo decide el navegador.
+_VARS = Paleta(**{f.name: f"var({_nombre_var(f.name)})" for f in fields(Paleta)})
+
+
+def _definiciones(p: Paleta) -> str:
+    """Las variables CSS de la paleta ``p``."""
+    return " ".join(f"{_nombre_var(f.name)}: {getattr(p, f.name)};" for f in fields(Paleta))
+
+
+# Streamlit no vuelve a ejecutar la app al cambiar de tema desde su menú, así que el CSS inyectado y
+# los gráficos quedarían con la paleta anterior. Este script lee el fondo que pinta Streamlit, marca
+# el modo en <html data-tema> (las variables CSS cambian al instante) y, si el modo cambió, pulsa un
+# botón oculto para pedir una nueva ejecución: así plotly se redibuja con la paleta nueva.
+_VIGIA = """
+<script>
+(() => {
+  const raiz = document.documentElement;
+  const modo = () => {
+    const app = document.querySelector(".stApp");
+    if (!app) return null;
+    const [r, g, b] = getComputedStyle(app).backgroundColor.match(/\\d+/g).map(Number);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b < 128 ? "oscuro" : "claro";
+  };
+  raiz.dataset.tema = modo() || raiz.dataset.tema || "claro";
+  if (window.__vigiaTema) return;
+  // El botón de la barra elige el otro modo en el menú de Streamlit, oculto mientras tanto.
+  document.addEventListener("click", (ev) => {
+    if (!ev.target.closest(".st-key-modo_tema button")) return;
+    const destino = raiz.dataset.tema === "oscuro" ? "Light" : "Dark";
+    const menu = document.querySelector('[data-testid="stMainMenu"] button')
+      || document.querySelector('[data-testid="stMainMenu"]');
+    if (!menu) return;
+    raiz.classList.add("cambia-tema");
+    menu.click();
+    let intentos = 0;
+    const espera = setInterval(() => {
+      const opcion = document.querySelector(`[data-testid="stMainMenuItem-theme-${destino}"]`);
+      if (opcion || ++intentos > 40) {
+        clearInterval(espera);
+        opcion?.click();
+        document.dispatchEvent(new KeyboardEvent("keydown", {key: "Escape", bubbles: true}));  // lo cierra
+        setTimeout(() => raiz.classList.remove("cambia-tema"), 300);
+      }
+    }, 25);
+  }, true);
+  window.__vigiaTema = setInterval(() => {
+    const m = modo();
+    if (m && m !== raiz.dataset.tema) {
+      raiz.dataset.tema = m;
+      document.querySelector(".st-key-vigia_tema button")?.click();
+    }
+  }, 400);
+})();
+</script>
+"""
+
+
+def css(p: Paleta = _VARS) -> str:
+    """El CSS fino del visor; por omisión, con las variables de las dos paletas según el modo."""
+    return f"""
 <style>
-::selection {{ background: {ACCENT_SOFT}; color: {INK}; }}
+:root {{ {_definiciones(CLARA)} }}
+html[data-tema="oscuro"] {{ {_definiciones(OSCURA)} }}
+::selection {{ background: {p.ACCENT_SOFT}; color: {p.INK}; }}
 code, .mono {{ font-family: {MONO}; font-variant-numeric: tabular-nums; }}
 [data-testid="stMetricValue"], [data-testid="stMetricDelta"] {{ font-variant-numeric: tabular-nums; }}
 h1 {{ letter-spacing: -0.01em; }}
-.lede {{ color: {INK_2}; font-size: 1.08rem; max-width: 68ch; line-height: 1.5; margin: -0.4rem 0 0.6rem; }}
-.nota {{ color: {MUTED}; font-size: 0.86rem; line-height: 1.45; max-width: 75ch; }}
+.lede {{ color: {p.INK_2}; font-size: 1.08rem; max-width: 68ch; line-height: 1.5; margin: -0.4rem 0 0.6rem; }}
+.nota {{ color: {p.MUTED}; font-size: 0.86rem; line-height: 1.45; max-width: 75ch; }}
 .ficha {{ width: 100%; border-collapse: collapse; font-size: 0.92rem; }}
-.ficha th {{ text-align: left; font-weight: 600; color: {MUTED}; font-size: 0.78rem;
-  border-bottom: 1px solid {LINE}; padding: 4px 6px; }}
-.ficha td {{ padding: 6px; border-bottom: 1px solid {SURFACE_2}; vertical-align: baseline; }}
+.ficha th {{ text-align: left; font-weight: 600; color: {p.MUTED}; font-size: 0.78rem;
+  border-bottom: 1px solid {p.LINE}; padding: 4px 6px; }}
+.ficha td {{ padding: 6px; border-bottom: 1px solid {p.SURFACE_2}; vertical-align: baseline; }}
 .ficha td.num {{ font-family: {MONO}; font-variant-numeric: tabular-nums; text-align: right;
   white-space: nowrap; }}
-.ficha .ref {{ font-family: {SANS}; white-space: normal; color: {MUTED}; font-size: 0.8rem;
-  display: inline-block; max-width: 11em; text-align: right; line-height: 1.25; }}
-.ficha tr.supera td.num.valor {{ color: {SEVERE}; font-weight: 600; }}
-.ficha .marca {{ display: inline-block; min-width: 4.6em; font-size: 0.74rem; font-weight: 600;
+.ficha .ref {{ font-family: {SANS}; white-space: normal; color: {p.MUTED}; font-size: 0.8rem;
+  display: inline-block; max-width: 11em; text-align: right; line-height: 1.35; }}
+.ficha tr.supera td.num.valor {{ font-weight: 700; }}
+.ficha tr.supera td.num.valor::before {{ content: ""; display: inline-block; {_TRIANGULO}
+  border-bottom: 9px solid {p.SEVERE}; margin-right: 6px; vertical-align: 0; }}
+.ficha .marca {{ display: inline-block; min-width: 4.6em; font-size: 0.8rem; font-weight: 600;
   padding: 1px 6px; border-radius: 3px; text-align: center; }}
-.ficha tr.supera .marca {{ background: {SEVERE_SOFT}; color: #9A2F17; }}
-.ficha tr.bajo .marca {{ background: {SURFACE_2}; color: {MUTED}; }}
+.ficha tr.supera .marca {{ background: {p.SEVERE_SOFT}; color: {p.INK}; }}
+.ficha tr.bajo .marca {{ background: {p.SURFACE_2}; color: {p.MUTED}; }}
 .regla {{ margin: -0.35rem 0 0.4rem; }}
-.regla-pista {{ position: relative; height: 18px; margin: 0 9px; border-bottom: 1px solid {LINE}; }}
-.regla-ev {{ position: absolute; bottom: 0; width: 0; height: 0; transform: translateX(-5px);
-  border-left: 5px solid transparent; border-right: 5px solid transparent;
-  border-bottom: 9px solid {SEVERE}; }}
-.regla-ahora {{ position: absolute; bottom: -4px; width: 2px; height: 20px; background: {ACCENT};
+.regla-pista {{ position: relative; height: 18px; margin: 0 9px; border-bottom: 1px solid {p.LINE}; }}
+.regla-ev {{ position: absolute; bottom: 0; {_TRIANGULO} transform: translateX(-5px);
+  border-bottom: 9px solid {p.SEVERE}; }}
+.regla-ahora {{ position: absolute; bottom: -4px; width: 2px; height: 20px; background: {p.ACCENT};
   transform: translateX(-1px); border-radius: 1px; }}
 .regla-horas {{ display: flex; justify-content: space-between; margin: 3px 9px 0;
-  font-family: {MONO}; font-size: 0.72rem; color: {MUTED}; }}
+  font-family: {MONO}; font-size: 0.75rem; color: {p.MUTED}; }}
 .block-container {{ padding-top: 2.2rem; }}
-[data-testid="stMain"], [data-testid="stHeader"] {{ background: {GROUND}; }}
+.st-key-vigia_tema, [data-testid="stLayoutWrapper"]:has(> .st-key-vigia_tema) {{ display: none; }}
+html.cambia-tema [data-testid="stMainMenuPopover"] {{ visibility: hidden; }}
+[data-testid="stMain"], [data-testid="stHeader"] {{ background: {p.GROUND}; }}
 [data-testid="stMain"] [data-testid="stPlotlyChart"],
 [data-testid="stMain"] [data-testid="stDataFrame"],
 [data-testid="stMain"] [data-testid="stExpander"] details,
-[data-testid="stMain"] .ficha {{ background: {SURFACE}; border: 1px solid {LINE}; border-radius: 6px; }}
+[data-testid="stMain"] .ficha {{ background: {p.SURFACE}; border: 1px solid {p.LINE}; border-radius: 6px; }}
 [data-testid="stMain"] [data-testid="stPlotlyChart"] {{ padding: 6px 4px 2px; }}
 [data-testid="stMain"] .ficha {{ border-collapse: separate; border-spacing: 0; overflow: hidden; }}
 h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-weight: 700; letter-spacing: 0; }}
-.paso {{ background: {SURFACE}; border: 1px solid {LINE}; border-radius: 6px; padding: 10px 12px;
+.paso {{ background: {p.SURFACE}; border: 1px solid {p.LINE}; border-radius: 6px; padding: 10px 12px;
   font-size: 0.92rem; line-height: 1.45; }}
-.paso b {{ font-family: {MONO}; font-weight: 600; color: {ACCENT}; font-size: 0.8rem; }}
+.antetitulo {{ font-family: {MONO}; font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: {p.ACCENT}; margin: 0 0 -0.4rem; }}
+.aviso {{ border: 1px solid {p.LINE}; background: {p.SURFACE}; padding: 14px 18px; margin: 1rem 0;
+  border-radius: 6px; line-height: 1.5; max-width: 68ch; }}
+.aviso b {{ color: {p.ACCENT}; }}
+[class*="st-key-hoja_"] {{ background: {p.SURFACE}; }}
+.st-key-proyecto {{ padding-top: 1.6rem; }}
+[data-testid="stMain"] [data-testid="stMarkdownContainer"] > p,
+[data-testid="stMain"] [data-testid="stMarkdownContainer"] li {{ max-width: 68ch; }}
+.stApp [data-testid="stCaptionContainer"] {{ color: {p.MUTED}; opacity: 1; }}  /* Streamlit lo atenúa al 60 % */
+.cifras {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;
+  background: {p.LINE}; border: 1px solid {p.LINE}; border-radius: 6px; overflow: hidden; margin: 0.6rem 0 1rem; }}
+.cifra {{ background: {p.SURFACE}; padding: 14px 16px; }}
+.cifra b {{ display: block; font-size: 1.7rem; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }}
+.cifra span {{ display: block; font-size: 0.8rem; color: {p.MUTED}; margin-top: 7px; line-height: 1.4; }}
+.cifra.sev b::after {{ content: ""; display: inline-block; {_TRIANGULO} border-bottom: 9px solid {p.SEVERE};
+  margin-left: 8px; vertical-align: 0.15em; }}
+[data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primary"] p,
+[data-testid="stBaseLinkButton-primary"], [data-testid="stBaseLinkButton-primary"] p {{ color: {p.SOBRE_ACCENT}; }}
+.paso b {{ font-family: {MONO}; font-weight: 600; color: {p.ACCENT}; font-size: 0.8rem; }}
 </style>
 """
 
 
+def boton_modo() -> None:
+    """Botón de la barra lateral que alterna entre el modo claro y el oscuro (lo atiende el vigía, sin recargar)."""
+    rotulo = "Cambiar a modo claro" if oscuro() else "Cambiar a modo oscuro"
+    st.sidebar.button(
+        rotulo, key="modo_tema", type="tertiary",
+        icon=":material/light_mode:" if oscuro() else ":material/dark_mode:",
+    )  # fmt: skip
+
+
 def aplica() -> None:
-    """Inyecta el CSS fino del visor en la página actual."""
-    st.html(CSS)
+    """Inyecta el CSS fino, el vigía del modo y su botón oculto en la página actual."""
+    st.html(css() + _VIGIA, unsafe_allow_javascript=True)
+    with st.container(key="vigia_tema"):  # oculto por CSS; el vigía lo pulsa al cambiar de tema
+        st.button("Actualizar tema", key="vigia_tema_boton")
