@@ -192,8 +192,8 @@ def completo(salida: Path, variables: list[str]) -> bool:
         return set(variables) <= set(ds.data_vars)
 
 
-def junta(v: str, partes: list[dict]) -> dict:
-    """Une las lecturas horarias ``partes`` de la variable ``v`` en una sola, a lo largo del tiempo."""
+def junta(partes: list[dict]) -> dict:
+    """Une las lecturas horarias ``partes`` de una variable en una sola, a lo largo del tiempo."""
     return partes[0] | {
         "datos": np.concatenate([x["datos"] for x in partes]),
         "time": np.concatenate([x["time"] for x in partes]),
@@ -220,7 +220,7 @@ def descarga_pl(
     }
     for v in faltan:
         t0 = time.time()
-        guarda({v: junta(v, [fut[v, k].result() for k in range(24)])}, parte[v], True, reg)
+        guarda({v: junta([fut[v, k].result() for k in range(24)])}, parte[v], True, reg)
         print(f"  {salida.stem} {v}: {time.time() - t0:.0f} s", flush=True)
     une([parte[v] for v in variables], salida)
 
