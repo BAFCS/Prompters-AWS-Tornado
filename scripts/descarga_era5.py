@@ -23,6 +23,7 @@ Uso::
 """
 
 import argparse
+import calendar
 import datetime as dt
 import multiprocessing as mp
 import time
@@ -81,10 +82,10 @@ def ruta_pl(v: str, dia: dt.date) -> str:
 
 def ruta_sfc(v: str, dia: dt.date) -> str:
     """Clave S3 del archivo mensual de superficie de la variable ``v`` que contiene ``dia``."""
-    ultimo = (dia.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
+    ultimo = calendar.monthrange(dia.year, dia.month)[1]
     return (
         f"{BUCKET}/e5.oper.an.sfc/{dia:%Y%m}/e5.oper.an.sfc.{SFC[v]}.ll025sc."
-        f"{dia:%Y%m}0100_{ultimo:%Y%m%d}23.nc"
+        f"{dia:%Y%m}0100_{dia:%Y%m}{ultimo:02d}23.nc"
     )
 
 
