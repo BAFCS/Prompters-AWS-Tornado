@@ -1,5 +1,6 @@
 """Comprueba que la página descriptiva funciona sin recortes preparados."""
 
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -35,6 +36,21 @@ class VisorTest(unittest.TestCase):
         self.assertEqual(len(app.exception), 0)
         self.assertEqual(len(app.error), 0)
         self.assertIn("Predicción de tormentas mesociclónicas", app.title[0].value)
+
+    def test_indice_enlaza_cada_seccion(self) -> None:
+        """El índice de El proyecto (lateral y compacto) enlaza a anclas que existen en la página."""
+        app = AppTest.from_file(Path(__file__).resolve().parents[1] / "scripts" / "visor.py")
+        with patch.object(datos, "regiones", return_value=[]):
+            app.run(timeout=30)
+        anclas = {h.proto.anchor for h in [*app.title, *app.header, *app.subheader]} - {""}
+        indices = [m.value for m in app.markdown if "class='indice'" in m.value]
+        self.assertEqual(len(indices), 2)  # el lateral y el del desplegable
+        enlaces = re.findall(r"href='#([\w-]+)'", indices[0])
+        self.assertEqual(len(enlaces), 6)
+        self.assertEqual(enlaces, re.findall(r"href='#([\w-]+)'", indices[1]))
+        for ancla in enlaces:
+            with self.subTest(ancla=ancla):
+                self.assertIn(ancla, anclas)
 
 
 if __name__ == "__main__":

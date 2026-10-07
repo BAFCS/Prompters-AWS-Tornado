@@ -14,8 +14,16 @@ DOCUMENTO = "https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesocic
 REPOSITORIO = "https://github.com/fforster/aws-mesocyclonic"
 CATALOGO = "https://doi.org/10.6084/m9.figshare.25119566"
 FIGS = comun.ROOT / "figs"
-ANCHO = 980  # px: el ancho de lectura de la página
 Color = Literal["orange", "primary"]
+# Secciones del índice: (ancla del encabezado, texto del enlace).
+SECCIONES = (
+    ("inicio", "Inicio"),
+    ("mesociclones", "Mesociclones"),
+    ("problema", "El problema"),
+    ("dificultad", "Por qué es difícil"),
+    ("datos", "Los datos"),
+    ("participar", "Participar"),
+)
 
 
 def _antetitulo(texto: str) -> None:
@@ -23,38 +31,45 @@ def _antetitulo(texto: str) -> None:
     st.markdown(f"<p class='antetitulo'>{texto}</p>", unsafe_allow_html=True)
 
 
-def _seccion(antetitulo: str, titulo: str, bajada: str) -> None:
-    """Encabezado de sección: rótulo, título y una frase de contexto."""
+def _seccion(ancla: str, antetitulo: str, titulo: str, bajada: str) -> None:
+    """Encabezado de sección: rótulo, título con ``ancla`` para el índice y una frase de contexto."""
     st.divider()
     _antetitulo(antetitulo)
-    st.header(titulo, anchor=False)
+    st.header(titulo, anchor=ancla)
     st.markdown(f"<p class='lede'>{bajada}</p>", unsafe_allow_html=True)
 
 
 def _enlaces(clave: str) -> None:
     """Botones al documento completo y al repositorio."""
-    c1, c2, _ = st.columns([1.3, 1, 2])
-    c1.link_button("Leer el documento completo", DOCUMENTO, key=f"{clave}_doc", type="primary",
-                   icon=":material/description:", width="stretch")  # fmt: skip
-    c2.link_button(
-        "Repositorio", REPOSITORIO, key=f"{clave}_repo", icon=":material/code:", width="stretch"
-    )
+    with st.container(horizontal=True, gap="small"):  # cada botón a su ancho; se parten si no caben
+        st.link_button("Leer el documento completo", DOCUMENTO, key=f"{clave}_doc", type="primary",
+                       icon=":material/description:")  # fmt: skip
+        st.link_button("Repositorio", REPOSITORIO, key=f"{clave}_repo", icon=":material/code:")
 
 
 def _tarjetas(clave: str, tarjetas: list[tuple[str, Color, str, str]], n_columnas: int = 2) -> None:
-    """Tarjetas en una grilla: (insignia, color de la insignia, título, texto)."""
-    columnas = st.columns(n_columnas, gap="medium")
-    for i, (insignia, color, titulo, texto) in enumerate(tarjetas):
-        with columnas[i % n_columnas].container(border=True, key=f"hoja_{clave}_{i}"):
-            st.badge(insignia, color=color)
-            st.markdown(f"**{titulo}**")
-            st.markdown(texto)
+    """Tarjetas en una grilla: (insignia, color de la insignia, título, texto).
+
+    La grilla la arma el CSS de ``tema.py`` (clave ``tarjetas<n>_``): ``n_columnas`` con ancho de sobra
+    y menos columnas cuando la página es angosta, en vez de columnas que solo se apilan en teléfono.
+    """
+    with st.container(horizontal=True, key=f"tarjetas{n_columnas}_{clave}"):
+        for i, (insignia, color, titulo, texto) in enumerate(tarjetas):
+            _tarjeta(f"hoja_{clave}_{i}", insignia, color, titulo, texto)
+
+
+def _tarjeta(clave: str, insignia: str, color: Color, titulo: str, texto: str) -> None:
+    """Una tarjeta con borde: insignia, título en negrita y texto."""
+    with st.container(border=True, key=clave):
+        st.badge(insignia, color=color)
+        st.markdown(f"**{titulo}**")
+        st.markdown(texto)
 
 
 def _portada() -> None:
     """Presenta el objetivo, las referencias del caso y los enlaces."""
     _antetitulo("Proyecto abierto · AWS Hackathon")
-    st.title("Predicción de tormentas mesociclónicas en el centro-sur de Chile", anchor=False)
+    st.title("Predicción de tormentas mesociclónicas en el centro-sur de Chile", anchor="inicio")
     st.markdown(
         '<p class="lede">Un desafío de análisis de datos meteorológicos para estudiar qué tormentas pueden desarrollar rotación organizada.</p>',
         unsafe_allow_html=True,
@@ -74,7 +89,7 @@ def _portada() -> None:
 
 def _animacion() -> None:
     """Mesociclogénesis en cuatro etapas: el usuario elige la etapa; los rodillos giran solos."""
-    st.subheader("Mesociclones, supercélulas y tornados", anchor=False)
+    st.subheader("Mesociclones, supercélulas y tornados", anchor="mesociclones")
     st.markdown(
         "Un mesociclón es una región de aire en rotación organizada dentro de una tormenta, de unos 2 a 10 km de diámetro. Una tormenta con un mesociclón persistente se denomina supercélula. Un tornado es un fenómeno de menor escala cuya circulación alcanza la superficie. Una supercélula puede desarrollar un tornado, pero esa evolución no es inevitable.",
         unsafe_allow_html=True,
@@ -100,6 +115,7 @@ def _animacion() -> None:
 def _problema() -> None:
     """Explica el caso de referencia y las limitaciones del catálogo."""
     _seccion(
+        "problema",
         "El problema",
         "Un catálogo de eventos reportados, sin casos negativos confirmados",
         "Disponemos de registros de tornados y trombas marinas. La ausencia de un reporte no permite asegurar que no ocurrió un evento.",
@@ -113,6 +129,7 @@ def _problema() -> None:
 def _dificultad() -> None:
     """Presenta las decisiones de cálculo y las referencias que deben validarse."""
     _seccion(
+        "dificultad",
         "Por qué es difícil",
         "Tres aspectos que deben adaptarse al contexto chileno",
         "El régimen atmosférico, el sentido de rotación y la cobertura del catálogo condicionan el cálculo de índices y el entrenamiento de modelos.",
@@ -163,6 +180,7 @@ def _dificultad() -> None:
 def _datos() -> None:
     """Describe los datos del visor y separa sus límites del acceso técnico."""
     _seccion(
+        "datos",
         "Los datos",
         "Tres fuentes de datos para estudiar las tormentas",
         "ERA5 es una reconstrucción histórica del estado de la atmósfera que combina observaciones y un modelo. GOES aporta imágenes satelitales para observar las nubes y su evolución. El catálogo aporta los eventos reportados con los que se comparan esos datos.",
@@ -209,6 +227,7 @@ def _datos() -> None:
 def _participar() -> None:
     """Propone tareas y hace explícitas las decisiones pendientes de la hackathon."""
     _seccion(
+        "participar",
         "Participar",
         "Por dónde empezar",
         "El proyecto está abierto a cualquier persona interesada, con o sin formación en meteorología.",
@@ -267,12 +286,29 @@ def _participar() -> None:
     )
 
 
+def _indice() -> str:
+    """El índice de la página como lista de enlaces a las anclas de ``SECCIONES``."""
+    enlaces = "".join(f"<li><a href='#{ancla}'>{texto}</a></li>" for ancla, texto in SECCIONES)
+    return f"<nav class='indice' aria-label='En esta página'><ol>{enlaces}</ol></nav>"
+
+
 def pagina() -> None:
-    """Dibuja la página en una columna de ancho de lectura."""
-    with st.container(width=ANCHO, key="proyecto"):
-        _portada()
-        _animacion()
-        _problema()
-        _dificultad()
-        _datos()
-        _participar()
+    """Dibuja el índice y el cuerpo de la página.
+
+    Con ancho de sobra el índice va en una columna fija a la izquierda; en pantallas más angostas
+    (tablet, teléfono) se ve un desplegable sobre el cuerpo. El CSS de ``tema.py`` elige cuál mostrar
+    según el ancho de ``.st-key-proyecto``.
+    """
+    with st.container(key="proyecto"), st.container(horizontal=True, wrap=False, gap="large"):
+        with st.container(width=220, key="indice_lateral"):
+            _antetitulo("En esta página")
+            st.markdown(_indice(), unsafe_allow_html=True)
+        with st.container(key="proyecto_cuerpo"):
+            with st.expander("En esta página", key="indice_compacto", icon=":material/toc:"):
+                st.markdown(_indice(), unsafe_allow_html=True)
+            _portada()
+            _animacion()
+            _problema()
+            _dificultad()
+            _datos()
+            _participar()
