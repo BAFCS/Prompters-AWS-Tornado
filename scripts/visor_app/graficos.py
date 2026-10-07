@@ -1,6 +1,7 @@
 """Gráficos plotly del visor: mapa con costa y eventos, Skew-T, hodógrafo y series de tiempo.
 
-Todos usan la plantilla ``cuaderno`` (o ``cuaderno_oscuro``) de ``tema.py`` según el modo activo. El
+Todos salen por ``_estilo``, que les pone la plantilla ``cuaderno`` (o ``cuaderno_oscuro``) de ``tema.py``
+según el modo activo. El
 rojo se reserva para los glifos de los eventos del catálogo y las líneas de umbral chileno, nunca para
 texto; el color de selección marca el punto elegido.
 """
@@ -93,7 +94,6 @@ def mapa(
     para que un clic en el mapa seleccione el punto más cercano (plotly no selecciona en heatmaps).
     """
     fig = go.Figure(
-        layout={"template": tema.plantilla()},
         data=go.Heatmap(
             z=z, x=lon, y=lat, colorscale=escala, zmin=rango[0], zmax=rango[1],
             zmid=0 if centro else None,
@@ -214,7 +214,6 @@ def grilla(
         rows=filas, cols=cols, horizontal_spacing=0.09 if cols > 1 else 0.02,
         vertical_spacing=0.08, subplot_titles=[c.titulo for c in capas],
     )  # fmt: skip
-    fig.update_layout(template=tema.plantilla())
     fondos: list[int] = []
     for i, (c, cont) in enumerate(zip(capas, contornos, strict=True)):
         r, k = i // cols + 1, i % cols + 1
@@ -308,7 +307,7 @@ def skewt(
     titulo: str,
 ) -> go.Figure:  # fmt: skip
     """Diagrama Skew-T log-p con temperatura, punto de rocío y la parcela de superficie."""
-    fig = go.Figure(layout={"template": tema.plantilla()})
+    fig = go.Figure()
     pp = np.geomspace(1050, 100, 60)
     for iso in range(-100, 50, 10):
         fig.add_trace(
@@ -377,7 +376,7 @@ def hodografo(
     rm: tuple[float, float], media: tuple[float, float], titulo: str,
 ) -> go.Figure:  # fmt: skip
     """Hodógrafo coloreado por capas, con los movimientos de Bunkers y el viento medio 0–6 km."""
-    fig = go.Figure(layout={"template": tema.plantilla()})
+    fig = go.Figure()
     lim = max(10.0, float(np.nanmax(np.abs(np.r_[u, v, lm, rm]))) * 1.15)
     for r in range(10, int(lim) + 10, 10):
         a = np.linspace(0, 2 * np.pi, 120)
@@ -486,7 +485,7 @@ def series(filas: list[Serie], eventos: pd.DataFrame, elegido: str | None) -> go
                 showarrow=False, yanchor="bottom", font={"size": 11, "color": tema.colores().INK},
             )  # fmt: skip
     fig.update_layout(
-        template=tema.plantilla(), height=190 * len(filas) + 80, hovermode="x unified",
+        height=190 * len(filas) + 80, hovermode="x unified",
         legend={"orientation": "h", "y": 1.06, "x": 0, "yanchor": "bottom"},
         margin={"t": 70},
     )  # fmt: skip

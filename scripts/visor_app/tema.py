@@ -80,12 +80,13 @@ def colores() -> Paleta:
 
 
 def _plantilla(p: Paleta) -> go.layout.Template:
-    """Plantilla plotly «cuaderno» con los colores de ``p``."""
+    """Plantilla plotly «cuaderno» con los colores de ``p``.
+
+    Fondo, fuente y etiqueta flotante no van aquí: el frontend de Streamlit ignora los de la plantilla y
+    ``graficos._estilo`` los fija en el layout.
+    """
     return go.layout.Template(
         layout={
-            "font": {"family": SANS, "color": p.INK, "size": 13},
-            "paper_bgcolor": p.SURFACE,
-            "plot_bgcolor": p.SURFACE,
             "colorway": [p.SELECCION, p.INK, p.WARM, p.COLD, p.MUTED, p.INK_2],
             "title": {
                 "font": {"family": SANS, "size": 15, "color": p.INK},
@@ -104,11 +105,6 @@ def _plantilla(p: Paleta) -> go.layout.Template:
                 "zerolinecolor": p.LINE,
                 "ticks": "",
             },
-            "hoverlabel": {
-                "bgcolor": p.SURFACE,
-                "bordercolor": p.LINE,
-                "font": {"family": MONO, "size": 12, "color": p.INK},
-            },
             "legend": {"font": {"size": 12}, "bgcolor": p.LEYENDA},
             "margin": {"l": 56, "r": 10, "t": 44, "b": 36},
         }
@@ -117,7 +113,6 @@ def _plantilla(p: Paleta) -> go.layout.Template:
 
 pio.templates["cuaderno"] = _plantilla(CLARA)
 pio.templates["cuaderno_oscuro"] = _plantilla(OSCURA)
-pio.templates.default = "cuaderno"
 
 
 def plantilla() -> str:
