@@ -140,7 +140,7 @@ def _nombre_var(campo: str) -> str:
 _VARS = Paleta(**{f.name: f"var({_nombre_var(f.name)})" for f in fields(Paleta)})
 
 
-def _definiciones(p: Paleta) -> str:
+def definiciones(p: Paleta) -> str:
     """Las variables CSS de la paleta ``p``."""
     return " ".join(f"{_nombre_var(f.name)}: {getattr(p, f.name)};" for f in fields(Paleta))
 
@@ -213,8 +213,8 @@ def css(p: Paleta = _VARS) -> str:
     """El CSS fino del visor; por omisión, con las variables de las dos paletas según el modo."""
     return f"""
 <style>
-:root {{ {_definiciones(CLARA)} }}
-html[data-tema="oscuro"] {{ {_definiciones(OSCURA)} }}
+:root {{ {definiciones(CLARA)} }}
+html[data-tema="oscuro"] {{ {definiciones(OSCURA)} }}
 ::selection {{ background: {p.ACCENT_SOFT}; color: {p.INK}; }}
 code, .mono {{ font-family: {MONO}; font-variant-numeric: tabular-nums; }}
 [data-testid="stMetricValue"], [data-testid="stMetricDelta"] {{ font-variant-numeric: tabular-nums; }}
