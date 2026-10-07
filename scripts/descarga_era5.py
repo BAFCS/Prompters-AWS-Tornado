@@ -22,7 +22,7 @@ Uso::
     uv run python scripts/descarga_era5.py --inicio 2019-05-29 --fin 2019-05-31 --pl u v t --sfc cape
 """
 
-import argparse
+import calendar
 import datetime as dt
 import multiprocessing as mp
 import time
@@ -81,10 +81,10 @@ def ruta_pl(v: str, dia: dt.date) -> str:
 
 def ruta_sfc(v: str, dia: dt.date) -> str:
     """Clave S3 del archivo mensual de superficie de la variable ``v`` que contiene ``dia``."""
-    ultimo = (dia.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
+    ultimo = calendar.monthrange(dia.year, dia.month)[1]
     return (
         f"{BUCKET}/e5.oper.an.sfc/{dia:%Y%m}/e5.oper.an.sfc.{SFC[v]}.ll025sc."
-        f"{dia:%Y%m}0100_{ultimo:%Y%m%d}23.nc"
+        f"{dia:%Y%m}0100_{dia:%Y%m}{ultimo:02d}23.nc"
     )
 
 
@@ -117,7 +117,7 @@ def decodifica(b: bytes, d: h5py.Dataset) -> np.ndarray:
     return np.frombuffer(crudo, d.dtype).reshape(d.chunks or ())
 
 
-def lee_una_vez(ruta: str, reg: comun.Region, h0: int, h1: int, bloque: int) -> dict:
+def lee(ruta: str, reg: comun.Region, h0: int, h1: int, bloque: int) -> dict:
     """Lee de ``ruta`` el recorte de ``reg`` entre los índices de tiempo ``h0`` y ``h1`` (exclusivo).
 
     Si el archivo guarda cada instante como un bloque global (niveles de presión), pide a S3
@@ -152,11 +152,6 @@ def lee_una_vez(ruta: str, reg: comun.Region, h0: int, h1: int, bloque: int) -> 
     return out
 
 
-def lee(ruta: str, reg: comun.Region, h0: int, h1: int, bloque: int) -> dict:
-    """``lee_una_vez`` con reintentos ante cortes de red."""
-    return comun.reintenta(lee_una_vez, ruta, reg, h0, h1, bloque)
-
-
 def horas_del_dia(ruta: str, dia: dt.date) -> tuple[int, int]:
     """Rango ``[h0, h1)`` de índices de ``ruta`` (archivo mensual) con las 24 horas de ``dia``."""
     fs = comun.s3()
@@ -186,9 +181,7 @@ def guarda(res: dict[str, dict], salida: Path, con_nivel: bool, reg: comun.Regio
             "creado": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
         },
     )
-    tmp = salida.with_suffix(".tmp")
-    ds.to_netcdf(tmp, engine="h5netcdf", encoding=dict.fromkeys(res, comun.COMPRESION))
-    tmp.rename(salida)
+    comun.escribe(ds, salida)
 
 
 def completo(salida: Path, variables: list[str]) -> bool:
@@ -199,8 +192,8 @@ def completo(salida: Path, variables: list[str]) -> bool:
         return set(variables) <= set(ds.data_vars)
 
 
-def junta(v: str, partes: list[dict]) -> dict:
-    """Une las lecturas horarias ``partes`` de la variable ``v`` en una sola, a lo largo del tiempo."""
+def junta(partes: list[dict]) -> dict:
+    """Une las lecturas horarias ``partes`` de una variable en una sola, a lo largo del tiempo."""
     return partes[0] | {
         "datos": np.concatenate([x["datos"] for x in partes]),
         "time": np.concatenate([x["time"] for x in partes]),
@@ -221,35 +214,41 @@ def descarga_pl(
     faltan = [v for v in variables if not parte[v].exists()]
     # Una tarea por (variable, hora): cada una transfiere un bloque global.
     fut = {
-        (v, k): ex.submit(lee, ruta_pl(v, dia), reg, k, k + 1, 2**20)
+        (v, k): ex.submit(comun.reintenta, lee, ruta_pl(v, dia), reg, k, k + 1, 2**20)
         for v in faltan
         for k in range(24)
     }
     for v in faltan:
         t0 = time.time()
-        guarda({v: junta(v, [fut[v, k].result() for k in range(24)])}, parte[v], True, reg)
+        guarda({v: junta([fut[v, k].result() for k in range(24)])}, parte[v], True, reg)
         print(f"  {salida.stem} {v}: {time.time() - t0:.0f} s", flush=True)
     une([parte[v] for v in variables], salida)
+
+
+def descarga_sfc(
+    ex: ProcessPoolExecutor, dia: dt.date, variables: list[str], reg: comun.Region, salida: Path
+) -> None:
+    """Descarga las variables de superficie de ``dia`` (solo el recuadro) y las escribe en ``salida``."""
+    h0, h1 = horas_del_dia(ruta_sfc(variables[0], dia), dia)
+    fut = {
+        v: ex.submit(comun.reintenta, lee, ruta_sfc(v, dia), reg, h0, h1, 4 * 2**20)
+        for v in variables
+    }
+    guarda({v: f.result() for v, f in fut.items()}, salida, False, reg)
 
 
 def une(partes: list[Path], salida: Path) -> None:
     """Une los archivos de una variable ``partes`` en ``salida`` y los borra."""
     ds = xr.merge([xr.load_dataset(f, engine="h5netcdf") for f in partes], combine_attrs="override")
     ds.attrs["creado"] = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
-    tmp = salida.with_suffix(".tmp")
-    ds.to_netcdf(tmp, engine="h5netcdf", encoding=dict.fromkeys(ds.data_vars, comun.COMPRESION))
-    tmp.rename(salida)
+    comun.escribe(ds, salida)
     for f in partes:
         f.unlink()
 
 
 def main() -> None:
     """Punto de entrada: interpreta los argumentos y descarga cada día pedido."""
-    p = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    comun.args_fechas(p)
-    comun.args_region(p)
+    p = comun.parser(__doc__, "los días")
     p.add_argument(
         "--pl",
         nargs="*",
@@ -266,39 +265,28 @@ def main() -> None:
         default=4,
         help="lecturas simultáneas (por defecto 4; ~400 MB de RAM cada una)",
     )
-    p.add_argument("--forzar", action="store_true", help="rehace los días que ya existen")
     a = p.parse_args()
     reg = comun.region_de(a)
     ctx = mp.get_context("spawn")  # s3fs no tolera fork: cada proceso abre su propia conexión
 
     with ProcessPoolExecutor(a.procesos, mp_context=ctx) as ex:
         for dia in comun.dias(a):
-            if a.pl:
-                salida = comun.carpeta(reg.nombre, "era5_pl") / f"era5_pl_{dia:%Y%m%d}.nc"
-                if completo(salida, a.pl) and not a.forzar:
+            for fuente, variables, descarga in (
+                ("era5_pl", a.pl, descarga_pl),
+                ("era5_sfc", a.sfc, descarga_sfc),
+            ):
+                if not variables:
+                    continue
+                salida = comun.carpeta(reg.nombre, fuente) / f"{fuente}_{dia:%Y%m%d}.nc"
+                if completo(salida, variables) and not a.forzar:
                     print(f"{salida.name}: ya existe", flush=True)
-                else:
-                    t0 = time.time()
-                    descarga_pl(ex, dia, a.pl, reg, salida)
-                    print(
-                        f"{salida.name}: {len(a.pl)} variables en {time.time() - t0:.0f} s",
-                        flush=True,
-                    )
-            if a.sfc:
-                salida = comun.carpeta(reg.nombre, "era5_sfc") / f"era5_sfc_{dia:%Y%m%d}.nc"
-                if completo(salida, a.sfc) and not a.forzar:
-                    print(f"{salida.name}: ya existe", flush=True)
-                else:
-                    t0 = time.time()
-                    h0, h1 = horas_del_dia(ruta_sfc(a.sfc[0], dia), dia)
-                    fut = {
-                        v: ex.submit(lee, ruta_sfc(v, dia), reg, h0, h1, 4 * 2**20) for v in a.sfc
-                    }
-                    guarda({v: f.result() for v, f in fut.items()}, salida, False, reg)
-                    print(
-                        f"{salida.name}: {len(a.sfc)} variables en {time.time() - t0:.0f} s",
-                        flush=True,
-                    )
+                    continue
+                t0 = time.time()
+                descarga(ex, dia, variables, reg, salida)
+                print(
+                    f"{salida.name}: {len(variables)} variables en {time.time() - t0:.0f} s",
+                    flush=True,
+                )
 
 
 if __name__ == "__main__":

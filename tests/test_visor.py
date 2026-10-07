@@ -28,8 +28,8 @@ class VisorTest(unittest.TestCase):
         self.assertEqual(len(app.title), 1)
         self.assertIn("Predicción de tormentas mesociclónicas", app.title[0].value)
 
-    def test_proyecto_se_muestra_sin_regiones(self) -> None:
-        """Sin ninguna región descargada, la página por defecto sigue siendo la descripción."""
+    def test_proyecto_sin_regiones_enlaza_cada_seccion(self) -> None:
+        """Sin regiones, la página por defecto es El proyecto y su índice enlaza anclas que existen."""
         app = AppTest.from_file(Path(__file__).resolve().parents[1] / "scripts" / "visor.py")
         with patch.object(datos, "regiones", return_value=[]):
             app.run(timeout=30)
@@ -37,12 +37,6 @@ class VisorTest(unittest.TestCase):
         self.assertEqual(len(app.error), 0)
         self.assertEqual(len(app.selectbox), 0)  # sin_datos cortó antes de la barra de región y día
         self.assertIn("Predicción de tormentas mesociclónicas", app.title[0].value)
-
-    def test_indice_enlaza_cada_seccion(self) -> None:
-        """El índice de El proyecto (lateral y compacto) enlaza a anclas que existen en la página."""
-        app = AppTest.from_file(Path(__file__).resolve().parents[1] / "scripts" / "visor.py")
-        with patch.object(datos, "regiones", return_value=[]):
-            app.run(timeout=30)
         anclas = {h.proto.anchor for h in [*app.title, *app.header, *app.subheader]} - {""}
         indices = [m.value for m in app.markdown if "class='indice'" in m.value]
         self.assertEqual(len(indices), 2)  # el lateral y el del desplegable

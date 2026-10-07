@@ -35,11 +35,6 @@ def regiones() -> list[str]:
     return sorted(p.name for p in comun.RECORTES.glob("*") if p.is_dir())
 
 
-def region(nombre: str) -> comun.Region | None:
-    """La región predefinida ``nombre``, o ``None`` si es una región a medida (``--bbox``)."""
-    return comun.REGIONES.get(nombre)
-
-
 def _fecha(p: Path) -> dt.date:
     """Fecha ``AAAAMMDD`` que aparece en el nombre de ``p``."""
     return dt.datetime.strptime(re.findall(r"\d{8}", p.name)[-1], "%Y%m%d").date()
@@ -83,16 +78,9 @@ def abre(ruta: Path) -> xr.Dataset:
     return _abre(ruta, ruta.stat().st_mtime)
 
 
-@st.cache_data
-def tiempos_archivo(ruta: Path) -> list[np.datetime64]:
-    """Horas de inicio de las imágenes GOES guardadas en ``ruta``."""
-    with xr.open_dataset(ruta, engine="h5netcdf") as ds:
-        return list(ds["time"].values)
-
-
 def imagenes(d: Dia) -> list[tuple[np.datetime64, Path]]:
     """Cada imagen GOES del día ``d``: su hora de inicio y el archivo que la contiene."""
-    return [(t, r) for r in d.goes for t in tiempos_archivo(r)]
+    return [(t, r) for r in d.goes for t in abre(r)["time"].values]
 
 
 def era5_ref(d: Dia) -> xr.Dataset | None:
@@ -159,7 +147,7 @@ def coordenada(v: object) -> float:
 def hora_utc(v: object, dia: dt.date) -> pd.Timestamp | None:
     """Primera hora ``HH:MM`` de la celda ``Hour (UTC)`` (``22-23:25`` → 22:00), o ``None``."""
     m = re.match(r"\s*(\d{1,2})(?::(\d{2}))?", str(v))
-    if not m or str(v).strip() in {"-", "nan", ""}:
+    if not m:
         return None
     h, mi = int(m.group(1)), int(m.group(2) or 0)
     if h > 23 or mi > 59:
@@ -220,11 +208,6 @@ def _eventos(dia: dt.date, version: float) -> pd.DataFrame:
 def instante(x: xr.DataArray) -> pd.Timestamp:
     """Convierte una coordenada de tiempo escalar de xarray en ``pd.Timestamp``."""
     return pd.Timestamp(str(x.values))
-
-
-def cercano(lat: np.ndarray, lon: np.ndarray, la: float, lo: float) -> tuple[int, int]:
-    """Índices (i, j) del punto de la grilla regular (``lat``, ``lon``) más cercano a (la, lo)."""
-    return int(np.abs(lat - la).argmin()), int(np.abs(lon - lo).argmin())
 
 
 def ventana(da: xr.DataArray, la: float, lo: float, radio: float) -> xr.DataArray:

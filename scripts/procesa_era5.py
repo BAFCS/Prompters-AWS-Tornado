@@ -28,7 +28,6 @@ Uso::
     uv run python scripts/procesa_era5.py --inicio 2019-05-30 --fin 2019-05-31 --forzar
 """
 
-import argparse
 import datetime as dt
 import time
 
@@ -37,7 +36,6 @@ import xarray as xr
 
 import comun
 
-G = 9.80665  # m/s², gravedad estándar (geopotencial → altura)
 PASO = 100.0  # m, resolución del perfil interpolado
 TOPE = 6000.0  # m, altura máxima del perfil interpolado
 DESVIO_BUNKERS = 7.5  # m/s, desviación de la tormenta respecto del viento medio 0–6 km
@@ -105,7 +103,7 @@ def indices_hora(pl: xr.Dataset, sfc: xr.Dataset) -> dict[str, np.ndarray]:
     pl = pl.sortby("level", ascending=False)  # de 1000 hPa hacia arriba: altura creciente
     niveles = pl["level"].values.astype(float)
     lnp = -np.log(niveles * 100.0)[:, None, None] * np.ones(pl["z"].shape)
-    hgt = pl["z"].values / G
+    hgt = pl["z"].values / comun.G
     sp = sfc["sp"].values
     h_sfc = interpola(lnp, hgt, -np.log(sp))
     agl = hgt - h_sfc[None]
@@ -186,14 +184,9 @@ def procesa_dia(pl: xr.Dataset, sfc: xr.Dataset, reg: comun.Region) -> xr.Datase
     horas = [indices_hora(pl.sel(time=t).load(), sfc.sel(time=t).load()) for t in tiempos]
     dims = ("time", "latitude", "longitude")
     datos = {}
-    for v, (nombre, unidad, umbral, sentido, referencia) in ATRIBUTOS.items():
-        attrs = {"long_name": nombre, "units": unidad}
-        if umbral is not None:
-            attrs |= {"umbral_chile": umbral}
-        if sentido is not None:
-            attrs |= {"umbral_sentido": sentido}
-        if referencia is not None:
-            attrs |= {"referencia": referencia}
+    claves = ("long_name", "units", "umbral_chile", "umbral_sentido", "referencia")
+    for v, valores in ATRIBUTOS.items():
+        attrs = {k: x for k, x in zip(claves, valores, strict=True) if x is not None}
         datos[v] = (dims, np.stack([h[v] for h in horas]).astype("f4"), attrs)
     return xr.Dataset(
         datos,
@@ -209,12 +202,7 @@ def procesa_dia(pl: xr.Dataset, sfc: xr.Dataset, reg: comun.Region) -> xr.Datase
 
 def main() -> None:
     """Punto de entrada: calcula los índices de cada día que tenga ERA5 de presión y de superficie."""
-    p = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    comun.args_fechas(p)
-    comun.args_region(p)
-    p.add_argument("--forzar", action="store_true", help="rehace los días que ya existen")
+    p = comun.parser(__doc__, "los días")
     a = p.parse_args()
     reg = comun.region_de(a)
     base = comun.RECORTES / reg.nombre
@@ -240,11 +228,7 @@ def main() -> None:
                 print(f"{dia}: faltan variables {sorted(faltan)}; descárgalas antes", flush=True)
                 continue
             out = procesa_dia(pl, sfc, reg)
-        tmp = salida.with_suffix(".tmp")
-        out.to_netcdf(
-            tmp, engine="h5netcdf", encoding=dict.fromkeys(out.data_vars, comun.COMPRESION)
-        )
-        tmp.rename(salida)
+        comun.escribe(out, salida)
         print(f"{salida.name}: {out.sizes['time']} horas en {time.time() - t0:.0f} s", flush=True)
 
 

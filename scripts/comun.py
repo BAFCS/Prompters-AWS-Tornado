@@ -15,11 +15,14 @@ from pathlib import Path
 import h5py
 import numpy as np
 import s3fs
+import xarray as xr
 from botocore.exceptions import BotoCoreError
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 RECORTES = DATA / "recortes"
+
+G = 9.80665  # m/s², gravedad estándar (geopotencial → altura)
 
 # Compresión sin pérdida para todo lo que se escribe en NetCDF (gzip + shuffle).
 COMPRESION = {"zlib": True, "complevel": 4, "shuffle": True}
@@ -50,8 +53,32 @@ REGIONES = {
 }
 
 
-def args_region(p: argparse.ArgumentParser) -> None:
-    """Añade a ``p`` las opciones ``--region`` y ``--bbox`` para elegir la región de trabajo."""
+def region_de(a: argparse.Namespace) -> Region:
+    """Devuelve la región pedida en los argumentos ``a`` (predefinida o a medida con ``--bbox``)."""
+    if a.bbox:
+        n, s, o, e = a.bbox
+        assert n > s and e > o, "--bbox espera NORTE SUR OESTE ESTE con NORTE > SUR y ESTE > OESTE"
+        return Region(a.region, n, s, o, e)
+    if a.region not in REGIONES:
+        raise SystemExit(f"región desconocida {a.region!r}; usa una de {list(REGIONES)} o --bbox")
+    return REGIONES[a.region]
+
+
+def parser(doc: str | None, unidad: str) -> argparse.ArgumentParser:
+    """Parser de un script de datos con las opciones comunes.
+
+    Trae ``--inicio`` y ``--fin`` (fechas UTC, inclusive), ``--region`` y ``--bbox`` (región de
+    trabajo) y ``--forzar``, que rehace lo que ya existe (``unidad``: ``"los días"`` o ``"las horas"``).
+    """
+    p = argparse.ArgumentParser(
+        description=doc, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    p.add_argument(
+        "--inicio", type=dt.date.fromisoformat, required=True, help="primer día, AAAA-MM-DD"
+    )
+    p.add_argument(
+        "--fin", type=dt.date.fromisoformat, help="último día (inclusive); por defecto --inicio"
+    )
     p.add_argument(
         "--region",
         default="centro-sur-austral",
@@ -64,27 +91,8 @@ def args_region(p: argparse.ArgumentParser) -> None:
         metavar=("NORTE", "SUR", "OESTE", "ESTE"),
         help="región a medida en grados (p. ej. -30 -45 -76 -70); se guarda con el nombre de --region",
     )
-
-
-def region_de(a: argparse.Namespace) -> Region:
-    """Devuelve la región pedida en los argumentos ``a`` (predefinida o a medida con ``--bbox``)."""
-    if a.bbox:
-        n, s, o, e = a.bbox
-        assert n > s and e > o, "--bbox espera NORTE SUR OESTE ESTE con NORTE > SUR y ESTE > OESTE"
-        return Region(a.region, n, s, o, e)
-    if a.region not in REGIONES:
-        raise SystemExit(f"región desconocida {a.region!r}; usa una de {list(REGIONES)} o --bbox")
-    return REGIONES[a.region]
-
-
-def args_fechas(p: argparse.ArgumentParser) -> None:
-    """Añade a ``p`` las opciones ``--inicio`` y ``--fin`` (fechas UTC, inclusive)."""
-    p.add_argument(
-        "--inicio", type=dt.date.fromisoformat, required=True, help="primer día, AAAA-MM-DD"
-    )
-    p.add_argument(
-        "--fin", type=dt.date.fromisoformat, help="último día (inclusive); por defecto --inicio"
-    )
+    p.add_argument("--forzar", action="store_true", help=f"rehace {unidad} que ya existen")
+    return p
 
 
 def dias(a: argparse.Namespace) -> list[dt.date]:
@@ -99,6 +107,17 @@ def carpeta(region: str, fuente: str) -> Path:
     d = RECORTES / region / fuente
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+def escribe(ds: xr.Dataset, salida: Path, encoding: dict | None = None) -> None:
+    """Escribe ``ds`` en ``salida`` pasando por un ``.tmp``, para no dejar NetCDF a medias.
+
+    Sin ``encoding``, cada variable se comprime con ``COMPRESION``.
+    """
+    tmp = salida.with_suffix(".tmp")
+    enc = dict.fromkeys(ds.data_vars, COMPRESION) if encoding is None else encoding
+    ds.to_netcdf(tmp, engine="h5netcdf", encoding=enc)
+    tmp.rename(salida)
 
 
 def s3() -> s3fs.S3FileSystem:
@@ -148,24 +167,21 @@ def num(obj: h5py.Dataset, nombre: str) -> float:
     return float(np.asarray(obj.attrs[nombre]).ravel()[0])
 
 
-def latlon_abi(h: h5py.File) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Coordenadas de la grilla fija del ABI de un archivo GOES abierto ``h``.
+def eje(h: h5py.File, nombre: str) -> np.ndarray:
+    """Eje ``nombre`` (``x`` o ``y``) del ABI en radianes, aplicando su escala y desplazamiento."""
+    d = dataset(h, nombre)
+    return d[:] * num(d, "scale_factor") + num(d, "add_offset")
 
-    Devuelve ``(x, y, lat, lon)``: los ángulos de barrido en radianes (1D) y la latitud y longitud
-    geodésicas en grados (2D, NaN fuera del disco). Implementa la proyección geoestacionaria del
-    GOES-R PUG (vol. 4, sección 4.2.8) con los parámetros de ``goes_imager_projection``.
+
+def latlon(x: np.ndarray, y: np.ndarray, pr: h5py.Dataset) -> tuple[np.ndarray, np.ndarray]:
+    """Latitud y longitud geodésicas (grados, 2D, NaN fuera del disco) de la grilla ``x`` × ``y``.
+
+    ``x`` e ``y`` son ángulos de barrido del ABI en radianes y ``pr`` es ``goes_imager_projection``.
+    Implementa la proyección geoestacionaria del GOES-R PUG (vol. 4, sección 4.2.8).
     """
-    pr = dataset(h, "goes_imager_projection")
     req, rpol = num(pr, "semi_major_axis"), num(pr, "semi_minor_axis")
     H = num(pr, "perspective_point_height") + req
     l0 = np.deg2rad(num(pr, "longitude_of_projection_origin"))
-
-    def eje(nombre: str) -> np.ndarray:
-        """Eje ``nombre`` (``x`` o ``y``) en radianes, aplicando su escala y desplazamiento."""
-        d = dataset(h, nombre)
-        return d[:] * num(d, "scale_factor") + num(d, "add_offset")
-
-    x, y = eje("x"), eje("y")
     X, Y = np.meshgrid(x, y)
     a = np.sin(X) ** 2 + np.cos(X) ** 2 * (np.cos(Y) ** 2 + req**2 / rpol**2 * np.sin(Y) ** 2)
     b = -2 * H * np.cos(X) * np.cos(Y)
@@ -175,4 +191,15 @@ def latlon_abi(h: h5py.File) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.nda
         sx, sy, sz = rs * np.cos(X) * np.cos(Y), -rs * np.sin(X), rs * np.cos(X) * np.sin(Y)
         lat = np.rad2deg(np.arctan(req**2 / rpol**2 * sz / np.sqrt((H - sx) ** 2 + sy**2)))
         lon = np.rad2deg(l0 - np.arctan(sy / (H - sx)))
+    return lat, lon
+
+
+def latlon_abi(h: h5py.File) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Coordenadas de la grilla fija del ABI de un archivo GOES abierto ``h``.
+
+    Devuelve ``(x, y, lat, lon)``: los ángulos de barrido en radianes (1D) y la latitud y longitud
+    geodésicas en grados (2D, ``float32``, NaN fuera del disco), calculadas con ``latlon``.
+    """
+    x, y = eje(h, "x"), eje(h, "y")
+    lat, lon = latlon(x, y, dataset(h, "goes_imager_projection"))
     return x, y, lat.astype("f4"), lon.astype("f4")

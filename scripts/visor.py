@@ -35,6 +35,7 @@ from visor_app import (
     p_series,
     p_sondeo,
     tema,
+    textos,
 )
 
 st.set_page_config(
@@ -114,8 +115,8 @@ eventos = datos.eventos(fecha)
 ts = datos.tiempos(dia)
 st.session_state["tiempos"] = ts
 
-reg = datos.region(nombre)
-if reg is None:  # región a medida: se deduce de las coordenadas de los datos
+reg = comun.REGIONES.get(nombre)
+if reg is None:  # región a medida (--bbox): se deduce de las coordenadas de los datos
     ref = datos.era5_ref(dia)
     if ref is None and dia.goes:
         ref = datos.abre(dia.goes[0])
@@ -187,7 +188,7 @@ if p is not None:
     )
 
 # --- Recorrido guiado ----------------------------------------------------------------------------
-pasos = estado.recorrido(fecha)
+pasos = textos.RECORRIDOS.get(fecha, ())
 if pasos:
     barra.divider()
     k = estado.paso_actual()

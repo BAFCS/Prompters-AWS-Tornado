@@ -80,12 +80,13 @@ def colores() -> Paleta:
 
 
 def _plantilla(p: Paleta) -> go.layout.Template:
-    """Plantilla plotly «cuaderno» con los colores de ``p``."""
+    """Plantilla plotly «cuaderno» con los colores de ``p``.
+
+    Fondo, fuente y etiqueta flotante no van aquí: el frontend de Streamlit ignora los de la plantilla y
+    ``graficos._estilo`` los fija en el layout.
+    """
     return go.layout.Template(
         layout={
-            "font": {"family": SANS, "color": p.INK, "size": 13},
-            "paper_bgcolor": p.SURFACE,
-            "plot_bgcolor": p.SURFACE,
             "colorway": [p.SELECCION, p.INK, p.WARM, p.COLD, p.MUTED, p.INK_2],
             "title": {
                 "font": {"family": SANS, "size": 15, "color": p.INK},
@@ -104,11 +105,6 @@ def _plantilla(p: Paleta) -> go.layout.Template:
                 "zerolinecolor": p.LINE,
                 "ticks": "",
             },
-            "hoverlabel": {
-                "bgcolor": p.SURFACE,
-                "bordercolor": p.LINE,
-                "font": {"family": MONO, "size": 12, "color": p.INK},
-            },
             "legend": {"font": {"size": 12}, "bgcolor": p.LEYENDA},
             "margin": {"l": 56, "r": 10, "t": 44, "b": 36},
         }
@@ -117,7 +113,6 @@ def _plantilla(p: Paleta) -> go.layout.Template:
 
 pio.templates["cuaderno"] = _plantilla(CLARA)
 pio.templates["cuaderno_oscuro"] = _plantilla(OSCURA)
-pio.templates.default = "cuaderno"
 
 
 def plantilla() -> str:
@@ -140,7 +135,7 @@ def _nombre_var(campo: str) -> str:
 _VARS = Paleta(**{f.name: f"var({_nombre_var(f.name)})" for f in fields(Paleta)})
 
 
-def _definiciones(p: Paleta) -> str:
+def definiciones(p: Paleta) -> str:
     """Las variables CSS de la paleta ``p``."""
     return " ".join(f"{_nombre_var(f.name)}: {getattr(p, f.name)};" for f in fields(Paleta))
 
@@ -213,8 +208,8 @@ def css(p: Paleta = _VARS) -> str:
     """El CSS fino del visor; por omisión, con las variables de las dos paletas según el modo."""
     return f"""
 <style>
-:root {{ {_definiciones(CLARA)} }}
-html[data-tema="oscuro"] {{ {_definiciones(OSCURA)} }}
+:root {{ {definiciones(CLARA)} }}
+html[data-tema="oscuro"] {{ {definiciones(OSCURA)} }}
 ::selection {{ background: {p.ACCENT_SOFT}; color: {p.INK}; }}
 code, .mono {{ font-family: {MONO}; font-variant-numeric: tabular-nums; }}
 [data-testid="stMetricValue"], [data-testid="stMetricDelta"] {{ font-variant-numeric: tabular-nums; }}
@@ -260,7 +255,6 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 .indice-titulo {{ font-size: 0.875rem; font-weight: 600; color: {p.INK_2}; margin: 0 0 -0.4rem; }}
 .aviso {{ border: 1px solid {p.LINE}; background: {p.SURFACE}; padding: 14px 18px; margin: 1rem 0;
   border-radius: 6px; line-height: 1.5; max-width: 68ch; }}
-.aviso b {{ color: {p.ACCENT}; }}
 [class*="st-key-hoja_"] {{ background: {p.SURFACE}; }}
 .st-key-proyecto {{ padding-top: 1.6rem; max-width: 1400px; container: proyecto / inline-size; }}
 /* El cuerpo es su propio contenedor: tarjetas y cifras se acomodan al espacio que les deja el índice. */

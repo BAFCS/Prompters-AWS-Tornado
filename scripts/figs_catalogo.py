@@ -57,26 +57,8 @@ lat = pd.to_numeric(df["Latitude"], errors="coerce")
 lon = pd.to_numeric(df["Longitude"], errors="coerce")
 
 
-def flag(c: str) -> pd.Series:
-    """Convierte la columna ``c`` del catálogo en una bandera entera 0/1.
-
-    Acepta valores numéricos y también textos afirmativos ("yes", "sí", "x", "true", ...).
-    """
-    s = df[c]
-    return (
-        pd.to_numeric(s, errors="coerce")
-        .fillna(
-            s.astype(str)
-            .str.strip()
-            .str.lower()
-            .isin(["1", "yes", "si", "sí", "x", "true"])
-            .astype(int)
-        )
-        .astype(int)
-    )
-
-
-T, W = flag("Tornado"), flag("Waterspout")
+# Banderas 0/1 de tipo de evento (Waterspout trae algún NaN, que cuenta como 0).
+T, W = (df[c].fillna(0).astype(int) for c in ("Tornado", "Waterspout"))
 ef = df["Max. EF Rating"].astype(str).str.extract(r"(\d)")[0].astype(float)
 
 

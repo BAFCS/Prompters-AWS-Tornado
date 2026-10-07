@@ -1,8 +1,8 @@
-"""Gráficos plotly del visor: mapa con costa y eventos, Skew-T, hodógrafo y series de tiempo.
+"""Gráficos plotly del visor: grilla de mapas con costa y eventos, Skew-T, hodógrafo y series de tiempo.
 
-Todos usan la plantilla ``cuaderno`` (o ``cuaderno_oscuro``) de ``tema.py`` según el modo activo. El
-rojo se reserva para los glifos de los eventos del catálogo y las líneas de umbral chileno, nunca para
-texto; el color de selección marca el punto elegido.
+Todos salen por ``_estilo``, que les pone la plantilla ``cuaderno`` (o ``cuaderno_oscuro``) de
+``tema.py`` según el modo activo. El rojo se reserva para los glifos de los eventos del catálogo y las
+líneas de umbral chileno, nunca para texto; el color de selección marca el punto elegido.
 """
 
 from dataclasses import dataclass
@@ -81,77 +81,6 @@ def _punto(punto: Punto, tam: int) -> list[go.Scatter]:
     ]  # fmt: skip
 
 
-def mapa(
-    z: np.ndarray, lat: np.ndarray, lon: np.ndarray, enc: Encuadre, costa: tuple[list, list],
-    *, titulo: str, unidad: str, escala: str, rango: tuple[float, float],
-    centro: bool = False, eventos: pd.DataFrame | None = None, punto: Punto | None = None,
-    umbral: float | None = None, alto: int = 640, clic: bool = False,
-) -> go.Figure:  # fmt: skip
-    """Mapa de calor de ``z`` con costa, eventos, punto elegido y la línea del umbral chileno.
-
-    Con ``clic`` agrega una grilla invisible de marcadores sobre cada punto de (``lat``, ``lon``)
-    para que un clic en el mapa seleccione el punto más cercano (plotly no selecciona en heatmaps).
-    """
-    fig = go.Figure(
-        layout={"template": tema.plantilla()},
-        data=go.Heatmap(
-            z=z, x=lon, y=lat, colorscale=escala, zmin=rango[0], zmax=rango[1],
-            zmid=0 if centro else None,
-            colorbar={"title": {"text": unidad, "side": "right"}, "thickness": 12, "outlinewidth": 0},
-            hovertemplate="%{y:.2f}°, %{x:.2f}°<br><b>%{z:.3g}</b> " + unidad + "<extra></extra>",
-        )
-    )  # fmt: skip
-    if umbral is not None:
-        fig.add_trace(
-            go.Contour(
-                z=z, x=lon, y=lat, showscale=False, hoverinfo="skip", name="umbral chileno",
-                contours={"start": umbral, "end": umbral, "size": 1, "coloring": "none"},
-                line={"color": tema.colores().SEVERE, "width": 1.6},
-            )
-        )  # fmt: skip
-    xs, ys = costa
-    fig.add_trace(
-        go.Scatter(
-            x=xs,
-            y=ys,
-            mode="lines",
-            line={"color": tema.colores().INK, "width": 0.9},
-            hoverinfo="skip",
-        )
-    )
-    if clic:
-        LA, LO = np.meshgrid(lat, lon, indexing="ij")
-        fig.add_trace(
-            go.Scatter(
-                x=LO.ravel(), y=LA.ravel(), mode="markers", name="grilla",
-                marker={"size": 9, "color": "rgba(0,0,0,0)"}, hoverinfo="skip",
-                selected={"marker": {"opacity": 0}}, unselected={"marker": {"opacity": 0}},
-            )
-        )  # fmt: skip
-    if eventos is not None and len(eventos):
-        fig.add_trace(
-            go.Scatter(
-                x=eventos["lon"], y=eventos["lat"], mode="markers", text=eventos["texto"],
-                hoverinfo="text", name="eventos",
-                marker={"symbol": "triangle-up", "size": 12, "color": tema.colores().SEVERE,
-                        "line": {"color": tema.colores().SURFACE, "width": 1.2}},
-                unselected={"marker": {"opacity": 1}},
-            )
-        )  # fmt: skip
-    if punto is not None:
-        fig.add_traces(_punto(punto, 22))
-    fig.update_xaxes(range=[enc.oeste, enc.este], showgrid=False, ticksuffix="°", title=None)
-    fig.update_yaxes(
-        range=[enc.sur, enc.norte], showgrid=False, ticksuffix="°", title=None,
-        scaleanchor="x", scaleratio=enc.aspecto,
-    )  # fmt: skip
-    fig.update_layout(
-        title={"text": titulo}, height=alto, showlegend=False, dragmode="pan",
-        clickmode="event+select", uirevision="mapa",
-    )  # fmt: skip
-    return _estilo(fig)
-
-
 # --- Grilla de Mapas -----------------------------------------------------------------------------
 def disposicion(n: int) -> tuple[int, int]:
     """Filas y columnas de la grilla para ``n`` paneles: 1×1, 1×2, 2×2 (3–4) o 2×3 (5–6)."""
@@ -202,19 +131,20 @@ def grilla(
     capas: list["Capa"], contornos: list["Capa | None"], enc: Encuadre, costa: tuple[list, list],
     *, eventos: pd.DataFrame | None = None, punto: Punto | None = None,
     clic: tuple[np.ndarray, np.ndarray] | None = None, viento: tuple[list, list] | None = None,
+    alto: int | None = None,
 ) -> tuple[go.Figure, list[int]]:  # fmt: skip
     """Paneles en una figura con los ejes compartidos: el zoom y el desplazamiento van juntos.
 
     ``contornos[i]`` es un campo ERA5 que se dibuja como isolíneas sobre el panel ``i`` (o ``None``).
     ``clic`` es la grilla (lat, lon) de marcadores invisibles que hace clicable cada panel. Devuelve la
-    figura y el índice de la traza de fondo de cada panel, para animarla con ``go.Frame``.
+    figura y el índice de la traza de fondo de cada panel, para animarla con ``go.Frame``. ``alto`` fija
+    la altura en píxeles (si falta, depende del número de filas).
     """
     filas, cols = disposicion(len(capas))
     fig = make_subplots(
         rows=filas, cols=cols, horizontal_spacing=0.09 if cols > 1 else 0.02,
         vertical_spacing=0.08, subplot_titles=[c.titulo for c in capas],
     )  # fmt: skip
-    fig.update_layout(template=tema.plantilla())
     fondos: list[int] = []
     for i, (c, cont) in enumerate(zip(capas, contornos, strict=True)):
         r, k = i // cols + 1, i % cols + 1
@@ -288,7 +218,7 @@ def grilla(
         _layout(fig, f"yaxis{i + 1}").matches = "y"
     fig.update_layout(
         yaxis={"scaleanchor": "x", "scaleratio": enc.aspecto},
-        height=640 if filas == 1 else 470 * filas, showlegend=False, dragmode="pan",
+        height=alto or (640 if filas == 1 else 470 * filas), showlegend=False, dragmode="pan",
         clickmode="event+select", uirevision="grilla", margin={"t": 56, "r": 48},
     )  # fmt: skip
     return _estilo(fig), fondos
@@ -308,7 +238,7 @@ def skewt(
     titulo: str,
 ) -> go.Figure:  # fmt: skip
     """Diagrama Skew-T log-p con temperatura, punto de rocío y la parcela de superficie."""
-    fig = go.Figure(layout={"template": tema.plantilla()})
+    fig = go.Figure()
     pp = np.geomspace(1050, 100, 60)
     for iso in range(-100, 50, 10):
         fig.add_trace(
@@ -372,19 +302,12 @@ def skewt(
     return _estilo(fig)
 
 
-def _capas() -> tuple[tuple[int, int, str, str], ...]:
-    """Capas del hodógrafo (desde, hasta en m, color, nombre) con los colores del modo activo."""
-    p = tema.colores()
-    return ((0, 1000, p.INK, "0–1 km"), (1000, 3000, p.COLD, "1–3 km"),
-            (3000, 6000, p.WARM, "3–6 km"), (6000, 10000, p.MUTED, "6–10 km"))  # fmt: skip
-
-
 def hodografo(
     h: np.ndarray, u: np.ndarray, v: np.ndarray, lm: tuple[float, float],
     rm: tuple[float, float], media: tuple[float, float], titulo: str,
 ) -> go.Figure:  # fmt: skip
     """Hodógrafo coloreado por capas, con los movimientos de Bunkers y el viento medio 0–6 km."""
-    fig = go.Figure(layout={"template": tema.plantilla()})
+    fig = go.Figure()
     lim = max(10.0, float(np.nanmax(np.abs(np.r_[u, v, lm, rm]))) * 1.15)
     for r in range(10, int(lim) + 10, 10):
         a = np.linspace(0, 2 * np.pi, 120)
@@ -394,7 +317,10 @@ def hodografo(
                 line={"color": tema.colores().SURFACE_2 if r % 20 else tema.colores().LINE, "width": 1},
             )
         )  # fmt: skip
-    for h0, h1, color, nombre in _capas():
+    p = tema.colores()
+    capas = ((0, 1000, p.INK, "0–1 km"), (1000, 3000, p.COLD, "1–3 km"),
+             (3000, 6000, p.WARM, "3–6 km"), (6000, 10000, p.MUTED, "6–10 km"))  # fmt: skip
+    for h0, h1, color, nombre in capas:
         k = (h >= h0) & (h <= h1)
         if k.sum() < 2:
             continue
@@ -490,7 +416,7 @@ def series(filas: list[Serie], eventos: pd.DataFrame, elegido: str | None) -> go
                 showarrow=False, yanchor="bottom", font={"size": 11, "color": tema.colores().INK},
             )  # fmt: skip
     fig.update_layout(
-        template=tema.plantilla(), height=190 * len(filas) + 80, hovermode="x unified",
+        height=190 * len(filas) + 80, hovermode="x unified",
         legend={"orientation": "h", "y": 1.06, "x": 0, "yanchor": "bottom"},
         margin={"t": 70},
     )  # fmt: skip

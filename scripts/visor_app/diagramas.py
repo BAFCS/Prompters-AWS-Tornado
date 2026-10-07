@@ -7,18 +7,6 @@ paleta del modo activo de ``tema``; las animaciones CSS (el giro de los rodillos
 
 from visor_app import tema
 
-
-def _vars() -> str:
-    """Variables CSS del SVG con la paleta del modo activo (una imagen no hereda las de la página)."""
-    p = tema.colores()
-    return (
-        f"--ground:{p.GROUND}; --surface:{p.SURFACE}; --surface-2:{p.SURFACE_2}; --line:{p.LINE};"
-        f" --ink:{p.INK}; --ink-2:{p.INK_2}; --muted:{p.MUTED}; --accent:{p.ACCENT};"
-        f" --accent-soft:{p.ACCENT_SOFT}; --severe:{p.SEVERE}; --severe-soft:{p.SEVERE_SOFT};"
-        f" --cold:{p.COLD}; --warm:{p.WARM};"
-    )
-
-
 _TEXTO = (
     f"text{{font-family:{tema.MONO}; font-size:12px; fill:var(--muted)}}"
     " text.lbl{font-size:12.5px; fill:var(--ink-2)}"
@@ -36,9 +24,6 @@ _CSS_MC = """
 .lay{transition:opacity .9s ease}
 .lay.off{opacity:0}
 @media (prefers-reduced-motion:reduce){ .sp .spin{animation:none} .sp,.lay{transition-duration:.01ms} }
-text{font-family:"IBM Plex Mono",monospace; font-size:12px; fill:var(--muted)}
-text.lbl{font-size:12.5px; fill:var(--ink-2)}
-text.big{font-family:"IBM Plex Sans",sans-serif; font-size:14px; font-weight:600}
 
 #mcSvg[data-stage="1"] .sp{ transform:translate(calc(244px + var(--i)*70px), 268px) rotate(90deg) }
 #mcSvg[data-stage="2"] .sp{ transform:translate(calc(328px + var(--i)*16px), calc(318px - var(--i)*32px)) rotate(45deg) }
@@ -171,10 +156,13 @@ ETAPAS = (
 
 
 def _svg(ancho: int, alto: int, css: str, cuerpo: str, extra: str = "") -> str:
-    """Envuelve ``cuerpo`` en un SVG autónomo con la paleta y los estilos de texto del visor."""
+    """Envuelve ``cuerpo`` en un SVG autónomo con la paleta y los estilos de texto del visor.
+
+    La paleta va como variables CSS del modo activo: una imagen no hereda las de la página.
+    """
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {ancho} {alto}" {extra}>'
-        f"<style>svg{{{_vars()}}} {_TEXTO} {css}</style>{cuerpo}</svg>"
+        f"<style>svg{{{tema.definiciones(tema.colores())}}} {_TEXTO} {css}</style>{cuerpo}</svg>"
     )
 
 

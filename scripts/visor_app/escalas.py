@@ -58,11 +58,6 @@ TIPOS: dict[str, tuple[Escala, ...]] = {
 }
 
 
-def opciones(tipo: str) -> tuple[Escala, ...]:
-    """Las escalas disponibles para un tipo de dato."""
-    return TIPOS[tipo]
-
-
 def elige(tipo: str, nombre: str | None) -> Escala:
     """La escala ``nombre`` si es válida para ``tipo``; si no, la predeterminada del tipo."""
     for e in TIPOS[tipo]:

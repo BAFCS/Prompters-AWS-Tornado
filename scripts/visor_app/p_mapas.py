@@ -74,7 +74,7 @@ def _controles(p: estado.Panel, n: int, cat: dict[str, productos.Producto], d: d
     if prod.tipo is not None or prod.fuente == "pl" or (prod.es_goes and indices):
         with botones.popover("", icon=":material/tune:", help="Escala de color, nivel o contornos"):
             if prod.tipo is not None:
-                ops = escalas.opciones(prod.tipo)
+                ops = escalas.TIPOS[prod.tipo]
                 k_esc = f"p{p.id}_escala"
                 st.session_state[k_esc] = escalas.elige(prod.tipo, p.escala).nombre
                 st.selectbox(
@@ -119,7 +119,7 @@ def _capa_panel(
 
 def _animar(
     fig: go.Figure, fondos: list[int], animados: list[int], visibles: list[estado.Panel],
-    cat: dict[str, productos.Producto], d: datos.Dia, t: pd.Timestamp, enc: graficos.Encuadre,
+    cat: dict[str, productos.Producto], d: datos.Dia, t: pd.Timestamp,
 ) -> int:  # fmt: skip
     """Agrega a ``fig`` un cuadro por imagen GOES en ±1 h para los paneles ``animados``.
 
@@ -267,7 +267,7 @@ def pagina() -> None:
         clic=None if ref is None else (ref["latitude"].values, ref["longitude"].values),
         viento=capas.viento_850(ctx.dia, t, enc) if st.session_state.get("viento") else None,
     )  # fmt: skip
-    n_cuadros = _animar(fig, fondos, animados, visibles, cat, ctx.dia, t, enc) if animados else 0
+    n_cuadros = _animar(fig, fondos, animados, visibles, cat, ctx.dia, t) if animados else 0
     st.caption(
         "Usa la rueda del ratón o los botones del gráfico para acercar la vista. "
         "Todos los paneles se mueven juntos."

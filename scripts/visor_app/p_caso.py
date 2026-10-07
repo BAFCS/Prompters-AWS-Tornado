@@ -1,9 +1,11 @@
 """Página «El caso»: eventos reportados y comparación de su entorno atmosférico."""
 
+import dataclasses
+
 import pandas as pd
 import streamlit as st
 
-from visor_app import componentes, datos, escalas, estado, graficos, tema, textos
+from visor_app import capas, componentes, datos, escalas, estado, graficos, productos, tema, textos
 
 
 def _al_elegir_fila() -> None:
@@ -16,7 +18,7 @@ def _al_elegir_fila() -> None:
 
 def _escala(tipo: str, clave: str) -> str:
     """Selector de la escala de color de un mapa: las estándar de su tipo de dato, recordada por página."""
-    ops = escalas.opciones(tipo)
+    ops = escalas.TIPOS[tipo]
     estado.recuerda(clave)
     if st.session_state.get(clave) not in [e.nombre for e in ops]:
         st.session_state[clave] = ops[0].nombre
@@ -30,39 +32,29 @@ def _escala(tipo: str, clave: str) -> str:
 
 def _mapa(ctx: estado.Contexto, t: pd.Timestamp | None) -> None:
     """Mapa de la zona de los eventos: GOES C13 a la hora elegida (o el VGP si no hay GOES)."""
+    cat = productos.catalogo(ctx.dia)
+    c = capas.capa(ctx.dia, cat["goes:C13"], t) if t is not None and "goes:C13" in cat else None
+    es_goes = c is not None  # si no, se intenta el VGP y la escala es la secuencial
+    if c is None and t is not None and "idx:vgp_01" in cat:
+        c = capas.capa(ctx.dia, cat["idx:vgp_01"], t)
+    if (
+        c is None or c.tipo is None
+    ):  # tipo es None solo en RGB; la guarda acota el tipo para pyright
+        st.info("Este día no tiene GOES ni índices ERA5 para dibujar el mapa.")
+        return
+    c = c.con_escala(_escala(c.tipo, "escala_caso_ir" if es_goes else "escala_caso_sec"))
+    c = dataclasses.replace(c, titulo=f"{c.titulo} UTC")
     enc = graficos.encuadre_eventos(ctx.eventos, ctx.reg, margen=1.3)
-    costa = datos.costa(ctx.reg)
-    img = datos.imagen_en(ctx.dia, t) if t is not None else None
-    if img is not None:
-        ruta, ti = img
-        ds = datos.abre(ruta)
-        z = ds["C13"].sel(time=ti).values
-        escala = _escala("infrarrojo", "escala_caso_ir")
-        fig = graficos.mapa(
-            z, ds["latitude"].values, ds["longitude"].values, enc, costa,
-            titulo=f"GOES-16 · infrarrojo 10,3 µm · {pd.Timestamp(ti):%H:%M} UTC",
-            unidad="K", escala=escala, rango=(190.0, 300.0), eventos=ctx.eventos,
-            punto=estado.punto(), alto=560,
-        )  # fmt: skip
-        st.plotly_chart(fig, width="stretch", theme=None, key="mapa_caso")
+    fig, _ = graficos.grilla(
+        [c], [None], enc, datos.costa(ctx.reg), eventos=ctx.eventos, punto=estado.punto(), alto=560
+    )
+    st.plotly_chart(fig, width="stretch", theme=None, key="mapa_caso")
+    if es_goes:
         st.caption(
             "Las temperaturas de brillo más bajas (en la escala de grises, los tonos más blancos) "
             "pueden asociarse a nubes más altas; no miden directamente su altura. Triángulos "
             "rojos: eventos del catálogo; doble anillo: el punto elegido. Sin corrección de paralaje."
         )
-    elif ctx.dia.idx is not None and t is not None:
-        ds = datos.abre(ctx.dia.idx)
-        h = ds["vgp_01"].sel(time=t, method="nearest")
-        escala = _escala("secuencial", "escala_caso_sec")
-        fig = graficos.mapa(
-            h.values, ds["latitude"].values, ds["longitude"].values, enc, costa,
-            titulo=f"ERA5 · VGP₀₋₁ · {datos.instante(h['time']):%H:%M} UTC",
-            unidad="m/s²", escala=escala, rango=(0.0, 0.3), eventos=ctx.eventos,
-            punto=estado.punto(), umbral=0.1, alto=560,
-        )  # fmt: skip
-        st.plotly_chart(fig, width="stretch", theme=None, key="mapa_caso")
-    else:
-        st.info("Este día no tiene GOES ni índices ERA5 para dibujar el mapa.")
 
 
 def _bitacora(ctx: estado.Contexto) -> None:
@@ -144,7 +136,7 @@ def pagina() -> None:
         "marinas reportados y no proporciona una etiqueta directa de mesociclón. "
         "En la tabla, EF es una clasificación de intensidad basada en los daños observados."
     )
-    pasos = estado.recorrido(ctx.dia.fecha)
+    pasos = textos.RECORRIDOS.get(ctx.dia.fecha, ())
     if pasos and estado.paso_actual() is None:
         st.button(
             "Empezar recorrido guiado", icon=":material/play_arrow:", key="recorrido_caso",
