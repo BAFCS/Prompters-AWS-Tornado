@@ -226,6 +226,18 @@ def descarga_pl(
     une([parte[v] for v in variables], salida)
 
 
+def descarga_sfc(
+    ex: ProcessPoolExecutor, dia: dt.date, variables: list[str], reg: comun.Region, salida: Path
+) -> None:
+    """Descarga las variables de superficie de ``dia`` (solo el recuadro) y las escribe en ``salida``."""
+    h0, h1 = horas_del_dia(ruta_sfc(variables[0], dia), dia)
+    fut = {
+        v: ex.submit(comun.reintenta, lee, ruta_sfc(v, dia), reg, h0, h1, 4 * 2**20)
+        for v in variables
+    }
+    guarda({v: f.result() for v, f in fut.items()}, salida, False, reg)
+
+
 def une(partes: list[Path], salida: Path) -> None:
     """Une los archivos de una variable ``partes`` en ``salida`` y los borra."""
     ds = xr.merge([xr.load_dataset(f, engine="h5netcdf") for f in partes], combine_attrs="override")
@@ -265,33 +277,22 @@ def main() -> None:
 
     with ProcessPoolExecutor(a.procesos, mp_context=ctx) as ex:
         for dia in comun.dias(a):
-            if a.pl:
-                salida = comun.carpeta(reg.nombre, "era5_pl") / f"era5_pl_{dia:%Y%m%d}.nc"
-                if completo(salida, a.pl) and not a.forzar:
+            for fuente, variables, descarga in (
+                ("era5_pl", a.pl, descarga_pl),
+                ("era5_sfc", a.sfc, descarga_sfc),
+            ):
+                if not variables:
+                    continue
+                salida = comun.carpeta(reg.nombre, fuente) / f"{fuente}_{dia:%Y%m%d}.nc"
+                if completo(salida, variables) and not a.forzar:
                     print(f"{salida.name}: ya existe", flush=True)
-                else:
-                    t0 = time.time()
-                    descarga_pl(ex, dia, a.pl, reg, salida)
-                    print(
-                        f"{salida.name}: {len(a.pl)} variables en {time.time() - t0:.0f} s",
-                        flush=True,
-                    )
-            if a.sfc:
-                salida = comun.carpeta(reg.nombre, "era5_sfc") / f"era5_sfc_{dia:%Y%m%d}.nc"
-                if completo(salida, a.sfc) and not a.forzar:
-                    print(f"{salida.name}: ya existe", flush=True)
-                else:
-                    t0 = time.time()
-                    h0, h1 = horas_del_dia(ruta_sfc(a.sfc[0], dia), dia)
-                    fut = {
-                        v: ex.submit(comun.reintenta, lee, ruta_sfc(v, dia), reg, h0, h1, 4 * 2**20)
-                        for v in a.sfc
-                    }
-                    guarda({v: f.result() for v, f in fut.items()}, salida, False, reg)
-                    print(
-                        f"{salida.name}: {len(a.sfc)} variables en {time.time() - t0:.0f} s",
-                        flush=True,
-                    )
+                    continue
+                t0 = time.time()
+                descarga(ex, dia, variables, reg, salida)
+                print(
+                    f"{salida.name}: {len(variables)} variables en {time.time() - t0:.0f} s",
+                    flush=True,
+                )
 
 
 if __name__ == "__main__":
