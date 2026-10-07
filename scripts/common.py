@@ -1,8 +1,8 @@
 """Utilidades compartidas por los scripts de descarga, procesamiento y visualización.
 
-Define las regiones de análisis, las rutas de salida en ``data/recortes/``, el acceso anónimo a S3 y
+Define las regiones de análisis, las rutas de salida en ``data/crops/``, el acceso anónimo a S3 y
 la geometría de la grilla fija del ABI de GOES. Los scripts lo importan como módulo hermano
-(``import comun``), porque ``scripts/`` no es un paquete instalable.
+(``import common``), porque ``scripts/`` no es un paquete instalable.
 """
 
 import argparse
@@ -20,104 +20,106 @@ from botocore.exceptions import BotoCoreError
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
-RECORTES = DATA / "recortes"
+CROPS = DATA / "crops"
 
 G = 9.80665  # m/s², gravedad estándar (geopotencial → altura)
 
 # Compresión sin pérdida para todo lo que se escribe en NetCDF (gzip + shuffle).
-COMPRESION = {"zlib": True, "complevel": 4, "shuffle": True}
+COMPRESSION = {"zlib": True, "complevel": 4, "shuffle": True}
 
 
 @dataclass(frozen=True)
 class Region:
     """Rectángulo lat/lon en grados; latitudes negativas al sur y longitudes negativas al oeste."""
 
-    nombre: str
-    norte: float
-    sur: float
-    oeste: float
-    este: float
+    name: str
+    north: float
+    south: float
+    west: float
+    east: float
 
-    def contiene(self, lat: np.ndarray, lon: np.ndarray) -> np.ndarray:
+    def contains(self, lat: np.ndarray, lon: np.ndarray) -> np.ndarray:
         """Máscara booleana de los puntos (``lat``, ``lon``) que caen dentro de la región."""
-        return (lat <= self.norte) & (lat >= self.sur) & (lon >= self.oeste) & (lon <= self.este)
+        return (lat <= self.north) & (lat >= self.south) & (lon >= self.west) & (lon <= self.east)
 
 
-REGIONES = {
-    r.nombre: r
+REGIONS = {
+    r.name: r
     for r in (
-        Region("completo", -15, -60, -95, -55),
-        Region("centro-sur", -30, -45, -76, -70),
-        Region("centro-sur-austral", -30, -56, -76, -66),
+        Region("full", -15, -60, -95, -55),
+        Region("south-central", -30, -45, -76, -70),
+        Region("south-central-austral", -30, -56, -76, -66),
     )
 }
 
 
-def region_de(a: argparse.Namespace) -> Region:
+def region_of(a: argparse.Namespace) -> Region:
     """Devuelve la región pedida en los argumentos ``a`` (predefinida o a medida con ``--bbox``)."""
     if a.bbox:
         n, s, o, e = a.bbox
-        assert n > s and e > o, "--bbox espera NORTE SUR OESTE ESTE con NORTE > SUR y ESTE > OESTE"
+        assert n > s and e > o, (
+            "--bbox espera NORTH SOUTH WEST EAST con NORTH > SOUTH y EAST > WEST"
+        )
         return Region(a.region, n, s, o, e)
-    if a.region not in REGIONES:
-        raise SystemExit(f"región desconocida {a.region!r}; usa una de {list(REGIONES)} o --bbox")
-    return REGIONES[a.region]
+    if a.region not in REGIONS:
+        raise SystemExit(f"región desconocida {a.region!r}; usa una de {list(REGIONS)} o --bbox")
+    return REGIONS[a.region]
 
 
-def parser(doc: str | None, unidad: str) -> argparse.ArgumentParser:
+def parser(doc: str | None, unit: str) -> argparse.ArgumentParser:
     """Parser de un script de datos con las opciones comunes.
 
-    Trae ``--inicio`` y ``--fin`` (fechas UTC, inclusive), ``--region`` y ``--bbox`` (región de
-    trabajo) y ``--forzar``, que rehace lo que ya existe (``unidad``: ``"los días"`` o ``"las horas"``).
+    Trae ``--start`` y ``--end`` (fechas UTC, inclusive), ``--region`` y ``--bbox`` (región de
+    trabajo) y ``--force``, que rehace lo que ya existe (``unit``: ``"los días"`` o ``"las horas"``).
     """
     p = argparse.ArgumentParser(
         description=doc, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     p.add_argument(
-        "--inicio", type=dt.date.fromisoformat, required=True, help="primer día, AAAA-MM-DD"
+        "--start", type=dt.date.fromisoformat, required=True, help="primer día, AAAA-MM-DD"
     )
     p.add_argument(
-        "--fin", type=dt.date.fromisoformat, help="último día (inclusive); por defecto --inicio"
+        "--end", type=dt.date.fromisoformat, help="último día (inclusive); por defecto --start"
     )
     p.add_argument(
         "--region",
-        default="centro-sur-austral",
-        help=f"región predefinida: {', '.join(REGIONES)} (por defecto centro-sur-austral)",
+        default="south-central-austral",
+        help=f"región predefinida: {', '.join(REGIONS)} (por defecto south-central-austral)",
     )
     p.add_argument(
         "--bbox",
         nargs=4,
         type=float,
-        metavar=("NORTE", "SUR", "OESTE", "ESTE"),
+        metavar=("NORTH", "SOUTH", "WEST", "EAST"),
         help="región a medida en grados (p. ej. -30 -45 -76 -70); se guarda con el nombre de --region",
     )
-    p.add_argument("--forzar", action="store_true", help=f"rehace {unidad} que ya existen")
+    p.add_argument("--force", action="store_true", help=f"rehace {unit} que ya existen")
     return p
 
 
-def dias(a: argparse.Namespace) -> list[dt.date]:
-    """Lista de días entre ``a.inicio`` y ``a.fin`` (inclusive)."""
-    fin = a.fin or a.inicio
-    assert fin >= a.inicio, "--fin debe ser igual o posterior a --inicio"
-    return [a.inicio + dt.timedelta(days=i) for i in range((fin - a.inicio).days + 1)]
+def days(a: argparse.Namespace) -> list[dt.date]:
+    """Lista de días entre ``a.start`` y ``a.end`` (inclusive)."""
+    end = a.end or a.start
+    assert end >= a.start, "--end debe ser igual o posterior a --start"
+    return [a.start + dt.timedelta(days=i) for i in range((end - a.start).days + 1)]
 
 
-def carpeta(region: str, fuente: str) -> Path:
-    """Carpeta de salida ``data/recortes/<region>/<fuente>/``, creada si no existe."""
-    d = RECORTES / region / fuente
+def folder(region: str, source: str) -> Path:
+    """Carpeta de salida ``data/crops/<region>/<fuente>/``, creada si no existe."""
+    d = CROPS / region / source
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
-def escribe(ds: xr.Dataset, salida: Path, encoding: dict | None = None) -> None:
-    """Escribe ``ds`` en ``salida`` pasando por un ``.tmp``, para no dejar NetCDF a medias.
+def write(ds: xr.Dataset, out_file: Path, encoding: dict | None = None) -> None:
+    """Escribe ``ds`` en ``out_file`` pasando por un ``.tmp``, para no dejar NetCDF a medias.
 
-    Sin ``encoding``, cada variable se comprime con ``COMPRESION``.
+    Sin ``encoding``, cada variable se comprime con ``COMPRESSION``.
     """
-    tmp = salida.with_suffix(".tmp")
-    enc = dict.fromkeys(ds.data_vars, COMPRESION) if encoding is None else encoding
+    tmp = out_file.with_suffix(".tmp")
+    enc = dict.fromkeys(ds.data_vars, COMPRESSION) if encoding is None else encoding
     ds.to_netcdf(tmp, engine="h5netcdf", encoding=enc)
-    tmp.rename(salida)
+    tmp.rename(out_file)
 
 
 def s3() -> s3fs.S3FileSystem:
@@ -125,9 +127,9 @@ def s3() -> s3fs.S3FileSystem:
     return s3fs.S3FileSystem(anon=True)
 
 
-def reintenta[T](fn: Callable[..., T], *args: object, intentos: int = 5) -> T:
+def retry[T](fn: Callable[..., T], *args: object, attempts: int = 5) -> T:
     """Llama ``fn(*args)`` y reintenta ante errores de red, esperando 2, 4, 8… segundos entre intentos."""
-    for k in range(intentos):
+    for k in range(attempts):
         try:
             return fn(*args)
         except (
@@ -136,10 +138,10 @@ def reintenta[T](fn: Callable[..., T], *args: object, intentos: int = 5) -> T:
             ValueError,
             BotoCoreError,
         ) as e:  # s3fs/botocore envuelven los cortes de red (EndpointConnectionError no es OSError)
-            if k == intentos - 1:
+            if k == attempts - 1:
                 raise
             print(
-                f"  reintento {k + 1}/{intentos - 1} de {getattr(fn, '__name__', fn)}: {e!s:.120}",
+                f"  reintento {k + 1}/{attempts - 1} de {getattr(fn, '__name__', fn)}: {e!s:.120}",
                 flush=True,
             )
             time.sleep(2 ** (k + 1))
@@ -153,23 +155,23 @@ def dataset(h: h5py.File | h5py.Group, name: str) -> h5py.Dataset:
     return obj
 
 
-def texto(v: object) -> str:
+def text(v: object) -> str:
     """Convierte un atributo HDF5 (``bytes``, ``str`` o arreglo) a ``str``."""
     if isinstance(v, bytes):
         return v.decode()
     if isinstance(v, np.ndarray):
-        return texto(v.item()) if v.size == 1 else str(v.tolist())
+        return text(v.item()) if v.size == 1 else str(v.tolist())
     return str(v)
 
 
-def num(obj: h5py.Dataset, nombre: str) -> float:
-    """Atributo numérico ``nombre`` de ``obj`` como ``float`` (HDF5 los guarda como arreglos de 1)."""
-    return float(np.asarray(obj.attrs[nombre]).ravel()[0])
+def num(obj: h5py.Dataset, name: str) -> float:
+    """Atributo numérico ``name`` de ``obj`` como ``float`` (HDF5 los guarda como arreglos de 1)."""
+    return float(np.asarray(obj.attrs[name]).ravel()[0])
 
 
-def eje(h: h5py.File, nombre: str) -> np.ndarray:
-    """Eje ``nombre`` (``x`` o ``y``) del ABI en radianes, aplicando su escala y desplazamiento."""
-    d = dataset(h, nombre)
+def axis(h: h5py.File, name: str) -> np.ndarray:
+    """Eje ``name`` (``x`` o ``y``) del ABI en radianes, aplicando su escala y desplazamiento."""
+    d = dataset(h, name)
     return d[:] * num(d, "scale_factor") + num(d, "add_offset")
 
 
@@ -200,6 +202,6 @@ def latlon_abi(h: h5py.File) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.nda
     Devuelve ``(x, y, lat, lon)``: los ángulos de barrido en radianes (1D) y la latitud y longitud
     geodésicas en grados (2D, ``float32``, NaN fuera del disco), calculadas con ``latlon``.
     """
-    x, y = eje(h, "x"), eje(h, "y")
+    x, y = axis(h, "x"), axis(h, "y")
     lat, lon = latlon(x, y, dataset(h, "goes_imager_projection"))
     return x, y, lat.astype("f4"), lon.astype("f4")

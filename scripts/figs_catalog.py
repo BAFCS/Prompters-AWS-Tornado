@@ -3,11 +3,11 @@
 
 Lee la base de Bastías-Curivil et al. (figshare, doi:10.6084/m9.figshare.25119566) y produce:
 
-- ``figs/fig1_mapa_catalogo.png``: mapa de los 102 eventos con histograma por latitud.
-- ``figs/fig2_catalogo_paneles.png``: estacionalidad, hora del día, sesgo de reporte e intensidad EF.
+- ``figs/fig1_catalog_map.png``: mapa de los 102 eventos con histograma por latitud.
+- ``figs/fig2_catalog_panels.png``: estacionalidad, hora del día, sesgo de reporte e intensidad EF.
 
 Entradas: ``data/tornados_chile.xlsx`` (hoja ``Final_Table``) y ``data/coast.zip`` (shapefile de
-costa, p. ej. Natural Earth 10m). Uso: ``uv run python scripts/figs_catalogo.py``.
+costa, p. ej. Natural Earth 10m). Uso: ``uv run python scripts/figs_catalog.py``.
 """
 
 import datetime
@@ -62,7 +62,7 @@ T, W = (df[c].fillna(0).astype(int) for c in ("Tornado", "Waterspout"))
 ef = df["Max. EF Rating"].astype(str).str.extract(r"(\d)")[0].astype(float)
 
 
-def hora(col: str) -> np.ndarray:
+def decimal_hours(col: str) -> np.ndarray:
     """Devuelve la columna horaria ``col`` como horas decimales (NaN si no se puede leer).
 
     Acepta objetos ``datetime.time`` y textos como "14:30" o "14h".
@@ -77,7 +77,7 @@ def hora(col: str) -> np.ndarray:
     return np.array(h, dtype=float)
 
 
-hl = hora("Hour (local)")
+hl = decimal_hours("Hour (local)")
 
 
 def tag(ax: Axes, txt: str, sub: str = "") -> None:
@@ -134,17 +134,17 @@ axm.scatter(
     zorder=6,
     label=f"Tornado ({is_t.sum()})",
 )
-sinc = (T == 0) & (W == 0)
-if sinc.sum():
+unclassified = (T == 0) & (W == 0)
+if unclassified.sum():
     axm.scatter(
-        lon[sinc],
-        lat[sinc],
-        s=sz[sinc],
+        lon[unclassified],
+        lat[unclassified],
+        s=sz[unclassified],
         c="none",
         ec=MUT,
         lw=0.9,
         zorder=3,
-        label=f"Sin clasificar ({sinc.sum()})",
+        label=f"Sin clasificar ({unclassified.sum()})",
     )
 axm.axhline(-42.4, color=ACC, ls="--", lw=1.4, zorder=7)
 axm.text(
@@ -207,9 +207,9 @@ fig.text(
     fontsize=8.6,
     color=MUT,
 )
-fig.savefig(f"{OUT}/fig1_mapa_catalogo.png", dpi=185, bbox_inches="tight")
+fig.savefig(f"{OUT}/fig1_catalog_map.png", dpi=185, bbox_inches="tight")
 plt.close(fig)
-print("fig1_mapa_catalogo.png")
+print("fig1_catalog_map.png")
 
 # ─────────── FIGURA B · 2x2 ───────────
 fig, axs = plt.subplots(2, 2, figsize=(9.2, 6.4))
@@ -305,7 +305,7 @@ a4.text(
     4.5, ec.max() * 0.55, "ninguno\nregistrado", ha="center", fontsize=8, color=MUT, style="italic"
 )
 tag(a4, "F · Intensidad", "94 de 102 eventos clasificados")
-fig.savefig(f"{OUT}/fig2_catalogo_paneles.png", dpi=185, bbox_inches="tight")
+fig.savefig(f"{OUT}/fig2_catalog_panels.png", dpi=185, bbox_inches="tight")
 plt.close(fig)
-print("fig2_catalogo_paneles.png")
+print("fig2_catalog_panels.png")
 print("mediana hora local:", np.median(hh), "| p25-p75:", np.percentile(hh, [25, 75]))

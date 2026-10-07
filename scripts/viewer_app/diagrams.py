@@ -2,15 +2,15 @@
 
 Se dibujan con ``st.image`` (un SVG como imagen): ``st.html`` sanea el SVG. Dentro de una imagen no
 hay JavaScript ni variables CSS de la página, así que cada SVG lleva su propia hoja de estilo con la
-paleta del modo activo de ``tema``; las animaciones CSS (el giro de los rodillos) sí funcionan.
+paleta del modo activo de ``theme``; las animaciones CSS (el giro de los rodillos) sí funcionan.
 """
 
-from visor_app import tema
+from viewer_app import theme
 
-_TEXTO = (
-    f"text{{font-family:{tema.MONO}; font-size:12px; fill:var(--muted)}}"
+_TEXT = (
+    f"text{{font-family:{theme.MONO}; font-size:12px; fill:var(--muted)}}"
     " text.lbl{font-size:12.5px; fill:var(--ink-2)}"
-    f" text.big{{font-family:{tema.SANS}; font-size:14px; font-weight:600}}"
+    f" text.big{{font-family:{theme.SANS}; font-size:14px; font-weight:600}}"
 )
 
 # Mesociclogénesis en cuatro etapas: ``data-stage`` (1–4) elige qué capas se ven y dónde van los rodillos.
@@ -39,7 +39,7 @@ _CSS_MC = """
 #mcSvg[data-stage="2"] #shearG{ opacity:.45 }
 """
 
-_CUERPO_MC = """
+_MC_BODY = """
       <line x1="40" y1="378" x2="720" y2="378" stroke="var(--line)" stroke-width="2"/>
       <path d="M40 378 L720 378 L720 392 L40 392 Z" fill="var(--surface-2)"/>
       <g class="lay" opacity=".85">
@@ -101,7 +101,7 @@ _CUERPO_MC = """
 """
 
 # CAPE contra cizalle 0–1 km: Chile (HSLC) frente a las Grandes Llanuras; comparación esquemática.
-_CUERPO_CAPE = """
+_CAPE_BODY = """
      <text class="big" x="694" y="94" text-anchor="middle" fill="var(--cold)">comparación esquemática</text>
      <text x="694" y="110" text-anchor="middle" fill="var(--cold)">no es un límite de STP</text>
      <line x1="90" y1="400" x2="800" y2="400" stroke="var(--line)" stroke-width="1.8"/>
@@ -135,7 +135,7 @@ _CUERPO_CAPE = """
      <text x="196" y="340" text-anchor="middle" fill="var(--muted)">CAPE medio: 15–45 J/kg</text>
 """
 
-ETAPAS = (
+STAGES = (
     (
         "1 · El cambio del viento con la altura genera rotación horizontal",
         "La cizalladura, llamada también cizalle, es el cambio de la velocidad o la dirección del viento con la altura. En el ejemplo del esquema, el viento aumenta su velocidad hacia arriba. Este cambio está asociado a una rotación del aire alrededor de un eje horizontal, paralelo al suelo.",
@@ -155,22 +155,22 @@ ETAPAS = (
 )
 
 
-def _svg(ancho: int, alto: int, css: str, cuerpo: str, extra: str = "") -> str:
-    """Envuelve ``cuerpo`` en un SVG autónomo con la paleta y los estilos de texto del visor.
+def _svg(width: int, height: int, css: str, body: str, extra: str = "") -> str:
+    """Envuelve ``body`` en un SVG autónomo con la paleta y los estilos de texto del visor.
 
     La paleta va como variables CSS del modo activo: una imagen no hereda las de la página.
     """
     return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {ancho} {alto}" {extra}>'
-        f"<style>svg{{{tema.definiciones(tema.colores())}}} {_TEXTO} {css}</style>{cuerpo}</svg>"
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" {extra}>'
+        f"<style>svg{{{theme.definitions(theme.colors())}}} {_TEXT} {css}</style>{body}</svg>"
     )
 
 
-def mesociclon(etapa: int) -> str:
-    """SVG de la mesociclogénesis en la ``etapa`` 1–4."""
-    return _svg(760, 430, _CSS_MC, _CUERPO_MC, f'id="mcSvg" data-stage="{etapa}"')
+def mesocyclone(stage: int) -> str:
+    """SVG de la mesociclogénesis en la ``stage`` 1–4."""
+    return _svg(760, 430, _CSS_MC, _MC_BODY, f'id="mcSvg" data-stage="{stage}"')
 
 
-def cape_cizalle() -> str:
+def cape_shear() -> str:
     """SVG de CAPE contra cizalle 0–1 km."""
-    return _svg(880, 470, "", _CUERPO_CAPE)
+    return _svg(880, 470, "", _CAPE_BODY)

@@ -10,42 +10,42 @@ from streamlit.testing.v1 import AppTest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from visor_app import datos  # noqa: E402
+from viewer_app import data  # noqa: E402
 
 
-class VisorTest(unittest.TestCase):
+class ViewerTest(unittest.TestCase):
     """Comprueba el acceso al proyecto con una región todavía vacía."""
 
-    def test_proyecto_se_muestra_con_region_sin_dias(self) -> None:
+    def test_project_shows_with_region_without_days(self) -> None:
         """Un directorio regional vacío no debe bloquear la descripción del proyecto."""
-        app = AppTest.from_file(Path(__file__).resolve().parents[1] / "scripts" / "visor.py")
+        app = AppTest.from_file(Path(__file__).resolve().parents[1] / "scripts" / "viewer.py")
         with (
-            patch.object(datos, "regiones", return_value=["region-vacia"]),
-            patch.object(datos, "dias", return_value={}),
+            patch.object(data, "regions", return_value=["empty-region"]),
+            patch.object(data, "days", return_value={}),
         ):
             app.run(timeout=30)
         self.assertEqual(len(app.exception), 0)
         self.assertEqual(len(app.title), 1)
         self.assertIn("Predicción de tormentas mesociclónicas", app.title[0].value)
 
-    def test_proyecto_sin_regiones_enlaza_cada_seccion(self) -> None:
+    def test_project_without_regions_links_each_section(self) -> None:
         """Sin regiones, la página por defecto es El proyecto y su índice enlaza anclas que existen."""
-        app = AppTest.from_file(Path(__file__).resolve().parents[1] / "scripts" / "visor.py")
-        with patch.object(datos, "regiones", return_value=[]):
+        app = AppTest.from_file(Path(__file__).resolve().parents[1] / "scripts" / "viewer.py")
+        with patch.object(data, "regions", return_value=[]):
             app.run(timeout=30)
         self.assertEqual(len(app.exception), 0)
         self.assertEqual(len(app.error), 0)
         self.assertEqual(len(app.selectbox), 0)  # sin_datos cortó antes de la barra de región y día
         self.assertIn("Predicción de tormentas mesociclónicas", app.title[0].value)
-        anclas = {h.proto.anchor for h in [*app.title, *app.header, *app.subheader]} - {""}
-        indices = [m.value for m in app.markdown if "class='indice'" in m.value]
+        anchors = {h.proto.anchor for h in [*app.title, *app.header, *app.subheader]} - {""}
+        indices = [m.value for m in app.markdown if "class='toc'" in m.value]
         self.assertEqual(len(indices), 2)  # el lateral y el del desplegable
-        enlaces = re.findall(r"href='#([\w-]+)'", indices[0])
-        self.assertEqual(len(enlaces), 6)
-        self.assertEqual(enlaces, re.findall(r"href='#([\w-]+)'", indices[1]))
-        for ancla in enlaces:
-            with self.subTest(ancla=ancla):
-                self.assertIn(ancla, anclas)
+        links = re.findall(r"href='#([\w-]+)'", indices[0])
+        self.assertEqual(len(links), 6)
+        self.assertEqual(links, re.findall(r"href='#([\w-]+)'", indices[1]))
+        for anchor in links:
+            with self.subTest(anchor=anchor):
+                self.assertIn(anchor, anchors)
 
 
 if __name__ == "__main__":

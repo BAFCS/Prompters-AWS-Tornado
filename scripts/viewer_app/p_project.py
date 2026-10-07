@@ -1,22 +1,22 @@
 """Página «El proyecto»: la presentación del proyecto con elementos de Streamlit.
 
-Los dos diagramas viven en ``diagramas.py``. Esta página no usa datos: se muestra aunque no haya recortes.
+Los dos diagramas viven en ``diagrams.py``. Esta página no usa datos: se muestra aunque no haya recortes.
 """
 
 from typing import Literal
 
 import streamlit as st
 
-import comun
-from visor_app import diagramas
+import common
+from viewer_app import diagrams
 
-DOCUMENTO = "https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md"
-REPOSITORIO = "https://github.com/fforster/aws-mesocyclonic"
-CATALOGO = "https://doi.org/10.6084/m9.figshare.25119566"
-FIGS = comun.ROOT / "figs"
+DOCUMENT = "https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md"
+REPOSITORY = "https://github.com/fforster/aws-mesocyclonic"
+CATALOG = "https://doi.org/10.6084/m9.figshare.25119566"
+FIGS = common.ROOT / "figs"
 Color = Literal["orange", "primary"]
 # Secciones del índice: (ancla del encabezado, texto del enlace).
-SECCIONES = (
+SECTIONS = (
     ("inicio", "Inicio"),
     ("mesociclones", "Mesociclones"),
     ("problema", "El problema"),
@@ -26,36 +26,36 @@ SECCIONES = (
 )
 
 
-def _seccion(ancla: str, titulo: str, bajada: str) -> None:
-    """Encabezado de sección: título con ``ancla`` para el índice y una frase de contexto."""
+def _section(anchor: str, title: str, subtitle: str) -> None:
+    """Encabezado de sección: título con ``anchor`` para el índice y una frase de contexto."""
     st.divider()
-    st.header(titulo, anchor=ancla)
-    st.markdown(f"<p class='lede'>{bajada}</p>", unsafe_allow_html=True)
+    st.header(title, anchor=anchor)
+    st.markdown(f"<p class='lede'>{subtitle}</p>", unsafe_allow_html=True)
 
 
-def _enlaces(clave: str) -> None:
+def _links(key: str) -> None:
     """Botones al documento completo y al repositorio."""
     with st.container(horizontal=True, gap="small"):  # cada botón a su ancho; se parten si no caben
-        st.link_button("Leer el documento completo", DOCUMENTO, key=f"{clave}_doc", type="primary",
+        st.link_button("Leer el documento completo", DOCUMENT, key=f"{key}_doc", type="primary",
                        icon=":material/description:")  # fmt: skip
-        st.link_button("Repositorio", REPOSITORIO, key=f"{clave}_repo", icon=":material/code:")
+        st.link_button("Repositorio", REPOSITORY, key=f"{key}_repo", icon=":material/code:")
 
 
-def _tarjetas(clave: str, tarjetas: list[tuple[str, Color, str, str]], n_columnas: int = 2) -> None:
+def _cards(key: str, cards: list[tuple[str, Color, str, str]], n_columns: int = 2) -> None:
     """Tarjetas en una grilla: (insignia, color de la insignia, título, texto).
 
-    La grilla la arma el CSS de ``tema.py`` (clave ``tarjetas<n>_``): ``n_columnas`` con ancho de sobra
+    La grilla la arma el CSS de ``theme.py`` (clave ``tarjetas<n>_``): ``n_columns`` con ancho de sobra
     y menos columnas cuando la página es angosta, en vez de columnas que solo se apilan en teléfono.
     """
-    with st.container(horizontal=True, key=f"tarjetas{n_columnas}_{clave}"):
-        for i, (insignia, color, titulo, texto) in enumerate(tarjetas):
-            with st.container(border=True, key=f"hoja_{clave}_{i}"):
-                st.badge(insignia, color=color)
-                st.markdown(f"**{titulo}**")
-                st.markdown(texto)
+    with st.container(horizontal=True, key=f"cards{n_columns}_{key}"):
+        for i, (badge, color, title, text) in enumerate(cards):
+            with st.container(border=True, key=f"sheet_{key}_{i}"):
+                st.badge(badge, color=color)
+                st.markdown(f"**{title}**")
+                st.markdown(text)
 
 
-def _portada() -> None:
+def _cover() -> None:
     """Presenta el objetivo, las referencias del caso y los enlaces."""
     st.title("Predicción de tormentas mesociclónicas en el centro-sur de Chile", anchor="inicio")
     st.markdown(
@@ -66,42 +66,40 @@ def _portada() -> None:
         "<p>El catálogo utilizado por el proyecto reúne 102 eventos de tornados y trombas marinas entre 1554 y 2025. Los registros dependen de las observaciones y los reportes disponibles, por lo que pueden faltar eventos.</p>\n<p>El objetivo del proyecto es estimar qué tormentas del centro-sur de Chile pueden desarrollar un mesociclón mediante datos de ERA5 y GOES. También se propone explorar el archivo histórico para identificar situaciones que merezcan una revisión por posible subregistro.</p>",
         unsafe_allow_html=True,
     )
-    cifras = (("102", "eventos catalogados, 1554–2025", ""), ("7", "tornados en 24 h, mayo 2019", " sev"),
+    stats = (("102", "eventos catalogados, 1554–2025", ""), ("7", "tornados en 24 h, mayo 2019", " sev"),
               ("10 min", "frecuencia nominal de GOES", ""), ("0", "registros al sur de 42,4°S", ""))  # fmt: skip
-    celdas = "".join(
-        f"<div class='cifra{c}'><b>{v}</b><span>{r}</span></div>" for v, r, c in cifras
-    )
-    st.markdown(f"<div class='cifras'>{celdas}</div>", unsafe_allow_html=True)
-    _enlaces("portada")
+    cells = "".join(f"<div class='stat{c}'><b>{v}</b><span>{r}</span></div>" for v, r, c in stats)
+    st.markdown(f"<div class='stats'>{cells}</div>", unsafe_allow_html=True)
+    _links("cover")
 
 
-def _animacion() -> None:
+def _animation() -> None:
     """Mesociclogénesis en cuatro etapas: el usuario elige la etapa; los rodillos giran solos."""
     st.subheader("Mesociclones, supercélulas y tornados", anchor="mesociclones")
     st.markdown(
         "Un mesociclón es una región de aire en rotación organizada dentro de una tormenta, de unos 2 a 10 km de diámetro. Una tormenta con un mesociclón persistente se denomina supercélula. Un tornado es un fenómeno de menor escala cuya circulación alcanza la superficie. Una supercélula puede desarrollar un tornado, pero esa evolución no es inevitable.",
     )
-    with st.container(border=True, key="hoja_animacion"):
+    with st.container(border=True, key="sheet_animation"):
         st.subheader("Cómo se organiza la rotación dentro de una tormenta", anchor=False)
         st.caption("Formación de un mesociclón: esquema simplificado en cuatro etapas")
-        etapa = st.segmented_control(
-            "Etapa", [1, 2, 3, 4], default=1, key="proyecto_etapa", label_visibility="collapsed",
+        stage = st.segmented_control(
+            "Etapa", [1, 2, 3, 4], default=1, key="project_stage", label_visibility="collapsed",
             format_func=lambda k: ("Cizalladura", "Inclinación", "Estiramiento", "Mesociclón")[k - 1],
         )  # fmt: skip
-        etapa = etapa or 1
-        st.image(diagramas.mesociclon(etapa), width="stretch")
-        titulo, texto = diagramas.ETAPAS[etapa - 1]
-        st.markdown(f"**:primary[{titulo}]**")
-        st.markdown(texto)
+        stage = stage or 1
+        st.image(diagrams.mesocyclone(stage), width="stretch")
+        title, text = diagrams.STAGES[stage - 1]
+        st.markdown(f"**:primary[{title}]**")
+        st.markdown(text)
         st.markdown(
-            '<p class="nota">El esquema muestra cómo la rotación horizontal del entorno puede contribuir a la rotación dentro de una tormenta. La formación de un tornado requiere procesos adicionales cerca de la superficie; un mesociclón puede persistir sin producirlo.</p>',
+            '<p class="note">El esquema muestra cómo la rotación horizontal del entorno puede contribuir a la rotación dentro de una tormenta. La formación de un tornado requiere procesos adicionales cerca de la superficie; un mesociclón puede persistir sin producirlo.</p>',
             unsafe_allow_html=True,
         )
 
 
-def _problema() -> None:
+def _problem() -> None:
     """Explica el caso de referencia y las limitaciones del catálogo."""
-    _seccion(
+    _section(
         "problema",
         "Un catálogo de eventos reportados, sin casos negativos confirmados",
         "Disponemos de registros de tornados y trombas marinas. La ausencia de un reporte no permite asegurar que no ocurrió un evento.",
@@ -112,15 +110,15 @@ def _problema() -> None:
     )
 
 
-def _dificultad() -> None:
+def _difficulty() -> None:
     """Presenta las decisiones de cálculo y las referencias que deben validarse."""
-    _seccion(
+    _section(
         "dificultad",
         "Tres aspectos que deben adaptarse al contexto chileno",
         "El régimen atmosférico, el sentido de rotación y la cobertura del catálogo condicionan el cálculo de índices y el entrenamiento de modelos.",
     )
-    _tarjetas(
-        "dificultad",
+    _cards(
+        "difficulty",
         [
             (
                 "1",
@@ -141,7 +139,7 @@ def _dificultad() -> None:
                 "La mayor cantidad de registros recientes puede estar influida por cambios en la observación y documentación. Para el aprendizaje automático, contamos con eventos reportados y situaciones sin etiqueta confirmada. El aprendizaje con positivos y datos no etiquetados, conocido como PU learning, es una opción para trabajar con esta limitación.",
             ),
         ],
-        n_columnas=3,
+        n_columns=3,
     )
     st.subheader("Referencias de los índices", anchor=False)
     st.markdown(
@@ -150,20 +148,20 @@ def _dificultad() -> None:
     st.markdown(
         "Estos valores orientan la comparación con los estudios citados. Requiere verificación: confirmar las variantes y el alcance de cada criterio antes de usarlo como umbral operativo. El visor calcula SHERBS3, una variante distinta de SHERBE, y una aproximación del STP; no deben trasladarse los criterios entre variantes sin validación.",
     )
-    with st.container(border=True, key="hoja_cape"):
-        st.image(diagramas.cape_cizalle(), width="stretch")
+    with st.container(border=True, key="sheet_cape"):
+        st.image(diagrams.cape_shear(), width="stretch")
         st.markdown(
             "Comparación esquemática de CAPE y cizalle; no representa una frontera de detección del STP. Los casos chilenos de mayo de 2019 combinan CAPE relativamente bajo con fuerte cizalle en el primer kilómetro. La referencia de 15–45 J/kg corresponde al CAPE medio a fines de mayo en Biobío descrito en el documento. Requiere verificación: confirmar las fuentes y el ámbito de las referencias del esquema antes de utilizarlas en una decisión."
         )
     st.markdown(
-        '<div class="aviso">Caballero-Morán y Rondanelli (2025) analizaron índices derivados de ERA5 entre 1959 y 2021. El documento del proyecto les atribuye la identificación de zonas del sur austral con condiciones favorables y sin eventos documentados. Este resultado motiva la búsqueda de posibles situaciones subregistradas. <strong>Requiere verificación:</strong> comprobar que esta formulación refleje el alcance del estudio; unas condiciones favorables no confirman un evento ocurrido.</div>',
+        '<div class="notice">Caballero-Morán y Rondanelli (2025) analizaron índices derivados de ERA5 entre 1959 y 2021. El documento del proyecto les atribuye la identificación de zonas del sur austral con condiciones favorables y sin eventos documentados. Este resultado motiva la búsqueda de posibles situaciones subregistradas. <strong>Requiere verificación:</strong> comprobar que esta formulación refleje el alcance del estudio; unas condiciones favorables no confirman un evento ocurrido.</div>',
         unsafe_allow_html=True,
     )
 
 
-def _datos() -> None:
+def _data_section() -> None:
     """Describe los datos del visor y separa sus límites del acceso técnico."""
-    _seccion(
+    _section(
         "datos",
         "Tres fuentes de datos para estudiar las tormentas",
         "ERA5 es una reconstrucción histórica del estado de la atmósfera que combina observaciones y un modelo. GOES aporta imágenes satelitales para observar las nubes y su evolución. El catálogo aporta los eventos reportados con los que se comparan esos datos.",
@@ -190,7 +188,7 @@ def _datos() -> None:
     st.markdown(
         "Las figuras siguientes se generaron con datos de los archivos públicos para el 30 de mayo de 2019. Las páginas Mapas, Sondeo y Series exploran el mismo caso."
     )
-    figuras = [
+    figures = [
         (
             "fig4_era5_20190530.png",
             "<b>ERA5, 30 de mayo de 2019, 21:00 UTC.</b> Los paneles muestran temperatura a 500 hPa (A), viento a 850 hPa (B), cizalle entre la superficie y 1 km (C) y entre la superficie y 6 km (D). Los niveles en hPa son superficies de presión que permiten comparar distintas partes de la atmósfera. En C y D se puede observar la extensión de las zonas con cizalle elevado.",
@@ -200,21 +198,21 @@ def _datos() -> None:
             "<b>GOES-16, banda 13.</b> Los paneles muestran la temperatura de brillo y su cambio entre imágenes; los triángulos marcan los tornados reportados ese día. La temperatura de brillo es una medida derivada de la radiación infrarroja recibida. Un descenso puede ser compatible con crecimiento vertical, pero también puede deberse al desplazamiento de nubes sobre el mismo píxel. El flujo óptico estima ese movimiento y puede ayudar a separar ambos efectos.",
         ),
     ]
-    for archivo, pie in figuras:
-        with st.container(border=True, key=f"hoja_{archivo[:4]}"):
-            st.image(str(FIGS / archivo), width="stretch")
-            st.markdown(f"<p class='nota'>{pie}</p>", unsafe_allow_html=True)
+    for file, caption in figures:
+        with st.container(border=True, key=f"sheet_{file[:4]}"):
+            st.image(str(FIGS / file), width="stretch")
+            st.markdown(f"<p class='note'>{caption}</p>", unsafe_allow_html=True)
 
 
-def _participar() -> None:
+def _participate() -> None:
     """Propone tareas y hace explícitas las decisiones pendientes de la hackathon."""
-    _seccion(
+    _section(
         "participar",
         "Por dónde empezar",
         "El proyecto está abierto a cualquier persona interesada, con o sin formación en meteorología.",
     )
-    _tarjetas(
-        "tareas",
+    _cards(
+        "tasks",
         [
             (
                 "Accesible",
@@ -252,10 +250,10 @@ def _participar() -> None:
     st.markdown(
         "- Unidad de predicción: qué representa cada caso que debe analizar el modelo.\n- Horizonte temporal: con cuánta anticipación se busca estimar el desarrollo del mesociclón.\n- Forma de validar mesociclones con las evidencias disponibles; el catálogo etiqueta tornados y trombas, no mesociclones.\n- Resultado que debe presentar cada equipo, criterios de evaluación y requisitos de uso de AWS."
     )
-    _enlaces("participar")
+    _links("participate")
     st.divider()
     st.markdown(
-        f"<p class='nota'>Catálogo de eventos: Bastías-Curivil et al. (2024–2025), <a href='{CATALOGO}'>"
+        f"<p class='note'>Catálogo de eventos: Bastías-Curivil et al. (2024–2025), <a href='{CATALOG}'>"
         "<em>Tornadoes and Waterspouts in Chile</em></a>, figshare, CC BY 4.0. Fuentes principales: "
         "Vicencio et al. (2021, <em>BAMS</em>) · Marín et al. (2024, <em>MWR</em>) · Barrett et al. "
         "(2020, <em>Atmos. Res.</em>) · Caballero-Morán &amp; Rondanelli (2025, <em>GRL</em>). La lista "
@@ -265,29 +263,29 @@ def _participar() -> None:
     )
 
 
-def _indice() -> str:
-    """El índice de la página como lista de enlaces a las anclas de ``SECCIONES``."""
-    enlaces = "".join(f"<li><a href='#{ancla}'>{texto}</a></li>" for ancla, texto in SECCIONES)
-    return f"<nav class='indice' aria-label='En esta página'><ol>{enlaces}</ol></nav>"
+def _toc() -> str:
+    """El índice de la página como lista de enlaces a las anclas de ``SECTIONS``."""
+    links = "".join(f"<li><a href='#{anchor}'>{text}</a></li>" for anchor, text in SECTIONS)
+    return f"<nav class='toc' aria-label='En esta página'><ol>{links}</ol></nav>"
 
 
-def pagina() -> None:
+def page() -> None:
     """Dibuja el cuerpo de la página y su índice.
 
     Con ancho de sobra el índice va en una columna fija a la derecha; en pantallas más angostas
-    (tablet, teléfono) se ve un desplegable sobre el cuerpo. El CSS de ``tema.py`` elige cuál mostrar
-    según el ancho de ``.st-key-proyecto`` (880 px).
+    (tablet, teléfono) se ve un desplegable sobre el cuerpo. El CSS de ``theme.py`` elige cuál mostrar
+    según el ancho de ``.st-key-project`` (880 px).
     """
-    with st.container(key="proyecto"), st.container(horizontal=True, wrap=False, gap="large"):
-        with st.container(key="proyecto_cuerpo"):
-            with st.expander("En esta página", key="indice_compacto", icon=":material/toc:"):
-                st.markdown(_indice(), unsafe_allow_html=True)
-            _portada()
-            _animacion()
-            _problema()
-            _dificultad()
-            _datos()
-            _participar()
-        with st.container(width=220, key="indice_lateral"):
-            st.markdown("<p class='indice-titulo'>En esta página</p>", unsafe_allow_html=True)
-            st.markdown(_indice(), unsafe_allow_html=True)
+    with st.container(key="project"), st.container(horizontal=True, wrap=False, gap="large"):
+        with st.container(key="project_body"):
+            with st.expander("En esta página", key="toc_compact", icon=":material/toc:"):
+                st.markdown(_toc(), unsafe_allow_html=True)
+            _cover()
+            _animation()
+            _problem()
+            _difficulty()
+            _data_section()
+            _participate()
+        with st.container(width=220, key="toc_side"):
+            st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
+            st.markdown(_toc(), unsafe_allow_html=True)

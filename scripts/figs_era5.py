@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 
-import comun
+import common
 
 warnings.filterwarnings("ignore")
 matplotlib.use("Agg")
@@ -54,18 +54,18 @@ VARS = {
 HOUR = 21
 
 
-fs = comun.s3()
+fs = common.s3()
 D: dict[str, np.ndarray] = {}
 for nm, (code, grid, var) in VARS.items():
     t0 = time.time()
     with fs.open(BASE.format(code, grid), "rb", block_size=8 * 1024 * 1024) as f:
         h = h5py.File(f, "r")
         if "lat" not in D:
-            la, lo = comun.dataset(h, "latitude")[:], comun.dataset(h, "longitude")[:]
+            la, lo = common.dataset(h, "latitude")[:], common.dataset(h, "longitude")[:]
             i0, i1 = np.searchsorted(-la, [28, 46])
             j0, j1 = np.searchsorted(lo, [280, 295])
-            D["lat"], D["lon"], D["lev"] = la[i0:i1], lo[j0:j1] - 360, comun.dataset(h, "level")[:]
-        D[nm] = comun.dataset(h, var)[HOUR, :, i0:i1, j0:j1].astype("f4")
+            D["lat"], D["lon"], D["lev"] = la[i0:i1], lo[j0:j1] - 360, common.dataset(h, "level")[:]
+        D[nm] = common.dataset(h, var)[HOUR, :, i0:i1, j0:j1].astype("f4")
     print(f"  {nm}: {D[nm].shape} en {time.time() - t0:.0f} s")
 lev = D["lev"]
 lat, lon = D["lat"], D["lon"]
@@ -77,7 +77,7 @@ def L(p: float) -> int:
 
 
 i1000, i900, i850, i500 = L(1000), L(900), L(850), L(500)
-gz = D["z"] / comun.G
+gz = D["z"] / common.G
 
 
 def spd(k: int) -> np.ndarray:

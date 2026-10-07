@@ -9,19 +9,19 @@ import streamlit as st
 import xarray as xr
 from metpy.units import units
 
-import comun
-from visor_app import componentes, datos, estado, graficos, tema, textos
+import common
+from viewer_app import charts, components, data, state, texts, theme
 
 
-def _columna(ds: xr.Dataset, t: pd.Timestamp, p: estado.Punto) -> xr.Dataset:
+def _column(ds: xr.Dataset, t: pd.Timestamp, p: state.Point) -> xr.Dataset:
     """La columna de ``ds`` en la hora y el punto de grilla más cercanos."""
     return ds.sel(time=t, method="nearest").sel(latitude=p.lat, longitude=p.lon, method="nearest")
 
 
-def pagina() -> None:
+def page() -> None:
     """Dibuja la página."""
-    ctx = estado.contexto()
-    t, p = estado.t_actual(), estado.punto()
+    ctx = state.context()
+    t, p = state.current_time(), state.point()
     st.title("Sondeo")
     st.markdown(
         "Perfil vertical estimado con ERA5 en el punto seleccionado. "
@@ -32,93 +32,91 @@ def pagina() -> None:
             "Elige un evento en la barra lateral o haz clic en un panel de Mapas cuando haya datos ERA5."
         )
         return
-    if ctx.dia.pl is None or ctx.dia.sfc is None:
+    if ctx.day.pl is None or ctx.day.sfc is None:
         st.info(
             "El perfil requiere ERA5 de niveles de presión y de superficie. Selecciona otro día disponible. Para preparar este día, ejecuta "
-            f"`uv run python scripts/descarga_era5.py --inicio {ctx.dia.fecha:%Y-%m-%d}`."
+            f"`uv run python scripts/download_era5.py --start {ctx.day.date:%Y-%m-%d}`."
         )
         return
-    faltan = {"u", "v", "t", "z", "r"} - set(datos.abre(ctx.dia.pl).data_vars)
-    faltan |= {"sp", "2t", "2d", "10u", "10v"} - set(datos.abre(ctx.dia.sfc).data_vars)
-    if faltan:
+    missing = {"u", "v", "t", "z", "r"} - set(data.open_nc(ctx.day.pl).data_vars)
+    missing |= {"sp", "2t", "2d", "10u", "10v"} - set(data.open_nc(ctx.day.sfc).data_vars)
+    if missing:
         st.info(
             "Los archivos ERA5 de este día están incompletos para calcular el perfil. Selecciona otro día o vuelve a "
-            f"ejecutar `uv run python scripts/descarga_era5.py --inicio {ctx.dia.fecha:%Y-%m-%d}` para completar las variables faltantes."
+            f"ejecutar `uv run python scripts/download_era5.py --start {ctx.day.date:%Y-%m-%d}` para completar las variables faltantes."
         )
         return
     t = pd.Timestamp(t)
-    pl = _columna(datos.abre(ctx.dia.pl), t, p).load().sortby("level", ascending=False)
-    sfc = _columna(datos.abre(ctx.dia.sfc), t, p).load()
-    hora = datos.instante(pl["time"])
+    pl = _column(data.open_nc(ctx.day.pl), t, p).load().sortby("level", ascending=False)
+    sfc = _column(data.open_nc(ctx.day.sfc), t, p).load()
+    hour = data.to_timestamp(pl["time"])
     la, lo = float(pl["latitude"]), float(pl["longitude"])
     st.html(
-        f"<p class='lede'>{html.escape(p.nombre)} · ERA5 {hora:%H:%M} UTC en el punto de grilla "
-        f"<span class='mono'>{componentes.coord(la, lo)}</span> (celdas de ~31 km).</p>"
+        f"<p class='lede'>{html.escape(p.name)} · ERA5 {hour:%H:%M} UTC en el punto de grilla "
+        f"<span class='mono'>{components.coord(la, lo)}</span> (celdas de ~31 km).</p>"
     )
 
     # Perfil termodinámico: superficie + niveles por encima del suelo.
     sp = float(sfc["sp"]) / 100
-    arriba = pl["level"].values < sp
-    pres = np.r_[sp, pl["level"].values[arriba]] * units.hPa
-    temp = np.r_[float(sfc["2t"]), pl["t"].values[arriba]] * units.K
+    above = pl["level"].values < sp
+    pres = np.r_[sp, pl["level"].values[above]] * units.hPa
+    temp = np.r_[float(sfc["2t"]), pl["t"].values[above]] * units.K
     td_pl = mpcalc.dewpoint_from_relative_humidity(
-        pl["t"].values[arriba] * units.K, np.clip(pl["r"].values[arriba], 1, 100) * units.percent
+        pl["t"].values[above] * units.K, np.clip(pl["r"].values[above], 1, 100) * units.percent
     )
-    rocio = np.r_[(float(sfc["2d"]) * units.K).to("degC").m, td_pl.to("degC").m] * units.degC
-    parcela = mpcalc.parcel_profile(pres, temp[0], rocio[0]).to("degC")
-    p_lcl, _ = mpcalc.lcl(pres[0], temp[0], rocio[0])
-    sbcape, sbcin = mpcalc.surface_based_cape_cin(pres, temp, rocio)
+    dewpoint = np.r_[(float(sfc["2d"]) * units.K).to("degC").m, td_pl.to("degC").m] * units.degC
+    parcel = mpcalc.parcel_profile(pres, temp[0], dewpoint[0]).to("degC")
+    p_lcl, _ = mpcalc.lcl(pres[0], temp[0], dewpoint[0])
+    sbcape, sbcin = mpcalc.surface_based_cape_cin(pres, temp, dewpoint)
 
     # Viento por altura sobre el suelo, del suelo (10 m) a 10 km.
-    if ctx.dia.idx is not None:  # altura del terreno calculada por procesa_era5.py
-        h_sfc = float(_columna(datos.abre(ctx.dia.idx), t, p)["altura_sfc"])
+    if ctx.day.idx is not None:  # altura del terreno calculada por process_era5.py
+        h_sfc = float(_column(data.open_nc(ctx.day.idx), t, p)["sfc_height"])
     else:
-        lnp, z = np.log(pl["level"].values[::-1]), (pl["z"].values / comun.G)[::-1]
+        lnp, z = np.log(pl["level"].values[::-1]), (pl["z"].values / common.G)[::-1]
         h_sfc = float(np.interp(np.log(sp), lnp, z))
-    agl = pl["z"].values[arriba] / comun.G - h_sfc
+    agl = pl["z"].values[above] / common.G - h_sfc
     alt = np.r_[10.0, agl]
-    u = np.r_[float(sfc["10u"]), pl["u"].values[arriba]]
-    v = np.r_[float(sfc["10v"]), pl["v"].values[arriba]]
+    u = np.r_[float(sfc["10u"]), pl["u"].values[above]]
+    v = np.r_[float(sfc["10v"]), pl["v"].values[above]]
     k = alt <= 10000
-    rm, lm, media = mpcalc.bunkers_storm_motion(
+    rm, lm, mean = mpcalc.bunkers_storm_motion(
         pres, u * units("m/s"), v * units("m/s"), alt * units.m
     )
 
-    izq, der = tema.columnas(2, "sondeo_graficos")
-    with izq:
+    left, right = theme.columns(2, "sounding_charts")
+    with left:
         st.plotly_chart(
-            graficos.skewt(
-                pres.m, temp.to("degC").m, rocio.m, parcela.m, float(p_lcl.m),
+            charts.skewt(
+                pres.m, temp.to("degC").m, dewpoint.m, parcel.m, float(p_lcl.m),
                 "Temperatura, punto de rocío y parcela de superficie",
             ),
             width="stretch", theme=None,
         )  # fmt: skip
-    with der:
+    with right:
         st.plotly_chart(
-            graficos.hodografo(
+            charts.hodograph(
                 alt[k], u[k], v[k], (lm[0].m, lm[1].m), (rm[0].m, rm[1].m),
-                (media[0].m, media[1].m), "Hodógrafo 0–10 km · u y v en m/s",
+                (mean[0].m, mean[1].m), "Hodógrafo 0–10 km · u y v en m/s",
             ),
             width="stretch", theme=None,
         )  # fmt: skip
 
-    izq, der = tema.columnas([3, 2], "sondeo_indices")
-    with izq:
+    left, right = theme.columns([3, 2], "sounding_indices")
+    with left:
         st.subheader("Índices en este punto")
-        filas = [
-            componentes.Fila(
-                "CAPE de superficie (MetPy)", "J/kg", float(sbcape.m), None, None, None
-            ),
-            componentes.Fila("CIN de superficie (MetPy)", "J/kg", float(sbcin.m), None, None, None),
+        rows = [
+            components.Row("CAPE de superficie (MetPy)", "J/kg", float(sbcape.m), None, None, None),
+            components.Row("CIN de superficie (MetPy)", "J/kg", float(sbcin.m), None, None, None),
         ]
-        if ctx.dia.idx is not None:
-            filas += componentes.filas_indices(
-                datos.abre(ctx.dia.idx), np.datetime64(t), (la, lo), None
+        if ctx.day.idx is not None:
+            rows += components.index_rows(
+                data.open_nc(ctx.day.idx), np.datetime64(t), (la, lo), None
             )
-        st.html(componentes.ficha(filas, "valor", None))
-        if ctx.dia.idx is not None:
-            st.caption(textos.NOTA_STP)
-    with der:
+        st.html(components.scorecard(rows, "valor", None))
+        if ctx.day.idx is not None:
+            st.caption(texts.STP_NOTE)
+    with right:
         st.subheader("Cómo leerlo")
         st.markdown(
             "**Skew-T.** El diagrama representa temperatura y presión; las líneas de igual "
