@@ -21,13 +21,6 @@ class Fila:
     referencia: str | None = None  # referencia descriptiva para índices sin criterio
 
 
-def supera(v: float | None, umbral: float | None, sentido: str | None) -> bool:
-    """Indica si el valor cumple el criterio de comparación del índice."""
-    if v is None or umbral is None or not np.isfinite(v):
-        return False
-    return v > umbral if sentido == ">" else v < umbral
-
-
 def _num(v: float | None) -> str:
     """Número con 3 cifras significativas y coma decimal, o una raya si falta."""
     if v is None or not np.isfinite(v):
@@ -55,7 +48,7 @@ def ficha(filas: list[Fila], col_punto: str, col_zona: str | None) -> str:
             marca = "Sin datos"
         elif f.umbral is None:
             marca = "Sin criterio de decisión"
-        elif supera(ref, f.umbral, f.sentido):
+        elif ref > f.umbral if f.sentido == ">" else ref < f.umbral:
             clase, marca = "supera", "Cumple el criterio"
         else:
             marca = "No cumple el criterio"
