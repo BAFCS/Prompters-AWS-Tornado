@@ -78,16 +78,9 @@ def abre(ruta: Path) -> xr.Dataset:
     return _abre(ruta, ruta.stat().st_mtime)
 
 
-@st.cache_data
-def tiempos_archivo(ruta: Path) -> list[np.datetime64]:
-    """Horas de inicio de las imágenes GOES guardadas en ``ruta``."""
-    with xr.open_dataset(ruta, engine="h5netcdf") as ds:
-        return list(ds["time"].values)
-
-
 def imagenes(d: Dia) -> list[tuple[np.datetime64, Path]]:
     """Cada imagen GOES del día ``d``: su hora de inicio y el archivo que la contiene."""
-    return [(t, r) for r in d.goes for t in tiempos_archivo(r)]
+    return [(t, r) for r in d.goes for t in abre(r)["time"].values]
 
 
 def era5_ref(d: Dia) -> xr.Dataset | None:
