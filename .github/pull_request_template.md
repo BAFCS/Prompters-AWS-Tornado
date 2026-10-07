@@ -23,8 +23,8 @@ uv run python -m unittest discover -s tests -v
 - [ ] `ruff check`, `ruff format --check` y `pyright` pasan limpios
 - [ ] Las pruebas de `tests/` pasan
 - [ ] Si cambia una figura, se regeneró y se comparó con la anterior
-- [ ] Si cambia `docs/mesociclones_chile.md`, se actualizó `scripts/visor_app/textos.py`
-- [ ] Si cambia un color del tema, se cambió en `.streamlit/config.toml` y en `visor_app/tema.py`
+- [ ] Si cambia `docs/mesociclones_chile.md`, se actualizó `scripts/viewer_app/texts.py`
+- [ ] Si cambia un color del tema, se cambió en `.streamlit/config.toml` y en `viewer_app/theme.py`
 - [ ] Los signos y umbrales respetan el hemisferio sur (SRH negativa, *left-mover*, umbrales chilenos)
 - [ ] `AGENTS.md` y `README.md` siguen al día
 - [ ] No se versionan datos (`data/`, `*.nc`, `*.xlsx`, ...)
