@@ -117,7 +117,7 @@ def decodifica(b: bytes, d: h5py.Dataset) -> np.ndarray:
     return np.frombuffer(crudo, d.dtype).reshape(d.chunks or ())
 
 
-def lee_una_vez(ruta: str, reg: comun.Region, h0: int, h1: int, bloque: int) -> dict:
+def lee(ruta: str, reg: comun.Region, h0: int, h1: int, bloque: int) -> dict:
     """Lee de ``ruta`` el recorte de ``reg`` entre los índices de tiempo ``h0`` y ``h1`` (exclusivo).
 
     Si el archivo guarda cada instante como un bloque global (niveles de presión), pide a S3
@@ -150,11 +150,6 @@ def lee_una_vez(ruta: str, reg: comun.Region, h0: int, h1: int, bloque: int) -> 
         if "level" in h:
             out["level"] = comun.dataset(h, "level")[:]
     return out
-
-
-def lee(ruta: str, reg: comun.Region, h0: int, h1: int, bloque: int) -> dict:
-    """``lee_una_vez`` con reintentos ante cortes de red."""
-    return comun.reintenta(lee_una_vez, ruta, reg, h0, h1, bloque)
 
 
 def horas_del_dia(ruta: str, dia: dt.date) -> tuple[int, int]:
@@ -219,7 +214,7 @@ def descarga_pl(
     faltan = [v for v in variables if not parte[v].exists()]
     # Una tarea por (variable, hora): cada una transfiere un bloque global.
     fut = {
-        (v, k): ex.submit(lee, ruta_pl(v, dia), reg, k, k + 1, 2**20)
+        (v, k): ex.submit(comun.reintenta, lee, ruta_pl(v, dia), reg, k, k + 1, 2**20)
         for v in faltan
         for k in range(24)
     }
@@ -288,7 +283,8 @@ def main() -> None:
                     t0 = time.time()
                     h0, h1 = horas_del_dia(ruta_sfc(a.sfc[0], dia), dia)
                     fut = {
-                        v: ex.submit(lee, ruta_sfc(v, dia), reg, h0, h1, 4 * 2**20) for v in a.sfc
+                        v: ex.submit(comun.reintenta, lee, ruta_sfc(v, dia), reg, h0, h1, 4 * 2**20)
+                        for v in a.sfc
                     }
                     guarda({v: f.result() for v, f in fut.items()}, salida, False, reg)
                     print(
