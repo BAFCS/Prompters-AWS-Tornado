@@ -119,7 +119,7 @@ def _capa_panel(
 
 def _animar(
     fig: go.Figure, fondos: list[int], animados: list[int], visibles: list[estado.Panel],
-    cat: dict[str, productos.Producto], d: datos.Dia, t: pd.Timestamp, enc: graficos.Encuadre,
+    cat: dict[str, productos.Producto], d: datos.Dia, t: pd.Timestamp,
 ) -> int:  # fmt: skip
     """Agrega a ``fig`` un cuadro por imagen GOES en ±1 h para los paneles ``animados``.
 
@@ -267,7 +267,7 @@ def pagina() -> None:
         clic=None if ref is None else (ref["latitude"].values, ref["longitude"].values),
         viento=capas.viento_850(ctx.dia, t, enc) if st.session_state.get("viento") else None,
     )  # fmt: skip
-    n_cuadros = _animar(fig, fondos, animados, visibles, cat, ctx.dia, t, enc) if animados else 0
+    n_cuadros = _animar(fig, fondos, animados, visibles, cat, ctx.dia, t) if animados else 0
     st.caption(
         "Usa la rueda del ratón o los botones del gráfico para acercar la vista. "
         "Todos los paneles se mueven juntos."
