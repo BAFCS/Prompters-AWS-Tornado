@@ -29,7 +29,6 @@ class Group:
     source: str  # clave de ``SOURCES``
     title: str
     lede: str
-    compact: bool = False  # fichas breves en dos columnas (campos crudos, bandas, columnas)
     refs: tuple[str, ...] = ()  # fuentes comunes a las fichas del grupo
 
 
@@ -53,7 +52,6 @@ class Variable:
     inputs: tuple[str, ...] = ()  # claves de otras fichas de las que se calcula
     products: tuple[str, ...] = ()  # claves de ``products.catalog`` que la muestran en Mapas
     level: float | None = None  # hPa con que abrir el panel si el producto es de presión
-    synonyms: str = ""  # sinónimos (sin uso desde que el buscador se reemplazó por el índice)
     # claves de ``REFERENCES`` propias de la ficha (se suman a las del grupo)
     refs: tuple[str, ...] = ()
 
@@ -320,10 +318,10 @@ SOURCES = (
 GROUPS = (
     Group("era5-presion", "era5", "Campos en niveles de presión",
           "Variables crudas en los 37 niveles de presión. El visor descarga las que necesitan los índices "
-          "y los mapas.", compact=True, refs=("era5-doc",)),
+          "y los mapas.", refs=("era5-doc",)),
     Group("era5-superficie", "era5", "Superficie y nivel único",
           "Variables crudas a 2, 10 o 100 m, en la superficie o integradas en la columna; incluye los "
-          "índices de estabilidad que el ECMWF entrega ya calculados.", compact=True, refs=("era5-doc",)),
+          "índices de estabilidad que el ECMWF entrega ya calculados.", refs=("era5-doc",)),
     Group("era5-cinematicos", "era5", "Derivados cinemáticos",
           "Describen cómo cambia el viento con la altura y la rotación del aire en el entorno. Ayudan a "
           "estudiar la organización de las tormentas.", refs=("markowski2010",)),
@@ -335,7 +333,7 @@ GROUPS = (
           "formulación; los umbrales deben evaluarse con casos chilenos."),
     Group("goes-bandas", "goes", "Las 16 bandas del ABI",
           "Las bandas 1–6 miden luz solar reflejada (solo de día); las 7–16, radiación infrarroja emitida, "
-          "que se expresa como temperatura de brillo.", compact=True, refs=("goes-abi",)),
+          "que se expresa como temperatura de brillo.", refs=("goes-abi",)),
     Group("goes-imagen", "goes", "Derivados por imagen",
           "Lo que se calcula con una sola imagen: qué tan alto llegó el tope, su textura y las firmas de "
           "una corriente ascendente muy potente.", refs=("documento",)),
@@ -344,9 +342,9 @@ GROUPS = (
           "distinguirlos de su desplazamiento y comprobar el intervalo de tiempo.", refs=("documento",)),
     Group("goes-productos", "goes", "Otros productos GOES",
           "Productos de nivel 2 y del detector de rayos que no forman parte del archivo multibanda que lee "
-          "el visor.", compact=True, refs=("goes-aws",)),
+          "el visor.", refs=("goes-aws",)),
     Group("catalogo-columnas", "catalogo", "Columnas del catálogo",
-          "Las columnas que importan para el proyecto, con su cobertura en las 102 filas.", compact=True, refs=("bastias",)),
+          "Las columnas que importan para el proyecto, con su cobertura en las 102 filas.", refs=("bastias",)),
     Group("contexto-variables", "contexto", "Variables de contexto",
           "Terreno, geometría de la observación, calendario y población.", refs=("documento",)),
 )  # fmt: skip
@@ -364,7 +362,6 @@ VARIABLES = (
         formula=r"|\vec V| = \sqrt{u^2 + v^2}",
         products=('pl:u', 'pl:v'),
         level=850.0,
-        synonyms="viento zonal meridional rapidez",
     ),
     Variable(
         "w", "w", "Velocidad vertical (omega)", "Pa/s", "era5-presion",
@@ -378,7 +375,6 @@ VARIABLES = (
         "metros por segundo.",
         products=('pl:w',),
         level=500.0,
-        synonyms="omega ascenso",
     ),
     Variable(
         "t", "t", "Temperatura", "K", "era5-presion",
@@ -388,7 +384,6 @@ VARIABLES = (
         "flotabilidad de una parcela: si es más cálida que el aire que la rodea, sube.",
         products=('pl:t',),
         level=500.0,
-        synonyms="temperatura aire",
     ),
     Variable(
         "q", "q", "Humedad específica", "kg/kg", "era5-presion",
@@ -398,7 +393,6 @@ VARIABLES = (
         "precipitable.",
         products=('pl:q',),
         level=850.0,
-        synonyms="humedad vapor",
     ),
     Variable(
         "z", "z", "Geopotencial", "m²/s²", "era5-presion",
@@ -409,7 +403,6 @@ VARIABLES = (
         formula=r"Z = \frac{\Phi}{g_0}, \qquad g_0 = 9{,}80665\ \mathrm{m\,s^{-2}}",
         products=('pl:z',),
         level=500.0,
-        synonyms="altura geopotencial",
     ),
     Variable(
         "r", "r", "Humedad relativa", "%", "era5-presion",
@@ -421,7 +414,6 @@ VARIABLES = (
         method="e es la presión de vapor y e_s la de saturación a la temperatura T.",
         products=('pl:r',),
         level=700.0,
-        synonyms="humedad",
     ),
     Variable(
         "vo", "ζ", "Vorticidad relativa", "1/s", "era5-presion",
@@ -432,7 +424,6 @@ VARIABLES = (
         caveat=f"{_SOUTH} la rotación ciclónica es horaria y tiene **ζ negativa**.",
         products=('pl:vo',),
         level=500.0,
-        synonyms="rotación vorticity",
     ),
     Variable(
         "pv", "PV", "Vorticidad potencial", "PVU", "era5-presion",
@@ -443,16 +434,14 @@ VARIABLES = (
         formula=r"\mathrm{PV} = -g\,(\zeta + f)\,\frac{\partial \theta}{\partial p}",
         method="f es el parámetro de Coriolis y θ la temperatura potencial; 1 PVU = 10⁻⁶ K m² kg⁻¹ s⁻¹.",
         caveat=f"{_SOUTH} f es negativo y la PV del aire estratosférico también.",
-        synonyms="potential vorticity intrusión estratosférica baja segregada cutoff",
     ),
     # --- ERA5 · superficie ---------------------------------------------------------------------------
     Variable(
         "viento10", "10u, 10v", "Viento a 10 m", "m/s", "era5-superficie",
         "Componentes del viento a 10 m sobre el terreno.",
-        why="Es el punto de partida de los perfiles del visor. Reemplaza al nivel de 1000 hPa, que sobre "
-        "los Andes queda bajo tierra.",
+        why="Es el punto de partida de la cizalladura y la helicidad de niveles bajos. Reemplaza al nivel de "
+        "1000 hPa, que sobre los Andes queda bajo tierra.",
         products=('sfc:10u', 'sfc:10v'),
-        synonyms="viento superficie",
     ),
     Variable(
         "viento100", "100u, 100v", "Viento a 100 m", "m/s", "era5-superficie",
@@ -467,7 +456,6 @@ VARIABLES = (
         "meteorológica.",
         why="Con el punto de rocío da la altura de la base de la nube (LCL).",
         products=('sfc:2t',),
-        synonyms="temperatura superficie",
     ),
     Variable(
         "td2m", "2d", "Punto de rocío a 2 m", "K", "era5-superficie",
@@ -475,7 +463,6 @@ VARIABLES = (
         "sature.",
         why="Cuanto más cerca de la temperatura, más húmedo el aire y más baja la base de la nube.",
         products=('sfc:2d',),
-        synonyms="rocío dewpoint",
     ),
     Variable(
         "sp", "sp", "Presión de superficie", "Pa", "era5-superficie",
@@ -483,7 +470,6 @@ VARIABLES = (
         why="Dice qué niveles de presión están bajo tierra: sobre los Andes es mucho menor que 1000 hPa. "
         "El visor la usa para medir alturas sobre el terreno.",
         products=('sfc:sp',),
-        synonyms="presión terreno",
     ),
     Variable(
         "msl", "msl", "Presión a nivel del mar", "Pa", "era5-superficie",
@@ -492,7 +478,6 @@ VARIABLES = (
         why="Dibuja las bajas y los frentes. El 30 de mayo de 2019 había una baja ocluida de ~995 hPa "
         "frente a la costa.",
         products=('sfc:msl',),
-        synonyms="presión isobaras baja",
     ),
     Variable(
         "cape", "CAPE", "Energía potencial convectiva disponible", "J/kg", "era5-superficie",
@@ -508,7 +493,6 @@ VARIABLES = (
         "obtuvieron.",
         inputs=('t', 'q'),
         products=('sfc:cape',),
-        synonyms="inestabilidad energía flotabilidad",
     ),
     Variable(
         "cin", "CIN", "Inhibición convectiva", "J/kg", "era5-superficie",
@@ -519,7 +503,6 @@ VARIABLES = (
         formula=r"\mathrm{CIN} = g \int_{\mathrm{sfc}}^{\mathrm{LFC}} \frac{T_{v,p} - T_{v,e}}{T_{v,e}}\,dz",
         caveat="El visor todavía no la descarga: por eso su STP es una aproximación sin CIN.",
         inputs=('t', 'q'),
-        synonyms="inhibición cap tapa",
     ),
     Variable(
         "tcwv", "tcwv", "Agua precipitable", "kg/m²", "era5-superficie",
@@ -528,7 +511,6 @@ VARIABLES = (
         formula=r"\mathrm{PW} = \frac{1}{g} \int_{p_{\mathrm{tope}}}^{p_s} q\,dp",
         inputs=('q',),
         products=('sfc:tcwv',),
-        synonyms="vapor columna humedad",
     ),
     Variable(
         "blh", "blh", "Altura de la capa límite", "m", "era5-superficie",
@@ -537,7 +519,6 @@ VARIABLES = (
         why="Una capa profunda mezcla el aire cálido y húmedo del suelo con el más seco de arriba. Sirve "
         "para interpretar la humedad y el viento de niveles bajos.",
         products=('sfc:blh',),
-        synonyms="capa límite pbl",
     ),
     Variable(
         "tcc", "tcc", "Nubosidad total", "0–1", "era5-superficie",
@@ -545,7 +526,6 @@ VARIABLES = (
         why="Es la nubosidad de ERA5, no la observada. Compararla con GOES muestra dónde el modelo "
         "acertó: si dice 0,2 y la imagen muestra una tormenta, no la reconstruyó.",
         products=('sfc:tcc',),
-        synonyms="nubes cobertura",
     ),
     Variable(
         "sst", "SST", "Temperatura superficial del mar", "K", "era5-superficie",
@@ -553,7 +533,6 @@ VARIABLES = (
         " la mantiene baja en comparación con otras costas a la misma latitud.",
         why="El Pacífico es la fuente de humedad y de calor de la convección que llega a la costa. "
         "Importa su diferencia con el aire (ver «Contraste mar–aire»).",
-        synonyms="mar océano",
     ),
     # --- ERA5 · derivados cinemáticos ----------------------------------------------------------------
     Variable(
@@ -568,7 +547,6 @@ VARIABLES = (
         "Cumplirlo describe el entorno; no confirma un tornado.",
         inputs=('viento', 'viento10', 'z', 'sp'),
         products=('idx:shear_01',),
-        synonyms="shear cizalle bulk wind difference bwd",
     ),
     Variable(
         "shear_03", "Cizalladura 0–3 km", "Cizalladura de 0 a 3 km", "m/s", "era5-cinematicos",
@@ -577,7 +555,6 @@ VARIABLES = (
         formula=r"\mathrm{BWD}_{0\text{–}3} = \left|\vec V(3\ \mathrm{km}) - \vec V(10\ \mathrm{m})\right|",
         inputs=('viento', 'viento10', 'z', 'sp'),
         products=('idx:shear_03',),
-        synonyms="shear cizalle",
     ),
     Variable(
         "shear_06", "Cizalladura 0–6 km", "Cizalladura de capa profunda", "m/s", "era5-cinematicos",
@@ -589,7 +566,6 @@ VARIABLES = (
         "de esa situación. Tampoco tiene un criterio local de decisión.",
         inputs=('viento', 'viento10', 'z', 'sp'),
         products=('idx:shear_06',),
-        synonyms="shear cizalle",
     ),
     Variable(
         "bunkers", "Bunkers LM", "Movimiento de la tormenta (Bunkers)", "m/s", "era5-cinematicos",
@@ -605,7 +581,6 @@ VARIABLES = (
         caveat=f"{_SOUTH} la supercélula favorecida es la **left-mover**: usar la otra rama da índices con el"
         f" signo cambiado.",
         inputs=('viento', 'viento10'),
-        synonyms="storm motion left-mover right-mover",
     ),
     Variable(
         "srh_01", "SRH₀₋₁", "Helicidad relativa a la tormenta 0–1 km", "m²/s²", "era5-cinematicos",
@@ -622,7 +597,6 @@ VARIABLES = (
         f"rotación, pero no basta para anunciar un tornado.",
         inputs=('viento', 'bunkers'),
         products=('idx:srh_01',),
-        synonyms="helicity helicidad storm relative",
     ),
     Variable(
         "srh_03", "SRH₀₋₃", "Helicidad relativa a la tormenta 0–3 km", "m²/s²", "era5-cinematicos",
@@ -633,7 +607,6 @@ VARIABLES = (
         "−253 a −688 m²/s².",
         inputs=('viento', 'bunkers'),
         products=('idx:srh_03',),
-        synonyms="helicity helicidad",
     ),
     Variable(
         "adv_vort", "−V·∇ζ", "Advección de vorticidad", "1/s²", "era5-cinematicos",
@@ -644,7 +617,6 @@ VARIABLES = (
         caveat=f"{_SOUTH} la vorticidad ciclónica es negativa: la advección que favorece el ascenso tiene el "
         f"signo contrario al del hemisferio norte.",
         inputs=('vo', 'viento'),
-        synonyms="advección vorticidad vaguada",
     ),
     Variable(
         "hodografo", "Hodógrafo", "Forma del hodógrafo", "", "era5-cinematicos",
@@ -654,9 +626,8 @@ VARIABLES = (
         "arco, es el perfil típico de las supercélulas. Se resume con la curvatura integrada, la "
         "longitud de arco y el área en los primeros 3 km.",
         formula=r"L_{0\text{–}3} = \int_0^{3\ \mathrm{km}} \left|\frac{\partial \vec V}{\partial z}\right| dz",
-        method="Se calcula con el perfil de viento del punto elegido.",
+        method="El visor todavía no la calcula: se obtendría del perfil de viento de cada columna ERA5.",
         inputs=('viento',),
-        synonyms="hodograph curvatura",
     ),
     Variable(
         "llj", "LLJ", "Jet de niveles bajos", "m/s", "era5-cinematicos",
@@ -665,7 +636,6 @@ VARIABLES = (
         " noroeste en 850 hPa llegaba a 20–30 m/s y se frenaba contra la cordillera.",
         formula=r"V_{\mathrm{LLJ}} = \max_{z < 1{,}5\ \mathrm{km}} |\vec V(z)|",
         inputs=('viento',),
-        synonyms="low level jet chorro",
     ),
     Variable(
         "divergencia", "δ", "Convergencia y divergencia", "1/s", "era5-cinematicos",
@@ -674,7 +644,6 @@ VARIABLES = (
         " en 200–300 hPa se lleva aire hacia afuera y el de abajo sube para reemplazarlo.",
         formula=r"\delta = \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y}",
         inputs=('viento',),
-        synonyms="convergencia divergence",
     ),
     # --- ERA5 · derivados termodinámicos -------------------------------------------------------------
     Variable(
@@ -686,7 +655,6 @@ VARIABLES = (
         "comparar con la literatura sin saber cuál se usó.",
         formula=r"\mathrm{CAPE}_{\text{parcela}} = g \int_{\mathrm{LFC}}^{\mathrm{EL}} \frac{T_{v,p} - T_{v,e}}{T_{v,e}}\,dz",
         inputs=('t', 'q', 't2m', 'td2m', 'sp'),
-        synonyms="sbcape mlcape mucape parcela",
     ),
     Variable(
         "cape_03", "CAPE₀₋₃", "CAPE de niveles bajos", "J/kg", "era5-termodinamicos",
@@ -695,20 +663,18 @@ VARIABLES = (
         "Con CAPE total baja, como en Chile, separa los casos mejor que la CAPE integrada.",
         formula=r"\mathrm{CAPE}_{0\text{–}3} = g \int_{\mathrm{LFC}}^{3\ \mathrm{km}} \frac{T_{v,p} - T_{v,e}}{T_{v,e}}\,dz",
         inputs=('t', 'q'),
-        synonyms="cape baja 3cape",
     ),
     Variable(
         "lcl", "LCL", "Nivel de condensación por ascenso", "m", "era5-termodinamicos",
         "La altura a la que una parcela que sube desde la superficie se satura: la base de la nube.",
-        why="Un LCL bajo, con aire húmedo cerca del suelo, es uno de los discriminantes tornádicos más "
-        "robustos de la literatura.",
+        why="Un LCL bajo, con aire húmedo cerca del suelo, es de las variables que mejor separan los casos "
+        "tornádicos de los demás en la literatura.",
         formula=r"z_{\mathrm{LCL}} \approx 125\ \mathrm{m\,K^{-1}}\,(T_{2m} - T_{d,2m})",
         method="Aproximación de Espy: 125 m por cada grado de diferencia entre temperatura y punto de rocío "
         "a 2 m.",
         caveat="En el caso de 2019 el LCL estaba bajo los 650–713 m: una base de nube baja.",
         inputs=('t2m', 'td2m'),
         products=('idx:lcl',),
-        synonyms="base nube condensación",
     ),
     Variable(
         "lfc_el", "LFC, EL", "Nivel de convección libre y de equilibrio", "m", "era5-termodinamicos",
@@ -717,7 +683,6 @@ VARIABLES = (
         why="Entre el LFC y el EL se acumula la CAPE, y la altura del EL marca qué tan profunda puede ser"
         " la convección.",
         inputs=('t', 'q'),
-        synonyms="lfc el equilibrio convección libre",
     ),
     Variable(
         "gamma_03", "Γ₀₋₃", "Gradiente térmico 0–3 km", "K/km", "era5-termodinamicos",
@@ -728,7 +693,6 @@ VARIABLES = (
         method="El visor usa la temperatura a 2 m como dato a 10 m.",
         inputs=('t', 't2m', 'z'),
         products=('idx:gamma_03',),
-        synonyms="lapse rate gradiente",
     ),
     Variable(
         "gamma_75", "Γ₇₀₀₋₅₀₀", "Gradiente térmico 700–500 hPa", "K/km", "era5-termodinamicos",
@@ -737,7 +701,6 @@ VARIABLES = (
         formula=r"\Gamma_{700\text{–}500} = \frac{T_{700} - T_{500}}{Z_{500} - Z_{700}}",
         inputs=('t', 'z'),
         products=('idx:gamma_75',),
-        synonyms="lapse rate gradiente",
     ),
     Variable(
         "t500", "T₅₀₀", "Temperatura en 500 hPa", "K", "era5-termodinamicos",
@@ -747,7 +710,6 @@ VARIABLES = (
         inputs=('t',),
         products=('pl:t',),
         level=500.0,
-        synonyms="aire frío altura núcleo frío",
     ),
     Variable(
         "humedad_capas", "T − Td", "Humedad por capas y depresión del punto de rocío", "K", "era5-termodinamicos",
@@ -757,7 +719,6 @@ VARIABLES = (
         "enfría el aire y lo hace bajar en corrientes descendentes.",
         formula=r"\Delta T_{d,700} = T_{700} - T_{d,700}",
         inputs=('t', 'q', 'r'),
-        synonyms="depresión rocío aire seco",
     ),
     Variable(
         "dcape", "DCAPE", "CAPE de corrientes descendentes", "J/kg", "era5-termodinamicos",
@@ -767,7 +728,6 @@ VARIABLES = (
         formula=r"\mathrm{DCAPE} = g \int_{\mathrm{sfc}}^{z_0} \frac{T_{v,e} - T_{v,p}}{T_{v,e}}\,dz",
         method="z₀ es el nivel desde donde parte la parcela descendente, típicamente en niveles medios.",
         inputs=('t', 'q'),
-        synonyms="descendente downdraft rfd",
     ),
     Variable(
         "sst_aire", "SST − T₂ₘ", "Contraste mar–aire", "K", "era5-termodinamicos",
@@ -775,7 +735,6 @@ VARIABLES = (
         why="Mide el calor y la humedad que el Pacífico entrega al aire que llega a la costa.",
         formula=r"\Delta T = \mathrm{SST} - T_{2m}",
         inputs=('sst', 't2m'),
-        synonyms="mar aire contraste",
     ),
     # --- ERA5 · índices compuestos -------------------------------------------------------------------
     Variable(
@@ -792,13 +751,12 @@ VARIABLES = (
         "al. 2021). Su alcance fuera de esos casos requiere evaluación.",
         inputs=('cape', 'shear_01'),
         products=('idx:vgp_01',),
-        synonyms="vorticity generation parameter",
     ),
     Variable(
         "stp_lm", "STP", "Parámetro significativo de tornado, rama left-mover", "", "era5-compuestos",
         "Combina energía, base de nube, helicidad y cizalladura profunda en un número (Thompson et "
         "al. 2003, 2012).",
-        why="Es el índice compuesto más usado en el mundo para tornados significativos. Con los umbrales "
+        why="Es un índice compuesto de uso amplio en Estados Unidos para tornados significativos. Con los umbrales "
         "de Estados Unidos, el brote de 2019 no se habría detectado: por eso los umbrales chilenos "
         "son distintos.",
         formula=r"\mathrm{STP} = \frac{\mathrm{CAPE}}{1500}\cdot\frac{2000 - \mathrm{LCL}}{1000}\cdot\frac{\mathrm{SRH}_{0\text{–}1}}{150}\cdot\frac{\mathrm{BWD}_{0\text{–}6}}{20}",
@@ -810,7 +768,6 @@ VARIABLES = (
         caveat="Con la SRH *left-mover* el STP austral es negativo.",
         inputs=('cape', 'lcl', 'srh_01', 'shear_06'),
         products=('idx:stp_lm',),
-        synonyms="significant tornado parameter",
     ),
     Variable(
         "sherbs3", "SHERBS3", "Índice para entornos HSLC", "", "era5-compuestos",
@@ -826,7 +783,6 @@ VARIABLES = (
         "SHERBS3 no tiene un umbral validado.",
         inputs=('shear_03', 'gamma_03', 'gamma_75'),
         products=('idx:sherbs3',),
-        synonyms="sherbe hslc",
     ),
     Variable(
         "ehi", "EHI", "Índice energía–helicidad", "", "era5-compuestos",
@@ -836,7 +792,6 @@ VARIABLES = (
         formula=r"\mathrm{EHI} = \frac{\mathrm{CAPE} \cdot \mathrm{SRH}}{160\,000}",
         caveat="Con la SRH *left-mover* del hemisferio sur, el EHI favorable es negativo.",
         inputs=('cape', 'srh_01'),
-        synonyms="energy helicity index",
     ),
     Variable(
         "scp", "SCP", "Parámetro compuesto de supercélula", "", "era5-compuestos",
@@ -847,7 +802,6 @@ VARIABLES = (
         caveat="Calibrado para el hemisferio norte; en el sur hay que usar la helicidad *left-mover* y "
         "recalibrar.",
         inputs=('cape_variantes', 'srh_03', 'shear_06'),
-        synonyms="supercell composite parameter",
     ),
     Variable(
         "brn", "BRN", "Número de Richardson global", "", "era5-compuestos",
@@ -858,7 +812,6 @@ VARIABLES = (
         formula=r"\mathrm{BRN} = \frac{\mathrm{CAPE}}{\tfrac12 \left|\bar{\vec V}_{0\text{–}6} - \bar{\vec V}_{0\text{–}0{,}5}\right|^2}",
         method="Los vientos medios se ponderan por densidad.",
         inputs=('cape', 'viento'),
-        synonyms="bulk richardson number",
     ),
     # --- GOES · bandas -------------------------------------------------------------------------------
     Variable(
@@ -867,16 +820,14 @@ VARIABLES = (
         " nubes.",
         why="Junto con la roja y la de vegetación permite armar imágenes en color natural. Solo de día.",
         products=('goes:C01',),
-        synonyms="visible azul",
     ),
     Variable(
         "C02", "C02", "Banda 2 · rojo", "", "goes-bandas",
         "Visible de 0,64 µm, la de mayor resolución: 0,5 km nativo (2 km en el visor).",
-        why="Es la de mayor resolución y muestra la textura y las sombras del tope de la nube: con ella "
+        why="Muestra la textura y las sombras del tope de la nube: con ella "
         "se distinguen los topes penetrantes y la superficie rugosa de una tormenta vigorosa. Solo de"
         " día.",
         products=('goes:C02',),
-        synonyms="visible rojo textura",
     ),
     Variable(
         "C03", "C03", "Banda 3 · vegetación (veggie)", "", "goes-bandas",
@@ -892,7 +843,6 @@ VARIABLES = (
         why="Como el vapor de los niveles bajos la absorbe, solo deja ver nubes altas: sirve para "
         "detectar cirros finos, como los de un yunque, que otras bandas no muestran.",
         products=('goes:C04',),
-        synonyms="cirros",
     ),
     Variable(
         "C05", "C05", "Banda 5 · nieve y hielo", "", "goes-bandas",
@@ -900,7 +850,6 @@ VARIABLES = (
         "de hielo se ven oscuras y las de agua, claras.",
         why="Ayuda a saber si una nube es de hielo o de agua líquida.",
         products=('goes:C05',),
-        synonyms="nieve hielo",
     ),
     Variable(
         "C06", "C06", "Banda 6 · tamaño de partícula", "", "goes-bandas",
@@ -909,7 +858,6 @@ VARIABLES = (
         why="En el tope de una corriente ascendente fuerte las partículas suelen ser pequeñas. Se usa "
         "junto con la banda 11 para estimar la fase y el tamaño del tope.",
         products=('goes:C06',),
-        synonyms="partícula",
     ),
     Variable(
         "C07", "C07", "Banda 7 · ventana de onda corta", "K", "goes-bandas",
@@ -918,7 +866,6 @@ VARIABLES = (
         why="Resalta incendios, niebla y el tamaño de las partículas del tope. De día su temperatura no "
         "es comparable con la de la noche.",
         products=('goes:C07',),
-        synonyms="onda corta",
     ),
     Variable(
         "C08", "C08", "Banda 8 · vapor de agua alto", "K", "goes-bandas",
@@ -926,7 +873,6 @@ VARIABLES = (
         why="Revela la circulación de niveles medios-altos aunque no haya nubes. Entra en el RGB Airmass "
         "y en C08 − C13.",
         products=('goes:C08',),
-        synonyms="vapor agua",
     ),
     Variable(
         "C09", "C09", "Banda 9 · vapor de agua medio", "K", "goes-bandas",
@@ -934,7 +880,6 @@ VARIABLES = (
         why="Muestra la humedad de los niveles medios: el aire seco se ve más cálido y el húmedo, más "
         "frío.",
         products=('goes:C09',),
-        synonyms="vapor agua",
     ),
     Variable(
         "C10", "C10", "Banda 10 · vapor de agua bajo", "K", "goes-bandas",
@@ -942,7 +887,6 @@ VARIABLES = (
         why="Marca el borde de los sistemas y el aire seco que baja desde niveles altos, que se ve más "
         "cálido.",
         products=('goes:C10',),
-        synonyms="vapor agua",
     ),
     Variable(
         "C11", "C11", "Banda 11 · fase del tope", "K", "goes-bandas",
@@ -950,7 +894,6 @@ VARIABLES = (
         why="Con la banda 13 permite separar los topes de hielo de los de agua; entra en la diferencia "
         "C13 − C11.",
         products=('goes:C11',),
-        synonyms="fase",
     ),
     Variable(
         "C12", "C12", "Banda 12 · ozono", "K", "goes-bandas",
@@ -958,7 +901,6 @@ VARIABLES = (
         why="Entra en el RGB Airmass: las bajas segregadas y las intrusiones de aire estratosférico se "
         "ven por su ozono.",
         products=('goes:C12',),
-        synonyms="ozono",
     ),
     Variable(
         "C13", "C13", "Banda 13 · ventana larga limpia", "K", "goes-bandas",
@@ -967,7 +909,6 @@ VARIABLES = (
         why="Es el termómetro del tope: cuanto más frío, más alto suele ser el tope de la tormenta. No "
         "mide la altura ni la fuerza de la corriente ascendente.",
         products=('goes:C13',),
-        synonyms="infrarrojo ir temperatura brillo",
     ),
     Variable(
         "C14", "C14", "Banda 14 · ventana larga", "K", "goes-bandas",
@@ -989,7 +930,6 @@ VARIABLES = (
         "ventanas.",
         why="Con la banda 13 se estudian las propiedades del tope (C13 − C16).",
         products=('goes:C16',),
-        synonyms="co2",
     ),
     # --- GOES · derivados por imagen -----------------------------------------------------------------
     Variable(
@@ -1004,7 +944,6 @@ VARIABLES = (
         caveat="Es una imagen para interpretar a ojo, no una medida: no hay un valor en K que leer.",
         inputs=('C08', 'C10', 'C12', 'C13'),
         products=('rgb:airmass',),
-        synonyms="rgb masa aire nube coma intrusión seca",
     ),
     Variable(
         "C08-C13", "C08 − C13", "Diferencia vapor de agua – ventana", "K", "goes-imagen",
@@ -1016,7 +955,6 @@ VARIABLES = (
         caveat="No es exclusivo de topes penetrantes: se ve también en otras nubes altas muy gruesas.",
         inputs=('C08', 'C13'),
         products=('goes:C08-C13',),
-        synonyms="diferencia bandas tropopausa",
     ),
     Variable(
         "bt_min", "BT_min", "Temperatura de brillo mínima", "K", "goes-imagen",
@@ -1025,7 +963,6 @@ VARIABLES = (
         "con su altura, pero esa relación cambia con la atmósfera del día.",
         formula=r"T_{b,\min} = \min_{\text{celda}} T_{b,13}",
         inputs=('C13',),
-        synonyms="mínimo tope frío",
     ),
     Variable(
         "tropo_tope", "T_tropo − T_tope", "Sobrepaso de la tropopausa", "K", "goes-imagen",
@@ -1034,7 +971,6 @@ VARIABLES = (
         "viene de ERA5 y el tope, de GOES.",
         formula=r"\Delta T = T_{\mathrm{tropopausa}} - T_{b,13}",
         inputs=('C13', 't'),
-        synonyms="tropopausa overshoot",
     ),
     Variable(
         "overshooting", "OT", "Topes penetrantes", "", "goes-imagen",
@@ -1043,7 +979,6 @@ VARIABLES = (
         why="Marcan una corriente ascendente tan fuerte que perfora la tropopausa y llega a la "
         "estratosfera.",
         inputs=('C13', 'C02'),
-        synonyms="overshooting top tope penetrante",
     ),
     Variable(
         "diferencias", "ΔBT", "Diferencias entre bandas", "K", "goes-imagen",
@@ -1057,7 +992,6 @@ VARIABLES = (
         method="C13 − C16 y C16 − C13 son el mismo par con el signo cambiado: al comparar con la literatura,"
         " revisa el orden de la resta.",
         inputs=('C11', 'C13', 'C14', 'C16'),
-        synonyms="diferencia bandas",
     ),
     Variable(
         "v_fria", "Firma V", "Firma en «V» o «U» fría", "", "goes-imagen",
@@ -1066,7 +1000,6 @@ VARIABLES = (
         why="Es una señal clásica de tiempo severo en el infrarrojo: el aire que sale por el yunque deja "
         "una V o una U fría alrededor de la corriente ascendente.",
         inputs=('C13',),
-        synonyms="enhanced v cold u",
     ),
     Variable(
         "aacp", "AACP", "Pluma de cirros sobre el yunque", "", "goes-imagen",
@@ -1076,7 +1009,6 @@ VARIABLES = (
         why="Es una señal de tormenta severa (Bedka et al., 2018): las tormentas con pluma tienen muchas "
         "más probabilidades de causar granizo, vientos fuertes o tornados.",
         inputs=('C02', 'C13'),
-        synonyms="above anvil cirrus plume",
     ),
     Variable(
         "textura", "Textura", "Textura del yunque", "", "goes-imagen",
@@ -1085,7 +1017,6 @@ VARIABLES = (
         "decaimiento.",
         formula=r"\sigma^2_{\mathrm{local}} = \frac{1}{N}\sum_{\text{ventana}} (R_{02} - \bar R_{02})^2",
         inputs=('C02',),
-        synonyms="varianza gradiente",
     ),
     Variable(
         "area_umbral", "A(T_b < T₀)", "Área del tope bajo umbrales", "km²", "goes-imagen",
@@ -1094,7 +1025,6 @@ VARIABLES = (
         "dinámicas.",
         formula=r"A_{T_0} = \sum_{\text{píxeles}} \mathbb{1}[T_{b,13} < T_0]\;\Delta A",
         inputs=('C13',),
-        synonyms="área yunque",
     ),
     Variable(
         "fase", "Fase", "Fase y tamaño de partícula del tope", "", "goes-imagen",
@@ -1102,7 +1032,6 @@ VARIABLES = (
         " o con los productos ACTPF y CPSF.",
         why="Las corrientes ascendentes fuertes llevan partículas pequeñas de hielo al tope.",
         inputs=('C06', 'C11'),
-        synonyms="hielo agua partícula",
     ),
     # --- GOES · tendencias ---------------------------------------------------------------------------
     Variable(
@@ -1119,7 +1048,6 @@ VARIABLES = (
         "crecen. El flujo óptico ayuda a separarlos.",
         inputs=('C13',),
         products=('goes:dT',),
-        synonyms="tendencia enfriamiento dbt/dt",
     ),
     Variable(
         "expansion", "dA/dt", "Expansión del yunque", "km²/min", "goes-tendencias",
@@ -1127,14 +1055,12 @@ VARIABLES = (
         why="Un yunque que se expande rápido indica una corriente ascendente vigorosa.",
         formula=r"\frac{dA_{T_0}}{dt} \approx \frac{A_{T_0}(t) - A_{T_0}(t-\Delta t)}{\Delta t}",
         inputs=('area_umbral',),
-        synonyms="área crecimiento",
     ),
     Variable(
         "ot_crecimiento", "OT(t)", "Crecimiento del tope penetrante", "", "goes-tendencias",
         "Cómo cambian en el tiempo el tamaño y la temperatura de un tope penetrante.",
         why="Si el tope penetrante crece y se enfría, la corriente ascendente se está intensificando.",
         inputs=('overshooting',),
-        synonyms="overshooting",
     ),
     Variable(
         "flujo_optico", "∇ × F", "Flujo óptico y su rotación", "1/s", "goes-tendencias",
@@ -1146,7 +1072,6 @@ VARIABLES = (
         caveat="Que el yunque gire no significa que haya un mesociclón: es el movimiento del tope, no el de "
         "la circulación interna. En el hemisferio sur la rotación ciclónica es horaria.",
         inputs=('C13',),
-        synonyms="optical flow rotación yunque",
     ),
     Variable(
         "lightning_jump", "Lightning jump", "Salto en la tasa de rayos", "rayos/min", "goes-tendencias",
@@ -1156,7 +1081,6 @@ VARIABLES = (
         "(Schultz et al., 2009).",
         caveat="La eficiencia del GLM cae hacia el sur y Magallanes queda en el borde de su campo de visión.",
         inputs=('glm',),
-        synonyms="rayos glm",
     ),
     Variable(
         "propagacion", "Desvío", "Propagación y desvío respecto del viento medio", "m/s", "goes-tendencias",
@@ -1166,20 +1090,17 @@ VARIABLES = (
         "ciclónicas australes (*left-movers*).",
         formula=r"\vec D = \vec C_{\mathrm{obs}} - \bar{\vec V}_{0\text{–}6}",
         inputs=('C13', 'bunkers'),
-        synonyms="movimiento tormenta left-mover desvío",
     ),
     # --- GOES · otros productos ----------------------------------------------------------------------
     Variable(
         "acha", "ACHAF", "Altura del tope nuboso", "m", "goes-productos",
         "Producto `ABI-L2-ACHAF`: la altura estimada del tope de la nube.",
         why="Con la altura del tope y el ángulo del satélite se puede corregir el paralaje.",
-        synonyms="altura tope paralaje",
     ),
     Variable(
         "actp", "ACTPF", "Fase del tope nuboso", "", "goes-productos",
         "Producto `ABI-L2-ACTPF`: si el tope es de hielo, agua o mixto.",
         why="Entrega directamente lo que el visor puede estimar con las bandas 11 y 6.",
-        synonyms="fase",
     ),
     Variable(
         "dsi", "DSIF", "Índices de estabilidad derivados", "", "goes-productos",
@@ -1187,14 +1108,12 @@ VARIABLES = (
         " satélite.",
         why="Es un contraste independiente de ERA5: la CAPE y el agua precipitable estimadas desde el "
         "satélite.",
-        synonyms="estabilidad cape satélite",
     ),
     Variable(
         "dmw", "DMWF", "Vientos derivados del movimiento", "m/s", "goes-productos",
         "Producto `ABI-L2-DMWF`: viento en altura medido siguiendo nubes y vapor.",
         why="Es una observación de viento en altura, no una reconstrucción como ERA5, aunque solo donde "
         "hay nubes o vapor que seguir.",
-        synonyms="vientos atmospheric motion vectors",
     ),
     Variable(
         "glm", "GLM", "Rayos", "", "goes-productos",
@@ -1202,14 +1121,12 @@ VARIABLES = (
         " las descargas detectadas.",
         why="Es la fuente de los saltos en la tasa de rayos.",
         caveat="Cobertura hasta ~52°S, con eficiencia de 70–90 % que cae hacia el sur.",
-        synonyms="rayos lightning",
     ),
     Variable(
         "l1b", "L1b RadF", "Radiancias crudas", "", "goes-productos",
         "Producto `ABI-L1b-RadF`: radiancias sin convertir. Existe un reprocesamiento de GOES-16 "
         "(2018 – fines de 2024) con mejor calibración y navegación.",
         why="Conviene para una climatología multianual o si se quiere controlar la calibración.",
-        synonyms="radiancia calibración",
     ),
     # --- Catálogo · columnas -------------------------------------------------------------------------
     Variable(
@@ -1217,14 +1134,12 @@ VARIABLES = (
         "Las coordenadas del evento, en grados. Cobertura: 102 de 102.",
         why="Permite ubicar el evento en la grilla de ERA5 y en los píxeles de GOES.",
         caveat="Es la posición del daño observado, no la del mesociclón.",
-        synonyms="coordenadas lugar",
     ),
     Variable(
         "cat_fecha", "Date", "Fecha", "", "catalogo-columnas",
         "El día del evento, en calendario gregoriano (así se llama la columna). Cobertura: 102 de "
         "102.",
         why="Junto con la hora, indica qué archivo de ERA5 y qué imagen de GOES corresponden.",
-        synonyms="día",
     ),
     Variable(
         "cat_hora_utc", "Hour (UTC)", "Hora UTC", "UTC", "catalogo-columnas",
@@ -1232,7 +1147,6 @@ VARIABLES = (
         "Cobertura: 91 (89 %).",
         why="Es la columna que permite cruzar con GOES.",
         caveat="Con imágenes cada 10 min, un error de ±1 h son ±6 imágenes.",
-        synonyms="hora",
     ),
     Variable(
         "cat_hora_local", "Hour (local)", "Hora local", "", "catalogo-columnas",
@@ -1240,7 +1154,6 @@ VARIABLES = (
         "calentamiento diurno.",
         why="Muestra a qué hora del día ocurren los eventos: la mediana es las 14:00, en plena ventana de"
         " calentamiento.",
-        synonyms="hora",
     ),
     Variable(
         "cat_tipo", "Tornado, Waterspout", "Tipo de evento", "binaria", "catalogo-columnas",
@@ -1249,7 +1162,6 @@ VARIABLES = (
         why="Separa los registros sobre tierra de los de agua y permite estudiar la transición "
         "mar–tierra. Con el catálogo solo no se puede saber cómo se formó el vórtice.",
         caveat="Los conteos se solapan: no se suman para obtener el total.",
-        synonyms="tromba tornado",
     ),
     Variable(
         "cat_ef", "Max. EF Rating", "Intensidad EF", "EF0–EF3", "catalogo-columnas",
@@ -1257,34 +1169,29 @@ VARIABLES = (
         "Unos 53 EF0, 28 EF1, 9 EF2 y 4 EF3; ningún EF4 ni EF5.",
         why="Es la única medida de la fuerza de cada evento, y sale del daño observado, no de una "
         "medición del viento.",
-        synonyms="fujita intensidad daño",
     ),
     Variable(
         "cat_register", "Register", "Registro visual", "sí/no", "catalogo-columnas",
         "Si existe testimonio o material visual de la columna rotatoria: 50 sí, 49 no.",
         why="Permite elegir los casos con más evidencia para revisarlos. Que haya registro visual no dice"
         " cómo se formó el vórtice.",
-        synonyms="confianza testimonio",
     ),
     Variable(
         "cat_fenomenos", "Hail, Electric Storm, …", "Fenómenos acompañantes", "binaria", "catalogo-columnas",
         "Indicadores de granizo, tormenta eléctrica, sonido y daño.",
         why="Muestran qué más pasó durante el evento. El daño y el ruido se anotan por testimonio, no por"
         " medición.",
-        synonyms="granizo rayos daño",
     ),
     Variable(
         "cat_victimas", "Fatalities, Injured", "Víctimas", "", "catalogo-columnas",
         "Fallecidos y heridos: 38 fallecidos en 6 eventos y unos 1.020 heridos en 17.",
         why="Dan una idea del impacto. Pocos eventos concentran casi todas las víctimas, así que el "
         "promedio dice poco.",
-        synonyms="muertos heridos",
     ),
     Variable(
         "cat_fuentes", "Sources, Comments", "Procedencia y notas", "", "catalogo-columnas",
         "Las fuentes, los enlaces a documentos y los comentarios de cada registro.",
         why="Permiten volver a la crónica o a la nota original para revisar la hora y el lugar.",
-        synonyms="fuentes referencias",
     ),
     # --- Contexto ------------------------------------------------------------------------------------
     Variable(
@@ -1292,7 +1199,6 @@ VARIABLES = (
         "Kilómetros desde cada punto hasta la línea de costa y hasta el pie de la cordillera.",
         why="Los Andes pueden modificar el viento de niveles bajos y la costa es la entrada de tormentas "
         "que vienen del mar.",
-        synonyms="costa cordillera geografía",
     ),
     Variable(
         "terreno", "h, ∇h", "Altura del terreno y pendiente", "m", "contexto-variables",
@@ -1301,7 +1207,6 @@ VARIABLES = (
         "orográfico.",
         method="Los índices del visor estiman la altura del terreno desde la presión de superficie.",
         inputs=('sp', 'z'),
-        synonyms="orografía elevación",
     ),
     Variable(
         "cenital_sat", "θ_sat", "Ángulo cenital del satélite", "°", "contexto-variables",
@@ -1309,7 +1214,6 @@ VARIABLES = (
         "Punta Arenas.",
         why="Permite que el modelo compense la degradación geométrica: el píxel estirado y el paralaje.",
         formula=r"d_{\mathrm{paralaje}} \approx h_{\mathrm{tope}}\,\tan\theta_{\mathrm{sat}}",
-        synonyms="paralaje geometría",
     ),
     Variable(
         "cenital_sol", "θ_sol", "Ángulo cenital solar", "°", "contexto-variables",
@@ -1317,7 +1221,6 @@ VARIABLES = (
         "90° es de noche.",
         why="Las bandas visibles solo tienen señal de día, así que el modelo necesita saber si la imagen "
         "es diurna.",
-        synonyms="sol día noche",
     ),
     Variable(
         "calendario", "sin, cos", "Hora del día y día del año", "", "contexto-variables",
@@ -1325,14 +1228,12 @@ VARIABLES = (
         "00:00.",
         why="Captura el ciclo diurno (mediana a las 14:00 local) y la estacionalidad (máximo en junio).",
         formula=r"\left(\sin\frac{2\pi h}{24},\ \cos\frac{2\pi h}{24}\right), \qquad \left(\sin\frac{2\pi d}{365{,}25},\ \cos\frac{2\pi d}{365{,}25}\right)",
-        synonyms="hora estación ciclo diurno",
     ),
     Variable(
         "poblacion", "Población", "Densidad de población", "hab/km²", "contexto-variables",
         "Habitantes por km², según un censo o una grilla de población (todavía no se elige cuál).",
         why="En el catálogo hay más registros donde vive más gente. Esta variable permite al modelo "
         "descontar ese efecto, aunque no lo elimina del todo.",
-        synonyms="sesgo reporte censo",
     ),
 )  # fmt: skip
 

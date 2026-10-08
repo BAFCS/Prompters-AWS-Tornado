@@ -213,7 +213,11 @@ def _bibliography() -> None:
     st.divider()
     st.header("Referencias", anchor="referencias")
     items = []
+    cited = {k for v in variables.VARIABLES for k in variables.references_of(v)}
+    cited |= {k for s in variables.SOURCES for k in s.refs}
     for k, r in variables.REFERENCES.items():
+        if k not in cited:  # las notas de prensa solo se enlazan en Problema
+            continue
         text = r.url.removeprefix("https://").removeprefix("doi.org/")
         link = f" <a href='{html.escape(r.url)}'>{html.escape(text)}</a>" if r.url else ""
         items.append(f"<li id='ref-{k}'>{_md_html(r.full)}{link}</li>")

@@ -140,15 +140,16 @@ def _summary(ctx: state.Context) -> None:
         st.caption("El catálogo no tiene reportes para este día.")
         return
     grades = pd.to_numeric(ev["ef"].str.extract(r"(\d)")[0], errors="coerce").dropna()
-    hours = sorted(ev["hour_txt"])
+    timed = ev[ev["hour"].map(pd.notna).astype(bool)]  # ya vienen ordenadas por hora
+    hours = timed["hour_txt"].tolist()
     cols = st.columns(4)  # cifras cortas: caben en 4 columnas aun con el cuerpo angosto
     for col, (label, value) in zip(
         cols,
         [
             ("Eventos", str(len(ev))),
             ("EF máximo", f"EF{int(grades.max())}" if len(grades) else "—"),
-            ("Primer reporte (UTC)", hours[0].split("-")[0]),
-            ("Último reporte (UTC)", hours[-1].split("-")[-1]),
+            ("Primer reporte (UTC)", hours[0].split("-")[0] if hours else "—"),
+            ("Último reporte (UTC)", hours[-1].split("-")[-1] if hours else "—"),
         ],
         strict=True,
     ):

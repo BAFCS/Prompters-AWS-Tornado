@@ -66,7 +66,7 @@ class VariablesTest(unittest.TestCase):
 
 
 class PageTest(unittest.TestCase):
-    """La página Datos se dibuja sin datos, con una ficha sola o con una búsqueda sin resultados."""
+    """La página Datos se dibuja sin datos y con ``?v=`` apuntando a una ficha."""
 
     def test_without_data_shows_every_variable(self) -> None:
         """Sin datos se ven las fichas y la bibliografía, sin botones «Ver en Mapas»."""

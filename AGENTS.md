@@ -98,7 +98,7 @@ uv run streamlit run scripts/viewer/viewer.py
 diagramas en `viewer_app/diagrams.py`) presenta el proyecto con elementos de Streamlit: es la
 página por defecto y se muestra aunque no haya datos. Datos (`viewer_app/p_data.py`) es el catálogo
 de datos: una ficha por variable de docs §4–5 (qué es, por qué importa, fórmula, criterio chileno,
-cuidado, insumos y fuentes), también sin datos; `?v=<clave>` desplaza la página a esa ficha. Las fichas, la
+cuidado, insumos y fuentes), también sin datos; `?v=<clave>` desplaza la página a esa ficha. Las fichas y la
 bibliografía viven en `viewer_app/variables.py`, que es además la fuente de la ayuda
 «Qué estás viendo» de Mapas: todo producto nuevo de `products.py` necesita su ficha
 (`tests/test_variables.py` lo comprueba). La barra lateral (región, día, regla de tiempo,
@@ -110,7 +110,7 @@ sincronizado); `theme.map_columns()` mide el ancho real del cuerpo (1 a 3 column
 `st.session_state["panels"]` (`state.Panel`), no en widgets, y el recorrido guiado la fija con `Step.panels`. Los textos, umbrales y el recorrido guiado salen de `docs/` y están en
 `viewer_app/texts.py` y `viewer_app/variables.py`: si cambia el documento o un cálculo, hay que
 actualizarlos. El tema (claro y oscuro) está en
-`.streamlit/config.toml` (`[theme.light]`, `[theme.dark]`) y `viewer_app/theme.py` (`LIGHT`, `DARK`;
+`.streamlit/config.toml` (`[theme.light]`, `[theme.dark]`; la primera visita de cada navegador arranca en oscuro, lo hace `theme._WATCHER`) y `viewer_app/theme.py` (`LIGHT`, `DARK`;
 `theme.colors()` da la paleta del modo activo): si cambia un color, hay que cambiarlo en los dos
 (`tests/test_colorscales.py` comprueba que coinciden y que los textos cumplen WCAG AA).
 Streamlit no vuelve a ejecutar la app al cambiar de tema, así que el CSS usa variables de las dos

@@ -16,7 +16,7 @@ a partir del reanálisis **ERA5** y las imágenes multiespectrales del satélite
 |---|---|
 | `docs/mesociclones_chile.md` | **El documento principal.** El problema, la física, el caso chileno, los datos de entrada, las variables a calcular, cómo plantear el modelo, la arquitectura en AWS y las tareas abiertas. |
 | `docs/mesociclones_chile.pdf` | El mismo documento en A4 (33 páginas), con las figuras. |
-| `scripts/viewer/viewer.py` y `scripts/viewer/viewer_app/` | **El visor**: una aplicación web local para explorar un día de datos (mapas, sondeos y series). |
+| `scripts/viewer/viewer.py` y `scripts/viewer/viewer_app/` | **El visor**: una aplicación web local para explorar un día de datos (caso de estudio, mapas y fichas de variables). |
 | `scripts/pipeline/download_*.py`, `scripts/pipeline/process_*.py` | Descargan ERA5 y GOES recortados a Chile y calculan los índices que usa el visor. |
 | `scripts/figures/figs_*.py` | Generan las cuatro figuras de `figs/` desde los datos reales. |
 | `tests/` | Pruebas automáticas del visor. |

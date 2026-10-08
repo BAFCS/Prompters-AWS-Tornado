@@ -219,33 +219,6 @@ def to_timestamp(x: xr.DataArray) -> pd.Timestamp:
     return pd.Timestamp(str(x.values))
 
 
-def window(da: xr.DataArray, la: float, lo: float, radius: float) -> xr.DataArray:
-    """Recorte de ``da`` a un cuadrado de ±``radius`` grados alrededor de (la, lo)."""
-    lat = da["latitude"].values
-    sl = slice(la + radius, la - radius) if lat[0] > lat[-1] else slice(la - radius, la + radius)
-    return da.sel(latitude=sl, longitude=slice(lo - radius, lo + radius))
-
-
-@st.cache_data
-def goes_series(path: Path, la: float, lo: float, radius: float) -> pd.DataFrame:
-    """Para cada imagen de ``path``: Tb mínima de C13 y área de topes más fríos que −50 °C.
-
-    El área se mide en km² sobre el cuadrado de ±``radius`` grados alrededor de (la, lo), contando
-    píxeles de la grilla reproyectada (2 km × 2 km aproximados en la resolución por defecto).
-    """
-    ds = open_nc(path)
-    c13 = window(ds["C13"], la, lo, radius).load()
-    dlat = abs(float(np.diff(ds["latitude"].values[:2])[0]))
-    km2 = (dlat * 111.2) * (dlat * 111.2 * np.cos(np.deg2rad(la)))
-    return pd.DataFrame(
-        {
-            "time": pd.to_datetime(ds["time"].values),
-            "tb_min": c13.min(dim=["latitude", "longitude"]).values,
-            "area_50": (c13 < 223.15).sum(dim=["latitude", "longitude"]).values * km2,
-        }
-    )
-
-
 def image_at(d: Day, t: np.datetime64 | pd.Timestamp) -> tuple[Path, np.datetime64] | None:
     """El archivo GOES y la hora de la imagen más cercana a ``t`` (``None`` si no hay GOES)."""
     imgs = images(d)

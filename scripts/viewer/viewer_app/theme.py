@@ -221,10 +221,11 @@ _WATCHER = """
   try { firstVisit = !localStorage.getItem("meso_theme_init"); } catch (e) {}
   const toDark = setInterval(() => {
     const m = mode();
-    if (!firstVisit || !m) return;
+    if (!firstVisit) { clearInterval(toDark); return; }
+    if (!m) return;
+    if (m === "light" && !choose("Dark")) return;  // el menú aún no existe: se reintenta
     clearInterval(toDark);
     try { localStorage.setItem("meso_theme_init", "1"); } catch (e) {}
-    if (m === "light") choose("Dark");
   }, 300);
   window.__watcherRequestedAt = 0;
   window.__watcherMismatches = 0;
@@ -335,7 +336,7 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 :is(.st-key-project, .st-key-data, .st-key-case) {{ padding-top: 1.6rem; max-width: 1400px; container: project / inline-size; }}
 /* El cuerpo es su propio contenedor: tarjetas y cifras se acomodan al espacio que les deja el índice. */
 :is(.st-key-project_body, .st-key-data_body, .st-key-case_body) {{ container: body / inline-size; }}
-/* Datos sin índice (búsqueda o una ficha): el mismo ancho de lectura que con el índice al lado. */
+/* Cuerpo de Datos y Caso de estudio: el mismo ancho de lectura aunque el índice quede arriba. */
 :is(.st-key-data_body, .st-key-case_body) {{ max-width: var(--measure); }}
 :is(.st-key-project, .st-key-data, .st-key-case) h1, :is(.st-key-project, .st-key-data, .st-key-case) h2, :is(.st-key-project, .st-key-data, .st-key-case) h3 {{ scroll-margin-top: var(--anchor-offset); }}
 :is(.st-key-project, .st-key-data, .st-key-case) [data-testid="stHeading"] {{ max-width: var(--measure); }}  /* en el contenedor, no en h1-h3: el ch depende del cuerpo de la fuente */
