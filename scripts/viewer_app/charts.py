@@ -5,12 +5,17 @@ Todos salen por ``_style``, que les pone la plantilla ``notebook`` (o ``notebook
 líneas de umbral chileno, nunca para texto; el color de selección marca el punto elegido.
 """
 
+import base64
+import io
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
+import plotly.colors as pc
 import plotly.graph_objects as go
+import streamlit as st
+from PIL import Image
 from plotly.subplots import make_subplots
 
 import common
@@ -91,26 +96,86 @@ def grid_shape(n: int) -> tuple[int, int]:
     return 2, 3
 
 
-def background_z(c: "Layer") -> np.ndarray:
-    """La matriz de ``c`` como entra a su traza: el RGB pasa a latitud creciente para ``go.Image``."""
-    if c.is_rgb and c.lat[0] > c.lat[-1]:
-        return c.z[::-1]
-    return c.z
+# Lado mayor de la grilla invisible que da el valor bajo el cursor y recibe el clic.
+HOVER_CELLS = 120
+ERA5_STEP = (
+    0.25  # la grilla de clic nunca es más gruesa que ERA5, que es lo que usan Sondeo y Series
+)
 
 
-def _background(c: "Layer", colorbar: dict) -> go.Heatmap | go.Image:
-    """Traza de fondo de un panel: imagen RGB o mapa de calor con su barra de color."""
-    if c.is_rgb:
-        lat = c.lat[::-1] if c.lat[0] > c.lat[-1] else c.lat
-        return go.Image(
-            z=background_z(c), x0=float(c.lon[0]), dx=float(c.lon[1] - c.lon[0]), y0=float(lat[0]),
-            dy=float(lat[1] - lat[0]), hovertemplate="%{y:.2f}°, %{x:.2f}°<extra></extra>",
-        )  # fmt: skip
-    return go.Heatmap(
-        z=c.z, x=c.lon, y=c.lat, colorscale=c.colorscale, zmin=c.color_range[0], zmax=c.color_range[1],
-        zmid=0 if c.centered else None, colorbar=colorbar,
-        hovertemplate="%{y:.2f}°, %{x:.2f}°<br><b>%{z:.3g}</b> " + c.unit + "<extra></extra>",
+@st.cache_data(max_entries=64, show_spinner=False)
+def _png(z: np.ndarray, colorscale: str, lo: float, hi: float) -> str:
+    """``z`` (de sur a norte) coloreada con ``colorscale`` entre ``lo`` y ``hi``, como PNG en data-URI.
+
+    Un RGB ``uint8`` pasa tal cual; en un campo, NaN queda transparente. Plotly dibuja la imagen sin
+    volver a rasterizarla en cada zoom, a diferencia de un ``go.Heatmap`` del mismo tamaño.
+    """
+    if z.ndim == 3:
+        rgba = z
+    else:
+        colors = pc.sample_colorscale(
+            pc.get_colorscale(colorscale), np.linspace(0, 1, 256), colortype="rgb"
+        )
+        lut = np.array([pc.unlabel_rgb(c) for c in colors]).round().astype(np.uint8)
+        i = (
+            np.nan_to_num(np.clip((z - lo) / ((hi - lo) or 1.0), 0, 1) * 255, nan=0)
+            .round()
+            .astype(np.uint8)
+        )
+        rgba = np.dstack([lut[i], np.where(np.isnan(z), 0, 255).astype(np.uint8)])
+    buf = io.BytesIO()  # la fila 0 queda al sur: con ``dy > 0`` plotly voltea la imagen
+    Image.fromarray(np.ascontiguousarray(rgba)).save(buf, "PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
+def background(
+    c: "Layer", colorbar: dict | None = None
+) -> list[go.Image | go.Scattergl | go.Scatter]:
+    """Trazas de fondo de un panel: la imagen ya coloreada, la grilla invisible y, salvo en RGB, la barra.
+
+    La grilla (un píxel de cada ``step``) da el valor bajo el cursor y el clic que elige el punto:
+    Streamlit solo recibe selecciones de trazas de puntos, no de imágenes ni heatmaps. Los puntos sin
+    dato van en una segunda grilla que solo muestra las coordenadas. La barra de color
+    va en un punto aparte que no se dibuja: colorear cada marcador de la grilla triplica el costo del
+    zoom. Los cuadros de la animación usan estas mismas trazas sin ``colorbar``: plotly conserva la inicial.
+    """
+    up = c.lat[0] > c.lat[-1]
+    lat, z = (c.lat[::-1], c.z[::-1]) if up else (c.lat, c.z)
+    lo, hi = c.color_range
+    image = go.Image(
+        source=_png(z, c.colorscale or "gray", lo, hi), x0=float(c.lon[0]),
+        dx=float(c.lon[1] - c.lon[0]), y0=float(lat[0]), dy=float(lat[1] - lat[0]), hoverinfo="skip",
     )  # fmt: skip
+    # ponytail: el hover da el valor del punto de grilla más cercano, no el del píxel bajo el cursor;
+    # si hace falta el exacto, recalcular la grilla con el encuadre visible (requiere un evento de zoom).
+    step = max(1, -(-max(z.shape[:2]) // HOVER_CELLS))
+    step = min(step, max(1, round(ERA5_STEP / abs(float(lat[1] - lat[0])))))
+    LA, LO = np.meshgrid(
+        lat[::step].astype(np.float32), c.lon[::step].astype(np.float32), indexing="ij"
+    )
+    coords = "%{y:.2f}°, %{x:.2f}°"
+    # hoverinfo distinto de "skip": con "skip" plotly no emite el clic y Streamlit no se entera.
+    marker = {"size": 9, "color": "rgba(0,0,0,0)"}
+    if c.is_rgb:
+        grid = go.Scattergl(x=LO.ravel(), y=LA.ravel(), mode="markers", marker=marker,
+                            hovertemplate=coords + "<extra></extra>")  # fmt: skip
+        return [image, grid]
+    values = z[::step, ::step].ravel()
+    ok = np.isfinite(values)
+    grid = go.Scattergl(
+        x=LO.ravel()[ok], y=LA.ravel()[ok], customdata=values[ok], mode="markers", marker=marker,
+        hovertemplate=coords + "<br><b>%{customdata:.3g}</b> " + c.unit + "<extra></extra>",
+    )  # fmt: skip
+    empty = go.Scattergl(
+        x=LO.ravel()[~ok], y=LA.ravel()[~ok], mode="markers", marker=marker,
+        hovertemplate=coords + "<br>sin dato<extra></extra>",
+    )  # fmt: skip
+    bar = go.Scatter(
+        x=[None], y=[None], mode="markers", hoverinfo="skip",
+        marker={"color": [lo], "colorscale": c.colorscale, "cmin": lo, "cmax": hi,
+                "showscale": c.kind is not None, "colorbar": colorbar},
+    )  # fmt: skip
+    return [image, grid, empty, bar]
 
 
 def _threshold(c: "Layer", width: float) -> go.Contour:
@@ -128,17 +193,16 @@ def _layout(fig: go.Figure, name: str) -> Any:  # noqa: ANN401
 
 
 def grid(
-    layers: list["Layer"], contours: list["Layer | None"], enc: Extent, coast: tuple[list, list],
+    layers: list["Layer"], contours: list["Layer | None"], enc: Extent, coast: tuple[np.ndarray, np.ndarray],
     *, events: pd.DataFrame | None = None, point: Point | None = None,
-    click: tuple[np.ndarray, np.ndarray] | None = None, wind: tuple[list, list] | None = None,
+    wind: tuple[list, list] | None = None,
     height: int | None = None,
 ) -> tuple[go.Figure, list[int]]:  # fmt: skip
     """Paneles en una figura con los ejes compartidos: el zoom y el desplazamiento van juntos.
 
     ``contornos[i]`` es un campo ERA5 que se dibuja como isolíneas sobre el panel ``i`` (o ``None``).
-    ``click`` es la grilla (lat, lon) de marcadores invisibles que hace clicable cada panel. Devuelve la
-    figura y el índice de la traza de fondo de cada panel, para animarla con ``go.Frame``. ``height`` fija
-    la altura en píxeles (si falta, depende del número de filas).
+    Devuelve la figura y el índice de la primera traza de fondo de cada panel (``background``), para
+    animarla con ``go.Frame``. ``height`` fija la altura en píxeles (si falta, depende del número de filas).
     """
     rows, cols = grid_shape(len(layers))
     fig = make_subplots(
@@ -154,7 +218,7 @@ def grid(
             "x": xd[1] + 0.004, "xanchor": "left", "y": (yd[0] + yd[1]) / 2, "len": (yd[1] - yd[0]) * 0.9,
         }  # fmt: skip
         backgrounds.append(len(fig.data))  # pyright: ignore[reportArgumentType]
-        fig.add_trace(_background(c, colorbar), row=r, col=k)
+        fig.add_traces(background(c, colorbar), rows=r, cols=k)
         if c.threshold is not None and not c.is_rgb:
             fig.add_trace(_threshold(c, 1.6), row=r, col=k)
         if cont is not None:
@@ -181,16 +245,6 @@ def grid(
                            line={"color": theme.colors().INK_2, "width": 1}),
                 row=r, col=k,
             )  # fmt: skip
-        if click is not None:
-            LA, LO = np.meshgrid(click[0], click[1], indexing="ij")
-            fig.add_trace(
-                go.Scatter(
-                    x=LO.ravel(), y=LA.ravel(), mode="markers", hoverinfo="skip",
-                    marker={"size": 9, "color": "rgba(0,0,0,0)"},
-                    selected={"marker": {"opacity": 0}}, unselected={"marker": {"opacity": 0}},
-                ),
-                row=r, col=k,
-            )  # fmt: skip
         if events is not None and len(events):
             fig.add_trace(
                 go.Scatter(
@@ -209,17 +263,21 @@ def grid(
     ):  # títulos alineados a la izquierda del panel
         a.update(x=_layout(fig, f"xaxis{i + 1 if i else ''}").domain[0], xanchor="left",
                  font={"family": theme.SANS, "size": 13, "color": theme.colors().INK})  # fmt: skip
-    fig.update_xaxes(range=[enc.west, enc.east], showgrid=False, ticksuffix="°", title=None)
-    fig.update_yaxes(range=[enc.south, enc.north], showgrid=False, ticksuffix="°", title=None)
+    # constrain="range": con go.Image plotly angostaría el panel en vez de ampliar el rango.
+    fig.update_xaxes(range=[enc.west, enc.east], showgrid=False, ticksuffix="°", title=None,
+                     constrain="range")  # fmt: skip
+    fig.update_yaxes(range=[enc.south, enc.north], showgrid=False, ticksuffix="°", title=None,
+                     constrain="range")  # fmt: skip
     # Todos los ejes igualan a los del primer panel (zoom sincronizado); la proporción va solo en el
     # primero, porque scaleanchor y matches en el mismo eje chocan en plotly.
     for i in range(1, rows * cols):
         _layout(fig, f"xaxis{i + 1}").matches = "x"
         _layout(fig, f"yaxis{i + 1}").matches = "y"
+    # hoverdistance=-1: con zoom los puntos de la grilla quedan separados y aun así responden.
     fig.update_layout(
         yaxis={"scaleanchor": "x", "scaleratio": enc.aspect},
         height=height or (640 if rows == 1 else 470 * rows), showlegend=False, dragmode="pan",
-        clickmode="event+select", uirevision="grid", margin={"t": 56, "r": 48},
+        clickmode="event+select", hoverdistance=-1, uirevision="grid", margin={"t": 56, "r": 48},
     )  # fmt: skip
     return _style(fig), backgrounds
 
