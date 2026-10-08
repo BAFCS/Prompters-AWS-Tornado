@@ -185,7 +185,7 @@ SOURCES = (
         "era5",
         "ERA5 · el entorno",
         "Un reanálisis: el estado completo de la atmósfera, hora por hora desde 1940, reconstruido con "
-        "un modelo que asimila todas las observaciones históricas. Describe el escenario en el que una "
+        "un modelo que combina las observaciones históricas disponibles. Describe el escenario en el que una "
         "tormenta puede organizarse o no.",
         (
             ("Resolución", "0,25° × 0,25° distribuida (~31 km nativa) · horaria"),
@@ -201,7 +201,7 @@ SOURCES = (
             ),
         ),
         "Con 31 km de resolución **ERA5 no resuelve un mesociclón**: uno de 5 km cabe en una sola celda. "
-        "No es un defecto, es la premisa del proyecto: ERA5 describe el entorno y GOES la tormenta. "
+        "ERA5 describe el entorno; GOES aporta información sobre la nube y su evolución. "
         "Sobre los Andes los niveles bajos (1000 hPa y a veces 925 hPa) quedan **bajo tierra** y sus "
         "valores son una extrapolación del modelo; los índices del visor parten del viento a 10 m para "
         "evitarlo. Cada archivo de nivel de presión pesa ~1,4 GB (una variable, un día, el globo) y no "
@@ -238,7 +238,8 @@ SOURCES = (
         "catalogo",
         "Catálogo de tornados · las etiquetas",
         "La base «Tornadoes and Waterspouts in Chile» (Bastías-Curivil et al., figshare, CC BY 4.0): "
-        "eventos que sus autores califican como «más probablemente que no» un tornado o una tromba, "
+        "casos en los que sus autores consideran más probable que haya ocurrido un tornado o una tromba "
+        "que lo contrario, "
         "reconstruidos desde crónicas coloniales, prensa, redes sociales y literatura científica.",
         (
             ("Tamaño", "102 filas y 32 columnas, una hoja (`Final_Table`)"),
@@ -281,14 +282,14 @@ GROUPS = (
           "Variables crudas a 2, 10 o 100 m, en la superficie o integradas en la columna; incluye los "
           "índices de estabilidad que el ECMWF entrega ya calculados.", compact=True, refs=("era5-doc",)),
     Group("era5-cinematicos", "era5", "Derivados cinemáticos",
-          "Cómo cambia el viento con la altura. Son los más importantes: miden la rotación horizontal "
-          "disponible para que una corriente ascendente la incline hacia la vertical.", refs=("markowski2010",)),
+          "Describen cómo cambia el viento con la altura y la rotación del aire en el entorno. Ayudan a "
+          "estudiar la organización de las tormentas.", refs=("markowski2010",)),
     Group("era5-termodinamicos", "era5", "Derivados termodinámicos",
           "Cuánta energía tiene el aire para subir, dónde se forma la base de la nube y qué tan rápido se "
           "enfría con la altura.", refs=("markowski2010",)),
     Group("era5-compuestos", "era5", "Índices compuestos",
-          "Combinan cizalle e inestabilidad en un número. Son atajos operacionales, no leyes físicas, y "
-          "casi todos vienen calibrados para el hemisferio norte y entornos de CAPE alto."),
+          "Combinan variables meteorológicas en un número. Su ámbito de aplicación depende de la "
+          "formulación; los umbrales deben evaluarse con casos chilenos."),
     Group("goes-bandas", "goes", "Las 16 bandas del ABI",
           "Las bandas 1–6 miden luz solar reflejada (solo de día); las 7–16, radiación infrarroja emitida, "
           "que se expresa como temperatura de brillo.", compact=True, refs=("goes-abi",)),
@@ -296,8 +297,8 @@ GROUPS = (
           "Lo que se calcula con una sola imagen: qué tan alto llegó el tope, su textura y las firmas de "
           "una corriente ascendente muy potente.", refs=("documento",)),
     Group("goes-tendencias", "goes", "Tendencias cada 10 minutos",
-          "Un tope frío dice poco; un tope que se enfría rápido dice mucho. Aquí la cadencia de 10 minutos "
-          "justifica su existencia.", refs=("documento",)),
+          "Los cambios entre imágenes aportan información sobre el desarrollo de la nube. Hay que "
+          "distinguirlos de su desplazamiento y comprobar el intervalo de tiempo.", refs=("documento",)),
     Group("goes-productos", "goes", "Otros productos GOES",
           "Productos de nivel 2 y del detector de rayos que no forman parte del archivo multibanda que lee "
           "el visor.", compact=True, refs=("goes-aws",)),
@@ -518,8 +519,8 @@ VARIABLES = (
         "srh_01", "SRH₀₋₁", "Helicidad relativa a la tormenta 0–1 km", "m²/s²", "era5-cinematicos",
         "Cuánta vorticidad horizontal *streamwise* (alineada con el flujo que entra a la tormenta) hay en "
         "el primer kilómetro: la rotación lista para ser inclinada hacia la vertical.",
-        why="Es probablemente la variable más informativa de todo el conjunto: cuantifica el mecanismo "
-        "que convierte cizalle en un mesociclón.",
+        why="Resume la vorticidad horizontal alineada con el aire que entra a la tormenta. Aporta "
+        "información sobre la relación entre el perfil de viento y la rotación del ascenso.",
         formula=r"\mathrm{SRH}_{0\text{–}h} = \sum_n \left[(u_{n+1}-c_x)(v_n-c_y) - (u_n-c_x)(v_{n+1}-c_y)\right]",
         method="Suma sobre el perfil interpolado cada 100 m hasta h = 1 km, con (c_x, c_y) el movimiento "
         "*left-mover* de Bunkers. Es la fórmula de MetPy.",
@@ -663,7 +664,8 @@ VARIABLES = (
         "vgp_01", "VGP₀₋₁", "Parámetro de generación de vorticidad", "m/s²", "era5-compuestos",
         "Combina la energía para el ascenso (CAPE) con el cambio del viento por unidad de altura en el "
         "primer kilómetro.",
-        why="Según Vicencio et al. (2021) es el mejor discriminante disponible para Chile.",
+        why="Vicencio et al. (2021) lo utilizan para distinguir los cinco días tornádicos analizados. "
+        "Su capacidad de separación debe evaluarse con otros casos.",
         formula=r"\mathrm{VGP}_{0\text{–}1} = \sqrt{\mathrm{CAPE}}\;\frac{\mathrm{BWD}_{0\text{–}1}}{1000\ \mathrm{m}}",
         threshold="Mayor que 0,1 m/s² en los cinco días tornádicos analizados entre 2008 y 2019 (Vicencio et "
         "al. 2021). Su alcance fuera de esos casos requiere evaluación.",
@@ -806,7 +808,7 @@ VARIABLES = (
         "La diferencia de temperatura de brillo entre la banda de vapor alto (6,2 µm) y la ventana limpia "
         "(10,3 µm).",
         why="Normalmente es muy negativa. Cerca de cero o positiva sugiere un tope que alcanza o supera "
-        "la tropopausa; el documento la cita como señal fuerte.",
+        "la tropopausa; hay que interpretarla junto con las condiciones del píxel.",
         formula=r"\Delta T_b = T_{b,6{,}2} - T_{b,10{,}3}",
         caveat="Un valor cercano a cero no confirma por sí solo un tope sobre la tropopausa.",
         inputs=("C08", "C13"), products=("goes:C08-C13",), synonyms="diferencia bandas tropopausa",
@@ -814,7 +816,8 @@ VARIABLES = (
     Variable(
         "bt_min", "BT_min", "Temperatura de brillo mínima", "K", "goes-imagen",
         "El valor más frío de la banda 13 dentro de la celda de tormenta.",
-        why="Qué tan alto llegó el tope: más frío, más alto, ascenso más potente.",
+        why="Ayuda a localizar topes fríos. Su relación con la altura depende del perfil térmico y "
+        "de las propiedades de la nube; no mide directamente la intensidad del ascenso.",
         formula=r"T_{b,\min} = \min_{\text{celda}} T_{b,13}",
         inputs=("C13",), synonyms="mínimo tope frío",
     ),
@@ -835,7 +838,7 @@ VARIABLES = (
     Variable(
         "diferencias", "ΔBT", "Diferencias entre bandas", "K", "goes-imagen",
         "Restas de temperatura de brillo entre bandas infrarrojas. El documento cita los pares C13 − C11 "
-        "y C13 − C16 como discriminantes de topes penetrantes (§4.2), y además C14 − C13 (11,2 − 10,3 µm) "
+        "y C13 − C16 para estudiar las propiedades del tope (§4.2), y además C14 − C13 (11,2 − 10,3 µm) "
         "y C16 − C13 (13,3 − 10,3 µm) como variables por imagen (§5.4). C08 − C13 tiene ficha propia.",
         why="Cada banda ve una altura o una fase distinta; la resta aísla esa diferencia.",
         formula=r"T_{b,13} - T_{b,11},\quad T_{b,13} - T_{b,16},\quad T_{b,14} - T_{b,13}",
@@ -882,7 +885,8 @@ VARIABLES = (
     Variable(
         "dT", "ΔC13", "Tasa de enfriamiento del tope", "K", "goes-tendencias",
         "El cambio de temperatura de brillo de la banda 13 entre una imagen y la anterior, píxel a píxel.",
-        why="Mide directamente si un tope está creciendo. Enfriamientos más rápidos que −4 K en "
+        why="Aporta información sobre la evolución de la nube, junto con su movimiento. Enfriamientos "
+        "más rápidos que −4 K en "
         "15 min son un indicador establecido de convección en rápido desarrollo.",
         formula=r"\Delta T_b = T_{b,13}(t) - T_{b,13}(t - \Delta t)",
         method="El visor resta la imagen anterior disponible; Δt suele ser 10 min, pero no siempre: "
@@ -906,13 +910,13 @@ VARIABLES = (
     ),
     Variable(
         "flujo_optico", "∇ × F", "Flujo óptico y su rotación", "1/s", "goes-tendencias",
-        "Un campo de movimiento del tope nuboso estimado entre imágenes consecutivas. Su rotacional mide "
-        "la rotación del yunque.",
-        why="Para un mesociclón bien desarrollado el yunque rota de forma visible en un *loop* de "
-        "satélite, y eso es lo que una red convolucional puede aprender. Separa además la advección del "
-        "crecimiento real en ΔC13.",
+        "Un campo de movimiento aparente estimado entre imágenes consecutivas. Su rotacional describe "
+        "el giro de ese campo.",
+        why="Permite buscar patrones compatibles con rotación y puede ayudar a distinguir el "
+        "desplazamiento de los cambios de la nube en ΔC13.",
         formula=r"\zeta_F = \frac{\partial F_y}{\partial x} - \frac{\partial F_x}{\partial y}",
-        caveat=f"Es una medida indirecta de la rotación interna. {_SOUTH} la rotación ciclónica es horaria.",
+        caveat="El movimiento del yunque no confirma por sí solo un mesociclón ni mide directamente "
+        f"su circulación interna. {_SOUTH} la rotación ciclónica es horaria.",
         inputs=("C13",), synonyms="optical flow rotación yunque",
     ),
     Variable(
@@ -928,9 +932,8 @@ VARIABLES = (
         "goes-tendencias",
         "La velocidad y dirección con que se mueve la tormenta, y cuánto se aparta del viento medio de la "
         "capa.",
-        why="Una tormenta que se desvía sistemáticamente a la izquierda del viento medio en el "
-        "hemisferio sur es, casi por definición, candidata a supercélula. Podría ser el detector de "
-        "mesociclones más directo de todo el conjunto.",
+        why="Una desviación persistente a la izquierda es una señal de interés para las supercélulas "
+        "ciclónicas australes. Debe combinarse con otras observaciones antes de clasificar la tormenta.",
         formula=r"\vec D = \vec C_{\mathrm{obs}} - \bar{\vec V}_{0\text{–}6}",
         inputs=("C13", "bunkers"), synonyms="movimiento tormenta left-mover desvío",
     ),
@@ -977,7 +980,8 @@ VARIABLES = (
     Variable("cat_tipo", "Tornado, Waterspout", "Tipo de evento", "binaria", "catalogo-columnas",
              "Indicadores de tornado (70) y tromba marina (45); 19 están marcados como ambos, trombas que "
              "tocaron tierra.",
-             why="Separan las dos vías físicas y dan material para estudiar la transición mar–tierra.",
+             why="Distinguen registros sobre tierra y sobre agua y permiten estudiar la transición mar–tierra. "
+             "Determinar el mecanismo de formación requiere evidencia adicional.",
              caveat="Los conteos se solapan: no se suman para obtener el total.",
              synonyms="tromba tornado"),
     Variable("cat_ef", "Max. EF Rating", "Intensidad EF", "EF0–EF3", "catalogo-columnas",
@@ -986,8 +990,8 @@ VARIABLES = (
              synonyms="fujita intensidad daño"),
     Variable("cat_register", "Register", "Registro visual", "sí/no", "catalogo-columnas",
              "Si existe testimonio o material visual de la columna rotatoria: 50 sí, 49 no.",
-             why="Es una variable de confianza de la etiqueta: sirve para ponderar ejemplos o definir "
-             "un subconjunto de alta pureza.",
+             why="Ayuda a seleccionar casos para revisar su evidencia y estudiar la confianza de las etiquetas. "
+             "No confirma por sí solo el mecanismo de formación.",
              synonyms="confianza testimonio"),
     Variable("cat_fenomenos", "Hail, Electric Storm, …", "Fenómenos acompañantes", "binaria",
              "catalogo-columnas",
@@ -1004,7 +1008,7 @@ VARIABLES = (
         "distancias", "d_costa, d_Andes", "Distancia a la costa y a los Andes", "km",
         "contexto-variables",
         "La distancia de cada punto a la línea de costa y al pie de la cordillera.",
-        why="Los Andes fabrican el cizalle de niveles bajos y la costa es la entrada de las tormentas "
+        why="Los Andes pueden modificar el viento de niveles bajos y la costa es la entrada de tormentas "
         "que vienen del mar.",
         synonyms="costa cordillera geografía",
     ),
@@ -1027,7 +1031,7 @@ VARIABLES = (
     Variable(
         "cenital_sol", "θ_sol", "Ángulo cenital solar", "°", "contexto-variables",
         "El ángulo entre la vertical del lugar y el Sol.",
-        why="Las bandas visibles solo existen de día; el modelo necesita saber cuándo faltan.",
+        why="Las bandas visibles requieren luz solar; el modelo necesita considerar la iluminación.",
         synonyms="sol día noche",
     ),
     Variable(
@@ -1040,8 +1044,8 @@ VARIABLES = (
     Variable(
         "poblacion", "Población", "Densidad de población", "hab/km²", "contexto-variables",
         "Cuántas personas viven por kilómetro cuadrado.",
-        why="No es un predictor físico: es el control del sesgo de reporte. Permite que el modelo separe "
-        "«aquí ocurren tornados» de «aquí se ven tornados».",
+        why="Ayuda a estudiar el sesgo de reporte. Incluirla no garantiza separar ocurrencia y "
+        "observación: hace falta un modelo y supuestos sobre cómo se documentan los eventos.",
         synonyms="sesgo reporte censo",
     ),
 )  # fmt: skip

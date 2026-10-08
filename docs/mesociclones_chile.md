@@ -2,7 +2,7 @@
 
 ### Un desafío abierto de datos, física atmosférica y aprendizaje automático
 
-**Proyecto para el AWS Hackathon** · Documento de contexto, versión 1.0
+**Proyecto para la hackathon AWS Breaking Barriers** · Documento de contexto, versión 1.0
 
 ---
 
@@ -10,7 +10,7 @@
 
 1. [El problema en una página](#1-el-problema-en-una-página)
 2. [Física: ¿qué es un mesociclón y por qué importa?](#2-física-qué-es-un-mesociclón-y-por-qué-importa)
-3. [El caso chileno: tornados donde "no debería haberlos"](#3-el-caso-chileno-tornados-donde-no-debería-haberlos)
+3. [El caso chileno: un régimen distinto al de las Grandes Llanuras](#3-el-caso-chileno-un-régimen-distinto-al-de-las-grandes-llanuras)
 4. [Los datos de entrada](#4-los-datos-de-entrada)
 5. [Variables derivadas (*features*) que conviene calcular](#5-variables-derivadas-features-que-conviene-calcular)
 6. [Cómo plantear el problema de aprendizaje automático](#6-cómo-plantear-el-problema-de-aprendizaje-automático)
@@ -21,24 +21,27 @@
 
 ---
 
+**Cómo leer este documento.** Las secciones 1–3 explican el problema y la física con ejemplos. La sección 4 presenta los datos; la 5, las variables que podemos calcular; y la 6, cómo construir y evaluar un modelo. Las secciones 7–8 proponen una implementación y tareas para los equipos. Puedes volver al glosario de la sección 9 cuando aparezca un término nuevo. Los apartados «Para profundizar» reúnen detalles que puedes dejar para una segunda lectura.
+
 ## 1. El problema en una página
 
-En Chile ocurren tornados. Durante mucho tiempo se los consideró una rareza casi anecdótica, hasta que el **30 y 31 de mayo de 2019** dos tornados golpearon en menos de 24 horas las ciudades de **Los Ángeles** y **Talcahuano/Concepción**, en la Región del Biobío, dejando daños estructurales severos, heridos y una víctima fatal. El episodio obligó a reconocer algo que la comunidad meteorológica chilena venía documentando de a poco: el centro-sur de Chile tiene un régimen de convección severa propio, distinto al del *Tornado Alley* norteamericano, y prácticamente sin sistemas de alerta temprana.
+En Chile ocurren tornados. El **30 y 31 de mayo de 2019**, dos de ellos afectaron las ciudades de Los Ángeles y Talcahuano–Concepción, en la Región del Biobío. Dejaron daños estructurales, personas heridas y una víctima fatal. El episodio puso de relieve un fenómeno que la comunidad meteorológica chilena venía estudiando: las tormentas del centro-sur pueden producir tiempo severo, como granizo, ráfagas destructivas y tornados, en condiciones distintas a las de las Grandes Llanuras de Estados Unidos.
 
-Hoy existe un catálogo formal y publicado: la base de datos **«Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile»** (Bastías-Curivil, Rondanelli, Vicencio et al., figshare, [doi:10.6084/m9.figshare.25119566](https://doi.org/10.6084/m9.figshare.25119566), CC BY 4.0). Reúne **102 eventos entre 1554 y 2025** — 70 marcados como tornado, 45 como tromba marina, 19 como ambos — de los cuales **68 ocurrieron desde 2015**. Ese catálogo es la base de este proyecto, pero también su principal dificultad, porque:
+La base de datos «Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile» (Bastías-Curivil, Rondanelli, Vicencio et al., figshare, [doi:10.6084/m9.figshare.25119566](https://doi.org/10.6084/m9.figshare.25119566), CC BY 4.0) reúne **102 eventos entre 1554 y 2025**. Hay 70 registros marcados como tornado, 45 como tromba marina y 19 en ambas categorías; esos conteos se solapan. De los 102 eventos, 68 corresponden al período 2015–2025. Este catálogo permite comparar datos meteorológicos con eventos documentados, pero su cobertura depende de quién pudo observarlos y registrarlos.
 
-> **El catálogo es una muestra de lo que se vio, no de lo que ocurrió.**
+> La ausencia de un registro no permite asegurar que no ocurrió un evento.
 
-Un tornado solo entra a la base de datos si tocó tierra cerca de gente, si alguien lo filmó, si dañó algo que salió en la prensa. Una tormenta mesociclónica sobre el mar frente a Valdivia, sobre un bosque en la cordillera de Nahuelbuta o a las 4 de la madrugada en un campo de Osorno, sencillamente no existe en los registros. Muy probablemente hay **cientos de tormentas que se volvieron mesociclónicas y nunca fueron registradas**.
+Las tormentas sobre el mar, en zonas rurales o durante la noche pueden quedar sin registro. Por ejemplo, una tormenta frente a Valdivia o sobre un bosque en Nahuelbuta puede tener pocos testigos. Por eso, el catálogo podría omitir eventos; su cantidad no se puede establecer con estos datos.
 
-Esto define el desafío técnico con precisión:
+El proyecto propone combinar tres fuentes:
 
-- **Entrada:** campos vectoriales 4D de viento y termodinámica del reanálisis **ERA5** (latitud × longitud × nivel de presión × tiempo), más imágenes multiespectrales de **16 bandas del satélite GOES** cada 10 minutos.
-- **Etiquetas:** 102 casos positivos confirmados (68 desde 2015), sin negativos confiables.
-- **Objetivo:** estimar, para cada tormenta o cada celda de la grilla, la **probabilidad de que el sistema desarrolle rotación organizada de mesoescala** (un mesociclón), potencialmente tornádica.
-- **Producto final ideal:** un mapa de riesgo horario o sub-horario sobre Chile centro-sur, con antelación de algunas horas.
+- **Datos meteorológicos:** viento, temperatura y humedad de ERA5, organizados por latitud, longitud, nivel de presión y tiempo. ERA5 reconstruye el estado de la atmósfera del pasado.
+- **Imágenes satelitales:** GOES observa las nubes en 16 bandas, que captan distintas partes del espectro electromagnético. En el caso de 2019 contamos con imágenes cada 10 minutos.
+- **Etiquetas:** los 102 registros de tornados o trombas marinas, con distintos grados de evidencia. Una etiqueta es la información que usamos para identificar un ejemplo durante el entrenamiento. Aquí los llamaremos casos positivos; no todos confirman la presencia de un mesociclón. Tampoco contamos con casos negativos confiables, es decir, situaciones en las que podamos asegurar que el fenómeno no ocurrió.
 
-No se trata solo de reproducir los 102 casos conocidos. Un modelo verdaderamente útil debería **encontrar los eventos que faltan en el catálogo**: señalar, en el archivo histórico, días y lugares donde las condiciones fueron indistinguibles de las de un tornado documentado. Eso convierte el proyecto en algo más cercano a un problema de **descubrimiento** que de clasificación clásica.
+El objetivo es estudiar qué condiciones favorecen que una tormenta desarrolle rotación organizada, llamada **mesociclón**. Durante la hackathon, un prototipo puede comparar casos conocidos y seleccionar días y lugares del archivo histórico que merezcan revisión. Condiciones similares a las de un tornado documentado no bastan para confirmar otro evento.
+
+A más largo plazo, se podría explorar un mapa de probabilidades sobre el centro-sur de Chile. Para utilizarlo con horas de anticipación habría que validar sus resultados y contar con datos disponibles a tiempo: ERA5 es una reconstrucción histórica, no una fuente de pronósticos en tiempo real.
 
 ---
 
@@ -46,11 +49,11 @@ No se trata solo de reproducir los 102 casos conocidos. Un modelo verdaderamente
 
 ### 2.1 Definición breve
 
-Un **mesociclón** es una columna de aire en rotación, de entre **2 y 10 km de diámetro**, embebida dentro de una tormenta convectiva profunda y que se extiende verticalmente varios kilómetros. No es un tornado: es *mucho* más grande que cualquier tornado que pueda nacer dentro de él, y mucho más lento. Es, por así decirlo, el torno en el que se fabrica el tornado.
+Un **mesociclón** es una columna de aire en rotación, de entre 2 y 10 km de diámetro, dentro de una tormenta convectiva profunda, donde el aire asciende varios kilómetros. Un tornado tiene una escala menor y su circulación alcanza la superficie. Una tormenta con mesociclón puede producir un tornado, aunque muchas no lo hacen.
 
-Una tormenta que posee un mesociclón persistente recibe el nombre de **supercélula**. Las supercélulas son el tipo de tormenta menos frecuente de los cuatro tipos clásicos (unicelular, multicelular, línea de turbonada y supercélula) y, al mismo tiempo, el más peligroso: concentran el granizo grande, las ráfagas destructivas y prácticamente todos los tornados fuertes y violentos.
+Una tormenta con un mesociclón persistente recibe el nombre de **supercélula**. Se distingue de otros tipos de tormenta por la asociación sostenida entre la corriente ascendente y la rotación. Puede producir granizo grande, ráfagas destructivas y tornados intensos.
 
-Dos cifras útiles para calibrar expectativas:
+Estas cifras ayudan a comparar el tamaño y la duración de los fenómenos. Son referencias generales; las tormentas chilenas pueden tener estructuras menos profundas, como veremos en la sección 3:
 
 | Magnitud | Valor típico |
 |---|---|
@@ -58,53 +61,53 @@ Dos cifras útiles para calibrar expectativas:
 | Duración de una supercélula | 2 – 4 horas (casos extremos > 7 h) |
 | Duración de un mesociclón individual | decenas de minutos a horas |
 | Altura del tope nuboso | 12 – 21 km |
-| Fracción de supercélulas que produce tornado | **≤ 30 %** |
+| Fracción de supercélulas que producen tornado | **≤ 30 %** |
 
-Esa última fila es la razón de ser de este proyecto y también su trampa: **predecir el mesociclón no es predecir el tornado**. La rotación de mesoescala es una condición casi necesaria pero claramente no suficiente. Un modelo que prediga bien mesociclones dará muchas falsas alarmas de tornado — y aun así será enormemente más útil que no tener nada.
+La última fila recuerda que detectar un mesociclón no basta para anticipar un tornado. Si se usara esa detección como aviso de tornado, se generarían falsas alarmas. La utilidad de un aviso dependerá de cuántos eventos detecte, cuántas falsas alarmas genere y con cuánto tiempo de anticipación llegue.
 
 ### 2.2 Los cuatro ingredientes
 
-La convección severa organizada necesita cuatro cosas simultáneamente. Se las suele llamar "los ingredientes", y casi toda la predicción operacional consiste en medirlas:
+Para entender cómo se organiza una tormenta severa conviene examinar cuatro ingredientes:
 
 1. **Humedad** en niveles bajos. Es el combustible: el calor latente que se libera al condensar el vapor de agua es lo que alimenta la corriente ascendente.
-2. **Inestabilidad**. Si una burbuja de aire levantada desde la superficie se encuentra más cálida (y por tanto menos densa) que su entorno, sigue subiendo sola. La energía disponible para ello se mide con el **CAPE** (*Convective Available Potential Energy*), en J/kg.
+2. **Inestabilidad**. Si una burbuja de aire levantada desde la superficie se encuentra más cálida (y por tanto menos densa) que su entorno, sigue subiendo sola. La energía disponible para ello se mide con el **CAPE** (*Convective Available Potential Energy*), en joules por kilogramo (J/kg).
 3. **Disparo** (*trigger*). Algo tiene que dar el primer empujón hacia arriba: un frente frío, la brisa de mar, una cadena montañosa, la convergencia del viento en superficie.
-4. **Cizalladura vertical del viento** (*wind shear*). El viento debe **cambiar de velocidad y/o de dirección con la altura**. Sin esto se puede tener una tormenta intensa, pero no una tormenta *rotatoria*.
+4. **Cizalladura vertical del viento** (*wind shear*, también llamada cizalle). Es el cambio de la rapidez o de la dirección del viento con la altura. Favorece la organización y la rotación de las supercélulas.
 
-Los tres primeros producen tormentas. **El cuarto es el que las hace girar**, y por eso es el corazón de este problema.
+La humedad, la inestabilidad y un mecanismo de ascenso favorecen la formación de tormentas. La cizalladura ayuda a organizarlas y es una variable central del proyecto. La sección 2.5 explica otra vía de formación de tornados que no requiere un mesociclón.
 
 ### 2.3 De la cizalladura a la rotación: inclinación y estiramiento
 
-Éste es el mecanismo central. Vale la pena entenderlo bien porque dicta qué variables hay que calcular a partir de ERA5.
+La cizalladura puede contribuir a la rotación de una tormenta mediante inclinación y estiramiento. Entender este mecanismo ayuda a elegir qué variables calcular a partir de ERA5. Los siguientes pasos son un esquema simplificado; en una tormenta real los procesos interactúan.
 
 **Paso 1 — la cizalladura crea vorticidad horizontal.**
-Imagine una ruedita de paletas flotando en el aire, con su eje horizontal. Si el viento sopla más fuerte arriba que abajo, empuja más la paleta superior que la inferior, y la ruedita empieza a girar sobre un eje horizontal. Eso es la **vorticidad horizontal**: una tendencia del aire a rotar en torno a un eje paralelo al suelo, generada directamente por el cizalle del viento.
+Imagina una pequeña rueda de paletas con el eje horizontal. Si el viento sopla más fuerte arriba que abajo, empuja más la paleta superior y la rueda gira. Así podemos representar la **vorticidad horizontal**: la tendencia local del aire a rotar alrededor de un eje paralelo al suelo.
 
-> **Una aclaración que suele omitirse.** Los esquemas clásicos dibujan "tubos" de aire girando horizontalmente, como rodillos. Es una simplificación pedagógica útil, pero imprecisa: en un entorno horizontalmente homogéneo no existen tales tubos físicos. Lo que existe es una *tendencia local a rotar* distribuida en todo el campo de viento cizallado. La corriente ascendente reorienta esa tendencia, no un rodillo literal.
+> **Para profundizar: el alcance de la analogía.** Los rodillos que suelen dibujarse en estos esquemas representan una tendencia local a rotar distribuida en el campo de viento. No son tubos físicos separados del aire que los rodea.
 
 **Paso 2 — la corriente ascendente inclina esa rotación hacia la vertical (*tilting*).**
-Cuando la corriente ascendente de la tormenta atraviesa la capa cizallada, tuerce el eje de giro desde la horizontal hacia la vertical. La rotación que antes era "de rodillo" pasa a ser "de trompo". La corriente ascendente completa empieza a girar.
+La corriente ascendente inclina parte de esa rotación hacia la vertical. En la analogía, el giro «de rodillo» pasa a ser «de trompo». Esto puede producir zonas de rotación vertical dentro de la tormenta.
 
 **Paso 3 — la convergencia estira la columna y la acelera (*stretching*).**
-Una vez que la columna rota, el aire que converge hacia su base la estira verticalmente. Por **conservación del momento angular** — el mismo principio por el cual una patinadora gira más rápido al cerrar los brazos — la columna, al hacerse más alta y delgada, **gira más rápido**. Se forma un mínimo de presión en su eje, que succiona más aire hacia arriba, que estira más la columna, que gira más rápido. Es un ciclo que se retroalimenta.
+El aire que converge hacia la base de una columna rotatoria puede estirarla verticalmente e intensificar su giro. La conservación del momento angular ayuda a entenderlo: una patinadora gira más rápido al cerrar los brazos. En la tormenta también intervienen los cambios de presión y el movimiento del aire.
 
 **Paso 4 — la rotación se organiza en un vórtice coherente.**
-Inicialmente la rotación es desordenada: hay vorticidad de curvatura, asimetrías, ningún giro uniforme. El campo de presión de la corriente ascendente redistribuye esa vorticidad hasta que las parcelas interiores y exteriores alcanzan una tasa de rotación casi uniforme. En ese momento existe un **vórtice único y coherente**: el mesociclón está formado y la supercélula ha madurado.
+Cuando la rotación y la corriente ascendente se mantienen asociadas, la tormenta puede desarrollar un mesociclón persistente. Esa asociación caracteriza a una supercélula.
 
-Un detalle físico que importa para el diseño de *features*: el paso 2 es eficiente **solo cuando la vorticidad horizontal es *streamwise***, es decir, cuando su eje de giro está *alineado con el flujo* que entra a la tormenta. Si la vorticidad es puramente transversal (*crosswise*, perpendicular al flujo), inclinarla produce rotación pero no la correlación entre rotación y ascenso que define a una supercélula. Esto es exactamente lo que mide la **helicidad relativa a la tormenta (SRH)** — y es la razón por la cual la SRH es mejor predictor que el cizalle a secas.
+**Para profundizar: la orientación de la rotación.** Importa cómo se orienta la vorticidad horizontal respecto del aire que entra a la tormenta. Cuando está alineada con ese flujo relativo, se denomina *streamwise*; cuando es perpendicular, *crosswise*. La **helicidad relativa a la tormenta (SRH)** resume la componente alineada a lo largo de una capa. Por eso aporta información que la diferencia de viento entre dos alturas no describe por sí sola.
 
 ### 2.4 Anatomía de una supercélula
 
-Una supercélula no es una nube amorfa: tiene partes bien definidas, y varias de ellas dejan huella en las imágenes satelitales.
+En una supercélula se pueden distinguir zonas de ascenso, descenso y precipitación. Algunas se reconocen desde el suelo o con radar; el satélite muestra sobre todo la parte superior de la nube:
 
 - **Corriente ascendente principal (*updraft*)**: la columna rotatoria. Puede alcanzar **50 m/s** en latitudes medias.
 - **Base libre de precipitación**: la zona bajo la corriente ascendente donde entra el aire húmedo. Puede caer granizo grande desde un cielo que se ve despejado.
 - **Nube pared (*wall cloud*)**: nube baja y rotatoria que cuelga de la base, en la frontera entre el ascenso y el descenso. Si la tormenta va a producir un tornado, típicamente muestra una nube pared que **persiste más de diez minutos**.
 - **FFD (*forward flank downdraft*)**: la corriente descendente del flanco delantero, fría y húmeda, donde está la precipitación más intensa.
-- **RFD (*rear flank downdraft*)**: la corriente descendente del flanco trasero. Es el elemento más sutil y probablemente el más importante: **los pulsos de la RFD suelen coincidir con la tornadogénesis**, porque aprietan y concentran la rotación preexistente cerca del suelo. En el radar produce la firma en forma de gancho.
-- **Yunque (*anvil*)**: la meseta de hielo que se extiende cuando el ascenso choca con la tropopausa y pierde flotabilidad. Muy frío (**≈ −30 °C** o menos).
-- **Tope penetrante (*overshooting top*)**: una cúpula que sobresale por encima del yunque, allí donde la corriente ascendente es tan potente que **penetra en la estratosfera**. Desde el suelo casi no se ve, pero **desde el satélite es inconfundible**: una burbuja sobre una superficie que, por lo demás, es lisa. Es una de las firmas satelitales más directamente utilizables.
-- **Cap o inversión de bloqueo**: una capa cálida sobre aire frío que impide la convección prematura y permite acumular energía. Cuando se rompe, el desarrollo es explosivo.
+- **RFD (*rear flank downdraft*)**: la corriente descendente del flanco trasero. Sus pulsos pueden intervenir en la formación del tornado al interactuar con la rotación y el ascenso cerca del suelo. La distribución de precipitación de una supercélula puede mostrar una forma de gancho en el radar.
+- **Yunque (*anvil*)**: la región de la nube que se extiende lateralmente en altura y suele contener cristales de hielo. Se forma cuando el ascenso llega a una capa estable cerca de la tropopausa, el límite entre la troposfera y la estratosfera.
+- **Tope penetrante (*overshooting top*)**: una cúpula que sobresale del yunque cuando el ascenso sobrepasa la tropopausa. Puede reconocerse en imágenes satelitales por su relieve o su contraste de temperatura con el entorno. Su detección depende de la resolución y de la geometría de observación.
+- **Cap o inversión de bloqueo**: una capa cálida sobre aire frío que impide la convección prematura y permite acumular energía. Si el ascenso supera esa capa, el desarrollo de la tormenta puede acelerarse.
 
 **Tipos de supercélula.** Se clasifican según cuánta precipitación envuelve al mesociclón:
 
@@ -114,205 +117,196 @@ Una supercélula no es una nube amorfa: tiene partes bien definidas, y varias de
 | **Clásica** | Precipitación "normal", estructura de libro de texto | Todo el espectro; el gancho es claro |
 | **HP** (alta precipitación) | La lluvia **envuelve completamente al mesociclón** | Especialmente peligrosa: **el tornado queda oculto tras la lluvia**; inundaciones y ráfagas |
 
-Para Chile esta taxonomía importa: un régimen marítimo y húmedo favorece estructuras del lado **HP**, donde el tornado es invisible desde tierra. Eso agrava el problema de detección y **refuerza el argumento para una alerta basada en modelos** en lugar de observación visual.
+En un entorno marítimo y húmedo, la precipitación puede dificultar la observación visual de un tornado. Las imágenes satelitales y los datos meteorológicos ayudan a estudiar esas tormentas, aunque tampoco permiten confirmar por sí solos lo que ocurre bajo la nube.
 
-### 2.5 Tornadogénesis: los últimos kilómetros
+### 2.5 Tornadogénesis: cómo se forma un tornado
 
-El paso de mesociclón a tornado es la parte peor entendida de toda la cadena, y conviene ser honesto al respecto. Hay dos caminos distintos:
+La **tornadogénesis** es el proceso de formación de un tornado. No todas sus etapas se comprenden por completo, y existen al menos dos vías que conviene distinguir:
 
-**Vía no supercelular** (*landspouts*, trombas marinas). Requiere un giro preexistente cerca de la superficie — típicamente en una línea de convergencia del viento — y un cumulonimbo encima cuya corriente ascendente estire ese giro hacia arriba. Estos tornados son **generalmente débiles y duran menos de 10 minutos**. Importa para Chile: buena parte de las trombas marinas del litoral probablemente sigue esta vía, que **no requiere mesociclón** y que un modelo entrenado sólo en cizalle profundo no va a capturar.
+**Vía no supercelular** (*landspouts*, trombas marinas). Requiere un giro preexistente cerca de la superficie — típicamente en una línea de convergencia del viento — y un cumulonimbo encima cuya corriente ascendente estire ese giro hacia arriba. Estos tornados son **generalmente débiles y duran menos de 10 minutos**. Importa para Chile: buena parte de las trombas marinas del litoral probablemente sigue esta vía, que **no requiere mesociclón**, por lo que un modelo centrado en la cizalladura profunda podría dejarla fuera.
 
-**Vía supercelular** (vía mesociclón). La RFD desciende y penetra por detrás en el centro del mesociclón; el aire frío y denso se enrolla en torno a la circulación existente, y la combinación ascenso + descenso concentra la rotación hasta escalas de decenas o centenas de metros. Estos tornados son **a menudo violentos y pueden durar más de una hora**.
+**Vía supercelular** (vía mesociclón). La RFD desciende y penetra por detrás en el centro del mesociclón; el aire frío y denso se enrolla en torno a la circulación existente, y la combinación ascenso + descenso concentra la rotación hasta escalas de decenas o centenas de metros. Estos tornados pueden alcanzar gran intensidad y durar más de una hora, aunque su intensidad y duración varían.
 
-La distinción tiene una consecuencia práctica directa: **el catálogo chileno casi con certeza mezcla ambas vías**, y valdría la pena etiquetarlas por separado si la evidencia lo permite.
+El catálogo puede reunir eventos de ambas vías. Distinguirlas ayudaría a definir las etiquetas del modelo, pero requiere evidencia sobre el mecanismo de formación. Saber si un evento ocurrió sobre agua o sobre tierra no basta para determinarlo.
 
-### 2.6 Una advertencia crítica: estamos en el hemisferio sur
+### 2.6 Convenciones de signo en el hemisferio sur
 
-Casi toda la literatura, todos los índices y prácticamente todo el software de meteorología severa fueron escritos para el hemisferio norte. **En el hemisferio sur los signos se invierten.**
+Buena parte de los índices de tormentas severas se desarrolló con casos del hemisferio norte. Al aplicarlos en Chile hay que revisar el sentido de giro, la estimación del movimiento de la tormenta y la convención de signos:
 
 - Un mesociclón ciclónico en Chile gira **en sentido horario** (visto desde arriba), no antihorario.
 - La **vorticidad ciclónica es negativa** con la convención matemática habitual.
-- La **helicidad relativa a la tormenta (SRH) de los casos tornádicos es negativa**, y las supercélulas tornádicas favorecidas son las ***left-movers*** (que se desvían a la izquierda del viento medio), al revés que en EE.UU.
-- Los índices compuestos — **STP, SCP, EHI** — están codificados con umbrales y signos del hemisferio norte.
+- La **helicidad relativa a la tormenta (SRH) de los casos tornádicos es negativa**, y las supercélulas tornádicas favorecidas son las ***left-movers*** (que se desvían a la izquierda del viento medio), al revés que en Estados Unidos.
+- Los índices compuestos STP, SCP y EHI combinan variables cuyos signos y umbrales deben interpretarse según su formulación. La sección 5.3 los presenta.
 
-> **Consecuencia operativa para el hackathon:** si se usa una librería como MetPy, SHARPpy o wrf-python tal cual, **los índices saldrán con el signo equivocado y el modelo aprenderá basura**. Hay que invertir explícitamente el signo de la SRH y de la vorticidad, o bien espejar el hodógrafo antes de calcular. Éste es probablemente el error silencioso más común y más costoso que se puede cometer en este proyecto.
-
+> **Qué comprobar al calcular.** En herramientas como MetPy, SHARPpy o wrf-python, revisa las convenciones de signo y la rama de movimiento de la tormenta antes de interpretar un índice. No basta con invertir todos los resultados: la SRH negativa puede ser la señal esperada para una supercélula ciclónica austral. Un error puede cambiar la interpretación del entorno y afectar el entrenamiento. La sección 5.1 explica la estimación *left-mover*.
 
 ---
 
-## 3. El caso chileno: tornados donde "no debería haberlos"
+## 3. El caso chileno: un régimen distinto al de las Grandes Llanuras
 
 ### 3.1 Chile no aparecía en el mapa
 
-Durante décadas, los atlas globales de tornados no mostraban nada en la costa occidental de Sudamérica. El "Corredor de los Tornados" sudamericano está del **otro lado del continente** — Argentina central, Uruguay, sur de Brasil, Paraguay — donde el aire cálido y húmedo del Amazonas choca con aire frío del sur sobre una llanura sin obstáculos. Chile, encajonado entre el Pacífico y los Andes, dominado por el anticiclón subtropical y con un clima notablemente estable, no encajaba en el molde.
+La costa occidental de Sudamérica estuvo poco representada en las descripciones globales de tornados. El «Corredor de los Tornados» sudamericano suele situarse en Argentina central, Uruguay, el sur de Brasil y Paraguay, donde confluyen masas de aire cálido y húmedo del norte y aire frío del sur. Chile tiene una configuración distinta: el Pacífico y los Andes condicionan el movimiento del aire y la disponibilidad de humedad.
 
-El molde estaba mal.
+El 30 y 31 de mayo de 2019 se produjeron al menos siete tornados en 24 horas entre los 36° y 38°S. Dos de ellos entraron en ciudades:
 
-El 30 y 31 de mayo de 2019 se produjeron **al menos siete tornados en 24 horas** entre los 36° y 38°S. Dos de ellos entraron en ciudades:
-
-| | **Los Ángeles, Biobío** | **Talcahuano – Concepción, Biobío** |
+| | Los Ángeles, Biobío | Talcahuano – Concepción, Biobío |
 |---|---|---|
-| Fecha y hora | 30 mayo, 21:57 UTC (≈17:57 local) | 31 mayo, 18:00 UTC (≈14:00 local) |
-| Intensidad | **EF2** | **EF1–EF2** |
+| Fecha y hora | 30 de mayo, 21:57 UTC (≈17:57 local) | 31 de mayo, 18:00 UTC (≈14:00 local) |
+| Intensidad | EF2 | EF1–EF2 |
 | Duración | ~8 min | ~15 min |
-| Trayecto | ~5,0 km | **17,1 km** |
+| Trayecto | ~5,0 km | 17,1 km |
 | Viento estimado | 50–60 m/s (218 km/h, informe DMC) | 50–55 m/s (178 km/h, informe DMC) |
 
-El saldo: **una persona fallecida**, decenas de heridos, cerca de 500 viviendas dañadas en el Gran Concepción, una nave industrial destruida, camiones volcados, y **unos 50.000 clientes sin electricidad** en Talcahuano. Cayó granizo de 2–3 cm y se acumularon hasta 180 mm de lluvia en dos días.
+Los daños incluyeron una persona fallecida, decenas de heridos, cerca de 500 viviendas dañadas en el Gran Concepción, una nave industrial destruida, camiones volcados y unos 50.000 clientes sin electricidad en Talcahuano. Cayó granizo de 2–3 cm y se acumularon hasta 180 mm de lluvia en dos días.
 
-El tornado de Talcahuano tiene además una particularidad extraordinaria para la ciencia: **pasó a 400–450 metros de dos estaciones meteorológicas automáticas** del aeropuerto Carriel Sur. Los instrumentos registraron una **caída de presión de 2,1 hPa en 6 minutos** y ráfagas de 24,4 m/s. A partir de ese registro se pudo reconstruir el perfil del vórtice y estimar **50–55 m/s** en el radio de viento máximo, a unos 80 m del centro. Mediciones directas tan cercanas a un tornado son rarísimas en cualquier parte del mundo.
+El tornado de Talcahuano pasó a 400–450 metros de dos estaciones meteorológicas automáticas del aeropuerto Carriel Sur. Los instrumentos registraron una caída de presión de 2,1 hPa en 6 minutos y ráfagas de 24,4 m/s. El registro permitió reconstruir el perfil del vórtice y estimar vientos de 50–55 m/s a unos 80 m del centro, en el radio de viento máximo. La cercanía de las estaciones permitió estudiar la estructura del tornado.
 
-Y un detalle que define el carácter del problema chileno: **el tornado de Talcahuano nació como tromba marina**. Un piloto lo reportó sobre el agua antes de que tocara tierra en Caleta El Soldado. La convección severa chilena se fabrica, en buena medida, **sobre el océano**.
+El tornado de Talcahuano nació como tromba marina: un piloto lo reportó sobre el agua antes de que tocara tierra en Caleta El Soldado. Este caso muestra por qué el proyecto también debe estudiar las tormentas sobre el océano y su transición hacia tierra.
 
-### 3.2 El régimen chileno: mucho cizalle, poco CAPE
+### 3.2 El régimen chileno: fuerte cizalladura y bajo CAPE
 
-Aquí está el hallazgo que hace de este un problema científico genuinamente interesante y no una simple transferencia de tecnología desde Estados Unidos.
+El caso chileno muestra por qué conviene evaluar los índices con datos locales. Los tornados de las Grandes Llanuras pueden ocurrir con CAPE de varios miles de J/kg. En el brote chileno de 2019 se observaron valores menores, acompañados por un fuerte cambio del viento con la altura.
 
-En la imaginería popular, un tornado necesita un día de calor sofocante y un CAPE monstruoso — los 4.000 o 5.000 J/kg de una tarde de mayo en Oklahoma. **En Chile no pasa nada parecido.**
+Durante el brote de 2019, el CAPE más inestable medido y reanalizado estuvo entre 200 y 500 J/kg; los sondeos AMDAR tomados por aviones que aterrizaban en Concepción dieron 673 y 744 J/kg. Estas estimaciones proceden de distintas fuentes y momentos del episodio; no deben interpretarse como una única medición. Los perfiles obtenidos por aviones (AMDAR) son observaciones de temperatura y viento durante el vuelo.
 
-Durante el brote de 2019, el CAPE más inestable medido y reanalizado estuvo entre **200 y 500 J/kg**; los sondeos AMDAR tomados por aviones que aterrizaban en Concepción dieron **673 y 744 J/kg**. Son valores que en las Grandes Llanuras norteamericanas se considerarían apenas suficientes para una tormenta ordinaria.
-
-Lo que sí había era **cizalladura**:
+Los estudios describen los siguientes valores del entorno. MUCAPE es el CAPE de la parcela más inestable, SRH mide la helicidad relativa a la tormenta y LCL es el nivel donde el aire que asciende comienza a condensar:
 
 | Parámetro | Valor durante el brote de 2019 |
 |---|---|
-| MUCAPE | **200 – 1.000 J/kg** (bajo) |
-| Cizalle 0–1 km | **12 – 20 m/s** (alto) |
-| Cizalle 0–6 km | **18 – 21 m/s** (alto) |
-| SRH 0–1 km | **−100 a −250 m²/s²** (parches de −600) |
-| SRH 0–3 km | **−253 a −688 m²/s²** |
-| Altura del LCL | **< 650 – 713 m** (muy bajo) |
-| Jet de bajo nivel en 850 hPa | 20 – 25 m/s del NW |
+| MUCAPE | 200 – 1.000 J/kg (bajo) |
+| Cizalladura 0–1 km | 12 – 20 m/s (alta) |
+| Cizalladura 0–6 km | 18 – 21 m/s (alta) |
+| SRH 0–1 km | −100 a −250 m²/s² (parches de −600) |
+| SRH 0–3 km | −253 a −688 m²/s² |
+| Altura del LCL | < 650 – 713 m (muy bajo) |
+| Jet de bajo nivel en 850 hPa | 20 – 25 m/s del noroeste |
 
-Este es el régimen que la literatura llama **HSLC** — *High Shear, Low CAPE*, alto cizalle y bajo CAPE. Se define operacionalmente como SBCAPE ≤ 500 J/kg con cizalle 0–6 km ≥ 18 m/s y cizalle 0–1 km ≥ 10 m/s. No es exclusivo de Chile: es el mismo régimen del **sureste de Estados Unidos en invierno, de California, del sur de Australia y de las Islas Británicas**. Chile es un caso de **convección severa de costa occidental de latitudes medias**, y los análogos correctos están en esos lugares, no en Tornado Alley.
+Este régimen se denomina HSLC (*High Shear, Low CAPE*): fuerte cizalladura y bajo CAPE. Una definición utilizada es SBCAPE ≤ 500 J/kg, cizalladura 0–6 km ≥ 18 m/s y cizalladura 0–1 km ≥ 10 m/s. SBCAPE toma como referencia una parcela de aire de la superficie. También se han estudiado entornos HSLC en el sureste de Estados Unidos en invierno, California, el sur de Australia y las Islas Británicas. Estos casos ofrecen comparaciones útiles para Chile, aunque sus condiciones no son idénticas.
 
-Hay que añadir un matiz importante sobre el "bajo" CAPE: **para la climatología chilena, 500 J/kg es un valor extraordinario**. El CAPE medio de fines de mayo en la región del Biobío es de apenas **15–45 J/kg**. No es que Chile tenga poco CAPE para hacer tornados; es que Chile normalmente no tiene *nada* de CAPE, y los días tornádicos son precisamente aquellos en que aparece algo.
+El CAPE de los días tornádicos puede ser bajo frente al de las Grandes Llanuras, pero alto frente al promedio local. A fines de mayo, el CAPE medio en Biobío es de 15–45 J/kg; un valor de 500 J/kg supera ampliamente esa referencia. Para interpretar un índice importa tanto su magnitud como el contexto climático.
 
-Esto también explica por qué el momento del día importa tanto. La sensibilidad del CAPE al calentamiento superficial en este régimen es de aproximadamente **+500 J/kg por cada grado Celsius**. Un grado de más en la tarde duplica el combustible. Los siete tornados de 2019 ocurrieron todos entre las **18:00 y las 23:25 UTC**, es decir, aproximadamente **entre las 14:00 y las 19:25 hora local**: la ventana del calentamiento diurno.
+El momento del día también importa. En el entorno analizado, la sensibilidad estimada del CAPE al calentamiento superficial fue de aproximadamente +500 J/kg por grado Celsius. Es una referencia del caso, no una regla para cualquier tormenta. Los siete tornados de 2019 ocurrieron entre las 18:00 y las 23:25 UTC, aproximadamente entre las 14:00 y las 19:25 hora local, durante la tarde.
 
-> ### ⚠️ La consecuencia más importante para este proyecto
->
-> **El Significant Tornado Parameter clásico no habría dado la alarma en mayo de 2019.** El STP, el índice compuesto más usado en Estados Unidos, pondera demasiado el CAPE frente al cizalle y la helicidad. Aplicado a Chile, sencillamente no ve estos eventos.
->
-> Los índices calibrados para Chile son distintos:
-> - **VGP₀₋₁ = √CAPE × cizalle₀₋₁ > 0,1 m/s²** — los cinco días tornádicos analizados (2008–2019) superan este umbral; Los Ángeles, el más intenso, supera **0,2** (Vicencio et al. 2021).
-> - **SHERBE ≥ 1** y **STP (rama *left-mover*) ≤ −0,3** — ambos por encima del percentil 99 de la distribución chilena 1959–2021 (Marín et al. 2024). Nótese que el umbral es **−0,3**, no **+1**.
-> - El **cizalle 0–6 km no discrimina** en Chile, porque en invierno extratropical casi siempre está disponible. **El que discrimina es el cizalle de 0–1 km** (> 12 m/s en los días tornádicos).
->
-> Un modelo de *machine learning* que use los índices norteamericanos tal cual va a fallar. Un modelo que descubra por sí solo la combinación correcta sería un resultado valioso.
+Qué implica para el modelo. Según Vicencio et al. (2021), el umbral clásico del Significant Tornado Parameter (STP), un índice que combina varias condiciones meteorológicas, no habría señalado el brote de mayo de 2019. Los criterios propuestos en los estudios chilenos son:
 
-### 3.3 La receta sinóptica
+- VGP₀₋₁ = √CAPE × cizalladura₀₋₁ > 0,1 m/s². Los cinco días tornádicos analizados entre 2008 y 2019 superan ese valor; Los Ángeles supera 0,2 (Vicencio et al. 2021). En esta fórmula, la cizalladura se expresa por unidad de altura, como se aclara en la sección 5.3.
+- SHERBE ≥ 1 y **STP de la rama *left-mover* ≤ −0,3**. Marín et al. (2024) los sitúan entre los valores extremos de la distribución chilena de 1959–2021. Hay que distinguir el criterio negativo del STP austral del umbral +1 usado en otros contextos.
+- La cizalladura de 0–1 km ayuda a distinguir los días tornádicos del entorno habitual. La de 0–6 km puede superar los valores de referencia en áreas extensas durante el invierno y aportar menos capacidad de separación por sí sola.
 
-Los estudios del brote de 2019 y la climatología de Marín et al. (2024) permiten escribir una receta razonablemente concreta de qué buscar en un mapa:
+Estos criterios orientan la comparación con los estudios citados. Antes de usarlos como umbrales de un modelo hay que comprobar las variantes de cada índice y evaluarlos con datos locales.
 
-1. **Un ciclón extratropical o una baja cuasi-estacionaria frente a la costa** (~40–43°S, 75–80°W) que sostenga durante dos a cuatro días una **advección cálida del norte/noroeste** en superficie entre los 35° y 40°S. En 2019 esa baja, ocluida y de ~995 hPa, estuvo prácticamente inmóvil desde el 28 de mayo.
-2. **Aire frío en niveles medios** (500 hPa) llegando en ondas cortas tras el frente. Nótese: la convección chilena severa es típicamente **post-frontal**, no pre-frontal como en Estados Unidos. A menudo bajo un **bloqueo anticiclónico al sur de los 45°S**, que parte el jet en dos ramas, o asociada a una **baja segregada** (*cutoff low*).
-3. **La zona inestable en la salida polar de un *jet streak***, que aporta el ascenso sinóptico de gran escala.
-4. **Un jet de bajo nivel del noroeste**, reforzado por el bloqueo del flujo contra los Andes.
-5. En el caso del 31 de mayo, una **nube coma** (*comma cloud*) con una mesobaja asociada, que disparó una banda de celdas convectivas **sobre el océano, separadas unos 50 km**, que fueron entrando a tierra una tras otra.
+### 3.3 El entorno atmosférico a gran escala
 
-### 3.4 Geografía: los Andes fabrican el cizalle
+Los estudios del brote de 2019 y la climatología de Marín et al. (2024) describen varios elementos del entorno sinóptico, es decir, sistemas atmosféricos que abarcan cientos o miles de kilómetros. Para leer los mapas, recuerda que la presión disminuye con la altura: 850 hPa representa niveles bajos y 500 hPa, niveles medios. La altura exacta cambia con el estado de la atmósfera.
 
-La cordillera no es un espectador pasivo. Los Andes, con más de 3 km de altura y orientados norte-sur, **bloquean el flujo del oeste** y lo obligan a canalizarse paralelo a la barrera, generando un **jet de barrera** (*barrier jet*) del nor-noroeste de 20–25 m/s en 850 hPa. Ese jet es precisamente lo que **amplifica el cizalle de bajo nivel y la helicidad**.
+1. Una baja presión frente a la costa (~40–43°S, 75–80°W). Puede mantener durante varios días el transporte de aire cálido desde el norte o noroeste hacia los 35–40°S. Ese transporte por el viento se llama *advección cálida*. En 2019, una baja de ~995 hPa permaneció casi inmóvil desde el 28 de mayo.
+2. Aire frío en niveles medios, cerca de 500 hPa, que llega tras el paso del frente. Puede aumentar la diferencia de temperatura entre el aire cercano a la superficie y el de altura, favoreciendo la inestabilidad.
+3. Corrientes de vientos intensos en altura, llamadas *jets*, cuya configuración puede favorecer el ascenso a gran escala.
+4. Un jet de bajo nivel del noroeste, reforzado por el bloqueo del flujo contra los Andes.
+5. El 31 de mayo se observó una nube con forma de coma, asociada a una zona de baja presión de menor escala (*mesobaja*). Acompañó una banda de tormentas sobre el océano, separadas unos 50 km, que entraron a tierra sucesivamente.
 
-Esto no es especulación: Marín et al. (2021) lo comprobaron causalmente con experimentos de sensibilidad en el modelo WRF, reduciendo la topografía al 50 %, 25 % y 0 %. **Al bajar la cordillera, el cizalle y la SRH se desploman.** Los mismos experimentos muestran que la **temperatura superficial del mar modula la severidad** a través de la inestabilidad, y que — de nuevo — **el cizalle importa más que el CAPE**.
+La figura 3 permite localizar dos de estos elementos: el panel A muestra el aire frío en 500 hPa y el B, el viento del noroeste en 850 hPa. Los marcadores sitúan los eventos para compararlos con el entorno.
 
-Hay además un contraste mar–tierra marcado y útil: el cizalle 0–1 km es de **5–10 m/s sobre el océano pero 10–20 m/s tierra adentro**, en parte por la fricción diferencial. Es decir, una celda que se forma sobre el mar **se vuelve más propensa a rotar justo al cruzar la costa**. Para un modelo de predicción, la franja costera entre los 36° y 40°S es la zona crítica.
+**Para profundizar.** Los estudios describen perturbaciones de menor extensión, llamadas *ondas cortas*, tras el frente. También pueden intervenir una baja segregada (*cutoff low*, un centro de baja presión aislado de la circulación principal) y un bloqueo anticiclónico al sur de 45°S que divide el jet en dos ramas. En el brote de 2019 se estudió además la posición de la zona inestable respecto de la salida polar de un *jet streak*, un tramo de viento especialmente intenso dentro del jet. Son detalles para interpretar junto con los mapas y las fuentes, más que una lista de requisitos universales.
+
+### 3.4 Cómo influyen los Andes en la cizalladura
+
+Los Andes bloquean parte del flujo del oeste y lo desvían en una dirección paralela a la cordillera. En el caso estudiado, esto favoreció un jet de barrera del nor-noroeste, con vientos de 20–25 m/s en 850 hPa. El cambio del viento entre ese nivel y la superficie aumenta la cizalladura de niveles bajos y puede contribuir a la helicidad.
+
+Marín et al. (2021) evaluaron ese efecto mediante simulaciones con WRF, un modelo atmosférico. Repitieron el caso reduciendo la altura de la topografía al 50 %, 25 % y 0 % de la original. En esas simulaciones, la reducción de la cordillera disminuyó la cizalladura y la SRH. También estudiaron cómo la temperatura superficial del mar modifica la inestabilidad. Los resultados respaldan la importancia del viento de niveles bajos en ese episodio.
+
+Los estudios describen cizalladura 0–1 km de 5–10 m/s sobre el océano y 10–20 m/s tierra adentro, en parte por la distinta fricción sobre agua y tierra. Una tormenta que cruza la costa puede encontrar un entorno más favorable para organizar su rotación. Por eso conviene estudiar la transición mar–tierra en la franja entre 36° y 40°S.
 
 ### 3.5 Estacionalidad y geografía de los eventos
 
-Ésta es quizá la diferencia más llamativa respecto del imaginario común: **los tornados chilenos son un fenómeno de otoño e invierno**, no de verano.
-
-Contando directamente sobre los 102 eventos de la base de datos:
+Los 102 eventos del catálogo se concentran en otoño e invierno, aunque también hay registros de primavera y verano:
 
 | Estación | Eventos | Fracción |
 |---|---:|---:|
-| **Invierno** (jun–ago) | **56** | **54,9 %** |
-| **Otoño** (mar–may) | **32** | **31,4 %** |
+| Invierno (jun–ago) | 56 | 54,9 % |
+| Otoño (mar–may) | 32 | 31,4 % |
 | Primavera (sep–nov) | 7 | 6,9 % |
 | Verano (dic–feb) | 7 | 6,9 % |
 
 Y mes a mes:
 
-| Ene | Feb | Mar | Abr | **May** | **Jun** | Jul | Ago | Sep | Oct | Nov | Dic |
+| Ene | Feb | Mar | Abr | May | Jun | Jul | Ago | Sep | Oct | Nov | Dic |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1 | 6 | 3 | 5 | **24** | **36** | 12 | 8 | 4 | 2 | 1 | 0 |
+| 1 | 6 | 3 | 5 | 24 | 36 | 12 | 8 | 4 | 2 | 1 | 0 |
 
-- **Junio es el mes más frecuente (36 eventos), seguido de mayo (24).** Entre ambos concentran el **59 %** de todo el catálogo.
-- **Otoño e invierno suman el 86 %** de los eventos.
-- El pico está concentrado entre **mediados de mayo y mediados de junio** — una "temporada de tornados" de aproximadamente **cuatro semanas** (Caballero-Morán & Rondanelli 2025). La probabilidad se mantiene elevada hasta agosto.
+- Junio es el mes más frecuente (36 eventos), seguido de mayo (24). Entre ambos concentran el 59 % de todo el catálogo.
+- Otoño e invierno suman el 86 % de los eventos.
+- El pico está concentrado entre mediados de mayo y mediados de junio — una "temporada de tornados" de aproximadamente cuatro semanas (Caballero-Morán & Rondanelli 2025). La probabilidad se mantiene elevada hasta agosto.
 
-> **Nota sobre una discrepancia.** Vicencio et al. (2021) reportan otoño 46 % / invierno 43 % y mayo como mes máximo, sobre una recopilación de 43 eventos. La base de figshare, más amplia y más reciente, invierte el orden: **invierno por sobre otoño, y junio por sobre mayo**. No es una contradicción, sino el efecto de haber más que duplicado la muestra — y un recordatorio de que estas proporciones siguen moviéndose a medida que crece el catálogo.
-- La razón física es clara: es cuando llega **aire frío en altura sobre un océano y una superficie todavía relativamente cálidos y húmedos**. El máximo de CAPE ocurre a fines de mayo, el máximo de cizalle a fines de junio, y el máximo del VGP resulta del solapamiento de ambos, a comienzos de junio.
+> **Por qué cambian las proporciones.** Vicencio et al. (2021) reportan 46 % en otoño y 43 % en invierno, con mayo como mes máximo, en una recopilación de 43 eventos. La base de figshare contiene más registros y sitúa primero al invierno y a junio. Las proporciones dependen de la muestra y de los criterios del catálogo; conviene indicar qué versión se usa en cada análisis.
 
-En cuanto a la geografía, la base de datos sitúa **55 de los 102 eventos entre 38° y 42°S** y **36 entre 34° y 38°S**: juntos, el **89 %** del catálogo. Por región administrativa encabezan **Los Lagos (23)**, **La Araucanía (16)** y **Biobío (16)**, seguidas de Ñuble (9), Maule (7) y Los Ríos (7). La mediana de latitud es **38,7°S**.
+Una explicación física de la concentración estacional es la llegada de aire frío en altura sobre el océano y una superficie todavía relativamente cálidos y húmedos. Los estudios citados sitúan el máximo de CAPE a fines de mayo y el de cizalladura a fines de junio. Su combinación favorece un máximo del VGP a comienzos de junio.
+
+En cuanto a la geografía, la base de datos sitúa 55 de los 102 eventos entre 38° y 42°S y 36 entre 34° y 38°S: juntos, el 89 % del catálogo. Por región administrativa encabezan Los Lagos (23), La Araucanía (16) y Biobío (16), seguidas de Ñuble (9), Maule (7) y Los Ríos (7). La mediana de latitud es 38,7°S.
 
 ![Mapa de los 102 tornados y trombas marinas catalogados en Chile entre 1554 y 2025, con un histograma de latitud al costado. Los eventos se concentran entre los 34° y 42°S y no hay ningún registro al sur de los 42,4°S.](../figs/fig1_catalog_map.png)
 
 **Figura 1.** Los 102 eventos del catálogo, coloreados por tipo y dimensionados por intensidad EF. La franja inferior sombreada marca los más de mil kilómetros de Chile austral sin un solo registro.
 
-Los dos extremos son instructivos. El evento más austral registrado es una tromba en **Meulín, Chiloé (42,4°S)** en julio de 2017: **no hay un solo registro al sur de los 42,4°S**, pese a que más de mil kilómetros de territorio chileno se extienden más allá. Y el más septentrional es **Tocopilla (22,1°S)**, en pleno desierto de Atacama, en agosto de 2020 — un recordatorio de que el fenómeno no está confinado al sur. Las **trombas marinas** son más típicas del invierno. La climatología de índices identifica dos focos:
+Los extremos geográficos muestran la amplitud de los registros. El evento más austral registrado es una tromba en Meulín, Chiloé (42,4°S) en julio de 2017: no hay un solo registro al sur de los 42,4°S, pese a que más de mil kilómetros de territorio chileno se extienden más allá. Y el más septentrional es Tocopilla (22,1°S), en pleno desierto de Atacama, en agosto de 2020 — un recordatorio de que el fenómeno no está confinado al sur. Las trombas marinas son más típicas del invierno. La climatología de índices identifica dos focos:
 
-- **~38°S, 72°W**, entre la Cordillera de la Costa y los Andes — coincide con el máximo de tornados observados.
-- **~42,7°S, 74°W**, Isla de Chiloé — coincide con el máximo de trombas marinas.
+- ~38°S, 72°W, entre la Cordillera de la Costa y los Andes — coincide con el máximo de tornados observados.
+- ~42,7°S, 74°W, Isla de Chiloé — coincide con el máximo de trombas marinas.
 
-### 3.6 El sesgo de reporte, cuantificado
+### 3.6 Cómo se distribuyen los registros en el tiempo
 
-El catálogo reúne **102 eventos a lo largo de 471 años**, entre 1554 y 2025. Pero su distribución temporal delata el problema:
+El catálogo reúne 102 eventos a lo largo de 471 años, entre 1554 y 2025. Su distribución temporal muestra una concentración de registros recientes:
 
 | Período | Duración | Eventos | Fracción |
 |---|---:|---:|---:|
 | 1554 – 1999 | 446 años | 23 | 22,5 % |
 | 2000 – 2014 | 15 años | 11 | 10,8 % |
-| **2015 – 2025** | **11 años** | **68** | **66,7 %** |
+| 2015 – 2025 | 11 años | 68 | 66,7 % |
 
-Dicho de otro modo: **dos tercios de todos los tornados conocidos de la historia de Chile ocurrieron en los últimos once años**, y los últimos 26 años aportan más registros que los cuatro siglos anteriores juntos.
+Dos tercios de los eventos del catálogo corresponden a 2015–2025. El período 2000–2025 aporta más registros que los siglos anteriores juntos. Esa distribución describe lo documentado, no necesariamente cómo ha cambiado la frecuencia real de los fenómenos.
 
-Nadie sostiene que los tornados chilenos se hayan multiplicado por cinco en cinco años. Lo que cambió fue **la densidad de teléfonos con cámara y de redes sociales**. El catálogo no mide tornados: mide **testigos con conexión a internet**. (Puede haber además una señal climática real superpuesta, pero es imposible separarla sin corregir primero la observabilidad.)
+La mayor disponibilidad de teléfonos con cámara y redes sociales facilita la documentación. La cantidad de registros depende tanto de los eventos como de la posibilidad de observarlos y reportarlos. También podría haber cambios en la frecuencia real, pero este catálogo por sí solo no permite separar ambos efectos.
 
-Los registros más antiguos son elocuentes precisamente porque son excepcionales: el de **Carelmapu, 14 de mayo de 1633**, que destruyó casi por completo un fuerte español y sobre el que el cronista Alonso de Ovalle escribió que cayó granizo "más grueso que balas de mosquete"; y el de **Concepción, 27 de mayo de 1934**, cuyos daños fueron cubiertos incluso por *The New York Times*. Ambos en mayo.
+Entre los registros históricos se encuentran el de Carelmapu, 14 de mayo de 1633, que destruyó casi por completo un fuerte español y sobre el que el cronista Alonso de Ovalle escribió que cayó granizo "más grueso que balas de mosquete"; y el de Concepción, 27 de mayo de 1934, cuyos daños fueron cubiertos incluso por *The New York Times*. Ambos en mayo.
 
-> **Y aquí está el dato que justifica todo este proyecto.** Caballero-Morán & Rondanelli (2025), analizando ERA5 entre 1959 y 2021, encontraron que **amplias zonas del sur austral de Chile presentan VGP, cizalle y helicidad perfectamente suficientes para generar tornados — y no tienen ningún registro documentado.** Su estacionalidad es incluso *más plana* que la del centro-sur. La conclusión de los autores es directa: se trata, casi con certeza, de **subregistro por baja densidad poblacional**.
->
-> Es decir: no estamos especulando sobre eventos faltantes. **La literatura revisada por pares ya señaló dónde buscarlos.**
+Caballero-Morán y Rondanelli (2025), al analizar ERA5 entre 1959 y 2021, identificaron zonas del sur austral con condiciones favorables según VGP, cizalladura y helicidad, pero sin eventos documentados. Plantean el subregistro por baja densidad poblacional como explicación. Esas zonas son candidatas para revisar el archivo histórico: los índices por sí solos no confirman que haya ocurrido un tornado.
 
-### 3.7 Chile no tiene radar
+### 3.7 Cobertura de radar y límites de la alerta
 
-El último elemento del cuadro es el que convierte este problema académico en un problema urgente.
+Un radar meteorológico observa la distribución de la precipitación. El efecto Doppler, un cambio de frecuencia asociado al movimiento de las partículas, permite estimar su velocidad hacia el radar o en dirección contraria. Eso ayuda a estudiar la estructura de las tormentas con más detalle que los datos de superficie aislados.
 
-Vicencio et al. (2021) lo dicen sin rodeos: en 2019, Chile era **"un país sin radares meteorológicos y sin sistema de alerta de tornados"**. Toda la evidencia de que aquellas tormentas fueron supercelulares tuvo que reconstruirse *a posteriori* con imágenes GOES-16 cada 10 minutos, detección de rayos de la red WWLLN, perfiles AMDAR de aviones comerciales que casualmente aterrizaban en Carriel Sur, estaciones de superficie, videos de aficionados y simulaciones WRF.
+Vicencio et al. (2021) describen a Chile en 2019 como un país sin radares meteorológicos ni un sistema de alerta de tornados. Para reconstruir las tormentas de ese episodio combinaron imágenes GOES-16, detección de rayos, perfiles de aviones comerciales, estaciones de superficie, videos y simulaciones WRF.
 
-La situación no ha cambiado sustancialmente. El proyecto de la Dirección Meteorológica de Chile contempla unos **ocho radares entre Valparaíso y Los Lagos**, a alrededor de **dos millones de dólares cada uno**, y sigue sin financiamiento. En 2025 ANID adjudicó, vía Fondequip, **el primer radar meteorológico del país** — móvil, sobre tráiler, unos US$700.000, liderado desde la Universidad de Valparaíso, con disponibilidad esperada hacia fines de 2026. Es un instrumento **científico y móvil**, no una red operacional.
+El 7 de noviembre de 2025, la Universidad de Valparaíso [anunció la adjudicación de un radar meteorológico móvil](https://www.uv.cl/archivo-noticias-uv/28540-chile-tendra-su-primer-radar-meteorologico-universidad-de-valparaiso-lidera-el-proyecto-que-transformara-la-investigacion-y-la-gestion-climatica-del-pais) mediante Fondequip Mayor. El proyecto contempla trasladarlo según las necesidades de investigación y monitoreo. El anuncio no equivale a la disponibilidad de una red permanente de cobertura nacional.
 
-Sin radar, la ventana de aviso de 20–30 minutos que ofrece el *nowcasting* Doppler se reduce a **5–10 minutos** con satélite y estaciones de superficie. La DMC y SENAPRED emiten hoy **avisos de condiciones favorables** para la formación de tornados y trombas por región, pero no un pronóstico del evento.
+En entornos HSLC, la rotación puede ser poco profunda y breve, lo que también dificulta su detección con radar. Emitir un aviso de condiciones favorables para una región y anticipar un tornado concreto son tareas distintas: la segunda exige observar y seguir la tormenta con suficiente detalle.
 
-Un matiz honesto, sin embargo: **el radar tampoco sería una bala de plata**. En los entornos HSLC los mesociclones son **someros y transitorios**, y con frecuencia se forman y disipan en el lapso de unos pocos volúmenes de barrido. Incluso en el sureste de Estados Unidos, que sí tiene cobertura NEXRAD completa, estos eventos son notoriamente difíciles de avisar.
-
-**Ésa es exactamente la brecha que un modelo basado en ERA5 y GOES puede ayudar a cerrar.** No reemplaza al radar; opera en una escala temporal distinta y complementaria — horas de antelación en lugar de minutos — e identifica *el entorno* favorable antes de que la tormenta exista. Y, de paso, puede reconstruir el catálogo histórico que Chile nunca tuvo.
+El proyecto puede ayudar a estudiar entornos favorables y seleccionar casos históricos para revisión. Su uso en alertas operativas requeriría validación y fuentes disponibles a tiempo. La latencia de ERA5, explicada en la sección 4.1, permite trabajar con el pasado, pero impide tratarlo como una entrada inmediata para avisos.
 
 ---
 
 ## 4. Los datos de entrada
 
-Tres fuentes, con naturalezas muy distintas: un **reanálisis** (el estado tridimensional de la atmósfera, reconstruido), un **satélite** (lo que se ve desde arriba, cada 10 minutos) y un **catálogo de eventos** (las etiquetas). Todo lo relevante está disponible públicamente y gran parte vive en S3 dentro del **AWS Open Data Program**, es decir, sin costo de transferencia si se procesa dentro de AWS en la región correcta.
+Trabajaremos con un reanálisis, imágenes satelitales y un catálogo de eventos. El primero reconstruye el estado de la atmósfera; las imágenes permiten observar la evolución de las nubes; el catálogo aporta los casos documentados. Los datos son públicos y gran parte se encuentra en Amazon S3, un servicio de almacenamiento de archivos. Acceder a datos públicos no significa que todo el procesamiento sea gratuito: hay que considerar cómputo, almacenamiento y transferencias según la ubicación y el tipo de acceso.
 
 ### 4.1 ERA5: el estado 4D de la atmósfera
 
-**ERA5** es el reanálisis atmosférico global de quinta generación del ECMWF. Un reanálisis no es un pronóstico ni una observación: es el resultado de correr un modelo de circulación global moderno *hacia atrás en el tiempo*, asimilando todas las observaciones históricas disponibles (radiosondas, satélites, aviones, boyas, estaciones). El producto es una reconstrucción física y dinámicamente consistente del estado completo de la atmósfera, hora por hora.
+ERA5 es el reanálisis atmosférico global de quinta generación del ECMWF, el Centro Europeo de Predicción Meteorológica a Plazo Medio. [Un reanálisis combina un modelo meteorológico con observaciones del pasado](https://www.ecmwf.int/en/about/media-centre/focus/2023/fact-sheet-reanalysis), como radiosondas, satélites, aviones, boyas y estaciones. Repite el análisis para cada período con un método consistente y produce una reconstrucción de la atmósfera, hora por hora. No es una medición directa ni un pronóstico del futuro.
 
 | Característica | Valor |
 |---|---|
-| Cobertura temporal | **Enero 1940 – presente** (extendido en tiempo casi real) |
-| Resolución temporal | **Horaria** |
+| Cobertura temporal | Enero 1940 – presente (extendido en tiempo casi real) |
+| Resolución temporal | Horaria |
 | Resolución horizontal nativa | ~31 km (0,28125°), espectral T639 |
-| Resolución horizontal distribuida | **0,25° × 0,25°** (grilla lat/lon regular) |
-| Niveles verticales | **137 niveles de modelo** (híbridos sigma-presión, tope 0,01 hPa); interpolados a **37 niveles de presión** (1 – 1000 hPa) |
-| Latencia | ~5 días (versión preliminar **ERA5T**); ~2–3 meses para la versión final |
-| Formato | GRIB1/GRIB2 nativo; **NetCDF-4** en las copias de AWS |
+| Resolución horizontal distribuida | 0,25° × 0,25° (grilla latitud/longitud regular) |
+| Niveles verticales | 137 niveles de modelo (híbridos sigma-presión, tope 0,01 hPa); interpolados a 37 niveles de presión (1 – 1000 hPa) |
+| Latencia | ~5 días (versión preliminar ERA5T); ~2–3 meses para la versión final |
+| Formato | GRIB1/GRIB2 nativo; NetCDF-4 en las copias de AWS |
 
-**Variables relevantes.** En niveles de presión: componentes del viento **u, v, w**, temperatura **t**, humedad específica **q**, geopotencial **z**, vorticidad potencial. En nivel único: presión a nivel del mar, temperatura y punto de rocío a 2 m, viento a 10 m y 100 m, temperatura superficial del mar, y **los índices de estabilidad CAPE y CIN** ya calculados por el ECMWF.
+**Variables relevantes.** En niveles de presión: componentes del viento u, v, w, temperatura t, humedad específica q, geopotencial z, vorticidad potencial. En nivel único: presión a nivel del mar, temperatura y punto de rocío a 2 m, viento a 10 m y 100 m, temperatura superficial del mar, y los índices de estabilidad CAPE y CIN ya calculados por el ECMWF.
 
-**Acceso en AWS.** Hay dos buckets y es importante no equivocarse:
+**Para profundizar: acceso en AWS.** Un *bucket* es un contenedor de archivos en S3. Para este proyecto necesitamos la copia que incluye datos en altura:
 
 ```bash
 # ✅ EL BUCKET A USAR — NSF NCAR, región us-west-2
@@ -322,7 +316,7 @@ aws s3 ls --no-sign-request s3://nsf-ncar-era5/
 aws s3 ls --no-sign-request s3://era5-pds/
 ```
 
-El bucket `era5-pds` **está marcado como deprecado** y contiene únicamente 18 variables de superficie (viento a 10 m, temperatura a 2 m, presión, oleaje...). **No tiene niveles de presión, ni viento en altura, ni CAPE**: es inservible para este problema. La copia mantenida es `nsf-ncar-era5`.
+El bucket `era5-pds` está marcado como deprecado y contiene únicamente 18 variables de superficie (viento a 10 m, temperatura a 2 m, presión, oleaje...). No tiene niveles de presión, ni viento en altura, ni CAPE: esa copia no contiene las variables en altura necesarias para este proyecto. La copia mantenida es `nsf-ncar-era5`.
 
 Estructura de claves de `nsf-ncar-era5` (verificada con `ListBucket`):
 
@@ -348,63 +342,63 @@ e5.oper.an.pl/202401/e5.oper.an.pl.128_060_pv.ll025sc.2024010100_2024010123.nc
 
 donde `128_060_pv` es tabla GRIB 128 / parámetro 60 / nombre corto `pv`, y `ll025sc` indica grilla 0,25° para campos escalares (`ll025uv` para campos vectoriales).
 
-![Cuatro mapas de ERA5 para el 30 de mayo de 2019 a las 21 UTC: temperatura y altura geopotencial en 500 hPa, viento en 850 hPa, cizalle de 0 a 1 km y cizalle de 0 a 6 km.](../figs/fig4_era5_20190530.png)
+![Cuatro mapas de ERA5 para el 30 de mayo de 2019 a las 21 UTC: temperatura y altura geopotencial en 500 hPa, viento en 850 hPa, cizalladura de 0 a 1 km y cizalladura de 0 a 6 km.](../figs/fig4_era5_20190530.png)
 
-**Figura 3.** El entorno del brote, reconstruido directamente desde `s3://nsf-ncar-era5/`. Cuatro cosas que el documento afirma y que aquí se ven: **(A)** un núcleo frío de −24 a −26 °C en 500 hPa justo sobre la zona de los tornados; **(B)** el jet del noroeste en 850 hPa, de 20–30 m/s, frenándose al chocar con la cordillera; **(C)** una franja estrecha de cizalle 0–1 km por encima del umbral chileno de 12 m/s, alineada con la costa y el pie de monte — exactamente donde ocurrieron los siete tornados; y **(D)** cizalle 0–6 km por encima de 18 m/s en casi todo el dominio, que es precisamente la razón por la cual **el cizalle profundo no discrimina** en Chile.
+**Figura 3.** Entorno del 30 de mayo de 2019, reconstruido con ERA5. El panel A muestra temperatura y altura geopotencial en 500 hPa; el B, viento en 850 hPa; el C, cizalladura 0–1 km; y el D, cizalladura 0–6 km. Los marcadores permiten comparar los campos con la ubicación de los tornados. La extensión de valores elevados en el panel D ilustra por qué conviene evaluar la capacidad de cada variable para distinguir los casos, en vez de usarla de forma aislada.
 
-> **Una trampa visible en el panel C.** En ERA5 el nivel de 1000 hPa está *bajo tierra* sobre los Andes, y sus valores son una extrapolación del modelo. Parte de la franja de cizalle intenso que sigue el pie de monte es, por tanto, artificio numérico y no viento real. Cualquier cálculo de cizalle de niveles bajos debe enmascarar los puntos donde la presión de superficie es menor que el nivel usado, o partir del viento a 10 m en lugar de 1000 hPa.
+> **Niveles bajo el terreno en el panel C.** En ERA5 el nivel de 1000 hPa está *bajo tierra* sobre los Andes, y sus valores son una extrapolación del modelo. Parte de la franja de cizalladura intensa que sigue el pie de monte es, por tanto, artificio numérico y no viento real. Cualquier cálculo de cizalladura de niveles bajos debe enmascarar los puntos donde la presión de superficie es menor que el nivel usado, o partir del viento a 10 m en lugar de 1000 hPa.
 
-> **Advertencia de volumen.** Cada archivo de nivel de presión contiene **una variable, un día completo (00–23 UTC), el globo entero y los 37 niveles: ≈ 1,36 GB**. No hay *subsetting* del lado del servidor. Bajar 10 años × 6 variables ingenuamente son decenas de terabytes. La estrategia correcta es leer con **lectura perezosa por rangos de bytes** (`xarray` + `fsspec` + `h5netcdf`, o `kerchunk`/`virtualizarr` para construir un índice y leer sólo los *chunks* del recuadro chileno). Sólo se necesita aproximadamente el recuadro **17°S–56°S, 80°W–66°W**, que es una fracción minúscula del globo.
+> **Volumen de descarga.** Cada archivo de niveles de presión contiene una variable, un día completo (00–23 UTC), el globo y 37 niveles: aproximadamente 1,36 GB. Descargar 10 años de seis variables completas requiere decenas de terabytes. No hay recorte geográfico del lado del servidor. La lectura por rangos de bytes permite pedir bloques del archivo y recortar después la región de interés; los bytes transferidos dependen de cómo se almacena cada variable. Un bloque puede contener una hora del globo entero, de modo que leer solo el recuadro en el resultado no garantiza transferir solo sus píxeles. Se puede trabajar con `xarray`, `fsspec` y `h5netcdf`, o construir índices con `kerchunk`/`virtualizarr`. El recuadro de interés es aproximadamente 17°S–56°S, 80°W–66°W.
 >
-> Alternativa: el **Climate Data Store (CDS)** de Copernicus sí ofrece recorte geográfico del lado del servidor, a costa de una cola de peticiones. Para un archivo histórico grande conviene S3; para prototipar, el CDS.
+> El Climate Data Store (CDS) de Copernicus ofrece recorte geográfico del lado del servidor, con una cola de peticiones. Puede ser una alternativa para prototipos pequeños.
 
-**Lo que ERA5 *no* puede hacer.** Con 31 km de resolución y un paso horario, **ERA5 no resuelve un mesociclón**. Un mesociclón de 5 km de diámetro cabe dentro de una sola celda. Esto no es un defecto, es la premisa del proyecto: ERA5 describe el **entorno** — el escenario sinóptico y de mesoescala en el que la tormenta puede o no organizarse — y el satélite describe **la tormenta**. La pregunta es si el entorno predice a la tormenta.
+**Lo que ERA5 permite estudiar.** Con ~31 km de resolución y datos horarios, ERA5 no resuelve un mesociclón de unos pocos kilómetros. Describe el entorno en el que se desarrolla la tormenta. GOES aporta información sobre la nube y su evolución, con las limitaciones de observación que veremos a continuación. El proyecto busca evaluar qué se puede inferir al combinar ambas fuentes.
 
 ### 4.2 GOES: la tormenta vista desde arriba, cada 10 minutos
 
-Los satélites **GOES-R** (GOES-16 en adelante) son geoestacionarios y llevan a bordo el **ABI** (*Advanced Baseline Imager*), un radiómetro de **16 bandas** desde el visible hasta el infrarrojo térmico.
+Los satélites GOES-R (GOES-16 en adelante) son geoestacionarios: mantienen su posición aparente sobre un punto del ecuador. Llevan a bordo el ABI (*Advanced Baseline Imager*), un radiómetro de 16 bandas desde el visible hasta el infrarrojo térmico.
 
-**Qué satélite mira a Chile.** El **GOES-East**, ubicado sobre el ecuador a **75,2°W** — es decir, casi exactamente sobre el meridiano de Chile. La serie temporal se reparte entre dos satélites:
+**Qué satélite observa Chile.** GOES-East está ubicado sobre el ecuador a 75,2°W, una longitud cercana a la de Chile. La serie temporal se reparte entre dos satélites:
 
 | Bucket | Período | Estado |
 |---|---|---|
 | `s3://noaa-goes16/` | Dic 2017 – Abr 2025 | Archivo histórico de GOES-East |
-| `s3://noaa-goes19/` | **Abr 2025 – presente** | GOES-East operacional (desde el 4 de abril de 2025, 15:00 UTC) |
-| `s3://noaa-goes18/` | Ene 2023 – presente | GOES-**West** (~137°W): **no sirve para Chile** |
+| `s3://noaa-goes19/` | Abr 2025 – presente | GOES-East operacional (desde el 4 de abril de 2025, 15:00 UTC) |
+| `s3://noaa-goes18/` | Ene 2023 – presente | GOES-West (~137°W): no sirve para Chile |
 | `s3://noaa-goes17/` | congelado (Ene 2023) | fuera de servicio |
 
-Todos en la región **us-east-1**.
+Todos en la región us-east-1.
 
-**Las 16 bandas del ABI:**
+**Las 16 bandas del ABI.** La longitud de onda central (λ) indica qué parte del espectro observa cada banda. Se expresa en micrómetros (µm); IR significa infrarrojo. Las resoluciones de la tabla son nominales y empeoran hacia los bordes de la imagen:
 
 | Banda | λ central (µm) | Tipo | Apodo | Resolución |
 |---|---|---|---|---|
 | 1 | 0,47 | Visible | Azul | 1 km |
-| 2 | 0,64 | Visible | Rojo | **0,5 km** |
+| 2 | 0,64 | Visible | Rojo | 0,5 km |
 | 3 | 0,86 | IR cercano | "Veggie" | 1 km |
 | 4 | 1,37 | IR cercano | Cirros | 2 km |
 | 5 | 1,6 | IR cercano | Nieve/hielo | 1 km |
 | 6 | 2,2 | IR cercano | Tamaño de partícula | 2 km |
 | 7 | 3,9 | IR | Ventana de onda corta | 2 km |
-| 8 | 6,2 | IR | **Vapor de agua, nivel alto** | 2 km |
-| 9 | 6,9 | IR | **Vapor de agua, nivel medio** | 2 km |
-| 10 | 7,3 | IR | **Vapor de agua, nivel bajo** | 2 km |
+| 8 | 6,2 | IR | Vapor de agua, nivel alto | 2 km |
+| 9 | 6,9 | IR | Vapor de agua, nivel medio | 2 km |
+| 10 | 7,3 | IR | Vapor de agua, nivel bajo | 2 km |
 | 11 | 8,4 | IR | Fase del tope nuboso | 2 km |
 | 12 | 9,6 | IR | Ozono | 2 km |
-| 13 | 10,3 | IR | **Ventana larga "limpia"** | 2 km |
+| 13 | 10,3 | IR | Ventana larga "limpia" | 2 km |
 | 14 | 11,2 | IR | Ventana larga | 2 km |
 | 15 | 12,3 | IR | Ventana larga "sucia" | 2 km |
 | 16 | 13,3 | IR | CO₂ | 2 km |
 
-Las bandas que más importan para convección severa son la **2** (textura y sombras del tope, sólo de día), las **8/9/10** (vapor de agua: revelan la circulación de niveles medios-altos aunque no haya nubes), la **13** (temperatura de brillo del tope: el termómetro de qué tan alto llegó la tormenta) y los pares **13−11** y **13−16**, que discriminan topes penetrantes.
+Las bandas que más importan para convección severa son la 2 (textura y sombras del tope, solo de día), las 8/9/10 (vapor de agua: revelan la circulación de niveles medios-altos aunque no haya nubes), la 13 (temperatura de brillo del tope: el termómetro de qué tan alto llegó la tormenta) y las diferencias entre bandas, como 13−11 y 13−16, que ayudan a estudiar las propiedades del tope. La temperatura de brillo es la temperatura equivalente inferida de la radiación; su interpretación depende de qué observa el píxel.
 
-**Cadencia.** En el **Modo 6** (operacional desde 2019): **disco completo cada 10 minutos**, CONUS cada 5 min, dominios de mesoescala cada 60 s. Chile está cubierto por el **disco completo**, es decir, **una imagen cada 10 minutos, 144 por día, las 24 horas**. Ésta es la resolución temporal que hace posible ver *cómo evoluciona* una tormenta.
+**Frecuencia de observación.** En el Modo 6 (operacional desde 2019): disco completo cada 10 minutos, CONUS cada 5 min, dominios de mesoescala cada 60 s. Chile está cubierto por el disco completo, es decir, una imagen cada 10 minutos, 144 por día, las 24 horas. Esta es la resolución temporal que hace posible ver *cómo evoluciona* una tormenta.
 
-![Tres paneles de GOES-16 banda 13 sobre Chile centro-sur el 30 de mayo de 2019: la temperatura de brillo a las 21:30 y a las 21:50 UTC, y el cambio en esos diez minutos.](../figs/fig3_goes_20190530.png)
+![Tres paneles de GOES-16 banda 13 sobre Chile centro-sur el 30 de mayo de 2019: la temperatura de brillo a las 21:30 y a las 21:50 UTC, y el cambio entre las 21:40 y las 21:50 UTC.](../figs/fig3_goes_20190530.png)
 
-**Figura 4.** Los mismos datos que usaría el modelo, tal como salen del bucket. A la izquierda y al centro, la temperatura de brillo de la banda 13 con veinte minutos de diferencia; los triángulos marcan los tornados de ese día. A la derecha, la **tendencia en diez minutos**: la variable de la sección 5.4 que mide directamente si un tope está creciendo. Los dipolos rojo–azul corresponden en su mayoría al desplazamiento de las nubes, no a desarrollo; separar advección de crecimiento real es justamente lo que un flujo óptico resuelve.
+**Figura 4.** Temperatura de brillo de la banda 13 a las 21:30 y las 21:50 UTC, separadas por veinte minutos; los triángulos marcan los tornados de ese día. El tercer panel muestra el cambio entre las 21:40 y las 21:50 UTC. Los pares de zonas rojas y azules pueden deberse al desplazamiento de las nubes, por lo que una diferencia entre imágenes no mide solo su desarrollo. Estimar el movimiento con flujo óptico puede ayudar a distinguir desplazamiento y cambio de la nube.
 
-**Estructura de claves:**
+Estructura de claves:
 
 ```
 <Producto>/<Año>/<DíaDelAño>/<Hora>/<Archivo>
@@ -419,21 +413,21 @@ OR_ABI-L1b-RadF-M3C02_G16_s20171671145342_e20171671156109_c20171671156144.nc
    └─ F = disco completo, C = CONUS, M1/M2 = mesoescala
 ```
 
-> **Trampa práctica:** el directorio se organiza por hora de observación, pero el sello `c` (creación) puede caer en la hora siguiente. **Filtrar siempre por el campo `s`, nunca por `c`.**
+> Trampa práctica: el directorio se organiza por hora de observación, pero el sello `c` (creación) puede caer en la hora siguiente. Filtrar siempre por el campo `s`, nunca por `c`.
 
-**Productos recomendados:**
+**Productos para explorar:**
 
-- `ABI-L2-MCMIPF` — *Multiband Cloud and Moisture Imagery, Full Disk*: **las 16 bandas calibradas en un solo archivo**. Muchísimo más eficiente que bajar 16 archivos `CMIPF` separados. Es el punto de partida natural.
-- `ABI-L2-ACHAF` — altura del tope nuboso. Imprescindible (ver más abajo, corrección de paralaje).
+- `ABI-L2-MCMIPF` — *Multiband Cloud and Moisture Imagery, Full Disk*: las 16 bandas calibradas en un solo archivo. Evita descargar un archivo `CMIPF` separado para cada banda y es un punto de partida para explorar varias bandas juntas.
+- `ABI-L2-ACHAF` — altura del tope nuboso. Se utiliza para estimar la corrección de paralaje, explicada más abajo.
 - `ABI-L2-ACTPF` — fase del tope nuboso (hielo/agua).
-- `ABI-L2-DSIF` — **índices de estabilidad derivados** (CAPE, índice de levantamiento, agua precipitable) estimados desde el satélite. Un contraste independiente de ERA5.
-- `ABI-L2-DMWF` — **vientos derivados del movimiento de las nubes**. Es una observación real de viento en altura, con resolución mucho mayor que ERA5.
-- `GLM-L2-LCFA` — rayos. Archivos cada **20 segundos** (180 por hora).
+- `ABI-L2-DSIF` — índices de estabilidad derivados (CAPE, índice de levantamiento, agua precipitable) estimados desde el satélite. Un contraste independiente de ERA5.
+- `ABI-L2-DMWF` — vientos derivados del movimiento de las nubes. Es una observación real de viento en altura, con resolución mucho mayor que ERA5.
+- `GLM-L2-LCFA` — rayos. Archivos cada 20 segundos (180 por hora).
 - `ABI-L1b-RadF` — radiancias crudas, si se quiere control total de la calibración.
 
-**El problema de la geometría: Chile está en el borde.**
+**Geometría de observación y paralaje.**
 
-Éste es un punto técnico que hay que tomar en serio. El GOES-East está sobre el **ecuador**, y Chile se extiende hasta los **56°S**. El ángulo cenital local crece con la latitud:
+El GOES-East está sobre el ecuador, y Chile se extiende hasta los 56°S. El ángulo cenital, medido entre la vertical local y la dirección al satélite, crece con la latitud:
 
 | Lugar | Latitud aprox. | Ángulo cenital | Consecuencia |
 |---|---|---|---|
@@ -444,26 +438,26 @@ OR_ABI-L1b-RadF-M3C02_G16_s20171671145342_e20171671156109_c20171671156144.nc
 
 Dos efectos concretos:
 
-1. **El píxel se estira.** Un píxel infrarrojo nominal de 2 km, visto a 60° de oblicuidad, cubre en realidad unos 2 × 4 km sobre el terreno. La resolución efectiva en el sur de Chile es peor que la nominal.
-2. **Paralaje.** El tope de una tormenta está a 12–15 km de altura, y el satélite lo ve *de lado*. El tope aparece desplazado respecto de su posición real en superficie, en dirección **contraria al punto subsatelital** (hacia el sur-suroeste), por una distancia aproximada de `h · tan(θ)`: unos **10 km a 40°S y 20 km a 53°S**. Eso es **varias celdas de grilla**. Superponer ingenuamente una imagen GOES con una posición de tornado reportada, o con la grilla de ERA5, introduce un error sistemático mayor que el fenómeno que se quiere estudiar.
+1. El píxel se estira. Un píxel infrarrojo nominal de 2 km, visto a 60° de oblicuidad, cubre en realidad unos 2 × 4 km sobre el terreno. La resolución efectiva en el sur de Chile es peor que la nominal.
+2. Paralaje. El tope de una tormenta está a 12–15 km de altura, y el satélite lo ve *de lado*. El tope aparece desplazado respecto de su posición real en superficie, en dirección contraria al punto subsatelital (hacia el sur-suroeste), por una distancia aproximada de `h · tan(θ)`: unos 10 km a 40°S y 20 km a 53°S. Eso es varias celdas de grilla. Superponer sin esa corrección una imagen GOES con una posición de tornado reportada, o con la grilla de ERA5, introduce un error sistemático mayor que el fenómeno que se quiere estudiar.
 
-> **Recomendación:** aplicar corrección de paralaje explícita usando la altura de tope de `ABI-L2-ACHAF` junto con los parámetros de la proyección (`goes_imager_projection`, presente en cada archivo NetCDF) y el punto subsatelital (0°, 75,2°W). No tratar la lat/lon de la grilla fija como geolocalización en superficie.
+> Recomendación: aplicar corrección de paralaje explícita usando la altura de tope de `ABI-L2-ACHAF` junto con los parámetros de la proyección (`goes_imager_projection`, presente en cada archivo NetCDF) y el punto subsatelital (0°, 75,2°W). No tratar la lat/lon de la grilla fija como geolocalización en superficie.
 
-También hay que notar que el **GLM** (detector de rayos) declara cobertura hasta ~52° de latitud: **Magallanes queda en el borde o fuera del campo de visión**, y en la zona Chiloé–Aysén la eficiencia de detección cae hacia el extremo bajo del rango 70–90 %. Es decir, **la ausencia de rayos detectados en el extremo sur no significa ausencia de rayos**. Ignorar esto genera un sesgo latitudinal que un modelo de ML aprenderá con entusiasmo y por las razones equivocadas.
+También hay que notar que el GLM (detector de rayos) declara cobertura hasta ~52° de latitud: Magallanes queda en el borde o fuera del campo de visión, y en la zona Chiloé–Aysén la eficiencia de detección cae hacia el extremo bajo del rango 70–90 %. Es decir, la ausencia de rayos detectados en el extremo sur no significa ausencia de rayos. El modelo podría confundir una menor cobertura del detector con una menor frecuencia de rayos.
 
-Por último: existe un reprocesamiento de **GOES-16 ABI L1b** (2018 – fines de 2024) con calibración radiométrica y geométrica mejorada y estabilidad de navegación corregida. Para una climatología multianual conviene usarlo.
+Por último: existe un reprocesamiento de GOES-16 ABI L1b (2018 – fines de 2024) con calibración radiométrica y geométrica mejorada y estabilidad de navegación corregida. Para una climatología multianual conviene usarlo.
 
-### 4.3 El catálogo de tornados: 102 positivos y ningún negativo
+### 4.3 El catálogo de eventos: registros y límites de las etiquetas
 
-La tercera fuente de datos es la base **«Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile»**, publicada en figshare con DOI y licencia **CC BY 4.0** por un equipo de doce autores encabezado por Cristian Bastías-Curivil, con Roberto Rondanelli y José Vicencio entre ellos. Está construida a partir de crónicas coloniales, prensa, redes sociales, literatura científica y libros, e incluye **solo los eventos calificados por los autores como «más probablemente que no» un tornado o una tromba**.
+La tercera fuente de datos es la base «Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile», publicada en figshare con DOI y licencia CC BY 4.0 por un equipo de doce autores encabezado por Cristian Bastías-Curivil, con Roberto Rondanelli y José Vicencio entre ellos. Está construida a partir de crónicas coloniales, prensa, redes sociales, literatura científica y libros, e incluye los casos en los que los autores consideran más probable que haya ocurrido un tornado o una tromba que lo contrario.
 
-Es un único archivo `.xlsx` (una hoja, `Final_Table`) con **102 filas y 32 columnas**. Las que importan para este proyecto:
+Es un único archivo `.xlsx` (una hoja, `Final_Table`) con 102 filas y 32 columnas. Las que importan para este proyecto:
 
 | Campo | Contenido | Cobertura |
 |---|---|---:|
-| `Latitude`, `Longitude` | Posición del evento | **102 / 102** |
+| `Latitude`, `Longitude` | Posición del evento | 102 / 102 |
 | `Date (Gregorian Calendar)` | Fecha | 102 / 102 |
-| `Hour (UTC)` | Hora UTC (a veces como rango) | **91 (89 %)** |
+| `Hour (UTC)` | Hora UTC (a veces como rango) | 91 (89 %) |
 | `Hour (local)` | Hora local | 95 (93 %) |
 | `Tornado` / `Waterspout` | Indicadores binarios de tipo | 70 / 45 |
 | `Max. EF Rating` | Intensidad en escala Fujita mejorada | 94 (92 %) |
@@ -474,222 +468,246 @@ Es un único archivo `.xlsx` (una hoja, `Final_Table`) con **102 filas y 32 colu
 
 ![Cuatro paneles con la estadística del catálogo: estacionalidad mensual con junio como máximo, distribución horaria con mediana a las 14:00 local, el reparto por períodos que muestra el sesgo de reporte, y la distribución de intensidades EF.](../figs/fig2_catalog_panels.png)
 
-**Figura 2.** El catálogo en cuatro cortes. El panel D merece atención: la mediana de ocurrencia es **las 14:00 hora local** (rango intercuartil 11:19–16:12), lo que confirma con datos la ventana de calentamiento diurno descrita en la sección 3.2.
+**Figura 2.** El catálogo en cuatro cortes. El panel D merece atención: la mediana de las horas registradas es 14:00 local. La mitad central de los registros queda entre 11:19 y 16:12, una distribución compatible con la importancia del calentamiento diurno discutida en la sección 3.2.
 
-La distribución de intensidades está fuertemente sesgada a eventos débiles, como en todos los catálogos del mundo: **alrededor de 53 eventos EF0**, **28 EF1**, **9 EF2** y **4 EF3**. No hay ningún EF4 ni EF5 registrado en Chile.
+La distribución de intensidades se concentra en eventos débiles: alrededor de 53 eventos EF0, 28 EF1, 9 EF2 y 4 EF3. No hay ningún EF4 ni EF5 registrado en Chile.
 
-El impacto acumulado está dominado por dos eventos históricos: **Concepción, 27 de mayo de 1934** (27 fallecidos, 599 heridos) y **San Carlos, 18 de mayo de 1981** (2 fallecidos, 323 heridos). En total la base registra 38 fallecidos en 6 eventos y unos 1.020 heridos en 17.
+El impacto acumulado está dominado por dos eventos históricos: Concepción, 27 de mayo de 1934 (27 fallecidos, 599 heridos) y San Carlos, 18 de mayo de 1981 (2 fallecidos, 323 heridos). En total la base registra 38 fallecidos en 6 eventos y unos 1.020 heridos en 17.
 
 Tres columnas merecen atención especial para el diseño del modelo:
 
-- **`Register`** separa los eventos con evidencia visual directa de la columna rotatoria de aquellos inferidos solo por el daño. Es, en la práctica, **una variable de confianza de la etiqueta** — y un candidato natural para ponderar ejemplos o para definir un subconjunto de entrenamiento de alta pureza.
-- **`Tornado` y `Waterspout`** permiten separar las dos vías físicas de la sección 2.5. Con 19 eventos marcados como ambos (trombas que tocaron tierra), hay material para estudiar la transición mar–tierra que caracteriza al caso chileno.
-- **`Hour (UTC)`** es la que hace posible cruzar con GOES. Su cobertura del 89 % es mucho mejor de lo que suele encontrarse en catálogos construidos a partir de prensa.
+- `Register` indica si existe testimonio o material visual de la columna rotatoria. Puede ayudar a seleccionar casos para una revisión detallada o a estudiar la confianza de las etiquetas; no confirma por sí solo su mecanismo de formación.
+- `Tornado` y `Waterspout` distinguen registros sobre tierra y sobre agua. Hay 19 eventos marcados en ambas categorías, que permiten estudiar la transición mar–tierra. Determinar si un evento fue supercelular o no supercelular requiere evidencia adicional, como se explica en la sección 2.5.
+- `Hour (UTC)` es la que hace posible cruzar con GOES. Está disponible para el 89 % de los registros.
 
 Sus limitaciones definen buena parte del diseño del proyecto:
 
-- **Incompletitud selectiva** (*reporting bias*). La probabilidad de que un evento entre al catálogo depende de la densidad de población, de la hora del día y del año de ocurrencia (aumenta con la penetración de los teléfonos con cámara y de las redes sociales). Hay **más eventos registrados cerca de Concepción que en la cordillera** — y eso no dice nada sobre dónde ocurren los tornados.
-- **Incertidumbre en hora y lugar** — aunque menor de lo que cabría temer. **El 89 % de los eventos trae hora UTC y el 93 % hora local**, y los 102 tienen coordenadas. Aun así, varias horas están dadas como rango (`22-23:25`) o redondeadas, y con GOES cada 10 minutos un error de ±1 hora son ±6 imágenes. La posición es la del *daño observado*, no la del mesociclón.
-- **Ausencia de negativos confiables.** "No hubo tornado ese día en ese lugar" no está observado: es una inferencia basada en que nadie reportó nada.
-- **Mezcla de fenómenos.** Tornados supercelulares, trombas marinas, *landspouts* y probablemente algún *downburst* mal clasificado conviven en la misma lista.
+- Incompletitud selectiva (*reporting bias*). La probabilidad de que un evento entre al catálogo depende de la densidad de población, de la hora del día y del año de ocurrencia (aumenta con la penetración de los teléfonos con cámara y de las redes sociales). Hay más eventos registrados cerca de Concepción que en la cordillera — pero esa diferencia no basta para concluir que allí ocurren más tornados.
+- Incertidumbre en hora y lugar. El 89 % de los eventos trae hora UTC y el 93 % hora local, y los 102 tienen coordenadas. Aun así, varias horas están dadas como rango (`22-23:25`) o redondeadas, y con GOES cada 10 minutos un error de ±1 hora son ±6 imágenes. La posición es la del *daño observado*, no la del mesociclón.
+- Ausencia de negativos confiables. "No hubo tornado ese día en ese lugar" no está observado: es una inferencia basada en que nadie reportó nada.
+- Mezcla de fenómenos. Tornados supercelulares, trombas marinas y *landspouts* pueden aparecer en la misma lista. También hay que revisar si algunos daños podrían corresponder a un *downburst*, una corriente descendente intensa que se expande al llegar al suelo.
 
-Ninguna de estas limitaciones es fatal, pero todas deben tratarse explícitamente. La sección 6 propone cómo.
+La sección 6 propone cómo considerar estas limitaciones al entrenar y evaluar un modelo.
 
 ---
 
 ## 5. Variables derivadas (*features*) que conviene calcular
 
-Ésta es la parte del proyecto donde la física se convierte en columnas de una tabla. La intuición de base es simple: **los campos crudos de ERA5 contienen la información, pero en una forma que un modelo con 100 ejemplos positivos no va a poder extraer por sí solo.** Con tan pocas etiquetas, la ingeniería de variables basada en física no es un lujo, es una necesidad: cada *feature* bien construida es conocimiento del dominio inyectado gratis al modelo.
+Una **variable derivada**, o *feature*, resume parte de los datos para que el modelo pueda utilizarlos. Por ejemplo, la cizalladura reúne en un número el cambio del viento entre dos alturas. Con pocos casos etiquetados, estas variables físicas permiten empezar con modelos más sencillos que una red que deba aprender directamente de todos los mapas e imágenes.
 
-### 5.1 Cinemáticos — los más importantes
+Las siguientes variables son opciones para explorar, no una lista que cada equipo deba implementar completa. Para un primer prototipo conviene elegir unas pocas, comprender sus limitaciones y comprobar si ayudan a distinguir los casos.
 
-**Cizalle de capa profunda (*bulk shear*).** La diferencia vectorial del viento entre dos niveles:
+### 5.1 Variables del viento
+
+**Cizalladura de capa profunda (*bulk shear*).** Mide la diferencia del viento entre la superficie y los 6 km de altura, considerando rapidez y dirección. Se usa para estudiar la organización de las tormentas, aunque en los casos chilenos puede aportar menos separación que la de niveles bajos. También conviene calcular las capas 0–1 km y 0–3 km.
 
 ```
 BWD(0–6 km) = | V(6 km) − V(superficie) |
 ```
 
-Es el discriminante clásico entre tormentas ordinarias y organizadas. También conviene calcular **0–1 km** (relevante para tornadogénesis) y **0–3 km**. Nótese que es una **diferencia vectorial**, no una diferencia de rapideces: un viento que gira 90° sin cambiar de magnitud tiene cizalle grande.
+`V` representa el vector viento: incluye sus componentes y dirección. Las barras indican la magnitud de la diferencia, expresada en m/s. Un viento que cambia de dirección sin cambiar de rapidez también tiene cizalladura. Hay que medir las alturas sobre el terreno y evitar niveles bajo la superficie, como se explica en la sección 4.1.
 
-**Helicidad relativa a la tormenta (SRH).** La integral, a lo largo de una capa, de la vorticidad horizontal proyectada sobre el flujo relativo a la tormenta:
+**Helicidad relativa a la tormenta (SRH).** Resume la vorticidad horizontal alineada con el aire que entra a la tormenta, a lo largo de una capa. Conecta el perfil de viento con el mecanismo de inclinación de la sección 2.3. Su valor depende de cómo se estime el movimiento de la tormenta; una magnitud grande por sí sola no confirma un tornado.
 
 ```
 SRH(0–h) = ∫₀ʰ (V(z) − C) · ω_h(z) dz
 ```
 
-donde `C` es el vector de movimiento de la tormenta. Mide exactamente la cantidad de vorticidad ***streamwise*** disponible para ser inclinada hacia la vertical — es decir, el mecanismo de la sección 2.3, cuantificado. **Es probablemente la variable más informativa de todo el conjunto.** Calcular en las capas **0–1 km** y **0–3 km**.
+`V(z)` es el viento a la altura `z`; `C`, el vector de movimiento de la tormenta; `ω_h`, la vorticidad horizontal; y `h`, la altura de la capa. El símbolo `·` combina la parte de la vorticidad alineada con el flujo relativo, y la integral suma su aporte entre la superficie y `h`. La SRH se expresa en m²/s². Conviene estudiarla en 0–1 km y 0–3 km.
 
-> Requiere estimar `C`. El método estándar es el de **Bunkers**, que da dos soluciones: *right-mover* y *left-mover*. **En el hemisferio sur la supercélula favorecida es la *left-mover***, así que hay que usar esa rama — y recordar que la **SRH tornádica será negativa**.
+> **Estimación del movimiento.** El método de Bunkers ofrece dos ramas: *right-mover* y *left-mover*, que se desvían a la derecha o a la izquierda del viento medio. Para las supercélulas ciclónicas australes descritas aquí se utiliza la rama *left-mover*, cuya SRH suele ser negativa. Hay que comprobar la rama y la convención de signos, sin invertir automáticamente todos los valores.
 
-**Vorticidad relativa** en 850, 700 y 500 hPa, y su advección. Y **vorticidad potencial** en 300–500 hPa, para identificar intrusiones estratosféricas y bajas segregadas (*cutoff lows*), que son un disparador sinóptico habitual en Chile.
+**Vorticidad relativa y potencial.** La relativa describe la rotación local del aire y puede estudiarse en 850, 700 y 500 hPa. Su advección indica cómo la transporta el viento. La potencial combina rotación y estratificación; en 300–500 hPa ayuda a estudiar intrusiones de aire estratosférico y bajas segregadas. Son variables del entorno: no deben confundirse con una detección de la rotación interna de la tormenta.
 
-**Forma del hodógrafo.** El hodógrafo es la curva que traza la punta del vector viento al subir en la vertical. Su **curvatura** distingue un perfil que sólo acelera con la altura (poco favorable) de uno que además gira (muy favorable). Se puede resumir en unos pocos números: curvatura integrada, longitud de arco, área encerrada en los primeros 3 km.
+**Forma del hodógrafo.** Es la curva que une las puntas de los vectores de viento a distintas alturas. Permite ver si el viento solo aumenta su rapidez o también cambia de dirección. Su curvatura, longitud de arco y área en los primeros 3 km son posibles resúmenes para el modelo; deben interpretarse junto con el movimiento de la tormenta.
 
-**Jet de niveles bajos.** Magnitud y altura del máximo de viento bajo 1,5 km — asociado al transporte de humedad y al cizalle cerca del suelo.
+**Jet de niveles bajos.** La rapidez y la altura del máximo de viento bajo 1,5 km describen una corriente que puede transportar humedad y aumentar la cizalladura cerca del suelo. Su presencia no basta para asegurar que se desarrollará una tormenta.
 
-**Convergencia y divergencia.** Convergencia en 925/850 hPa (el disparo) y divergencia en 200–300 hPa (la "aspiradora" en altura que sostiene el ascenso).
+**Convergencia y divergencia.** La convergencia en 925/850 hPa indica dónde confluyen flujos de aire y puede favorecer el ascenso. La divergencia en 200–300 hPa describe la salida de aire en altura. Ambas ayudan a interpretar el entorno de ascenso, pero deben evaluarse junto con humedad e inestabilidad.
 
-### 5.2 Termodinámicos
+### 5.2 Variables de temperatura y humedad
 
-- **CAPE** en sus variantes: **SBCAPE** (parcela de superficie), **MLCAPE** (capa mezclada, ~los primeros 100 hPa) y **MUCAPE** (la parcela más inestable, para convección elevada).
-- **CAPE de niveles bajos (0–3 km)**. Para tornados, la CAPE que realmente importa es la de los **primeros 1–3 km**, porque es la que controla el *estiramiento* de la vorticidad cerca del suelo. En un régimen chileno de CAPE total bajo, ésta puede ser mucho más discriminante que el CAPE integrado.
-- **CIN** (inhibición convectiva): cuánta energía hay que gastar para romper el *cap*.
-- **Altura del LCL** (nivel de condensación por ascenso). Un LCL bajo — base de nube baja, aire húmedo cerca del suelo — es uno de los discriminantes tornádicos más robustos de la literatura.
-- **LFC** (nivel de convección libre) y **nivel de equilibrio**, que fija la profundidad de la convección.
-- **Tasa de caída de temperatura** (*lapse rate*) en 0–3 km y 700–500 hPa.
-- **Temperatura en 500 hPa**: un indicador simple pero muy útil de aire frío en altura, el mecanismo dominante de inestabilización en Chile.
-- **Agua precipitable** y humedad relativa en varias capas; la **depresión del punto de rocío en 700 hPa** (aire seco en niveles medios, que alimenta las descendentes).
-- **DCAPE**: la energía disponible para las corrientes *descendentes*, ligada a la intensidad de la RFD y de las ráfagas.
-- **Temperatura superficial del mar** y su gradiente respecto al aire: la fuente de calor y humedad para la convección que llega desde el Pacífico.
+- **CAPE:** energía disponible para el ascenso, en J/kg. SBCAPE usa una parcela de superficie; MLCAPE, una parcela representativa de una capa mezclada cercana al suelo (~los primeros 100 hPa); y MUCAPE, la parcela más inestable del perfil. Los valores no son intercambiables: dependen de dónde se inicia el ascenso.
+- **CAPE de niveles bajos (0–3 km):** energía disponible en la parte baja del ascenso. Ayuda a estudiar el estiramiento de la rotación cerca del suelo; puede aportar información distinta del CAPE total, pero no reemplaza la evaluación del viento.
+- **CIN, inhibición convectiva:** energía que debe superar una parcela para seguir ascendiendo, en J/kg. Una inhibición elevada puede limitar el inicio de la convección aunque exista CAPE por encima.
+- **Altura del LCL, nivel de condensación por ascenso:** altura a la que el aire comienza a condensar al subir. Un LCL bajo suele asociarse con aire húmedo cerca del suelo y una base nubosa baja; no confirma por sí solo un tornado.
+- **LFC, nivel de convección libre, y nivel de equilibrio:** indican dónde una parcela comienza a ascender por su flotabilidad y dónde deja de ser más cálida que el entorno. Ayudan a estimar la profundidad del ascenso, que también depende de cómo se elija la parcela.
+- **Tasa de descenso de temperatura con la altura (*lapse rate*):** permite comparar cuánto se enfría el ambiente en 0–3 km y 700–500 hPa. Un descenso más rápido puede favorecer la inestabilidad; hay que considerar también la humedad.
+- **Temperatura en 500 hPa:** referencia del aire frío en altura. En combinación con condiciones más cálidas abajo, ayuda a explicar la inestabilidad del caso chileno.
+- **Agua precipitable y humedad relativa:** la primera resume el vapor de agua de la columna; la segunda describe qué tan cerca está el aire de saturarse en cada capa. Ninguna equivale directamente a la lluvia que caerá.
+- **Depresión del punto de rocío en 700 hPa:** diferencia entre temperatura y punto de rocío. Valores mayores indican aire más seco, que puede favorecer el enfriamiento por evaporación y las corrientes descendentes.
+- **DCAPE:** energía disponible para corrientes descendentes, relacionada con el potencial de ráfagas. Se interpreta como una medida del entorno, no como una predicción directa de la intensidad de la RFD.
+- **Temperatura superficial del mar y diferencia con la del aire:** permiten estudiar el intercambio de calor y humedad sobre el Pacífico. Su efecto depende también del viento y del perfil atmosférico.
 
 ### 5.3 Índices compuestos
 
-Combinan cizalle e inestabilidad en un solo número. Son atajos operacionales, no leyes físicas, **y todos vienen calibrados para el hemisferio norte y para entornos de CAPE alto**. Conviene calcularlos, pero con la expectativa de que en Chile haya que recalibrar sus umbrales.
+Estos índices combinan varias variables meteorológicas en un número. Su ámbito de aplicación depende de cómo se diseñaron; SHERBE, por ejemplo, se orienta a entornos con poca energía convectiva. Son resúmenes empíricos y sus umbrales deben contrastarse con casos chilenos. Un índice alto o bajo no confirma un evento.
 
-- **EHI** (*Energy-Helicity Index*) = CAPE × SRH / 160000
-- **SCP** (*Supercell Composite Parameter*)
-- **STP** (*Significant Tornado Parameter*) — combina MLCAPE, cizalle 0–6 km, SRH 0–1 km, altura del LCL y CIN. **En Chile hay que usar la rama *left-mover* y el umbral ≤ −0,3**, no el +1 norteamericano.
-- **BRN** (*Bulk Richardson Number*): razón entre flotabilidad y cizalle; discrimina el modo convectivo
-- **SHERBE** (*Severe Hazards in Environments with Reduced Buoyancy*) — diseñado precisamente para entornos HSLC, que es el caso chileno. **Umbral propuesto para Chile: ≥ 1.**
-- **VGP** (*Vorticity Generation Parameter*). La variante de bajo nivel **VGP₀₋₁ = √CAPE × cizalle₀₋₁** es, según Vicencio et al. (2021), el mejor discriminante disponible para Chile: **> 0,1 m/s²** en todos los días tornádicos analizados.
+- **EHI** (*Energy-Helicity Index*) = CAPE × SRH / 160000. Combina energía para el ascenso y helicidad; su signo depende de la SRH.
+- **SCP** (*Supercell Composite Parameter*). Resume condiciones favorables para supercélulas mediante variables de energía y viento. Hay que especificar la formulación y la rama de movimiento utilizada.
+- **STP** (*Significant Tornado Parameter*). Combina MLCAPE, cizalladura 0–6 km, SRH 0–1 km, altura del LCL y CIN en una de sus formulaciones. Marín et al. (2024) proponen para el caso chileno la rama *left-mover* y el criterio ≤ −0,3. Ese criterio debe evaluarse antes de trasladarlo a variantes que usan otro CAPE u omiten CIN.
+- **BRN** (*Bulk Richardson Number*). Compara flotabilidad y cizalladura para estudiar el tipo de organización convectiva. Su interpretación depende del perfil utilizado.
+- **SHERBE** (*Severe Hazards in Environments with Reduced Buoyancy*). Combina condiciones de viento y temperatura para entornos HSLC. El criterio propuesto para Chile es ≥ 1; no debe trasladarse sin validación a variantes como SHERBS3.
+- **VGP** (*Vorticity Generation Parameter*). Combina CAPE y cizalladura para resumir condiciones de generación de vorticidad. En la variante de bajo nivel, VGP₀₋₁ = √CAPE × cizalladura₀₋₁, la cizalladura es el cambio del viento por unidad de altura, en s⁻¹. Así el resultado se expresa en m/s². No se debe sustituir directamente por una diferencia de viento en m/s. Vicencio et al. (2021) describen valores > 0,1 m/s² en los cinco días tornádicos analizados.
 
-> **Prioridad para el hackathon.** Dado que el STP clásico *no* habría detectado el brote de 2019 (sección 3.2), conviene: (a) calcular SHERBE y VGP₀₋₁ desde el principio, no como añadido; (b) reajustar los coeficientes del STP con datos chilenos en lugar de heredar los originales. Un "STP austral" bien calibrado sería un resultado publicable por sí solo.
+Para la hackathon conviene comparar VGP₀₋₁, SHERBE y STP con los casos documentados, comprobando qué variante se calcula. Recalibrar los coeficientes de un índice es una línea de investigación que requiere una evaluación más amplia que la de un prototipo.
 
-### 5.4 Satelitales (GOES)
+### 5.4 Variables obtenidas de GOES
 
-**Estáticos, por imagen:**
+**Variables de una imagen.** La temperatura de brillo (*BT*, por sus siglas en inglés) es una temperatura equivalente inferida de la radiación. En un tope nuboso opaco, una temperatura más baja suele corresponder a mayor altura, pero esa relación depende del perfil térmico y de las propiedades de la nube. En las diferencias siguientes, los valores entre paréntesis son longitudes de onda en micrómetros.
 
-- **Temperatura de brillo mínima** en la banda 13 dentro de la celda: qué tan alto llegó el tope. Más frío = más alto = ascenso más potente.
-- **Diferencia tropopausa − tope**: cuánto sobrepasó la tormenta el nivel de equilibrio, usando la tropopausa de ERA5.
-- **Detección de topes penetrantes** (*overshooting tops*): mínimos locales de temperatura de brillo rodeados de yunque más cálido, con textura característica en la banda 2.
-- **Diferencias entre bandas**: `BT(6,2) − BT(10,3)` (el clásico indicador de tope que alcanza o supera la tropopausa; valores ≥ 0 son señal fuerte), `BT(11,2) − BT(10,3)`, `BT(13,3) − BT(10,3)`.
-- **Firma en "V" o "U" fría** en el infrarrojo: el patrón que deja el flujo divergente en altura alrededor de un ascenso muy potente.
-- **Pluma de cirros sobre el yunque** (*above-anvil cirrus plume*): en la literatura reciente es uno de los mejores precursores satelitales de tormenta severa.
-- **Textura del yunque**: estadísticas de la gradiente y de la varianza local de la banda 2 — el yunque "burbujeante" de una tormenta vigorosa frente a la superficie lisa de una en decaimiento.
-- **Área del tope por debajo de umbrales** de temperatura de brillo (−50 °C, −60 °C, −70 °C).
-- **Fase y tamaño de partícula del tope** (bandas 11, 6; productos ACTPF y CPSF).
+- **Temperatura de brillo mínima de la banda 13:** ayuda a localizar topes fríos dentro de una celda de tormenta. Un mínimo aislado no basta para estimar la fuerza de la corriente ascendente.
+- **Diferencia entre tropopausa y tope:** compara sus temperaturas para buscar señales de un tope que alcanza o sobrepasa esa capa, usando ERA5 como referencia. La resolución de ERA5 limita la precisión de la comparación.
+- **Topes penetrantes (*overshooting tops*):** mínimos locales de temperatura rodeados de yunque más cálido, junto con textura característica en la banda 2. Son candidatos que conviene revisar en la secuencia de imágenes.
+- **Diferencias entre bandas:** `BT(6,2) − BT(10,3)`, `BT(11,2) − BT(10,3)` y `BT(13,3) − BT(10,3)` aportan información sobre el tope. En la primera, valores ≥ 0 se utilizan como señal de topes que alcanzan o superan la tropopausa; su interpretación requiere comprobar las condiciones del píxel.
+- **Firma en «V» o «U» fría:** patrón infrarrojo que puede acompañar un ascenso intenso y el flujo de aire alrededor de él. No todas las tormentas severas lo muestran.
+- **Pluma de cirros sobre el yunque (*above-anvil cirrus plume*):** estructura de nubes altas estudiada como señal de tormenta severa. Debe distinguirse de otros cirros en movimiento.
+- **Textura del yunque:** el gradiente mide cambios de brillo entre píxeles cercanos y la varianza local, cuánto difieren sus valores. En la banda 2 permiten comparar texturas lisas e irregulares, pero dependen de la iluminación diurna.
+- **Área del tope bajo umbrales de temperatura** (−50 °C, −60 °C, −70 °C): describe la extensión de las regiones frías. Los umbrales deben evaluarse para la altura y el régimen de las tormentas chilenas.
+- **Fase y tamaño de partícula del tope:** las bandas 11 y 6, junto con productos ACTPF y CPSF, ayudan a estudiar si predominan agua o hielo y sus propiedades. Son estimaciones satelitales, no mediciones directas de cada partícula.
 
-**Dinámicos — las tendencias son lo verdaderamente valioso:**
+**Cambios entre imágenes.** La evolución de la temperatura y del área del tope aporta información sobre el desarrollo de la nube. Hay que distinguir esos cambios de su desplazamiento y comprobar el tiempo transcurrido entre imágenes.
 
-Aquí es donde la cadencia de 10 minutos justifica su existencia. Un tope frío no dice mucho; **un tope que se enfría rápido dice muchísimo**, porque mide directamente la aceleración de la corriente ascendente.
+- **Tasa de enfriamiento del tope:** `dBT/dt` en ventanas de 10, 30 y 60 minutos. Enfriamientos más rápidos que −4 K / 15 min se usan como señal de convección en rápido desarrollo. Una diferencia en un píxel fijo también puede deberse al paso de otra parte de la nube.
+- **Tasa de expansión del yunque frío:** indica cómo cambia su área por unidad de tiempo. Debe calcularse con un umbral de temperatura y un método de seguimiento consistentes.
+- **Tasa de crecimiento del tope penetrante:** sigue los cambios de tamaño y temperatura del candidato detectado. Su interpretación depende de poder reconocerlo entre imágenes.
+- **Flujo óptico:** estima el movimiento aparente entre imágenes consecutivas. Su rotacional describe el giro de ese campo de movimiento y puede ayudar a buscar patrones compatibles con rotación. Es una hipótesis para explorar: el movimiento observado del yunque no confirma por sí solo un mesociclón ni mide directamente su circulación interna.
+- **Aumento de la tasa de rayos (*lightning jump*):** un incremento súbito de las descargas puede preceder al tiempo severo en superficie. Hay que considerar la cobertura y la eficiencia de detección del GLM, especialmente hacia el extremo sur.
+- **Velocidad y dirección de propagación, y desviación respecto del viento medio:** permiten comparar el movimiento de una tormenta con el aire del entorno. Una desviación persistente a la izquierda es una señal de interés para las supercélulas ciclónicas australes; debe combinarse con otras observaciones antes de clasificar la tormenta.
 
-- **Tasa de enfriamiento del tope**: `dBT/dt` en ventanas de 10, 30 y 60 minutos. Enfriamientos más rápidos que **−4 K / 15 min** son un indicador establecido de convección en rápido desarrollo.
-- **Tasa de expansión del área** del yunque frío.
-- **Tasa de crecimiento del tope penetrante.**
-- **Flujo óptico** entre imágenes consecutivas: da un campo de movimiento del tope nuboso, y su **rotación** (el rotacional del flujo óptico) es una medida directa — aunque indirecta en el sentido físico — de la rotación del yunque. Para un mesociclón bien desarrollado, **el yunque rota de forma visible en un *loop* de satélite**, y eso es precisamente lo que una red convolucional puede aprender.
-- **Tasa de aumento de rayos** (*lightning jump*): un salto súbito en la frecuencia de descargas del GLM precede típicamente en varios minutos al tiempo severo en superficie. Uno de los indicadores de *nowcasting* mejor validados que existen. (Con la salvedad de cobertura en el extremo sur.)
-- **Velocidad y dirección de propagación de la tormenta**, y **desviación respecto del viento medio de la capa**: una tormenta que se desvía sistemáticamente a la izquierda del viento medio en el hemisferio sur es, casi por definición, una candidata a supercélula. **Esta variable podría ser el detector de mesociclones más directo disponible en todo el conjunto de datos.**
+### 5.5 Variables geográficas y temporales
 
-### 5.5 Geográficos y temporales
+- **Distancia a la costa y a los Andes, altura del terreno y pendiente:** ayudan a describir los efectos geográficos discutidos en la sección 3.4. Su asociación con registros también puede reflejar diferencias en la observación.
+- **Ángulo cenital del satélite y del Sol:** miden cuánto se aparta cada dirección de la vertical local. El primero ayuda a describir la degradación geométrica de la imagen; el segundo, la iluminación. Las bandas visibles requieren luz solar.
+- **Hora del día y día del año:** describen ciclos diarios y estacionales. Se pueden representar con seno y coseno para que momentos próximos, como las 23:59 y las 00:00, no parezcan distantes por el cambio de fecha.
+- **Densidad de población:** puede ayudar a estudiar el sesgo de reporte. Incluirla como una columna adicional no garantiza separar ocurrencia y observación; requiere un modelo y supuestos sobre cómo se documentan los eventos, como se explica en la sección 6.1.
 
-- **Distancia a la costa** y **distancia a los Andes**; **altura del terreno** y pendiente.
-- **Ángulo cenital del satélite** (para que el modelo pueda compensar la degradación geométrica) y **ángulo cenital solar** (las bandas visibles sólo existen de día).
-- **Hora del día** y **día del año**, codificados con seno/coseno.
-- **Densidad de población** — no como predictor físico, sino como **variable de control del sesgo de reporte**. Incluirla explícitamente permite que el modelo separe "aquí ocurren tornados" de "aquí se ven tornados".
+### 5.6 Cómo elegir un primer modelo
 
-### 5.6 Una nota sobre el enfoque
+Conviene empezar con unas pocas variables físicas y un **modelo tabular**, que recibe una tabla con un ejemplo por fila y una variable por columna. Después se pueden comparar otras opciones:
 
-Existe un eje de decisión importante:
-
-| Enfoque | Descripción | Cuándo conviene |
+| Enfoque | Qué recibe | Cuándo explorarlo |
 |---|---|---|
-| **Basado en *features*** | Calcular decenas de índices físicos y alimentar un modelo tabular (gradient boosting) | Con 102 positivos, es la opción más robusta y la más interpretable. **Empezar por aquí.** |
-| ***End-to-end*** | Dar los tensores crudos (ERA5 4D + imágenes GOES) a una red convolucional 3D o a un transformer | Más potente en principio, pero con 100 ejemplos se sobreajustará sin remedio salvo con preentrenamiento |
-| **Híbrido** | *Features* físicas del entorno (ERA5) + una CNN pequeña sobre recortes de GOES, concatenadas | Probablemente el mejor equilibrio. Es la ruta que recomendaríamos para el hackathon |
+| Variables físicas | Índices del entorno en una tabla; por ejemplo, para un modelo de árboles como *gradient boosting* | Punto de partida para pocos casos etiquetados. Permite revisar el aporte de cada variable |
+| Datos completos (*end-to-end*) | Mapas e imágenes organizados como arreglos multidimensionales, para una red convolucional o un *transformer* | Requiere más datos o preentrenamiento. Con pocos casos puede memorizar los ejemplos sin funcionar bien en otros |
+| Híbrido | Variables físicas de ERA5 junto con patrones de imágenes aprendidos por una red convolucional (CNN) | Cuando ya exista una referencia tabular y se quiera evaluar qué añaden las imágenes |
+
+Una red más compleja no asegura un mejor resultado. La comparación debe usar los mismos casos de evaluación y considerar las limitaciones de las etiquetas.
 
 ---
 
 ## 6. Cómo plantear el problema de aprendizaje automático
 
-Éste es el punto donde el proyecto se vuelve realmente interesante, porque la formulación ingenua —"clasificador binario tornado / no tornado"— es incorrecta y va a fallar de maneras sutiles.
+Antes de elegir un algoritmo hay que definir qué queremos predecir, qué representa cada ejemplo y qué evidencia respalda su etiqueta. Un registro de tornado, una tormenta con mesociclón y un entorno favorable son resultados relacionados, pero distintos.
 
-### 6.1 No es clasificación binaria: es aprendizaje con positivos y no etiquetados
+### 6.1 Aprendizaje con positivos y datos no etiquetados
 
-Tenemos 102 casos confirmados y **ningún caso confirmado negativo**. Un día sin reporte no es un día sin tornado: es un día sin reporte. Esto corresponde exactamente al marco de **PU learning** (*Positive-Unlabeled learning*), un área bien estudiada.
+Contamos con 102 registros de tornados o trombas marinas y ningún conjunto de casos negativos confirmados. Para predecir esos eventos, los registros son ejemplos positivos y el resto contiene situaciones sin etiqueta. Para predecir mesociclones, además hay que revisar cuáles de esos registros aportan evidencia del mecanismo supercelular.
 
-La consecuencia central es que el clasificador entrenado con "positivos vs. resto" **no estima la probabilidad de que haya tornado**, sino la probabilidad de que haya *tornado reportado*, que es el producto de dos cosas:
+El **aprendizaje con positivos y datos no etiquetados**, conocido como *PU learning* (*Positive-Unlabeled learning*), permite estudiar este tipo de situación. Hay que evaluar sus supuestos: la posibilidad de que un evento sea registrado cambia según el lugar, la hora, el año y la calidad de la evidencia.
+
+Si se entrena un clasificador, un modelo que asigna ejemplos a categorías, usando «eventos reportados frente al resto», puede aprender tanto las condiciones de ocurrencia como las de observación. Para un catálogo de tornados, la relación entre ambas puede expresarse así:
 
 ```
 P(reportado | entorno) = P(tornado | entorno) × P(reportado | tornado, lugar, hora, año)
 ```
 
-Si se modela explícitamente el segundo factor — con densidad de población, hora del día y año como covariables de observabilidad — se puede, bajo hipótesis razonables, **separar el fenómeno de su detección**. Técnicas aplicables: estimación de la constante de propensión de etiquetado (Elkan & Noto), *bagging* de PU learning, o modelos de ocupación tomados prestados de la ecología, que fueron inventados precisamente para "especies que están pero no se ven".
+`P(A | B)` significa la probabilidad de A dadas las condiciones B. La expresión supone que el reporte corresponde a un tornado real y que las condiciones relevantes para documentarlo quedan recogidas en el segundo factor. En un catálogo que mezcla tornados y trombas hay que definir el evento de interés y revisar la confianza de cada registro antes de aplicar esa formulación.
 
-**El resultado más valioso del proyecto podría no ser el clasificador, sino su lista de falsos positivos de mayor confianza**: días y lugares donde el modelo está seguro de que hubo condiciones mesociclónicas y no hay reporte. Esos casos se pueden auditar uno a uno con las imágenes GOES, buscando la firma de rotación del yunque. Cada confirmación es un evento nuevo para el catálogo — y el catálogo ampliado permite reentrenar. Es un ciclo virtuoso.
+La densidad de población, la hora del día y el año pueden ayudar a modelar la posibilidad de observar y registrar un evento. Sin información o supuestos adicionales no se pueden separar de forma única la ocurrencia y el reporte. Hay que explicitar esas decisiones y comprobar cómo cambian los resultados al variarlas.
 
-### 6.2 Desbalance extremo
+**Para profundizar.** Entre las opciones están la estimación de propensión de etiquetado —la probabilidad de que un positivo reciba etiqueta— de Elkan y Noto, combinaciones de modelos entrenados con distintas muestras (*bagging*) y modelos de ocupación. Estos últimos se usan en ecología para distinguir la presencia de una especie de la posibilidad de detectarla; su aplicación aquí requiere evaluar qué datos y supuestos equivalentes tenemos.
 
-Con 68 eventos desde 2015 sobre una grilla de miles de celdas horarias, la tasa base es del orden de **10⁻⁶ a 10⁻⁷**. Implicaciones:
+Los días y lugares con puntuación alta y sin reporte son **candidatos para revisión**. Se pueden comparar con imágenes GOES y otras fuentes para determinar qué evidencia hay. Una señal satelital compatible con rotación puede motivar una investigación, pero no confirma por sí sola un tornado ni justifica añadirlo al catálogo.
 
-- **La exactitud (*accuracy*) es inútil.** Un modelo que diga "nunca" acierta el 99,9999 % de las veces.
-- Métricas adecuadas: **AUC-PR** (no AUC-ROC, que es engañosamente optimista con desbalance extremo), ***Brier score***, **curvas de fiabilidad** (¿cuando el modelo dice 10 %, ocurre el 10 % de las veces?), y las métricas operacionales de la meteorología: **POD** (probabilidad de detección), **FAR** (tasa de falsas alarmas), **CSI** (*critical success index*) y **ETS**.
-- **Muestreo negativo informado**: en vez de negativos al azar, usar *negativos difíciles* — días con tormenta convectiva pero sin ningún indicio de rotación. Eso obliga al modelo a aprender qué distingue una tormenta rotatoria de una tormenta fuerte, que es la pregunta real.
+### 6.2 Desbalance entre eventos y situaciones sin etiqueta
 
-### 6.3 Validación: la trampa de la fuga temporal y espacial
+Los eventos registrados son muy pocos frente al número de celdas y horas disponibles. La proporción exacta depende de la región, el período y la unidad de análisis: una tormenta, una celda o un día. Esta elección debe quedar documentada.
 
-Un **split aleatorio destruye este problema**. Dos horas consecutivas del mismo evento son prácticamente el mismo dato; si una cae en entrenamiento y otra en validación, el modelo parecerá excelente y no servirá para nada.
+Un modelo que prediga siempre «sin evento» podría tener una **exactitud** (*accuracy*, proporción de aciertos) muy alta y aun así no detectar ningún caso positivo. Por eso conviene evaluar varias preguntas:
 
-Lo correcto:
+| Pregunta | Medida posible | Cómo interpretarla |
+|---|---|---|
+| ¿Cuántos eventos registrados detecta? | POD, probabilidad de detección | Fracción de casos registrados que el modelo señala |
+| ¿Cuántos avisos carecen de un evento registrado asociado? | FAR, proporción de falsas alarmas | Con etiquetas incompletas, algunos de esos avisos pueden corresponder a eventos sin registro |
+| ¿Cómo cambia el resultado al exigir una puntuación mayor? | Curva de precisión y exhaustividad; área bajo ella, AUC-PR | Compara la proporción de avisos respaldados con la fracción de casos detectados a distintos umbrales |
+| ¿Las probabilidades se corresponden con las frecuencias observadas? | Curvas de fiabilidad y *Brier score*, error cuadrático de las probabilidades | Requieren etiquetas de evaluación adecuadas; el subregistro afecta su interpretación |
 
-- **Separación por eventos completos**, no por instantes. Todo un brote va entero a entrenamiento o entero a validación.
-- **Validación cruzada por bloques temporales** (dejar un año fuera cada vez), que además revela si el modelo es estable entre temporadas.
-- **Zonas de amortiguación espaciales** si se valida por región.
-- Conviene reservar **un evento notorio y bien documentado como prueba final ciega** — por ejemplo el brote de mayo de 2019 — y no mirarlo hasta el final.
+**Para profundizar.** CSI (*critical success index*) combina aciertos, omisiones y falsas alarmas; ETS ajusta una medida de aciertos por lo esperable al azar. Son métricas operacionales adicionales. AUC-ROC también puede calcularse, pero con muchos ejemplos sin evento puede ocultar una cantidad de avisos sin respaldo poco útil en la práctica. Ninguna métrica elimina la incertidumbre de las etiquetas.
 
-### 6.4 Aumentación de datos y transferencia
+Para comparar tormentas entre sí, conviene buscar **controles difíciles**: días con convección profunda sin rotación documentada. Permiten investigar qué distingue los casos registrados de otras tormentas fuertes. Siguen siendo controles candidatos, no negativos confirmados, y necesitan revisión de evidencia.
 
-Con 100 positivos, dos estrategias ayudan mucho:
+### 6.3 Validación: separar los casos de entrenamiento y evaluación
 
-1. **Preentrenamiento con datos de otra región.** Estados Unidos tiene decenas de miles de tornados catalogados en la base de datos del *Storm Prediction Center*, y Argentina/Uruguay —el "Corredor de los Tornados" sudamericano— tienen un régimen mucho más comparable al chileno. Entrenar en un dominio con muchas etiquetas y **ajustar finamente (*fine-tuning*) sobre Chile** es probablemente la mejor forma de aprovechar 100 ejemplos.
-   *Ojo:* al transferir desde el hemisferio norte hay que **reflejar el hemisferio** (invertir el signo de la componente meridional del viento y de la helicidad), o el modelo aprenderá la quiralidad equivocada.
-2. **Aprendizaje auto-supervisado sobre GOES.** Las imágenes no etiquetadas son esencialmente infinitas: 144 imágenes × 16 bandas × 365 días × varios años. Preentrenar un codificador con predicción del fotograma siguiente o con métodos contrastivos, y luego usar ese codificador con las 100 etiquetas, transforma el problema de "100 ejemplos" en "100 ejemplos sobre una representación ya buena".
+El **entrenamiento** ajusta el modelo con ejemplos; la **validación** ayuda a elegir entre alternativas; y la **prueba final** evalúa el resultado con casos que no guiaron esas decisiones. Si horas consecutivas del mismo evento quedan en grupos distintos, el modelo encontrará situaciones casi idénticas y aparentará un rendimiento mayor del que tiene en eventos nuevos. Esto se llama *fuga de información*.
 
-### 6.5 Interpretabilidad
+Para reducir ese problema:
 
-En una aplicación de alerta temprana, un modelo que no se puede explicar no se va a usar. Conviene incluir desde el principio **valores de SHAP** sobre las *features* físicas, **mapas de atención o de saliencia** sobre las imágenes GOES, y **casos análogos** ("este día se parece al 30 de mayo de 2019"). Si el modelo resulta apoyarse mayoritariamente en SRH de niveles bajos y en la tasa de enfriamiento del tope, eso no sólo da confianza: es un resultado científico.
+- Separar por eventos completos: todas las horas de un brote deben quedar en el mismo grupo.
+- Evaluar por bloques temporales, por ejemplo dejando un año fuera cada vez, para comparar temporadas.
+- Al evaluar por región, dejar una distancia de separación entre las zonas de entrenamiento y prueba, de modo que no compartan observaciones cercanas de un mismo sistema.
+- Reservar casos completos que no hayan guiado las decisiones como prueba final. El brote de mayo de 2019, utilizado a lo largo de este documento para explorar y comprobar cálculos, sirve como caso de desarrollo; no debe presentarse después como una prueba ciega.
+
+### 6.4 Cómo aprovechar datos sin etiquetas y modelos previos
+
+Una vez construido un primer modelo, se pueden explorar dos estrategias para aprovechar más datos:
+
+1. **Preentrenamiento con otra región y ajuste con casos chilenos.** Se entrena un modelo con un conjunto más amplio, como los registros del Storm Prediction Center de Estados Unidos, y luego se ajusta con los datos locales (*fine-tuning*). Hay que comparar los regímenes atmosféricos, las variables y las etiquetas: compartir hemisferio no asegura que dos regiones sean equivalentes. Al usar datos del hemisferio norte también hay que revisar las convenciones de giro. Cualquier transformación de coordenadas debe aplicarse de forma consistente al viento, las imágenes y las etiquetas; no basta con cambiar un signo aislado.
+2. **Aprendizaje autosupervisado sobre GOES.** Se aprovechan muchas imágenes sin etiquetas de eventos para aprender patrones visuales. Por ejemplo, una red puede intentar predecir la imagen siguiente. Después se evalúa si esos patrones ayudan a distinguir los casos del catálogo. El preentrenamiento puede reducir la dependencia de etiquetas, pero no garantiza una representación útil para detectar mesociclones.
+
+### 6.5 Cómo explicar los resultados
+
+Quien evalúe un aviso o un caso histórico necesita entender qué datos lo sustentan. Se pueden mostrar las variables que más influyeron, las zonas de una imagen utilizadas y situaciones documentadas parecidas.
+
+Los **valores SHAP** atribuyen parte de la predicción a cada variable; los mapas de **saliencia** resaltan zonas de la imagen que influyen en el resultado. En algunos modelos también se pueden inspeccionar los mapas de atención, aunque atención e influencia no son equivalentes. Estos recursos ayudan a revisar si el modelo utiliza señales razonables, pero no demuestran que haya aprendido el mecanismo físico.
+
+Por ejemplo, se puede comparar un caso con el 30 de mayo de 2019 y mostrar su SRH de niveles bajos, la evolución del tope y las diferencias entre ambos. Eso permite discutir el resultado con evidencia en vez de mostrar solo una puntuación.
 
 ---
 
 ## 7. Arquitectura sugerida en AWS
 
-Una ruta pragmática, sin pretensión de ser la única:
+El flujo de trabajo consiste en leer datos, recortar la región, calcular variables, entrenar un modelo y mostrar sus resultados. No hace falta implementar todos los servicios desde el principio. La siguiente propuesta relaciona cada etapa con opciones de AWS y formatos de datos.
 
-**Ingesta.** Los datos ya están en S3 dentro del programa de datos abiertos: `nsf-ncar-era5` en *us-west-2* y `noaa-goes16/19` en *us-east-1*. **Trabajar en la misma región que el bucket** evita costos de transferencia entre regiones (lo que sugiere procesar GOES en *us-east-1*). Los buckets de GOES publican avisos por **SNS** cuando llega un objeto nuevo, lo que permite un canal casi en tiempo real vía Lambda/SQS.
+| Etapa | Qué hace | Opciones para implementarla |
+|---|---|---|
+| Lectura | Acceder a los archivos públicos de ERA5 y GOES | S3 almacena los archivos. ERA5 está en `nsf-ncar-era5`, región *us-west-2*; GOES, en `noaa-goes16` y `noaa-goes19`, *us-east-1* |
+| Extracción | Leer los bloques necesarios y guardar recortes de Chile | Una tarea por día, con herramientas como `xarray` y `fsspec`. AWS Batch permite ejecutar tareas por lotes; Lambda es una opción para tareas que quepan en sus límites de tiempo y recursos |
+| Variables derivadas | Calcular índices y organizar ejemplos | MetPy ayuda con cálculos meteorológicos; `xarray` y `dask`, con arreglos y tareas paralelas. Hay que revisar ramas y signos para el hemisferio sur |
+| Entrenamiento | Ajustar y comparar modelos | SageMaker ofrece herramientas de entrenamiento y seguimiento de experimentos; los parámetros de ajuste del algoritmo se llaman hiperparámetros |
+| Consulta y visualización | Obtener puntuaciones y mostrar mapas o casos | Un servicio de predicción de SageMaker, o Lambda tras API Gateway, puede responder consultas. S3 y CloudFront pueden servir los archivos de un sitio estático |
 
-**Extracción.** El recorte sobre Chile es vergonzosamente paralelo: una tarea por día. **AWS Batch** o **Lambda** con `xarray` + `fsspec` + `zarr`/`kerchunk`. Conviene rematerializar el recuadro chileno como un **Zarr** propio en S3: una vez hecho, el acceso pasa de minutos a milisegundos y todo el resto del trabajo se acelera.
+Guardar los recortes una vez evita repetir la lectura de archivos globales. Zarr organiza arreglos multidimensionales en bloques y permite acceder a partes del conjunto. Parquet almacena tablas por columnas y puede usarse para las variables derivadas, separando archivos por año o mes. La mejora de rendimiento depende de cómo se organicen los bloques y de qué consultas se hagan.
 
-**Cálculo de *features*.** `MetPy` para los índices termodinámicos y cinemáticos (**recordando la corrección de signos del hemisferio sur**), `xarray` + `dask` para paralelizar. Guardar como Parquet particionado por año/mes.
+**Para profundizar: llegada de datos nuevos.** Los archivos GOES pueden anunciarse mediante SNS, un servicio de notificaciones. SQS permite poner trabajo en una cola y Lambda puede procesarlo. Ese flujo de imágenes recientes no convierte a ERA5 en una fuente inmediata: una versión operativa tendría que definir también de dónde obtiene el entorno meteorológico a tiempo.
 
-**Entrenamiento.** **SageMaker** para experimentos y búsqueda de hiperparámetros. Con 102 positivos, el entrenamiento en sí es barato; lo caro es la preparación de datos.
-
-**Servicio.** Endpoint de SageMaker o Lambda tras API Gateway; un mapa de riesgo en un sitio estático servido desde S3 + CloudFront.
-
-**Costo.** La parte dominante es el cómputo de extracción, no el almacenamiento ni el entrenamiento. Empezar con un **subconjunto deliberadamente pequeño** —por ejemplo los 102 eventos conocidos más 1000 días de control, sólo sobre el recuadro 33°S–45°S— permite recorrer el flujo completo de punta a punta en horas en lugar de semanas. Sólo después conviene escalar al archivo completo.
+Para empezar, conviene usar unos pocos días documentados y días de control sobre el recuadro 33°S–45°S. Los controles son días sin registro que deben tratarse como datos no etiquetados. Después de medir el volumen leído, el tiempo y el costo, se puede ampliar el conjunto. Trabajar cerca de la región del bucket reduce transferencias entre regiones; hay que revisar también los costos de cómputo, almacenamiento y salida a internet.
 
 ---
 
 ## 8. Tareas abiertas: por dónde empezar
 
-El proyecto está abierto a cualquier persona interesada, con o sin formación en meteorología. Algunas líneas de trabajo, de menor a mayor dificultad:
+Hay tareas para equipos con distinta experiencia. Cada una puede dar lugar a un prototipo acotado; las alternativas avanzadas requieren más tiempo y evaluación.
 
 **Accesibles**
-1. **Curar y homogeneizar el catálogo** de eventos: fechas, horas UTC, coordenadas, tipo (supercelular / tromba marina / *landspout*), fuente y grado de confianza. Es la tarea de mayor impacto por unidad de esfuerzo, y no requiere saber meteorología.
-2. **Construir animaciones GOES** de los eventos conocidos. Ver 20 casos en *loop* enseña más sobre el problema que cualquier documento — y sirve de material divulgativo.
-3. **Visualizar el entorno sinóptico** de cada caso: mapas de 500 hPa, sondeos, hodógrafos.
+
+1. **Ordenar y revisar el catálogo:** fechas, horas UTC, coordenadas, fuentes y grado de evidencia. Homogeneizar formatos es un buen punto de entrada. Clasificar el mecanismo de formación requiere revisión meteorológica.
+2. **Construir animaciones GOES de casos conocidos:** acompañarlas con una guía de qué cambia entre imágenes, qué observar y qué no se puede concluir desde el satélite.
+3. **Visualizar el entorno de un caso:** mapas de 500 hPa, perfiles verticales o sondeos y hodógrafos. Añadir unidades y explicaciones permite que otras personas exploren los datos.
 
 **Intermedias**
 
-4. Implementar la **extracción eficiente** del recuadro chileno desde ERA5 en S3 sin bajar el globo entero.
-5. Implementar la **batería de índices con signos del hemisferio sur correctos**, y validarla contra casos conocidos.
-6. Construir el **conjunto de negativos difíciles**: días con convección profunda pero sin rotación.
-7. Implementar la **corrección de paralaje** para GOES sobre Chile.
+4. **Evaluar y mejorar la extracción de ERA5:** medir los bytes leídos para obtener el recuadro chileno y evitar descargas completas cuando la organización de los bloques lo permita.
+5. **Completar y comprobar los índices australes:** revisar las ramas de movimiento, signos y variantes, y contrastar los cálculos con casos conocidos.
+6. **Seleccionar controles difíciles:** revisar días con tormentas profundas sin rotación documentada, conservando la incertidumbre de esa etiqueta.
+7. **Implementar la corrección de paralaje de GOES:** comparar la posición de los topes antes y después de la corrección y documentar la altura utilizada.
 
 **Avanzadas**
 
-8. **Detección de rotación del yunque** por flujo óptico en los *loops* de GOES — un detector de mesociclones que no depende del catálogo de tornados y que podría generar miles de etiquetas nuevas.
-9. **PU learning** con modelado explícito del sesgo de reporte.
-10. **Preentrenamiento auto-supervisado** sobre el archivo GOES completo.
-11. **Recalibración austral del STP/SCP** con los datos chilenos.
+8. **Explorar patrones de rotación mediante flujo óptico:** seleccionar candidatos en animaciones GOES y evaluar qué evidencia respalda su interpretación. No tratar el movimiento del yunque como una etiqueta confirmada de mesociclón.
+9. **Estudiar PU learning con sesgo de reporte:** definir sus supuestos y comprobar cómo cambian los resultados bajo distintas posibilidades de observación.
+10. **Explorar preentrenamiento autosupervisado con GOES:** comparar el resultado con el modelo inicial usando los mismos casos de evaluación.
+11. **Evaluar una recalibración del STP/SCP:** distinguir ajustes exploratorios de criterios que cuenten con validación en casos independientes.
 
 ---
 
@@ -698,23 +716,31 @@ El proyecto está abierto a cualquier persona interesada, con o sin formación e
 | Término | Significado |
 |---|---|
 | **ABI** | *Advanced Baseline Imager*. El radiómetro de 16 bandas a bordo de GOES-R |
-| **CAPE** | Energía potencial convectiva disponible (J/kg). El "combustible" de la tormenta |
+| **CAPE** | Energía potencial convectiva disponible: energía por unidad de masa para el ascenso del aire (J/kg) |
 | **CIN** | Inhibición convectiva. La energía que hay que gastar para iniciar la convección |
 | **Cizalladura (*shear*)** | Cambio del viento con la altura, en magnitud y/o dirección |
-| **Convección profunda** | Ascenso que atraviesa toda la troposfera; una tormenta |
+| **Convección profunda** | Ascenso del aire que se extiende por una parte importante de la troposfera |
 | **ERA5** | Reanálisis global del ECMWF, 0,25°, horario, desde 1940 |
+| **Etiqueta** | Información asignada a un ejemplo para entrenar o evaluar un modelo; aquí puede ser un registro de tornado o tromba |
+| **Feature** | Variable calculada o seleccionada como entrada de un modelo |
+| **Grilla** | Conjunto de celdas que organiza los datos sobre una región |
 | **GLM** | *Geostationary Lightning Mapper*. Detector óptico de rayos en GOES |
-| **Hodógrafo** | Curva que traza la punta del vector viento al ascender en la vertical |
+| **Hodógrafo** | Curva que une los vectores de viento de distintas alturas para mostrar cómo cambia su rapidez y dirección |
 | **LCL** | Nivel de condensación por ascenso. La altura de la base de la nube |
+| **Jet** | Corriente de vientos intensos que puede encontrarse en niveles bajos o altos |
 | **Mesociclón** | Columna rotatoria de 2–10 km dentro de una tormenta profunda |
-| **Reanálisis** | Reconstrucción histórica del estado atmosférico con un modelo moderno |
+| **Reanálisis** | Reconstrucción histórica de la atmósfera que combina observaciones y un modelo meteorológico |
 | **RFD** | Corriente descendente del flanco trasero; clave en la tornadogénesis |
-| **SRH** | Helicidad relativa a la tormenta. Mide la vorticidad alineada con el flujo |
+| **SRH** | Helicidad relativa a la tormenta: integra la vorticidad horizontal alineada con el aire que entra a la tormenta |
+| **Sobreajuste** | Cuando un modelo se ajusta a los ejemplos conocidos, pero pierde rendimiento en casos nuevos |
 | **Supercélula** | Tormenta con un mesociclón persistente |
 | **Tope penetrante** | Cúpula que sobresale del yunque; señal de ascenso muy intenso |
-| **Tornadogénesis** | El proceso de formación del tornado a partir del mesociclón |
+| **Tornadogénesis** | Proceso de formación de un tornado, con o sin un mesociclón previo |
+| **UTC** | Tiempo universal coordinado, usado para comparar observaciones sin depender del huso horario local |
+| **Troposfera** | Capa inferior de la atmósfera donde se desarrolla la mayor parte del tiempo meteorológico |
+| **Tropopausa** | Límite entre la troposfera y la estratosfera |
 | **Vorticidad** | Medida local de la rotación de un fluido |
-| **Yunque (*anvil*)** | La meseta de hielo en el tope de la tormenta |
+| **Yunque (*anvil*)** | Región de la nube que se extiende lateralmente en altura y suele contener cristales de hielo |
 
 ---
 
@@ -733,10 +759,10 @@ El proyecto está abierto a cualquier persona interesada, con o sin formación e
 - **Bastías-Curivil, C., Rondanelli, R., Vicencio, J., Matus, F., Caballero, V., Muñoz, F., Barraza, J., Campos, D., Valenzuela, R., de la Maza, A., Campos, J. & Trobok, I. (2024–2025).** *Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile.* **figshare**, Dataset, v5. [doi:10.6084/m9.figshare.25119566](https://doi.org/10.6084/m9.figshare.25119566) · Licencia **CC BY 4.0**
   — 102 eventos, 1554–2025, con coordenadas, hora UTC, clasificación EF y procedencia documentada. Es la fuente de todas las cifras de catálogo de este documento.
 
-**Literatura sobre convección severa en Chile** (imprescindible)
+**Literatura sobre convección severa en Chile**
 
 - **Vicencio, J., Rondanelli, R., Campos, D., Valenzuela, R., Garreaud, R., Reyes, A., Padilla, R., Abarca, R., Barahona, C., Delgado, R. & Nicora, G. (2021).** *The Chilean Tornado Outbreak of May 2019: Synoptic, Mesoscale, and Historical Contexts.* **Bulletin of the American Meteorological Society**, 102(3), E611–E634. [doi:10.1175/BAMS-D-19-0218.1](https://doi.org/10.1175/BAMS-D-19-0218.1) · [PDF libre](https://dgf.uchile.cl/rene/PUBS/Tornado_chile_2019.pdf)
-  — **El punto de partida obligatorio.** Análisis completo del brote, contexto histórico del catálogo chileno, y la propuesta del VGP de bajo nivel.
+  — Un punto de partida para profundizar en el caso de 2019. Análisis completo del brote, contexto histórico del catálogo chileno, y la propuesta del VGP de bajo nivel.
 - **Barrett, B. S., Marín, J. C. & Jacques-Coper, M. (2020).** *A multiscale analysis of the tornadoes of 30–31 May 2019 in south-central Chile.* **Atmospheric Research**, 236, 104811. [doi:10.1016/j.atmosres.2019.104811](https://doi.org/10.1016/j.atmosres.2019.104811) · [PDF](https://bsbarret.github.io/barrett_marin_jacquescoper_AtmosRes2020.pdf)
   — Caracterización del régimen HSLC y de la escala subestacional (MJO).
 - **Marín, J. C., Gutiérrez, F., Gensini, V. A., Barrett, B. S., Pozo, D., Jacques-Coper, M. & Veloso-Aguila, D. (2024).** *Climatological Aspects of Notable Tornado Events in Chile.* **Monthly Weather Review**, 152(8), 1803–1819. [doi:10.1175/MWR-D-23-0249.1](https://doi.org/10.1175/MWR-D-23-0249.1)
@@ -744,7 +770,7 @@ El proyecto está abierto a cualquier persona interesada, con o sin formación e
 - **Caballero-Morán, V. & Rondanelli, R. (2025).** *Tornado Seasonality in Central-Southern Chile.* **Geophysical Research Letters**, 52, e2024GL110900. [doi:10.1029/2024GL110900](https://doi.org/10.1029/2024GL110900)
   — La temporada de ~4 semanas, y la identificación de zonas australes con entorno favorable pero **sin registros**.
 - **Marín, J. C. et al. (2021).** *The tornadoes of 30–31 May 2019 in south-central Chile: Sensitivity to topography and SST.* **Atmospheric Research**.
-  — Experimentos WRF que demuestran causalmente el rol de los Andes en generar el cizalle.
+  — Experimentos con WRF que evalúan cómo la topografía modifica la cizalladura en el caso de 2019.
 - **Aránguiz, R. et al. (2020).** *Damage assessment of the May 31st, 2019, Talcahuano tornado, Chile.* **International Journal of Disaster Risk Reduction**, 50, 101853. [doi:10.1016/j.ijdrr.2020.101853](https://doi.org/10.1016/j.ijdrr.2020.101853)
 - **Vicencio, J. et al. (2019).** *Informe Especial: Tornados en la Región del Biobío.* Dirección Meteorológica de Chile. [Blog DMC](https://blog.meteochile.gob.cl/2019/06/14/en-busqueda-de-las-huellas-del-tornado-los-angeles-y-talcahuano-concepcion/)
 - **Marín, J. C., Barrett, B. S., Gutiérrez, F. & Pozo, D. (2026).** *Mesoscale environments of tornadoes in Chile and along the U.S. west coast.* **Atmospheric Research**, 334, 109331.
@@ -778,8 +804,7 @@ El proyecto está abierto a cualquier persona interesada, con o sin formación e
 
 ### Sobre las figuras
 
-Las cuatro figuras de este documento **están generadas a partir de los datos reales**, no son
-esquemas. Los scripts que las producen están en `scripts/` del repositorio:
+Las cuatro figuras de este documento se generaron a partir de datos del catálogo, ERA5 y GOES. Los scripts que las producen están en `scripts/` del repositorio:
 
 | Script | Produce | Fuente |
 |---|---|---|
@@ -788,7 +813,8 @@ esquemas. Los scripts que las producen están en `scripts/` del repositorio:
 | `figs_goes.py` | Figura 4 | `s3://noaa-goes16/ABI-L2-CMIPF/` |
 
 `figs_era5.py` es además una demostración práctica de la estrategia recomendada en la sección
-4.1: extrae una hora, 37 niveles y el recuadro chileno desde archivos globales de 1,1–1,8 GB
-**en unos 20 segundos por variable**, sin descargarlos completos.
+4.1: lee bloques de archivos globales de 1,1–1,8 GB y obtiene una hora, 37 niveles y el
+recuadro chileno. En la ejecución de referencia tomó unos 20 segundos por variable; el
+tiempo y los bytes transferidos dependen de la red y de los bloques de cada archivo.
 
 *Documento preparado como material de contexto para el proyecto de predicción de tormentas mesociclónicas en Chile. Se agradecen correcciones, especialmente de la comunidad meteorológica chilena.*

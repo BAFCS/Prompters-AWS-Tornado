@@ -59,7 +59,7 @@ def _cover() -> None:
     """Presenta el objetivo, las referencias del caso y los enlaces."""
     st.title("Predicción de tormentas mesociclónicas en el centro-sur de Chile", anchor="inicio")
     st.markdown(
-        '<p class="lede">Proyecto abierto del AWS Hackathon. Un desafío de análisis de datos meteorológicos para estudiar qué tormentas pueden desarrollar rotación organizada.</p>',
+        '<p class="lede">Proyecto abierto para la hackathon AWS Breaking Barriers. Un desafío de análisis de datos meteorológicos para estudiar qué tormentas pueden desarrollar rotación organizada.</p>',
         unsafe_allow_html=True,
     )
     st.markdown(
