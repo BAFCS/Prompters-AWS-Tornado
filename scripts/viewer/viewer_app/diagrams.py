@@ -215,9 +215,9 @@ _PLAN_BODY = f"""
 
 # Escala 2D, 15 px por km: dentro de una celda de ERA5 (31 × 31 km) caben unos 240 píxeles de GOES (2 × 2 km)
 # y un mesociclón (círculo de 2 a 10 km de diámetro).
-_GRID = "".join(f'<line x1="{40 + 30 * k}" y1="30" x2="{40 + 30 * k}" y2="495"/>' for k in range(1, 15)) + "".join(
-    f'<line x1="40" y1="{30 + 30 * k}" x2="505" y2="{30 + 30 * k}"/>' for k in range(1, 15)
-)
+_GRID = "".join(
+    f'<line x1="{40 + 30 * k}" y1="30" x2="{40 + 30 * k}" y2="495"/>' for k in range(1, 15)
+) + "".join(f'<line x1="40" y1="{30 + 30 * k}" x2="505" y2="{30 + 30 * k}"/>' for k in range(1, 15))
 _SCALE_BODY = f"""
      <rect x="40" y="30" width="465" height="465" fill="var(--cold)" opacity=".14"/>
      <g stroke="var(--cold)" stroke-width="1" opacity=".35">{_GRID}</g>

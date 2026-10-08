@@ -260,7 +260,9 @@ _WATCHER = """
 MEASURE = "120ch"  # ancho máximo de texto, notas, títulos, tarjetas, cifras y tablas (--measure)
 RADIUS = "6px"  # esquinas de widgets y paneles (--radius)
 TOUCH = "44px"  # objetivo táctil mínimo (--touch)
-ANCHOR_OFFSET = "4.5rem"  # alto de la barra superior: margen de anclas y de la barra fija (--anchor-offset)
+ANCHOR_OFFSET = (
+    "4.5rem"  # alto de la barra superior: margen de anclas y de la barra fija (--anchor-offset)
+)
 COLUMN_MIN = "26rem"  # ancho mínimo de cada columna antes de apilarlas (--column-min)
 
 
@@ -368,6 +370,11 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 /* Cifras de la portada: cuatro en fila o dos por dos, nunca una fila a medias. */
 :is(.st-key-project, .st-key-data) .stats {{ grid-template-columns: repeat(4, 1fr); }}
 @container body (max-width: 760px) {{ :is(.st-key-project, .st-key-data) .stats {{ grid-template-columns: repeat(2, 1fr); }} }}
+.var-index-group {{ margin: 1rem 0 0.4rem; font-size: 0.875rem; font-weight: 600; color: {p.INK_2}; }}
+.var-index {{ display: flex; flex-wrap: wrap; gap: 6px; max-width: var(--measure); }}
+.var-index a {{ display: inline-flex; align-items: center; min-height: var(--touch); padding: 0 12px; background: {p.SURFACE};
+  border: 1px solid {p.LINE}; border-radius: var(--radius); color: {p.INK}; font-size: 0.9rem; text-decoration: none; }}
+.var-index a:hover, .var-index a:focus-visible {{ border-color: {p.ACCENT}; color: {p.ACCENT}; }}
 .toc ol {{ list-style: none; margin: 0.6rem 0 0; padding: 0; border-left: 1px solid {p.LINE}; }}
 [data-testid="stMain"] .toc li {{ margin: 0; padding: 0; }}
 .toc a {{ display: flex; align-items: center; min-height: var(--touch); margin-left: -1px; padding: 5px 0 5px 12px; border-left: 1px solid transparent;

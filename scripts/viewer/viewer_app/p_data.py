@@ -10,7 +10,7 @@ import html
 
 import streamlit as st
 
-from viewer_app import products, state, variables
+from viewer_app import products, state, theme, variables
 from viewer_app.variables import Variable
 
 
@@ -43,11 +43,6 @@ def _on_input(widget: str) -> None:
     """Callback de las píldoras «Se calcula con»: abre la ficha del insumo elegido."""
     _set_focus(st.session_state[widget])
     st.session_state[widget] = None
-
-
-def _clear_search() -> None:
-    """Callback: borra el texto del buscador."""
-    st.session_state["data_search"] = ""
 
 
 def _available() -> set[str]:
@@ -166,19 +161,72 @@ def _toc() -> str:
     return f"<nav class='toc' aria-label='En esta página'><ol>{''.join(items)}</ol></nav>"
 
 
+_INTRO = (
+    (
+        "ERA5 · el entorno",
+        "El reanálisis global del ECMWF: una reconstrucción de la atmósfera hora a hora desde 1940, "
+        "que combina un modelo con observaciones de radiosondas, satélites, aviones y estaciones. "
+        "Entrega viento, temperatura, humedad y energía disponible en una grilla de ~31 km. Describe "
+        "el entorno donde nace una tormenta, no la tormenta.",
+    ),
+    (
+        "GOES · la tormenta",
+        "Un satélite geoestacionario sobre 75,2° O. Su radiómetro ABI mide 16 bandas, del visible al "
+        "infrarrojo, cada 10 minutos y con píxeles de 2 km. De ahí salen la altura del tope de las "
+        "nubes y su evolución. Ve la nube, no el giro dentro de ella.",
+    ),
+    (
+        "Catálogo · las etiquetas",
+        "102 tornados y trombas marinas en Chile entre 1554 y 2025, reunidos desde crónicas, prensa y "
+        "literatura científica (Bastías-Curivil et al.). Son los eventos con los que se comparan ERA5 "
+        "y GOES. Solo hay positivos: falta saber dónde no ocurrió nada.",
+    ),
+)
+
+
+def _intro() -> None:
+    """Qué es cada fuente, en pocas líneas, antes de entrar a las fichas."""
+    cols = theme.columns([1, 1, 1], "sources_intro")
+    for col, (title, text) in zip(cols, _INTRO, strict=True):
+        with (
+            col,
+            st.container(border=True, key=f"sheet_intro_{title.split()[0].lower()}", gap="small"),
+        ):
+            st.markdown(f"**{title}**")
+            st.markdown(text)
+
+
+def _index() -> None:
+    """Un botón por variable, agrupado como las fichas, que lleva a su definición."""
+    st.subheader("Ir a una variable", anchor=False)
+    blocks = []
+    for g in variables.GROUPS:
+        links = "".join(
+            f"<a href='#{v.key}' title='{html.escape(v.name)}'>{html.escape(v.symbol)}</a>"
+            for v in variables.VARIABLES
+            if v.group == g.key
+        )
+        blocks.append(
+            f"<p class='var-index-group'>{g.title}</p><div class='var-index'>{links}</div>"
+        )
+    st.markdown("".join(blocks), unsafe_allow_html=True)
+
+
 def _body() -> bool:
-    """Portada, buscador y fichas (todas, las que coinciden con la búsqueda, o una sola).
+    """Portada, índice y fichas (todas o una sola).
 
     Devuelve si se dibujó la lista completa: solo entonces existen todas las anclas del índice.
     """
     st.title("Datos", anchor="inicio")
     st.markdown(
-        f"<p class='lede'>Las {len(variables.VARIABLES)} variables del proyecto, ordenadas por linaje: "
-        "cada fuente cruda primero y, debajo, lo que se calcula con ella. Cada ficha dice qué es la "
-        "variable, por qué importa para un mesociclón, cómo se calcula y qué cuidar en el hemisferio "
-        "sur.</p>",
+        f"<p class='lede'>El proyecto usa {len(variables.VARIABLES)} variables, y casi todas "
+        "descienden de tres fuentes. Aquí van ordenadas por linaje: cada fuente primero, con los "
+        "campos tal como llegan, y debajo lo que se calcula a partir de ellos. Cada ficha explica qué "
+        "es la variable, por qué importa para un mesociclón, cómo se calcula y qué cuidar en el "
+        "hemisferio sur.</p>",
         unsafe_allow_html=True,
     )
+    _intro()
     available = _available()
     focus = _focus()
     if focus is not None:
@@ -188,33 +236,12 @@ def _body() -> bool:
         _bibliography()
         return False
 
-    state.restore("data_search")
-    query = st.text_input(
-        "Buscar una variable", key="data_search", icon=":material/search:",
-        placeholder="CAPE, helicidad, C13, cizalladura, Register…",
-    )  # fmt: skip
-    state.save("data_search")
+    _index()
     if not available:
         st.caption(
             "No hay datos preparados para el día elegido: las fichas se leen igual, pero sin el botón "
             "«Ver en Mapas»."
         )
-    if query.strip():
-        found = variables.search(query)
-        if not found:
-            st.info(
-                f"Ninguna variable coincide con «{query.strip()}». Prueba con un símbolo (CAPE, C13) "
-                "o una palabra (helicidad, tropopausa)."
-            )
-            st.button("Borrar la búsqueda", icon=":material/close:", on_click=_clear_search)
-            return False
-        st.caption(f"{len(found)} de {len(variables.VARIABLES)} variables.")
-        for g in variables.GROUPS:
-            in_group = [v for v in found if v.group == g.key]
-            if in_group:
-                _group(g, in_group, available, flat=True)
-        return False
-
     for s in variables.SOURCES:
         _source(s)
         for g in variables.GROUPS:

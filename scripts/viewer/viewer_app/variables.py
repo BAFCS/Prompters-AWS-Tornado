@@ -6,7 +6,6 @@ Mapas toma de aquí su ayuda en contexto. Todo sale de las secciones 4 y 5 de
 documento o un cálculo, hay que corregirlo aquí. Las fórmulas van en LaTeX (KaTeX de Streamlit).
 """
 
-import unicodedata
 from dataclasses import dataclass, replace
 
 
@@ -54,7 +53,7 @@ class Variable:
     inputs: tuple[str, ...] = ()  # claves de otras fichas de las que se calcula
     products: tuple[str, ...] = ()  # claves de ``products.catalog`` que la muestran en Mapas
     level: float | None = None  # hPa con que abrir el panel si el producto es de presión
-    synonyms: str = ""  # palabras extra para el buscador
+    synonyms: str = ""  # sinónimos (sin uso desde que el buscador se reemplazó por el índice)
     # claves de ``REFERENCES`` propias de la ficha (se suman a las del grupo)
     refs: tuple[str, ...] = ()
 
@@ -1101,22 +1100,6 @@ BY_PRODUCT: dict[str, Variable] = {}
 for _v in VARIABLES:
     for _p in _v.products:
         BY_PRODUCT.setdefault(_p, _v)
-
-
-def _normalize(text: str) -> str:
-    """``text`` en minúsculas y sin tildes, para buscar «helicidad» y encontrar «Helicidad»."""
-    decomposed = unicodedata.normalize("NFKD", text)
-    return "".join(c for c in decomposed if not unicodedata.combining(c)).casefold()
-
-
-def search(query: str) -> list[Variable]:
-    """Las variables cuyas palabras contienen todas las de ``query`` (vacía: todas)."""
-    words = _normalize(query).split()
-    return [
-        v for v in VARIABLES
-        if all(p in _normalize(" ".join((v.key, v.symbol, v.name, v.synonyms, v.what)))
-               for p in words)
-    ]  # fmt: skip
 
 
 def references_of(v: Variable) -> list[str]:

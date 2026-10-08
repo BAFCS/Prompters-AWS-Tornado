@@ -160,7 +160,9 @@ def _restart_play() -> None:
 
 def _step_stage(delta: int) -> None:
     """Mueve la etapa elegida ``delta`` pasos, sin salirse de 1–4."""
-    st.session_state["project_stage"] = min(4, max(1, (st.session_state.get("project_stage") or 1) + delta))
+    st.session_state["project_stage"] = min(
+        4, max(1, (st.session_state.get("project_stage") or 1) + delta)
+    )
 
 
 def _stages() -> None:
@@ -220,12 +222,12 @@ def _animation() -> None:
         st.caption("Formación de un mesociclón: esquema simplificado en cuatro etapas")
         st.toggle("Reproducir en bucle", key="project_play", on_change=_restart_play)
         # El fragmento se repite solo mientras se reproduce; cambiar de etapa no recarga la página.
-        st.fragment(run_every=_PLAY_SECONDS if st.session_state.get("project_play") else None)(_stages)()
+        st.fragment(run_every=_PLAY_SECONDS if st.session_state.get("project_play") else None)(
+            _stages
+        )()
 
 
-CASE_TEXT = (
-    '<p>El <strong>30 y 31 de mayo de 2019</strong>, siete tornados golpearon en menos de 24 horas la zona entre Ñuble y La Araucanía. Dos entraron en ciudades: <strong>Los Ángeles</strong> (EF2) y <strong>Talcahuano–Concepción</strong> (EF1–EF2, 17 km de trayecto, una persona fallecida, 50.000 clientes sin electricidad). La escala Fujita mejorada (EF) clasifica la intensidad según los daños observados. Este episodio es el caso de referencia del proyecto para estudiar las condiciones atmosféricas asociadas a los tornados del centro-sur de Chile.</p>\n<p>Existe un catálogo formal y publicado: la base <a href="https://doi.org/10.6084/m9.figshare.25119566">Tornadoes and Waterspouts in Chile</a> (Bastías-Curivil, Rondanelli, Vicencio et al., CC BY 4.0), con <strong>102 eventos entre 1554 y 2025</strong>. Incluye tornados, trombas marinas y eventos clasificados en ambas categorías. Según el resumen disponible, todos tienen coordenadas y el 89 % tiene hora UTC, un dato necesario para compararlos con imágenes satelitales. UTC significa tiempo universal coordinado y puede diferir de la hora local de Chile.</p>\n<p>En la copia del catálogo usada aquí, 70 registros están marcados como tornado, 45 como tromba marina y 19 en ambas categorías. Otros 6 no están marcados en ninguna de las dos; su clasificación debe revisarse. Los conteos de tornados y trombas se solapan y no deben sumarse para obtener el total.</p>\n<p>La cobertura del catálogo depende de que los eventos hayan sido observados, documentados e incorporados a la base. Esto puede favorecer los registros de zonas pobladas y dejar menos información sobre zonas rurales, el mar o eventos nocturnos. Es un sesgo de reporte que debe considerarse al analizar los datos. El catálogo no contiene registros al sur de los 42,4°S; esa ausencia no confirma que allí no hayan ocurrido eventos.</p>\n<p>Una línea de trabajo consiste en identificar días y lugares con condiciones similares a las de eventos documentados. Esos resultados serían candidatos para una revisión posterior; la similitud del entorno no confirma que haya ocurrido un tornado ni que se haya formado un mesociclón.</p>'
-)
+CASE_TEXT = '<p>El <strong>30 y 31 de mayo de 2019</strong>, siete tornados golpearon en menos de 24 horas la zona entre Ñuble y La Araucanía. Dos entraron en ciudades: <strong>Los Ángeles</strong> (EF2) y <strong>Talcahuano–Concepción</strong> (EF1–EF2, 17 km de trayecto, una persona fallecida, 50.000 clientes sin electricidad). La escala Fujita mejorada (EF) clasifica la intensidad según los daños observados. Este episodio es el caso de referencia del proyecto para estudiar las condiciones atmosféricas asociadas a los tornados del centro-sur de Chile.</p>\n<p>Existe un catálogo formal y publicado: la base <a href="https://doi.org/10.6084/m9.figshare.25119566">Tornadoes and Waterspouts in Chile</a> (Bastías-Curivil, Rondanelli, Vicencio et al., CC BY 4.0), con <strong>102 eventos entre 1554 y 2025</strong>. Incluye tornados, trombas marinas y eventos clasificados en ambas categorías. Según el resumen disponible, todos tienen coordenadas y el 89 % tiene hora UTC, un dato necesario para compararlos con imágenes satelitales. UTC significa tiempo universal coordinado y puede diferir de la hora local de Chile.</p>\n<p>En la copia del catálogo usada aquí, 70 registros están marcados como tornado, 45 como tromba marina y 19 en ambas categorías. Otros 6 no están marcados en ninguna de las dos; su clasificación debe revisarse. Los conteos de tornados y trombas se solapan y no deben sumarse para obtener el total.</p>\n<p>La cobertura del catálogo depende de que los eventos hayan sido observados, documentados e incorporados a la base. Esto puede favorecer los registros de zonas pobladas y dejar menos información sobre zonas rurales, el mar o eventos nocturnos. Es un sesgo de reporte que debe considerarse al analizar los datos. El catálogo no contiene registros al sur de los 42,4°S; esa ausencia no confirma que allí no hayan ocurrido eventos.</p>\n<p>Una línea de trabajo consiste en identificar días y lugares con condiciones similares a las de eventos documentados. Esos resultados serían candidatos para una revisión posterior; la similitud del entorno no confirma que haya ocurrido un tornado ni que se haya formado un mesociclón.</p>'
 
 
 def _problem() -> None:
@@ -246,7 +248,9 @@ def _problem() -> None:
         with st.container(horizontal=True, key="catalog_options"):
             by_intensity = st.checkbox("Tamaño según intensidad (EF)", key="catalog_by_intensity")
             by_type = st.checkbox("Color según tipo de evento", key="catalog_by_type")
-        fig = charts.catalog_map(cat, data.coast(charts.CATALOG_REGION), by_intensity=by_intensity, by_type=by_type)
+        fig = charts.catalog_map(
+            cat, data.coast(charts.CATALOG_REGION), by_intensity=by_intensity, by_type=by_type
+        )
         st.plotly_chart(fig, width="stretch", theme=None, key="catalog_map")
     with words:
         st.markdown(CASE_TEXT, unsafe_allow_html=True)
@@ -394,7 +398,11 @@ def _data_section() -> None:
         "**Límites.** Solo tiene casos positivos: que no haya un reporte no prueba que no ocurriera un evento. Entra al catálogo lo que alguien vio y contó, "
         "así que hay más registros donde hay más gente. Varias horas vienen como rango o redondeadas, y la posición es la del daño observado, no la del mesociclón."
     )
-    st.page_link(state.page("data"), label="Abrir el catálogo de datos de cada variable", icon=":material/dataset:")
+    st.page_link(
+        state.page("data"),
+        label="Abrir el catálogo de datos de cada variable",
+        icon=":material/dataset:",
+    )
     st.subheader("El tamaño de las celdas", anchor=False)
     st.markdown(
         "Una celda de ERA5 mide unos 31 km por lado y guarda un solo valor por variable; un mesociclón mide de 2 a 10 km. "

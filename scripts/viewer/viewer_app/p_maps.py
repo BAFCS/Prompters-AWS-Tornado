@@ -227,9 +227,7 @@ def page() -> None:
         _add_popover(cat, len(ps))
         with st.popover("Elegir punto", icon=":material/location_on:"):
             p = state.point()
-            st.caption(
-                "Elige cualquier lugar de la región, también con teclado."
-            )
+            st.caption("Elige cualquier lugar de la región, también con teclado.")
             with st.form("coordinates"):
                 lat = st.number_input(
                     "Latitud (°)",

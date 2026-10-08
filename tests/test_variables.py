@@ -64,12 +64,6 @@ class VariablesTest(unittest.TestCase):
                 self.assertNotIn("**", t)
                 self.assertEqual(t.count("*") % 2, 0)
 
-    def test_search_ignores_accents_and_case(self) -> None:
-        """«HELICIDAD» y «helicidad» encuentran lo mismo, y la SRH está entre los resultados."""
-        self.assertEqual(variables.search("HELICIDAD"), variables.search("helicidad"))
-        self.assertIn(variables.BY_KEY["srh_01"], variables.search("helicidad"))
-        self.assertEqual(variables.search("zzzz"), [])
-
 
 class PageTest(unittest.TestCase):
     """La página Datos se dibuja sin datos, con una ficha sola o con una búsqueda sin resultados."""
@@ -97,12 +91,12 @@ class PageTest(unittest.TestCase):
             with self.subTest(ancla=a):
                 self.assertIn(a, anchors)
 
-    def test_search_hides_toc(self) -> None:
-        """Con una búsqueda activa el índice desaparece: sus anclas no están dibujadas."""
+    def test_index_links_every_variable(self) -> None:
+        """El índice con botones trae un enlace por variable, hacia su ficha."""
         app = AppTest.from_function(_page)
         app.run(timeout=30)
-        app.text_input(key="data_search").input("helicidad").run(timeout=30)
-        self.assertFalse([m for m in app.markdown if "class='toc'" in m.value])
+        html = "".join(m.value for m in app.markdown if "class='var-index'" in m.value)
+        self.assertEqual(len(re.findall(r"href='#", html)), len(variables.VARIABLES))
 
     def test_v_query_shows_one_variable(self) -> None:
         """``?v=vgp_01`` deja solo esa ficha, con su criterio chileno y la vuelta a todas."""
@@ -114,14 +108,6 @@ class PageTest(unittest.TestCase):
         self.assertIn("vorticidad", names[0])
         self.assertTrue(any("Criterio en Chile" in m.value for m in app.markdown))
         self.assertTrue(any(b.label == "Ver todas las variables" for b in app.button))
-
-    def test_empty_search_offers_to_clear_it(self) -> None:
-        """Una búsqueda sin coincidencias lo dice y ofrece borrarla."""
-        app = AppTest.from_function(_page)
-        app.run(timeout=30)
-        app.text_input(key="data_search").input("zzzz").run(timeout=30)
-        self.assertEqual(len(app.info), 1)
-        self.assertTrue(any(b.label == "Borrar la búsqueda" for b in app.button))
 
 
 if __name__ == "__main__":

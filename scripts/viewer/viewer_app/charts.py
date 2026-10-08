@@ -89,7 +89,12 @@ def _point(point: Point, size: int) -> list[go.Scatter]:
 
 # --- Catálogo completo de eventos ----------------------------------------------------------------
 CATALOG_REGION = common.Region("catalog", north=-20.0, south=-44.0, west=-76.0, east=-68.0)
-_PHENOMENA = (("Sound", "ruido"), ("Hail", "granizo"), ("Electric Storm", "tormenta eléctrica"), ("Damage", "daños"))
+_PHENOMENA = (
+    ("Sound", "ruido"),
+    ("Hail", "granizo"),
+    ("Electric Storm", "tormenta eléctrica"),
+    ("Damage", "daños"),
+)
 
 
 def _clock(v: object) -> str:
@@ -118,7 +123,12 @@ def _hover(r: pd.Series) -> str:
 
 
 def catalog_map(
-    cat: pd.DataFrame, coast: tuple[np.ndarray, np.ndarray], *, by_intensity: bool, by_type: bool, height: int = 700
+    cat: pd.DataFrame,
+    coast: tuple[np.ndarray, np.ndarray],
+    *,
+    by_intensity: bool,
+    by_type: bool,
+    height: int = 700,
 ) -> go.Figure:
     """Mapa de Chile con todos los eventos del catálogo.
 
@@ -133,10 +143,22 @@ def catalog_map(
     grade = pd.to_numeric(ev["ef"].str.extract(r"(\d)")[0], errors="coerce").fillna(0)
     ev["size"] = 9 + 5 * grade if by_intensity else 11
     ev["text"] = [_hover(r) for _, r in ev.iterrows()]
-    colors = {"tornado": p.SEVERE, "tromba": p.COLD, "tornado y tromba": p.WARM, "sin clasificación": p.MUTED}
+    colors = {
+        "tornado": p.SEVERE,
+        "tromba": p.COLD,
+        "tornado y tromba": p.WARM,
+        "sin clasificación": p.MUTED,
+    }
     groups = [(k, ev[ev["kind"] == k]) for k in colors] if by_type else [("eventos", ev)]
     fig = go.Figure(
-        go.Scatter(x=coast[0], y=coast[1], mode="lines", line={"width": 1, "color": p.MUTED}, hoverinfo="skip", showlegend=False)
+        go.Scatter(
+            x=coast[0],
+            y=coast[1],
+            mode="lines",
+            line={"width": 1, "color": p.MUTED},
+            hoverinfo="skip",
+            showlegend=False,
+        )
     )
     for name, g in groups:
         if g.empty:
@@ -151,7 +173,9 @@ def catalog_map(
     fig.update_yaxes(range=[reg.south, reg.north], ticksuffix="°", showgrid=False, zeroline=False,
                      scaleanchor="x", scaleratio=Extent(reg.north, reg.south, reg.west, reg.east).aspect)  # fmt: skip
     fig.update_layout(
-        height=height, margin={"l": 40, "r": 10, "t": 10, "b": 10}, showlegend=by_type,
+        height=height,
+        margin={"l": 40, "r": 10, "t": 10, "b": 10},
+        showlegend=by_type,
         legend={"orientation": "h", "y": -0.02, "yanchor": "top"},
     )
     return _style(fig)

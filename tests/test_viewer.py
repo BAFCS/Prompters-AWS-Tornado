@@ -11,7 +11,7 @@ from streamlit.testing.v1 import AppTest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "viewer"))
 
-from viewer_app import charts, data, variables  # noqa: E402
+from viewer_app import charts, data  # noqa: E402
 
 
 class ViewerTest(unittest.TestCase):
