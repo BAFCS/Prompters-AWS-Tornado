@@ -20,13 +20,11 @@ Uso::
 """
 
 import datetime as dt
-import multiprocessing as mp
 import re
 import sys
 import time
 import zlib
 from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import h5py
@@ -42,7 +40,6 @@ LAMBDA = {
     1: 0.47, 2: 0.64, 3: 0.86, 4: 1.37, 5: 1.6, 6: 2.2, 7: 3.9, 8: 6.2,
     9: 6.9, 10: 7.3, 11: 8.4, 12: 9.6, 13: 10.3, 14: 11.2, 15: 12.3, 16: 13.3,
 }  # fmt: skip
-GOES_EPOCH = np.datetime64("2000-01-01T12:00:00")
 SCAN_START_RE = re.compile(r"_s(\d{4})(\d{3})(\d{2})(\d{2})(\d{2})(\d)_")
 
 
@@ -140,7 +137,6 @@ def read(path: str, v: dict, bands: list[int]) -> dict:
         assert all(isinstance(c, bytes) for c in raw_chunks), f"lectura fallida en {path}"
         out = {
             "time": np.datetime64(scan_start(path), "ms"),
-            "t_mid": GOES_EPOCH + np.timedelta64(int(common.dataset(h, "t")[()] * 1000), "ms"),
             "satellite": common.text(h.attrs.get("platform_ID", "?")),
             "bands": {},
         }
@@ -179,11 +175,6 @@ def save(parts: list[dict], v: dict, out_file: Path, reg: common.Region) -> None
         data,
         coords={
             "time": np.array([p["time"] for p in parts]),
-            "t_mid": (
-                "time",
-                np.array([p["t_mid"] for p in parts]),
-                {"long_name": "mitad del barrido del disco"},
-            ),
             "y": ("y", v["y"], {"units": "rad", "long_name": "ángulo de barrido N-S del ABI"}),
             "x": ("x", v["x"], {"units": "rad", "long_name": "ángulo de barrido E-O del ABI"}),
             "lat": (("y", "x"), v["lat"], {"units": "degrees_north"}),
@@ -191,9 +182,8 @@ def save(parts: list[dict], v: dict, out_file: Path, reg: common.Region) -> None
         },
         attrs={
             "source": f"s3://noaa-goes16|19/{PRODUCT} ({parts[0]['satellite']})",
-            "region": f"{reg.name}: {reg.north}..{reg.south} lat, {reg.west}..{reg.east} lon",
             "note": "grilla fija del ABI; lat/lon sin corrección de paralaje; time = inicio del barrido",
-            "created": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
+            **common.stamp(reg),
         },
     )
     for c in ("lat", "lon"):
@@ -218,9 +208,8 @@ def main() -> None:
     )
     a = p.parse_args()
     reg = common.region_of(a)
-    ctx = mp.get_context("spawn")  # s3fs no tolera fork: cada proceso abre su propia conexión
 
-    with ProcessPoolExecutor(a.processes, mp_context=ctx) as ex:
+    with common.pool(a.processes) as ex:
         for day in common.days(a):
             dest = common.folder(reg.name, "goes") / f"{day:%Y%m%d}"
             dest.mkdir(exist_ok=True)

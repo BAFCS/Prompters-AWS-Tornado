@@ -33,7 +33,6 @@ uv run ruff check scripts            # lint (uv run ruff check --fix para autoco
 uv run ruff format scripts           # formato
 uv run pyright                       # chequeo de tipos
 uv run python -m unittest discover -s tests -v  # regresiones de fichas, catálogo y acceso sin datos
-uv run jupyter lab                   # notebooks (jupyterlab + ipywidgets en el grupo dev)
 uv add <pkg> / uv add --dev <pkg>    # añadir dependencias
 ```
 
@@ -51,8 +50,7 @@ anterior (las figuras son deterministas: mismo entorno y datos dan los mismos p�
 ## Scripts de figuras
 
 Viven en `scripts/figures/`. Estructura de `scripts/`: `figures/` (figuras), `pipeline/` (descarga y
-procesamiento), `viewer/` (visor y `viewer_app/`) y `common.py` (compartido). `docs/auditorias/` guarda las
-auditorías del visor y `docs/historico/` los planes y especificaciones ya ejecutados. `PRODUCT.md`,
+procesamiento), `viewer/` (visor y `viewer_app/`) y `common.py` (compartido). `PRODUCT.md`,
 `DESIGN.md` y `.impeccable/` siguen en la raíz porque Impeccable los busca ahí (no tiene opción para moverlos).
 
 Cada script es un programa lineal sin funciones `main` ni argumentos: carga datos, dibuja y guarda
@@ -65,7 +63,7 @@ un apagado más oscuro porque va sobre fondo niebla).
 | Script | Figura | Entrada |
 |---|---|---|
 | `figs_catalog.py` | fig1, fig2 | `data/tornados_chile.xlsx` (figshare, hoja `Final_Table`) y `data/coast.zip` (shapefile de costa; Natural Earth 10m reproduce la figura) |
-| `figs_era5.py` | fig4 | lee directo de `s3://nsf-ncar-era5/` (anónimo, s3fs + h5py); escribe `data/era5_cache.npy` |
+| `figs_era5.py` | fig4 | lee directo de `s3://nsf-ncar-era5/` (anónimo, s3fs + h5py) |
 | `figs_goes.py` | fig3 | `data/goes/*.nc`: archivos GOES-16 `ABI-L2-CMIPF` banda 13 del 30-may-2019 (día 150) ~21:30–21:50 UTC |
 
 ## Scripts de datos y visor

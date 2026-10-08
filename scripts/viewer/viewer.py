@@ -176,6 +176,7 @@ else:
 if len(events):
     options = ["—", *events["id"]]
     selected = state.point()
+    labels = dict(zip(events["id"], events["hour_txt"] + " · " + events["place"], strict=True))
 
     def on_event_select() -> None:
         """Callback: lleva el visor al evento elegido en la lista."""
@@ -188,8 +189,7 @@ if len(events):
     )
     sidebar.selectbox(
         "Evento", options, key="event_select", on_change=on_event_select,
-        format_func=lambda k: "Sin evento seleccionado" if k == "—" else
-        f"{events.set_index('id').loc[k, 'hour_txt']} · {events.set_index('id').loc[k, 'place']}",
+        format_func=lambda k: "Sin evento seleccionado" if k == "—" else labels[k],
     )  # fmt: skip
 p = state.point()
 if p is not None:

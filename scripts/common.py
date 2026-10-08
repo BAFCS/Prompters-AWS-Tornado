@@ -7,8 +7,10 @@ la geometría de la grilla fija del ABI de GOES. Los scripts lo importan como m�
 
 import argparse
 import datetime as dt
+import multiprocessing as mp
 import time
 from collections.abc import Callable
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -121,6 +123,19 @@ def write(ds: xr.Dataset, out_file: Path, encoding: dict | None = None) -> None:
     enc = dict.fromkeys(ds.data_vars, COMPRESSION) if encoding is None else encoding
     ds.to_netcdf(tmp, engine="h5netcdf", encoding=enc)
     tmp.rename(out_file)
+
+
+def stamp(reg: Region) -> dict[str, str]:
+    """Atributos ``region`` y ``created`` de un NetCDF de ``reg``."""
+    return {
+        "region": f"{reg.name}: {reg.north}..{reg.south} lat, {reg.west}..{reg.east} lon",
+        "created": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
+    }
+
+
+def pool(processes: int) -> ProcessPoolExecutor:
+    """Pool de procesos con contexto ``spawn`` (s3fs no tolera fork: cada proceso abre su conexión)."""
+    return ProcessPoolExecutor(processes, mp_context=mp.get_context("spawn"))
 
 
 def s3() -> s3fs.S3FileSystem:

@@ -29,7 +29,7 @@ matplotlib.use("Agg")
 ROOT = Path(__file__).resolve().parents[2]
 OUT, DATA = ROOT / "figs", ROOT / "data"
 ACC, SEV, COLD, WARM, MUT = "#0E6A63", "#D2492A", "#4C7FB8", "#C98A3C", "#64757B"
-INK, LINE, SURF = "#0C1518", "#C9D3D6", "#F1F4F5"
+INK, LINE = "#0C1518", "#C9D3D6"
 plt.rcParams.update(
     {
         "font.family": "DejaVu Sans",
@@ -101,39 +101,22 @@ axm.set_facecolor("#FBFCFC")
 is_t, is_w = (T > 0) & (W == 0), (W > 0) & (T == 0)
 both = (T > 0) & (W > 0)
 sz = np.where(np.isnan(ef), 26, 26 + 30 * np.nan_to_num(ef))
-axm.scatter(
-    lon[is_w],
-    lat[is_w],
-    s=sz[is_w],
-    c=COLD,
-    alpha=0.85,
-    ec="white",
-    lw=0.6,
-    zorder=4,
-    label=f"Tromba marina ({is_w.sum()})",
-)
-axm.scatter(
-    lon[both],
-    lat[both],
-    s=sz[both],
-    c=WARM,
-    alpha=0.9,
-    ec="white",
-    lw=0.6,
-    zorder=5,
-    label=f"Ambos ({both.sum()})",
-)
-axm.scatter(
-    lon[is_t],
-    lat[is_t],
-    s=sz[is_t],
-    c=SEV,
-    alpha=0.85,
-    ec="white",
-    lw=0.6,
-    zorder=6,
-    label=f"Tornado ({is_t.sum()})",
-)
+for mask, color, alpha, z, name in (
+    (is_w, COLD, 0.85, 4, "Tromba marina"),
+    (both, WARM, 0.9, 5, "Ambos"),
+    (is_t, SEV, 0.85, 6, "Tornado"),
+):
+    axm.scatter(
+        lon[mask],
+        lat[mask],
+        s=sz[mask],
+        c=color,
+        alpha=alpha,
+        ec="white",
+        lw=0.6,
+        zorder=z,
+        label=f"{name} ({mask.sum()})",
+    )
 unclassified = (T == 0) & (W == 0)
 if unclassified.sum():
     axm.scatter(

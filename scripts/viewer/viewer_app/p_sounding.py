@@ -19,9 +19,7 @@ def _column(ds: xr.Dataset, t: pd.Timestamp, p: state.Point) -> xr.Dataset:
 
 
 # Fichas de Datos de lo que muestra la página: los dos gráficos, la CAPE y la CIN y los índices de la tabla.
-SHEETS = tuple(
-    dict.fromkeys(("hodografo", "bunkers", "cape", "cin", *components.SCORECARD_INDICES))
-)
+SHEETS = ("hodografo", "bunkers", "cape", "cin", *components.SCORECARD_INDICES)
 
 
 def _on_sheet() -> None:

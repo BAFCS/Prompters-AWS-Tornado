@@ -24,8 +24,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "ipywidgets>=8.1.9",
-    "jupyterlab>=4.6.4",
     "pandas-stubs>=3.0.5.260914",
     "pyright>=1.1.414",
     "ruff>=0.16.9",
