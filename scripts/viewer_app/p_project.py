@@ -3,12 +3,15 @@
 Los dos diagramas viven en ``diagrams.py``. Esta página no usa datos: se muestra aunque no haya recortes.
 """
 
+import html
+import re
+from pathlib import Path
 from typing import Literal
 
 import streamlit as st
 
 import common
-from viewer_app import diagrams
+from viewer_app import diagrams, state
 
 DOCUMENT = "https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md"
 REPOSITORY = "https://github.com/fforster/aws-mesocyclonic"
@@ -36,9 +39,23 @@ def _section(anchor: str, title: str, subtitle: str) -> None:
 def _links(key: str) -> None:
     """Botones al documento completo y al repositorio."""
     with st.container(horizontal=True, gap="small"):  # cada botón a su ancho; se parten si no caben
-        st.link_button("Leer el documento completo", DOCUMENT, key=f"{key}_doc", type="primary",
+        st.link_button("Leer el documento completo", DOCUMENT, key=f"{key}_doc",
                        icon=":material/description:")  # fmt: skip
         st.link_button("Repositorio", REPOSITORY, key=f"{key}_repo", icon=":material/code:")
+
+
+def _image(source: Path | str, description: str) -> None:
+    """Conserva el visor de imagen nativo y publica su descripción para el vigía del tema."""
+    key = (
+        source.stem
+        if isinstance(source, Path)
+        else ("mesocyclone" if "mcSvg" in source else "cape")
+    )
+    with st.container(key=f"image_{key}"):
+        st.image(str(source) if isinstance(source, Path) else source, width="stretch")
+        st.html(
+            f'<span class="project-image-alt" data-description="{html.escape(description, quote=True)}" hidden></span>'
+        )
 
 
 def _cards(key: str, cards: list[tuple[str, Color, str, str]], n_columns: int = 2) -> None:
@@ -62,6 +79,9 @@ def _cover() -> None:
         '<p class="lede">Proyecto abierto del AWS Hackathon. Un desafío de análisis de datos meteorológicos para estudiar qué tormentas pueden desarrollar rotación organizada.</p>',
         unsafe_allow_html=True,
     )
+    st.page_link(
+        state.page("case"), label="Explorar el caso de mayo de 2019", icon=":material/map:"
+    )
     st.markdown(
         "<p>El catálogo utilizado por el proyecto reúne 102 eventos de tornados y trombas marinas entre 1554 y 2025. Los registros dependen de las observaciones y los reportes disponibles, por lo que pueden faltar eventos.</p>\n<p>El objetivo del proyecto es estimar qué tormentas del centro-sur de Chile pueden desarrollar un mesociclón mediante datos de ERA5 y GOES. También se propone explorar el archivo histórico para identificar situaciones que merezcan una revisión por posible subregistro.</p>",
         unsafe_allow_html=True,
@@ -75,7 +95,7 @@ def _cover() -> None:
 
 def _animation() -> None:
     """Mesociclogénesis en cuatro etapas: el usuario elige la etapa; los rodillos giran solos."""
-    st.subheader("Mesociclones, supercélulas y tornados", anchor="mesociclones")
+    st.header("Mesociclones, supercélulas y tornados", anchor="mesociclones")
     st.markdown(
         "Un mesociclón es una región de aire en rotación organizada dentro de una tormenta, de unos 2 a 10 km de diámetro. Una tormenta con un mesociclón persistente se denomina supercélula. Un tornado es un fenómeno de menor escala cuya circulación alcanza la superficie. Una supercélula puede desarrollar un tornado, pero esa evolución no es inevitable.",
     )
@@ -87,8 +107,8 @@ def _animation() -> None:
             format_func=lambda k: ("Cizalladura", "Inclinación", "Estiramiento", "Mesociclón")[k - 1],
         )  # fmt: skip
         stage = stage or 1
-        st.image(diagrams.mesocyclone(stage), width="stretch")
         title, text = diagrams.STAGES[stage - 1]
+        _image(diagrams.mesocyclone(stage), f"Formación de un mesociclón. Etapa {title}. {text}")
         st.markdown(f"**:primary[{title}]**")
         st.markdown(text)
         st.markdown(
@@ -149,7 +169,10 @@ def _difficulty() -> None:
         "Estos valores orientan la comparación con los estudios citados. Requiere verificación: confirmar las variantes y el alcance de cada criterio antes de usarlo como umbral operativo. El visor calcula SHERBS3, una variante distinta de SHERBE, y una aproximación del STP; no deben trasladarse los criterios entre variantes sin validación.",
     )
     with st.container(border=True, key="sheet_cape"):
-        st.image(diagrams.cape_shear(), width="stretch")
+        _image(
+            diagrams.cape_shear(),
+            "Comparación esquemática de CAPE y cizalle: los casos chilenos de mayo de 2019 combinan baja energía convectiva con fuerte cambio del viento en el primer kilómetro. No es una frontera de detección.",
+        )
         st.markdown(
             "Comparación esquemática de CAPE y cizalle; no representa una frontera de detección del STP. Los casos chilenos de mayo de 2019 combinan CAPE relativamente bajo con fuerte cizalle en el primer kilómetro. La referencia de 15–45 J/kg corresponde al CAPE medio a fines de mayo en Biobío descrito en el documento. Requiere verificación: confirmar las fuentes y el ámbito de las referencias del esquema antes de utilizarlas en una decisión."
         )
@@ -200,7 +223,7 @@ def _data_section() -> None:
     ]
     for file, caption in figures:
         with st.container(border=True, key=f"sheet_{file[:4]}"):
-            st.image(str(FIGS / file), width="stretch")
+            _image(FIGS / file, re.sub(r"<[^>]+>", "", caption))
             st.markdown(f"<p class='note'>{caption}</p>", unsafe_allow_html=True)
 
 

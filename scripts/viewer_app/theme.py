@@ -16,10 +16,39 @@ from dataclasses import dataclass, fields
 import plotly.graph_objects as go
 import plotly.io as pio
 import streamlit as st
+import streamlit.components.v2 as components_v2
 from streamlit.delta_generator import DeltaGenerator
 
 SANS = "'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif"
 MONO = "'IBM Plex Mono', ui-monospace, Menlo, monospace"
+
+_MAP_LAYOUT = components_v2.component(
+    "map_layout",
+    js="""
+export default ({parentElement, setStateValue}) => {
+  const container = parentElement.closest('.block-container');
+  if (!container) return;
+  let previous;
+  const observer = new ResizeObserver(([entry]) => {
+    const columns = Math.max(1, Math.min(3, Math.floor(entry.contentRect.width / 420)));
+    if (columns !== previous) {
+      previous = columns;
+      setStateValue('columns', columns);
+    }
+  });
+  observer.observe(container);
+  return () => observer.disconnect();
+};
+""",
+    isolate_styles=False,
+)
+
+
+def map_columns() -> int:
+    """Columnas de mapas que caben en el cuerpo, medidas sin depender del dispositivo."""
+    with st.container(key="map_layout"):
+        result = _MAP_LAYOUT(key="map_width", on_columns_change=lambda: None)
+    return max(1, min(3, int(result.columns or 1)))
 
 
 @dataclass(frozen=True)
@@ -184,6 +213,17 @@ _WATCHER = """
   window.__watcherRequestedAt = 0;
   window.__watcherMismatches = 0;
   window.__themeWatcher = setInterval(() => {
+    for (const [testid, label] of [
+      ['stExpandSidebarButton', 'Abrir selección de región, fecha y evento'],
+      ['stSidebarCollapseButton', 'Cerrar selección de región, fecha y evento'],
+    ]) {
+      const control = document.querySelector(`[data-testid="${testid}"]`);
+      (control?.matches('button') ? control : control?.querySelector('button'))?.setAttribute('aria-label', label);
+    }
+    document.querySelectorAll('.project-image-alt').forEach(marker => {
+      const image = marker.closest('[class*="st-key-image_"]')?.querySelector('img');
+      if (image && image.alt !== marker.dataset.description) image.alt = marker.dataset.description;
+    });
     const m = mode();
     if (!m) return;
     const changed = m !== root.dataset.theme;
@@ -240,7 +280,7 @@ h1 {{ letter-spacing: -0.01em; }}
 .ruler-hours {{ display: flex; justify-content: space-between; margin: 3px 9px 0;
   font-family: {MONO}; font-size: 0.75rem; color: {p.MUTED}; }}
 .block-container {{ padding-top: 2.2rem; }}
-.st-key-theme_watcher, [data-testid="stLayoutWrapper"]:has(> .st-key-theme_watcher) {{ display: none; }}
+.st-key-theme_watcher, .st-key-map_layout, [data-testid="stLayoutWrapper"]:has(> .st-key-theme_watcher), [data-testid="stLayoutWrapper"]:has(> .st-key-map_layout) {{ display: none; }}
 html.theme-switching [data-testid="stMainMenuPopover"] {{ visibility: hidden; }}
 [data-testid="stMain"], [data-testid="stHeader"] {{ background: {p.GROUND}; }}
 [data-testid="stMain"] [data-testid="stPlotlyChart"],
@@ -260,13 +300,13 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 /* El cuerpo es su propio contenedor: tarjetas y cifras se acomodan al espacio que les deja el índice. */
 .st-key-project_body {{ container: body / inline-size; }}
 .st-key-project h1, .st-key-project h2, .st-key-project h3 {{ scroll-margin-top: 4.5rem; }}
-/* El proyecto: párrafos sueltos hasta 90ch; en tarjetas, figuras y notas el texto llega al borde. */
+/* La prosa conserva una medida cómoda; las figuras y tablas usan todo el ancho. */
 [data-testid="stMain"] .st-key-project [data-testid="stMarkdownContainer"] > p,
 [data-testid="stMain"] .st-key-project [data-testid="stMarkdownContainer"] li,
-.st-key-project .lede {{ max-width: 90ch; }}
+.st-key-project .lede {{ max-width: 68ch; }}
 [data-testid="stMain"] .st-key-project [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] > p,
 [data-testid="stMain"] .st-key-project [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] li,
-.st-key-project .note {{ max-width: none; }}
+.st-key-project .note {{ max-width: 68ch; }}
 /* Índice: columna fija a la derecha si la página mide 880 px o más; si no, desplegable arriba. */
 /* Streamlit 1.64 envuelve el contenedor de ancho fijo en un stLayoutWrapper: ese es el que se oculta y
    se fija (selectores internos; revisarlos al actualizar Streamlit). El contenedor también se oculta
@@ -302,7 +342,7 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 @container body (max-width: 760px) {{ .st-key-project .stats {{ grid-template-columns: repeat(2, 1fr); }} }}
 .toc ol {{ list-style: none; margin: 0.6rem 0 0; padding: 0; border-left: 1px solid {p.LINE}; }}
 [data-testid="stMain"] .toc li {{ margin: 0; padding: 0; }}
-.toc a {{ display: block; margin-left: -1px; padding: 5px 0 5px 12px; border-left: 1px solid transparent;
+.toc a {{ display: flex; align-items: center; min-height: 44px; margin-left: -1px; padding: 5px 0 5px 12px; border-left: 1px solid transparent;
   color: {p.INK_2}; font-size: 0.92rem; line-height: 1.35; text-decoration: none; }}
 .toc a:hover, .toc a:focus-visible {{ color: {p.ACCENT}; border-left-color: {p.ACCENT}; }}
 [data-testid="stMain"] [data-testid="stMarkdownContainer"] > p,
@@ -318,6 +358,14 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primary"] p,
 [data-testid="stBaseLinkButton-primary"], [data-testid="stBaseLinkButton-primary"] p {{ color: {p.ON_ACCENT}; }}
 .step b {{ font-family: {MONO}; font-weight: 600; color: {p.ACCENT}; font-size: 0.8rem; }}
+/* Controles propios: rótulos legibles, foco nativo y blancos táctiles amplios. */
+.stApp button:not([data-testid="stTooltipIcon"]) {{ min-height: 44px; }}
+[data-testid="stMain"] a[data-testid="stPageLink-NavLink"] {{ min-height: 44px; }}
+@media (max-width: 760px), (pointer: coarse) {{
+  .js-plotly-plot .modebar-btn {{ min-width: 44px; min-height: 44px; display: inline-flex;
+    align-items: center; justify-content: center; }}
+  .js-plotly-plot .modebar {{ display: flex; flex-wrap: wrap; max-width: 100%; }}
+}}
 </style>
 """
 

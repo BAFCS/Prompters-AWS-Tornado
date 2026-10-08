@@ -29,7 +29,7 @@ def page() -> None:
     )
     if p is None or t is None:
         st.info(
-            "Elige un evento en la barra lateral o haz clic en un panel de Mapas cuando haya datos ERA5."
+            "Elige un evento en la barra lateral o usa «Elegir punto» en Mapas cuando haya datos ERA5."
         )
         return
     if ctx.day.pl is None or ctx.day.sfc is None:
@@ -55,6 +55,20 @@ def page() -> None:
         f"<p class='lede'>{html.escape(p.name)} · ERA5 {hour:%H:%M} UTC en el punto de grilla "
         f"<span class='mono'>{components.coord(la, lo)}</span> (celdas de ~31 km).</p>"
     )
+    st.markdown(
+        "**Para empezar:** en el Skew-T, compara temperatura, punto de rocío y parcela; "
+        "en el hodógrafo, observa cuánto cambia el viento con la altura. "
+        "Abre «Cómo leerlo» para interpretar cada marca."
+    )
+    with st.expander("Cómo leerlo"):
+        st.markdown(
+            "**Skew-T:** temperatura frente a presión; las isotermas están inclinadas. "
+            "El punto de rocío describe la humedad y la parcela muestra el ascenso desde superficie. "
+            "La separación entre parcela y entorno permite estimar CAPE y CIN; el LCL señala "
+            "el inicio de condensación. **Hodógrafo:** une componentes este-oeste (u) y norte-sur (v) "
+            "del viento por altura. Los diamantes estiman movimientos Bunkers: left-mover y right-mover. "
+            "Los índices del visor usan la rama left-mover."
+        )
 
     # Perfil termodinámico: superficie + niveles por encima del suelo.
     sp = float(sfc["sp"]) / 100
@@ -104,7 +118,7 @@ def page() -> None:
 
     left, right = theme.columns([3, 2], "sounding_indices")
     with left:
-        st.subheader("Índices en este punto")
+        st.header("Índices en este punto")
         rows = [
             components.Row("CAPE de superficie (MetPy)", "J/kg", float(sbcape.m), None, None, None),
             components.Row("CIN de superficie (MetPy)", "J/kg", float(sbcin.m), None, None, None),
@@ -117,7 +131,7 @@ def page() -> None:
         if ctx.day.idx is not None:
             st.caption(texts.STP_NOTE)
     with right:
-        st.subheader("Cómo leerlo")
+        st.header("Interpretación del perfil")
         st.markdown(
             "**Skew-T.** El diagrama representa temperatura y presión; las líneas de igual "
             "temperatura están inclinadas. El punto de rocío indica la temperatura a la que el "
