@@ -87,18 +87,10 @@ def _point(point: Point, size: int) -> list[go.Scatter]:
 
 
 # --- Grilla de Mapas -----------------------------------------------------------------------------
-def grid_shape(n: int, narrow: bool = False) -> tuple[int, int]:
-    """Filas y columnas de la grilla para ``n`` paneles: 1×1, 1×2, 2×2 (3–4) o 2×3 (5–6).
-
-    ``narrow`` (teléfono) los apila en una columna: en 2×3 cada mapa quedaba de 60 px.
-    """
-    if narrow:
-        return max(n, 1), 1
-    if n <= 2:
-        return 1, max(n, 1)
-    if n <= 4:
-        return 2, 2
-    return 2, 3
+def grid_shape(n: int, columns: int = 3) -> tuple[int, int]:
+    """Filas y columnas según los paneles y el espacio disponible."""
+    cols = max(1, min(columns, n, 2 if n <= 4 else 3))
+    return max(1, (n + cols - 1) // cols), cols
 
 
 # Lado mayor de la grilla invisible que da el valor bajo el cursor y recibe el clic.
@@ -201,20 +193,21 @@ def grid(
     layers: list["Layer"], contours: list["Layer | None"], enc: Extent, coast: tuple[np.ndarray, np.ndarray],
     *, events: pd.DataFrame | None = None, point: Point | None = None,
     wind: tuple[list, list] | None = None,
-    height: int | None = None, narrow: bool = False,
+    height: int | None = None, columns: int = 3,
 ) -> tuple[go.Figure, list[int]]:  # fmt: skip
     """Paneles en una figura con los ejes compartidos: el zoom y el desplazamiento van juntos.
 
     ``contornos[i]`` es un campo ERA5 que se dibuja como isolíneas sobre el panel ``i`` (o ``None``).
     Devuelve la figura y el índice de la primera traza de fondo de cada panel (``background``), para
     animarla con ``go.Frame``. ``height`` fija la altura en píxeles (si falta, depende del número de filas).
-    ``narrow`` apila los paneles en una columna (ver ``grid_shape``).
+    ``columns`` es el máximo de columnas que caben (ver ``grid_shape``).
     """
-    rows, cols = grid_shape(len(layers), narrow)
-    height = height or (640 if rows == 1 else (400 if narrow else 470) * rows)
+    rows, cols = grid_shape(len(layers), columns)
+    stacked = cols == 1 and rows > 1
+    height = height or (640 if rows == 1 else (400 if stacked else 470) * rows)
     fig = make_subplots(
         rows=rows, cols=cols, horizontal_spacing=0.09 if cols > 1 else 0.02,
-        vertical_spacing=72 / height if narrow else 0.08, subplot_titles=[c.title for c in layers],
+        vertical_spacing=72 / height if stacked else 0.12 / rows, subplot_titles=[c.title for c in layers],
     )  # fmt: skip
     backgrounds: list[int] = []
     for i, (c, cont) in enumerate(zip(layers, contours, strict=True)):
@@ -284,7 +277,8 @@ def grid(
     fig.update_layout(
         yaxis={"scaleanchor": "x", "scaleratio": enc.aspect},
         height=height, showlegend=False, dragmode="pan",
-        clickmode="event+select", hoverdistance=-1, uirevision="grid", margin={"t": 56, "r": 48},
+        clickmode="event+select", hoverdistance=-1, uirevision="grid",
+        margin={"t": 110 if stacked else 56, "r": 48},
     )  # fmt: skip
     return _style(fig), backgrounds
 
@@ -460,7 +454,7 @@ def series(rows: list[SeriesRow], events: pd.DataFrame, selected: str | None) ->
                 y=f.threshold, row=i, col=1,  # pyright: ignore[reportArgumentType]
                 line={"color": theme.colors().SEVERE, "width": 1, "dash": "dash"},
                 annotation_text="valor de comparación", annotation_position="top left",
-                annotation_font={"size": 10, "color": theme.colors().MUTED},
+                annotation_font={"size": 12, "color": theme.colors().MUTED},
             )  # fmt: skip
     for _, ev in events.iterrows():
         if ev["hour"] is None or pd.isna(ev["hour"]):
@@ -477,13 +471,13 @@ def series(rows: list[SeriesRow], events: pd.DataFrame, selected: str | None) ->
         )
         if own:
             fig.add_annotation(
-                x=ev["hour"], y=1.0, yref="paper", text=f"{ev['place']} {ev['hour']:%H:%M}",
-                showarrow=False, yanchor="bottom", font={"size": 11, "color": theme.colors().INK},
+                x=ev["hour"], y=1.08, yref="paper", text=f"{ev['place']} {ev['hour']:%H:%M}",
+                showarrow=False, yanchor="bottom", font={"size": 12, "color": theme.colors().INK},
             )  # fmt: skip
     fig.update_layout(
         height=190 * len(rows) + 80, hovermode="x unified",
-        legend={"orientation": "h", "y": 1.06, "x": 0, "yanchor": "bottom"},
-        margin={"t": 70},
+        legend={"orientation": "h", "y": 1.16, "x": 0, "yanchor": "bottom"},
+        margin={"t": 110},
     )  # fmt: skip
     fig.update_xaxes(tickformat="%H:%M")  # sin la fecha en inglés que plotly agrega por defecto
     return _style(fig)

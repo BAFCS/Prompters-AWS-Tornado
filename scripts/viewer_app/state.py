@@ -92,8 +92,12 @@ def point() -> Point | None:
     return st.session_state.get("point")
 
 
-def select_point(p: Point) -> None:
-    """Fija ``p`` como punto elegido en todas las páginas."""
+def select_point(p: Point, reg: common.Region | None = None) -> None:
+    """Fija ``p`` como punto elegido en todas las páginas; con ``reg``, debe caer dentro de ella."""
+    if not (-90 <= p.lat <= 90 and -180 <= p.lon <= 180):
+        raise ValueError("La latitud debe estar entre −90 y 90°, y la longitud entre −180 y 180°.")
+    if reg is not None and not (reg.south <= p.lat <= reg.north and reg.west <= p.lon <= reg.east):
+        raise ValueError("El punto debe estar dentro de la región elegida.")
     st.session_state["point"] = p
 
 
@@ -196,8 +200,22 @@ def apply_step(day: dt.date, k: int | None, events: pd.DataFrame) -> None:
     """
     steps = texts.TOURS.get(day, ())
     if k is None or not steps:
+        before = st.session_state.pop("_tour_before", None)
+        if before is not None:
+            for key in ("panels", "point"):
+                if before[key] is None:
+                    st.session_state.pop(key, None)
+                else:
+                    st.session_state[key] = before[key]
+            set_widget("t_idx", before["t_idx"])
         st.session_state["step"] = None
         return
+    if current_step() is None:
+        st.session_state["_tour_before"] = {
+            "panels": panels(),
+            "point": point(),
+            "t_idx": st.session_state.get("t_idx", 0),
+        }
     k = max(0, min(k, len(steps) - 1))
     p = steps[k]
     st.session_state["step"] = k

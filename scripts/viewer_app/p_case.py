@@ -61,7 +61,7 @@ def _map(ctx: state.Context, t: pd.Timestamp | None) -> None:
 
 def _event_log(ctx: state.Context) -> None:
     """Tabla de eventos del día, seleccionable."""
-    st.subheader("Eventos reportados del día")
+    st.header("Eventos reportados del día")
     if ctx.events.empty:
         st.markdown(
             "<p class='note'>El catálogo no contiene reportes de tornados o trombas marinas "
@@ -92,7 +92,7 @@ def _event_log(ctx: state.Context) -> None:
 
 def _scorecard(ctx: state.Context, t: pd.Timestamp | None) -> None:
     """Compara índices con criterios y referencias para la hora ERA5 más cercana."""
-    st.subheader("Índices del entorno y referencias")
+    st.header("Índices del entorno y referencias")
     if ctx.day.idx is None or t is None:
         st.markdown(
             "<p class='note'>No hay índices preparados para este día. Elige otra fecha "
@@ -107,7 +107,9 @@ def _scorecard(ctx: state.Context, t: pd.Timestamp | None) -> None:
         ds, t, (p.lat, p.lon) if p else None, (enc.north, enc.south, enc.west, enc.east)
     )
     hour = data.to_timestamp(ds["time"].sel(time=t, method="nearest"))
-    st.html(components.scorecard(rows, p.name if p else "punto", "extremo del área"))
+    st.html(
+        components.scorecard(rows, p.name if p else "punto", "extremo del área · columna evaluada")
+    )
     st.caption(
         f"ERA5 {hour:%H:%M} UTC. La columna del punto corresponde a la celda ERA5 más cercana "
         "al lugar elegido. «Extremo del área» es el máximo o mínimo de cada índice dentro "
@@ -156,7 +158,7 @@ def page() -> None:
     left, right = theme.columns([3, 2], "case_context")
     with left:
         if c.context:
-            st.subheader("Contexto")
+            st.header("Contexto")
             for paragraph in c.context:
                 st.markdown(paragraph)
         details = texts.CASE_DETAILS.get(ctx.day.date)
@@ -165,7 +167,7 @@ def page() -> None:
                 for paragraph in details:
                     st.markdown(paragraph)
     with right:
-        st.subheader("Para seguir")
+        st.header("Para seguir")
         st.page_link(
             state.page("maps"), label="Mapas: entorno y tormenta lado a lado",
             icon=":material/map:",
