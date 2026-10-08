@@ -133,6 +133,12 @@ REFERENCES = {
         "advierten que puede volver a ocurrir. *BioBioChile*.",
         "https://www.biobiochile.cl/noticias/ciencia-y-tecnologia/ciencia/2026/07/11/se-cumplen-7-anos-del-historico-brote-de-tornados-en-chile-y-advierten-que-puede-volver-a-ocurrir.shtml",
     ),
+    "meteored2022": Reference(
+        "Vicencio Veloso (2022)",
+        "Vicencio Veloso, J. (2022, 31 de agosto). El día que marcó el antes y el después de los tornados en "
+        "Chile. *Meteored*.",
+        "https://www.meteored.cl/noticias/ciencia/el-dia-que-marco-el-antes-y-el-despues-de-los-tornados-en-chile.html",
+    ),
     "t13-2025": Reference(
         "T13 (2025)",
         "T13 (2025, 22 de septiembre). Chile, país de tornados: expertos insiste en instalar radares ante nueva "

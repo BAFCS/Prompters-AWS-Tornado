@@ -78,10 +78,13 @@ def _cover() -> None:
     """Presenta el objetivo, las referencias del caso y los enlaces."""
     st.title("Predicción de tormentas mesociclónicas en el centro-sur de Chile", anchor="inicio")
     with st.container(key="hero"):
-        _image(ASSETS / "tornado_stock.webp", "Tornado y rayos sobre un valle con casas; imagen ilustrativa.")
+        _image(
+            ASSETS / "tornado_los_angeles.webp",
+            "Tornado en Los Ángeles, Chile, el 30 de mayo de 2019: el embudo toca el suelo y hay escombros en el aire.",
+        )
         st.markdown(
-            "<p class='note'>Imagen ilustrativa; no corresponde a Chile ni a un evento del catálogo. "
-            "Fuente: <a href='https://www.pexels.com/photo/lightning-and-tornado-hitting-village-1446076/'>Pexels</a>.</p>",
+            "<p class='note'>Tornado en Los Ángeles, 30 de mayo de 2019. "
+            "Fuente: <a href='https://www.meteored.cl/noticias/ciencia/el-dia-que-marco-el-antes-y-el-despues-de-los-tornados-en-chile.html'>Vicencio Veloso (2022), Meteored</a>; la fuente no indica quién tomó la foto.</p>",
             unsafe_allow_html=True,
         )
     st.markdown(
