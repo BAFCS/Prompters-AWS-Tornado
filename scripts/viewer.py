@@ -103,6 +103,7 @@ state.restore("region")
 name = sidebar.selectbox(
     "Región", names, key="region",
     index=names.index("south-central-austral") if "south-central-austral" in names else 0,
+    format_func=lambda n: (common.REGIONS[n].label if n in common.REGIONS else "") or str(n),
 )  # fmt: skip
 state.save("region")
 days = data.days(name)
@@ -137,6 +138,7 @@ st.session_state["ctx"] = state.Context(name, reg, day, events)
 if st.session_state.get("_previous_day") != date:
     st.session_state["_previous_day"] = date
     st.session_state["step"] = None
+    st.session_state.pop("_tour_before", None)
     st.session_state.pop("point", None)
     timed = events[events["hour"].notna()] if len(events) else events
     if len(timed):
@@ -227,6 +229,13 @@ if steps:
             "Salir del recorrido", type="tertiary", icon=":material/close:",
             on_click=state.apply_step, args=(date, None, events),
         )  # fmt: skip
+        if k == len(steps) - 1:
+            sidebar.caption(
+                "Recorrido completo. Puedes explorar otro punto o consultar cómo participar en el proyecto."
+            )
+            sidebar.page_link(
+                state.page("project"), label="Ver cómo participar", icon=":material/groups:"
+            )
 
 # El recorrido pide el cambio de página desde un callback; se ejecuta aquí.
 target = st.session_state.pop("go_to", None)

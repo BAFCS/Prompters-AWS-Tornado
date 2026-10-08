@@ -16,10 +16,43 @@ from dataclasses import dataclass, fields
 import plotly.graph_objects as go
 import plotly.io as pio
 import streamlit as st
+import streamlit.components.v2 as components_v2
 from streamlit.delta_generator import DeltaGenerator
 
 SANS = "'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif"
 MONO = "'IBM Plex Mono', ui-monospace, Menlo, monospace"
+
+_MAP_LAYOUT = components_v2.component(
+    "map_layout",
+    js="""
+export default ({parentElement, setStateValue}) => {
+  const container = parentElement.closest('.block-container');
+  if (!container) return;
+  let previous;
+  const observer = new ResizeObserver(([entry]) => {
+    const columns = Math.max(1, Math.min(3, Math.floor(entry.contentRect.width / 420)));
+    if (columns !== previous) {
+      previous = columns;
+      setStateValue('columns', columns);
+    }
+  });
+  observer.observe(container);
+  return () => observer.disconnect();
+};
+""",
+    isolate_styles=False,
+)
+
+
+def map_columns() -> int:
+    """Columnas de mapas que caben en el cuerpo, medidas sin depender del dispositivo."""
+    with st.container(key="map_layout"):
+        result = _MAP_LAYOUT(key="map_width", on_columns_change=lambda: None)
+    # El componente responde recién en la segunda ejecución: mientras tanto se usa la última medida,
+    # para que los controles no salten de una columna a varias al volver a la página.
+    if result.columns:
+        st.session_state["_map_columns"] = int(result.columns)
+    return max(1, min(3, int(st.session_state.get("_map_columns", 1))))
 
 
 @dataclass(frozen=True)
@@ -71,14 +104,6 @@ def is_dark() -> bool:
     try:
         return st.context.theme.type == "dark"
     except Exception:  # fuera de una sesión (pruebas, scripts): tema claro
-        return False
-
-
-def is_phone() -> bool:
-    """Si el navegador es de teléfono: su User-Agent dice «Mobi» (las tablets no lo dicen)."""
-    try:
-        return "Mobi" in (st.context.headers.get("User-Agent") or "")
-    except Exception:  # fuera de una sesión (pruebas, scripts): escritorio
         return False
 
 
@@ -191,7 +216,19 @@ _WATCHER = """
   }, true);
   window.__watcherRequestedAt = 0;
   window.__watcherMismatches = 0;
+  // Verificado con Streamlit 1.64: depende de su DOM (botones de la barra lateral e imágenes).
   window.__themeWatcher = setInterval(() => {
+    for (const [testid, label] of [
+      ['stExpandSidebarButton', 'Abrir selección de región, fecha y evento'],
+      ['stSidebarCollapseButton', 'Cerrar selección de región, fecha y evento'],
+    ]) {
+      const control = document.querySelector(`[data-testid="${testid}"]`);
+      (control?.matches('button') ? control : control?.querySelector('button'))?.setAttribute('aria-label', label);
+    }
+    document.querySelectorAll('.project-image-alt').forEach(marker => {
+      const image = marker.closest('[class*="st-key-image_"]')?.querySelector('img');
+      if (image && image.alt !== marker.dataset.description) image.alt = marker.dataset.description;
+    });
     const m = mode();
     if (!m) return;
     const changed = m !== root.dataset.theme;
@@ -248,7 +285,7 @@ h1 {{ letter-spacing: -0.01em; }}
 .ruler-hours {{ display: flex; justify-content: space-between; margin: 3px 9px 0;
   font-family: {MONO}; font-size: 0.75rem; color: {p.MUTED}; }}
 .block-container {{ padding-top: 2.2rem; }}
-.st-key-theme_watcher, [data-testid="stLayoutWrapper"]:has(> .st-key-theme_watcher) {{ display: none; }}
+.st-key-theme_watcher, .st-key-map_layout, [data-testid="stLayoutWrapper"]:has(> .st-key-theme_watcher), [data-testid="stLayoutWrapper"]:has(> .st-key-map_layout) {{ display: none; }}
 html.theme-switching [data-testid="stMainMenuPopover"] {{ visibility: hidden; }}
 [data-testid="stMain"], [data-testid="stHeader"] {{ background: {p.GROUND}; }}
 [data-testid="stMain"] [data-testid="stPlotlyChart"],
@@ -312,7 +349,7 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 @container body (max-width: 760px) {{ :is(.st-key-project, .st-key-data) .stats {{ grid-template-columns: repeat(2, 1fr); }} }}
 .toc ol {{ list-style: none; margin: 0.6rem 0 0; padding: 0; border-left: 1px solid {p.LINE}; }}
 [data-testid="stMain"] .toc li {{ margin: 0; padding: 0; }}
-.toc a {{ display: block; margin-left: -1px; padding: 5px 0 5px 12px; border-left: 1px solid transparent;
+.toc a {{ display: flex; align-items: center; min-height: 44px; margin-left: -1px; padding: 5px 0 5px 12px; border-left: 1px solid transparent;
   color: {p.INK_2}; font-size: 0.92rem; line-height: 1.35; text-decoration: none; }}
 .toc a:hover, .toc a:focus-visible {{ color: {p.ACCENT}; border-left-color: {p.ACCENT}; }}
 [data-testid="stMain"] [data-testid="stMarkdownContainer"] > p,
@@ -349,6 +386,14 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 .bibliography a {{ overflow-wrap: anywhere; }}
 .toc ol ol {{ margin: 0 0 0.35rem; border-left: none; }}
 .toc ol ol a {{ padding-left: 24px; font-size: 0.86rem; color: {p.MUTED}; }}
+/* Controles propios: rótulos legibles, foco nativo y blancos táctiles amplios. */
+.stApp button:not([data-testid="stTooltipIcon"]) {{ min-height: 44px; }}
+[data-testid="stMain"] a[data-testid="stPageLink-NavLink"] {{ min-height: 44px; }}
+@media (max-width: 760px), (pointer: coarse) {{
+  .js-plotly-plot .modebar-btn {{ min-width: 44px; min-height: 44px; display: inline-flex;
+    align-items: center; justify-content: center; }}
+  .js-plotly-plot .modebar {{ display: flex; flex-wrap: wrap; max-width: 100%; }}
+}}
 </style>
 """
 

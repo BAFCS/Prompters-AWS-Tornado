@@ -31,7 +31,7 @@ def page() -> None:
     st.title("Series")
     if p is None:
         st.info(
-            "Elige un evento en la barra lateral o haz clic en un panel de Mapas cuando haya datos ERA5."
+            "Elige un evento en la barra lateral o usa «Elegir punto» en Mapas cuando haya datos ERA5."
         )
         return
     state.restore("radius")

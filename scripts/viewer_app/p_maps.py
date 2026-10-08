@@ -55,10 +55,13 @@ def _add_popover(cat: dict[str, products.Product], n: int) -> None:
     full = n >= state.MAX_PANELS
     with st.popover("Agregar panel", icon=":material/add:", disabled=full, width="content",
                     help=f"Hasta {state.MAX_PANELS} paneles." if full else None):  # fmt: skip
-        st.pills(
-            "Selección sugerida", [k for k in products.FAVORITES if k in cat], key="add_favorite",
-            format_func=lambda k: cat[k].short, on_change=_on_add, args=("add_favorite",),
-        )  # fmt: skip
+        st.caption("Elige qué quieres comparar. La lista completa sigue disponible abajo.")
+        for label, keys in products.FAVORITE_GROUPS:
+            options = [k for k in keys if k in cat]
+            if options:
+                key = f"add_{keys[0]}"
+                st.pills(label, options, key=key, format_func=lambda k: cat[k].short,
+                         on_change=_on_add, args=(key,))  # fmt: skip
         st.selectbox(
             "Otra variable o imagen", products.sorted_keys(cat), index=None, key="add_other",
             placeholder="Escribe para buscar…", format_func=lambda k: cat[k].label,
@@ -82,43 +85,44 @@ def _controls(p: state.Panel, n: int, cat: dict[str, products.Product], d: data.
     for step, icon, tip in ((-1, ":material/chevron_left:", "Anterior"),
                                (+1, ":material/chevron_right:", "Siguiente")):  # fmt: skip
         buttons.button(
-            "", icon=icon, key=f"p{p.id}_{step}", help=f"{tip} en «{prod.group}»",
+            f"{tip} · {n}", icon=icon, key=f"p{p.id}_{step}", help=f"{tip} en «{prod.group}»",
             on_click=state.change_panel, args=(p.id,),
             kwargs={"key": products.neighbor(p.key, cat, step)},
         )  # fmt: skip
     indices = [k for k in cat if k.startswith("idx:")]
-    if prod.kind is not None or prod.source == "pl" or (prod.is_goes and indices):
-        with buttons.popover("", icon=":material/tune:", help="Escala de color, nivel o contornos"):
-            if prod.kind is not None:
-                ops = colorscales.KINDS[prod.kind]
-                k_scale = f"p{p.id}_colorscale"
-                st.session_state[k_scale] = colorscales.pick(prod.kind, p.colorscale).name
-                st.selectbox(
-                    "Escala de color", [e.name for e in ops], key=k_scale,
-                    format_func=lambda name: colorscales.pick(str(prod.kind), name).display_label,
-                    on_change=_on_change, args=(p.id, "colorscale", k_scale),
-                    help="Escalas estándar para este tipo de dato. La primera es la predeterminada.",
-                )  # fmt: skip
-            if prod.source == "pl":
-                nv = layers.levels(d)
-                k_level = f"p{p.id}_level"
-                st.session_state[k_level] = (
-                    p.level if p.level in nv else (850.0 if 850.0 in nv else nv[0])
-                )
-                st.select_slider("Nivel (hPa)", options=nv, key=k_level, on_change=_on_change,
-                                 args=(p.id, "level", k_level),
-                                 help="Nivel de presión, expresado en hectopascales (hPa).")  # fmt: skip
-            elif prod.is_goes and indices:
-                k_cont = f"p{p.id}_cont"
-                st.session_state[k_cont] = p.contour or "—"
-                st.selectbox(
-                    "Contornos ERA5", ["—", *indices], key=k_cont,
-                    format_func=lambda k: "Sin contornos" if k == "—" else cat[k].short,
-                    on_change=_on_change, args=(p.id, "contour", k_cont),
-                    help="Líneas que unen lugares con el mismo valor del índice. El valor de comparación se muestra en rojo.",
-                )  # fmt: skip
-    buttons.button("", icon=":material/close:", key=f"p{p.id}_x", help="Quitar el panel",
-              on_click=state.remove_panel, args=(p.id,))  # fmt: skip
+    with buttons.popover(
+        f"Opciones · {n}", icon=":material/tune:", help="Escala de color, nivel, contornos o quitar"
+    ):
+        if prod.kind is not None:
+            ops = colorscales.KINDS[prod.kind]
+            k_scale = f"p{p.id}_colorscale"
+            st.session_state[k_scale] = colorscales.pick(prod.kind, p.colorscale).name
+            st.selectbox(
+                "Escala de color", [e.name for e in ops], key=k_scale,
+                format_func=lambda name: colorscales.pick(str(prod.kind), name).display_label,
+                on_change=_on_change, args=(p.id, "colorscale", k_scale),
+                help="Escalas estándar para este tipo de dato. La primera es la predeterminada.",
+            )  # fmt: skip
+        if prod.source == "pl":
+            nv = layers.levels(d)
+            k_level = f"p{p.id}_level"
+            st.session_state[k_level] = (
+                p.level if p.level in nv else (850.0 if 850.0 in nv else nv[0])
+            )
+            st.select_slider("Nivel (hPa)", options=nv, key=k_level, on_change=_on_change,
+                             args=(p.id, "level", k_level),
+                             help="Nivel de presión, expresado en hectopascales (hPa).")  # fmt: skip
+        elif prod.is_goes and indices:
+            k_cont = f"p{p.id}_cont"
+            st.session_state[k_cont] = p.contour or "—"
+            st.selectbox(
+                "Contornos ERA5", ["—", *indices], key=k_cont,
+                format_func=lambda k: "Sin contornos" if k == "—" else cat[k].short,
+                on_change=_on_change, args=(p.id, "contour", k_cont),
+                help="Líneas que unen lugares con el mismo valor del índice. El valor de comparación se muestra en rojo.",
+            )  # fmt: skip
+        st.button(f"Quitar el panel {n}", icon=":material/close:", key=f"p{p.id}_x",
+                  on_click=state.remove_panel, args=(p.id,))  # fmt: skip
 
 
 def _panel_layer(
@@ -220,10 +224,49 @@ def page() -> None:
         st.session_state.setdefault(key, default)
     # Fila horizontal: cada control toma el ancho de su rótulo y la fila se parte en pantallas angostas.
     with st.container(horizontal=True, vertical_alignment="bottom", gap="medium"):
+        _add_popover(cat, len(ps))
+        with st.popover("Elegir punto", icon=":material/location_on:"):
+            p = state.point()
+            st.caption(
+                "Elige cualquier lugar de la región para Sondeo y Series, también con teclado."
+            )
+            with st.form("coordinates"):
+                lat = st.number_input(
+                    "Latitud (°)",
+                    min_value=float(ctx.reg.south),
+                    max_value=float(ctx.reg.north),
+                    value=float(
+                        min(
+                            ctx.reg.north,
+                            max(ctx.reg.south, p.lat if p else (ctx.reg.north + ctx.reg.south) / 2),
+                        )
+                    ),
+                    format="%.2f",
+                )
+                lon = st.number_input(
+                    "Longitud (°)",
+                    min_value=float(ctx.reg.west),
+                    max_value=float(ctx.reg.east),
+                    value=float(
+                        min(
+                            ctx.reg.east,
+                            max(ctx.reg.west, p.lon if p else (ctx.reg.west + ctx.reg.east) / 2),
+                        )
+                    ),
+                    format="%.2f",
+                )
+                if st.form_submit_button("Usar este punto", type="primary"):
+                    try:
+                        state.select_point(state.Point(lat, lon, "Punto por coordenadas"), ctx.reg)
+                    except ValueError as error:
+                        st.error(str(error))
+                    else:
+                        st.rerun()
+    settings = st.expander("Ajustes de mapas")
+    with settings, st.container(horizontal=True, vertical_alignment="bottom", gap="medium"):
         view = st.segmented_control(
             "Encuadre", ["Zona de eventos", "Región completa"], key="extent", width="content"
         )
-        _add_popover(cat, len(ps))
         st.toggle("Viento 850 hPa", key="wind", disabled=ctx.day.pl is None, width="content",
                   help="Flechas del viento en 850 hPa sobre todos los paneles (requiere niveles de presión).")  # fmt: skip
         st.toggle("Animar GOES ±1 h", key="animate", disabled=not ctx.day.goes, width="content",
@@ -257,9 +300,10 @@ def page() -> None:
             "No hay paneles. Agrega uno con «Agregar panel»: el RGB Airmass es un buen comienzo."
         )
         return
-    narrow = theme.is_phone()
-    rows, cols = charts.grid_shape(len(visible), narrow)
-    # En el teléfono los mapas van en una columna y sus controles, plegados encima: abiertos, seis filas
+    fit = theme.map_columns()
+    narrow = fit == 1
+    rows, cols = charts.grid_shape(len(visible), fit)
+    # Con una sola columna los controles van plegados encima de los mapas: abiertos, seis filas
     # de controles alejaban el primer mapa unos 700 px.
     with (
         st.expander("Paneles", icon=":material/tune:", expanded=len(visible) <= 2)
@@ -290,21 +334,20 @@ def page() -> None:
     fig, backgrounds = charts.grid(
         layer_list, contours, enc, data.coast(ctx.reg), events=ctx.events, point=state.point(),
         wind=layers.wind_850(ctx.day, t, enc) if st.session_state.get("wind") else None,
-        narrow=narrow,
+        columns=fit,
     )  # fmt: skip
     n_frames = _animate(fig, backgrounds, animated, visible, cat, ctx.day, t) if animated else 0
     st.caption(
-        "Arrastra un mapa para moverlo y usa los botones + y − del gráfico para acercar; para "
-        "desplazar la página, toca fuera de los mapas. Todos los paneles se mueven juntos."
-        if narrow
-        else "Usa la rueda del ratón o los botones del gráfico para acercar la vista. "
-        "Todos los paneles se mueven juntos."
+        "Compara el entorno y las nubes cerca del evento. Todos los mapas comparten el encuadre. "
+        + (
+            "Arrastra un mapa para moverlo y usa los botones + y − del gráfico para acercar; para "
+            "desplazar la página, toca fuera de los mapas."
+            if narrow
+            else "Usa la rueda del ratón o los botones del gráfico para acercar la vista."
+        )
     )
     if ref is not None:
-        st.caption(
-            f"{'Toca' if narrow else 'Haz clic en'} cualquier panel para seleccionar el punto que se "
-            "usará en Sondeo y Series."
-        )
+        st.caption("«Elegir punto» acepta coordenadas con teclado. También puedes tocar el mapa.")
     st.plotly_chart(
         fig, width="stretch", theme=None, key="grid", on_select=_on_click,
         selection_mode="points", config={"scrollZoom": True},
@@ -317,7 +360,8 @@ def page() -> None:
     if goes_idx:
         st.caption(
             "GOES muestra la hora de inicio del barrido. Las imágenes no tienen corrección de "
-            "paralaje: el ángulo de observación puede desplazar la posición aparente de las nubes."
+            "paralaje: el ángulo de observación puede desplazar la posición aparente de las nubes. "
+            "Temperatura de brillo en K: °C = K − 273,15."
         )
     for note in sorted({c.note for c in layer_list if c.note}):
         st.caption(note)

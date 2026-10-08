@@ -37,6 +37,7 @@ class Region:
     south: float
     west: float
     east: float
+    label: str = ""  # nombre para la interfaz; vacío usa ``name``
 
     def contains(self, lat: np.ndarray, lon: np.ndarray) -> np.ndarray:
         """Máscara booleana de los puntos (``lat``, ``lon``) que caen dentro de la región."""
@@ -47,8 +48,8 @@ REGIONS = {
     r.name: r
     for r in (
         Region("full", -15, -60, -95, -55),
-        Region("south-central", -30, -45, -76, -70),
-        Region("south-central-austral", -30, -56, -76, -66),
+        Region("south-central", -30, -45, -76, -70, "Centro-sur de Chile"),
+        Region("south-central-austral", -30, -56, -76, -66, "Centro-sur y zona austral"),
     )
 }
 
