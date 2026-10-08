@@ -5,8 +5,8 @@ Lee U, V, T y Z en 37 niveles de presión desde ``s3://nsf-ncar-era5/`` (acceso 
 el recuadro chileno de una hora, leyendo el HDF5 por rangos de bytes con s3fs + h5py, sin descargar
 los archivos globales completos (~1,4 GB cada uno).
 
-Produce ``figs/fig4_era5_20190530.png`` (500 hPa, viento en 850 hPa, cizalladura 0-1 y 0-6 km) y guarda
-los campos recortados en ``data/era5_cache.npy``. Uso: ``uv run python scripts/figures/figs_era5.py``.
+Produce ``figs/fig4_era5_20190530.png`` (500 hPa, viento en 850 hPa, cizalladura 0-1 y 0-6 km).
+Uso: ``uv run python scripts/figures/figs_era5.py``.
 """
 
 import sys
@@ -19,6 +19,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
+from matplotlib.cm import ScalarMappable
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import common  # noqa: E402
@@ -26,8 +27,7 @@ import common  # noqa: E402
 warnings.filterwarnings("ignore")
 matplotlib.use("Agg")
 
-ROOT = Path(__file__).resolve().parents[2]
-OUT, DATA = ROOT / "figs", ROOT / "data"
+OUT = common.ROOT / "figs"
 ACC, SEV, COLD, WARM, MUT = "#0E6A63", "#D2492A", "#4C7FB8", "#C98A3C", "#64757B"
 INK, LINE = "#0C1518", "#C9D3D6"
 plt.rcParams.update(
@@ -124,6 +124,13 @@ def base(ax: Axes, ti: str, sub: str) -> None:
         ax.plot(lo_, la, marker="v", ms=6, mfc="none", mec=SEV, mew=1.3, zorder=9)
 
 
+def cbar(mappable: ScalarMappable, ax: Axes) -> None:
+    """Dibuja la barra de color horizontal de ``mappable`` bajo ``ax``."""
+    plt.colorbar(
+        mappable, ax=ax, orientation="horizontal", pad=0.09, shrink=0.92, aspect=24
+    ).ax.tick_params(labelsize=7.5)
+
+
 # A · 500 hPa
 a = axs[0]
 c = a.contourf(
@@ -132,9 +139,7 @@ c = a.contourf(
 cs = a.contour(X, Y, gz[i500], levels=np.arange(4800, 6000, 40), colors=INK, linewidths=0.7)
 a.clabel(cs, fmt="%d", fontsize=6.5)
 base(a, "A · 500 hPa", "temperatura (°C) y altura geopotencial (m)")
-plt.colorbar(c, ax=a, orientation="horizontal", pad=0.09, shrink=0.92, aspect=24).ax.tick_params(
-    labelsize=7.5
-)
+cbar(c, a)
 
 # B · 850 hPa viento
 b = axs[1]
@@ -151,27 +156,21 @@ b.quiver(
     alpha=0.75,
 )
 base(b, "B · 850 hPa", "rapidez del viento (m/s) — el jet del NW")
-plt.colorbar(c, ax=b, orientation="horizontal", pad=0.09, shrink=0.92, aspect=24).ax.tick_params(
-    labelsize=7.5
-)
+cbar(c, b)
 
 # C · cizalladura 0-1 km
 c3 = axs[2]
 cc = c3.contourf(X, Y, sh01, levels=np.arange(0, 26, 2), cmap="PuRd", extend="max")
 c3.contour(X, Y, sh01, levels=[12], colors=[SEV], linewidths=1.6)
 base(c3, "C · Cizalladura 0–1 km", "m/s · línea roja = umbral chileno de 12 m/s")
-plt.colorbar(cc, ax=c3, orientation="horizontal", pad=0.09, shrink=0.92, aspect=24).ax.tick_params(
-    labelsize=7.5
-)
+cbar(cc, c3)
 
 # D · cizalladura 0-6 km
 d = axs[3]
 cd = d.contourf(X, Y, sh06, levels=np.arange(0, 46, 3), cmap="PuBuGn", extend="max")
 d.contour(X, Y, sh06, levels=[18], colors=[ACC], linewidths=1.6)
 base(d, "D · Cizalladura 0–6 km", "m/s · línea verde = umbral HSLC de 18 m/s")
-plt.colorbar(cd, ax=d, orientation="horizontal", pad=0.09, shrink=0.92, aspect=24).ax.tick_params(
-    labelsize=7.5
-)
+cbar(cd, d)
 for ax in axs[1:]:
     ax.set_yticklabels([])
 axs[0].set_yticklabels([f"{abs(v)}°S" for v in np.arange(-45, -27, 5)])
@@ -194,8 +193,3 @@ fig.text(
 )
 fig.savefig(f"{OUT}/fig4_era5_20190530.png", dpi=175, bbox_inches="tight")
 print("fig4_era5_20190530.png")
-np.save(
-    DATA / "era5_cache.npy",
-    np.array({k: D[k] for k in ("u", "v", "t", "z", "lat", "lon", "lev")}, dtype=object),
-    allow_pickle=True,
-)

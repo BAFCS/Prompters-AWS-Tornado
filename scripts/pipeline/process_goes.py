@@ -67,7 +67,6 @@ def reproject(
         data,
         coords={
             "time": ds["time"].values,
-            "t_mid": ("time", ds["t_mid"].values),
             "latitude": ("latitude", lat, {"units": "degrees_north"}),
             "longitude": ("longitude", lon, {"units": "degrees_east"}),
         },

@@ -1,9 +1,4 @@
 {
-  "enabledPlugins": {
-    "expo@claude-plugins-official": false,
-    "supabase@claude-plugins-official": false,
-    "typescript-lsp@claude-plugins-official": false
-  },
   "hooks": {
     "PostToolUse": [
       {

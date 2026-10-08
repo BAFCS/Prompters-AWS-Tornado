@@ -14,16 +14,10 @@ from viewer_app import products, state, variables
 from viewer_app.variables import Variable
 
 
-def _ref_anchor(k: str) -> str:
-    """Ancla de la referencia ``k`` en la bibliografía."""
-    return f"ref-{k}"
-
-
 def _citations(keys: list[str] | tuple[str, ...]) -> str:
     """Las citas cortas de ``keys``, enlazadas a la bibliografía del final de la página."""
     return " · ".join(
-        f"<a href='#{_ref_anchor(k)}'>{html.escape(variables.REFERENCES[k].short)}</a>"
-        for k in keys
+        f"<a href='#ref-{k}'>{html.escape(variables.REFERENCES[k].short)}</a>" for k in keys
     )
 
 
@@ -142,7 +136,7 @@ def _bibliography() -> None:
     for k, r in variables.REFERENCES.items():
         text = r.url.removeprefix("https://").removeprefix("doi.org/")
         link = f" <a href='{html.escape(r.url)}'>{html.escape(text)}</a>" if r.url else ""
-        items.append(f"<li id='{_ref_anchor(k)}'>{_md_html(r.full)}{link}</li>")
+        items.append(f"<li id='ref-{k}'>{_md_html(r.full)}{link}</li>")
     st.markdown(f"<ul class='bibliography'>{''.join(items)}</ul>", unsafe_allow_html=True)
 
 

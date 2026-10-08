@@ -201,7 +201,7 @@ def _events(day: dt.date, version: float) -> pd.DataFrame:
     d["ef"] = d["Max. EF Rating"].fillna("?").astype(str).str.replace(r"\.0$", "", regex=True)
     d["confidence"] = np.where(d["Register"] == 1, "registro confirmado", "registro débil")
     d = d.sort_values("hour", na_position="last").reset_index(drop=True)
-    d["id"] = [f"{i}" for i in range(len(d))]
+    d["id"] = d.index.astype(str)
     d["text"] = [
         f"<b>{place}</b><br>{h} UTC · EF{ef} · {t}"
         for place, h, ef, t in zip(d["place"], d["hour_txt"], d["ef"], d["kind"], strict=True)

@@ -26,8 +26,7 @@ import common  # noqa: E402
 warnings.filterwarnings("ignore")
 matplotlib.use("Agg")
 
-ROOT = Path(__file__).resolve().parents[2]
-OUT, DATA = ROOT / "figs", ROOT / "data"
+OUT, DATA = common.ROOT / "figs", common.DATA
 ACC, SEV, COLD, WARM, MUT = "#0E6A63", "#D2492A", "#4C7FB8", "#C98A3C", "#64757B"
 INK, LINE = "#0C1518", "#C9D3D6"
 plt.rcParams.update(
@@ -191,18 +190,15 @@ axes[2].text(
 for la, lo, _nm in TOR:
     axes[2].plot(lo, la, marker="v", ms=7, mfc="none", mec="k", mew=0.9, zorder=6)
 
-cax = fig.add_axes((0.045, 0.855, 0.38, 0.021))
-cb = fig.colorbar(m, cax=cax, orientation="horizontal")
-cb.set_label("temperatura de brillo, banda 13 (K)", fontsize=8.4)
-cb.ax.xaxis.set_label_position("top")
-cb.ax.xaxis.set_ticks_position("bottom")
-cb.ax.tick_params(labelsize=8)
-cax2 = fig.add_axes((0.72, 0.855, 0.265, 0.021))
-cb2 = fig.colorbar(mm, cax=cax2, orientation="horizontal")
-cb2.set_label("ΔT en 10 min (K) · azul = se enfría", fontsize=8.4)
-cb2.ax.xaxis.set_label_position("top")
-cb2.ax.xaxis.set_ticks_position("bottom")
-cb2.ax.tick_params(labelsize=8)
+for mappable, rect, label in (
+    (m, (0.045, 0.855, 0.38, 0.021), "temperatura de brillo, banda 13 (K)"),
+    (mm, (0.72, 0.855, 0.265, 0.021), "ΔT en 10 min (K) · azul = se enfría"),
+):
+    cb = fig.colorbar(mappable, cax=fig.add_axes(rect), orientation="horizontal")
+    cb.set_label(label, fontsize=8.4)
+    cb.ax.xaxis.set_label_position("top")
+    cb.ax.xaxis.set_ticks_position("bottom")
+    cb.ax.tick_params(labelsize=8)
 fig.text(
     0.045,
     0.975,

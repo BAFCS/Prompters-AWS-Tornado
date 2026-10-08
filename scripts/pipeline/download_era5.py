@@ -24,7 +24,6 @@ Uso::
 
 import calendar
 import datetime as dt
-import multiprocessing as mp
 import sys
 import time
 import zlib
@@ -179,8 +178,7 @@ def save(res: dict[str, dict], out_file: Path, has_level: bool, reg: common.Regi
         coords=coords,
         attrs={
             "source": f"s3://{BUCKET}/ (ERA5, ECMWF; copia NSF NCAR, doi:10.5065/BH6N-5N20)",
-            "region": f"{reg.name}: {reg.north}..{reg.south} lat, {reg.west}..{reg.east} lon",
-            "created": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
+            **common.stamp(reg),
         },
     )
     common.write(ds, out_file)
@@ -242,7 +240,7 @@ def download_sfc(
 def merge_parts(parts: list[Path], out_file: Path) -> None:
     """Une los archivos de una variable ``parts`` en ``out_file`` y los borra."""
     ds = xr.merge([xr.load_dataset(f, engine="h5netcdf") for f in parts], combine_attrs="override")
-    ds.attrs["created"] = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
+    ds.attrs["created"] = common.now()
     common.write(ds, out_file)
     for f in parts:
         f.unlink()
@@ -269,9 +267,8 @@ def main() -> None:
     )
     a = p.parse_args()
     reg = common.region_of(a)
-    ctx = mp.get_context("spawn")  # s3fs no tolera fork: cada proceso abre su propia conexión
 
-    with ProcessPoolExecutor(a.processes, mp_context=ctx) as ex:
+    with common.pool(a.processes) as ex:
         for day in common.days(a):
             for source, variables, download in (
                 ("era5_pl", a.pl, download_pl),

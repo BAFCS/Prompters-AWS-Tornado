@@ -49,6 +49,11 @@ class Point:
     name: str
     event: str | None = None  # id del evento en ``data.events`` si viene del catálogo
 
+    @classmethod
+    def from_event(cls, ev: pd.Series) -> "Point":
+        """El punto de la fila ``ev`` de ``data.events``."""
+        return cls(float(ev["lat"]), float(ev["lon"]), str(ev["place"]), str(ev["id"]))
+
 
 def restore(key: str) -> None:
     """Restaura el valor guardado de ``key`` antes de dibujar su widget en otra página."""
@@ -181,7 +186,7 @@ def go_to_variable(key: str) -> None:
 
 def go_to_event(ev: pd.Series) -> None:
     """Callback: lleva la regla de tiempo a la hora del evento ``ev`` y lo fija como punto."""
-    select_point(Point(float(ev["lat"]), float(ev["lon"]), str(ev["place"]), str(ev["id"])))
+    select_point(Point.from_event(ev))
     if ev["hour"] is not None and not pd.isna(ev["hour"]):
         set_widget("t_idx", index_of(pd.Timestamp(ev["hour"])))
 
@@ -225,7 +230,7 @@ def apply_step(day: dt.date, k: int | None, events: pd.DataFrame) -> None:
         rows = events[events["place"].str.contains(p.event, case=False, regex=False)]
         if len(rows):
             ev = rows.iloc[0]
-            select_point(Point(float(ev["lat"]), float(ev["lon"]), str(ev["place"]), str(ev["id"])))
+            select_point(Point.from_event(ev))
     if p.panels:
         set_panels([new_panel(c) for c in p.panels])
     st.session_state["go_to"] = p.page
