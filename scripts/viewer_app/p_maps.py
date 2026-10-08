@@ -306,7 +306,7 @@ def page() -> None:
     # Con una sola columna los controles van plegados encima de los mapas: abiertos, seis filas
     # de controles alejaban el primer mapa unos 700 px.
     with (
-        st.expander("Paneles", icon=":material/tune:", expanded=len(visible) <= 2)
+        st.expander("Controles de los paneles", icon=":material/tune:", expanded=len(visible) <= 2)
         if narrow
         else st.container()
     ):
@@ -347,7 +347,10 @@ def page() -> None:
         )
     )
     if ref is not None:
-        st.caption("«Elegir punto» acepta coordenadas con teclado. También puedes tocar el mapa.")
+        st.caption(
+            "«Elegir punto» acepta coordenadas con teclado. También puedes tocar el mapa: se usa el nodo de "
+            "ERA5 más cercano (la grilla es de 0,25°, unos 28 km), y ese punto alimenta Sondeo y Series."
+        )
     st.plotly_chart(
         fig, width="stretch", theme=None, key="grid", on_select=_on_click,
         selection_mode="points", config={"scrollZoom": True},

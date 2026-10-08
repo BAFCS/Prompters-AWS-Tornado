@@ -159,7 +159,7 @@ def page() -> None:
             "usando el perfil y una de esas estimaciones; los índices de esta app utilizan la rama left-mover."
         )
         st.pills(
-            "Fichas en Datos", list(SHEETS), key="sounding_sheet", on_change=_on_sheet,
+            "Qué significa cada variable", list(SHEETS), key="sounding_sheet", on_change=_on_sheet,
             format_func=lambda k: variables.BY_KEY[k].symbol,
-            help="Qué es cada índice, su fórmula, el criterio chileno y sus fuentes.",
+            help="Abre la ficha en Datos: qué es, cómo se calcula, el criterio para Chile y las fuentes.",
         )  # fmt: skip

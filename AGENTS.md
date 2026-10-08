@@ -78,7 +78,7 @@ Escriben NetCDF comprimido (gzip + shuffle) en `data/crops/<region>/`, saltan lo
 | `download_era5.py` | ERA5 niveles de presión y superficie, recortado; un archivo por día | `era5_pl/era5_pl_AAAAMMDD.nc`, `era5_sfc/era5_sfc_AAAAMMDD.nc` |
 | `download_goes.py` | GOES `ABI-L2-MCMIPF` (16 bandas, 2 km), recortado en la grilla fija; un archivo por hora | `goes/AAAAMMDD/goes_AAAAMMDDHH.nc` |
 | `process_goes.py` | Reproyecta GOES a lat/lon regular (vecino más cercano, sin alterar valores) | `goes_latlon/AAAAMMDD/goes_AAAAMMDDHH.nc` |
-| `process_era5.py` | Índices australes por columna (cizalle, Bunkers *left-mover*, SRH, VGP₀₋₁, STP LM sin CIN, SHERBS3, LCL), vectorizados con las fórmulas de MetPy | `era5_indices/era5_idx_AAAAMMDD.nc` |
+| `process_era5.py` | Índices australes por columna (cizalladura, Bunkers *left-mover*, SRH, VGP₀₋₁, STP LM sin CIN, SHERBS3, LCL), vectorizados con las fórmulas de MetPy | `era5_indices/era5_idx_AAAAMMDD.nc` |
 | `viewer.py` | App Streamlit de varias páginas (`st.navigation`); el código de las páginas vive en `scripts/viewer_app/` | — |
 
 ```bash
@@ -147,6 +147,6 @@ aws s3 cp --no-sign-request --recursive s3://noaa-goes16/ABI-L2-CMIPF/2019/150/2
   el nivel de 1000 hPa está bajo tierra: enmascarar por presión de superficie o usar viento a 10 m.
 - **GOES**: Chile lo ve GOES-East (`noaa-goes16` dic 2017–abr 2025, `noaa-goes19` desde abr 2025,
   us-east-1). `figs_goes.py` implementa a mano la proyección directa del ABI; la inversa es `common.latlon`. El paralaje
-  desplaza los topes nubosos ~20 km a 53°S.
+  desplaza los topes nubosos ~21 km a 53°S (tope de 12 km).
 - **Catálogo**: 102 eventos, solo positivos (sin negativos). Columnas clave: `Register` (confianza de
   la etiqueta), `Tornado`/`Waterspout` (dos vías físicas), `Hour (UTC)` (cruce con GOES).

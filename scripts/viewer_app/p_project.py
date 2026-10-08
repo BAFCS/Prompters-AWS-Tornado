@@ -76,7 +76,7 @@ def _cover() -> None:
     """Presenta el objetivo, las referencias del caso y los enlaces."""
     st.title("Predicción de tormentas mesociclónicas en el centro-sur de Chile", anchor="inicio")
     st.markdown(
-        '<p class="lede">Proyecto abierto del AWS Hackathon. Un desafío de análisis de datos meteorológicos para estudiar qué tormentas pueden desarrollar rotación organizada.</p>',
+        '<p class="lede">Proyecto abierto para la hackathon AWS Breaking Barriers. Un desafío de análisis de datos meteorológicos para estudiar qué tormentas pueden desarrollar rotación organizada.</p>',
         unsafe_allow_html=True,
     )
     st.page_link(
@@ -144,7 +144,7 @@ def _difficulty() -> None:
                 "1",
                 "orange",
                 "Los umbrales deben evaluarse con datos chilenos",
-                "Los casos descritos presentan fuerte cambio del viento con la altura y energía convectiva relativamente baja. Este régimen se denomina HSLC, por sus siglas en inglés (high shear, low CAPE: fuerte cizalle y bajo CAPE). La energía potencial convectiva disponible (CAPE) mide la energía disponible para el ascenso del aire. Los índices combinan estas y otras variables para resumir el entorno.",
+                "Los casos descritos presentan fuerte cambio del viento con la altura y energía convectiva relativamente baja. Este régimen se denomina HSLC, por sus siglas en inglés (high shear, low CAPE: fuerte cizalladura y bajo CAPE). La energía potencial convectiva disponible (CAPE) mide la energía disponible para el ascenso del aire. Los índices combinan estas y otras variables para resumir el entorno.",
             ),
             (
                 "2",
@@ -171,10 +171,10 @@ def _difficulty() -> None:
     with st.container(border=True, key="sheet_cape"):
         _image(
             diagrams.cape_shear(),
-            "Comparación esquemática de CAPE y cizalle: los casos chilenos de mayo de 2019 combinan baja energía convectiva con fuerte cambio del viento en el primer kilómetro. No es una frontera de detección.",
+            "Comparación esquemática de CAPE y cizalladura: los casos chilenos de mayo de 2019 combinan baja energía convectiva con fuerte cambio del viento en el primer kilómetro. No es una frontera de detección.",
         )
         st.markdown(
-            "Comparación esquemática de CAPE y cizalle; no representa una frontera de detección del STP. Los casos chilenos de mayo de 2019 combinan CAPE relativamente bajo con fuerte cizalle en el primer kilómetro. La referencia de 15–45 J/kg corresponde al CAPE medio a fines de mayo en Biobío descrito en el documento. Requiere verificación: confirmar las fuentes y el ámbito de las referencias del esquema antes de utilizarlas en una decisión."
+            "Comparación esquemática de CAPE y cizalladura; no representa una frontera de detección del STP. Los casos chilenos de mayo de 2019 combinan CAPE relativamente bajo con fuerte cizalladura en el primer kilómetro. La referencia de 15–45 J/kg corresponde al CAPE medio a fines de mayo en Biobío descrito en el documento. Requiere verificación: confirmar las fuentes y el ámbito de las referencias del esquema antes de utilizarlas en una decisión."
         )
     st.markdown(
         '<div class="notice">Caballero-Morán y Rondanelli (2025) analizaron índices derivados de ERA5 entre 1959 y 2021. El documento del proyecto les atribuye la identificación de zonas del sur austral con condiciones favorables y sin eventos documentados. Este resultado motiva la búsqueda de posibles situaciones subregistradas. <strong>Requiere verificación:</strong> comprobar que esta formulación refleje el alcance del estudio; unas condiciones favorables no confirman un evento ocurrido.</div>',
@@ -204,7 +204,7 @@ def _data_section() -> None:
     figures = [
         (
             "fig4_era5_20190530.png",
-            "<b>ERA5, 30 de mayo de 2019, 21:00 UTC.</b> Los paneles muestran temperatura a 500 hPa (A), viento a 850 hPa (B), cizalle entre la superficie y 1 km (C) y entre la superficie y 6 km (D). Los niveles en hPa son superficies de presión que permiten comparar distintas partes de la atmósfera. En C y D se puede observar la extensión de las zonas con cizalle elevado.",
+            "<b>ERA5, 30 de mayo de 2019, 21:00 UTC.</b> Los paneles muestran temperatura a 500 hPa (A), viento a 850 hPa (B), cizalladura entre la superficie y 1 km (C) y entre la superficie y 6 km (D). Los niveles en hPa son superficies de presión que permiten comparar distintas partes de la atmósfera. En C y D se puede observar la extensión de las zonas con cizalladura elevada.",
         ),
         (
             "fig3_goes_20190530.png",

@@ -2,7 +2,7 @@
 """Calcula índices de tiempo severo desde los recortes ERA5, con los signos del hemisferio sur.
 
 Para cada columna de la grilla y cada hora arma un perfil vertical (superficie + niveles de presión
-sobre el terreno), lo interpola cada 100 m y calcula cizalle, movimiento de Bunkers, helicidad y los
+sobre el terreno), lo interpola cada 100 m y calcula cizalladura, movimiento de Bunkers, helicidad y los
 índices compuestos que el documento propone para Chile. Las fórmulas siguen a MetPy
 (``bunkers_storm_motion``, ``storm_relative_helicity``) pero vectorizadas sobre la grilla, porque
 MetPy solo trabaja con perfiles 1D.
@@ -14,7 +14,7 @@ Convenciones australes (ver docs/mesociclones_chile.md, secciones 2.5 y 5):
 - El STP usa la rama *left-mover*, así que también es negativo; el umbral chileno es ≤ −0,3.
 
 Simplificaciones: el CAPE es el de ERA5 (no el de capa mezclada), el STP no lleva el término de CIN
-y el índice de Sherburn es SHERBS3 (cizalle 0–3 km), no SHERBE (capa efectiva).
+y el índice de Sherburn es SHERBS3 (cizalladura 0–3 km), no SHERBE (capa efectiva).
 
 Entrada y salida::
 
@@ -45,9 +45,9 @@ Z_10M = 10.0  # m, altura asignada a los datos de superficie (viento a 10 m)
 # docs/mesociclones_chile.md da como calibrados para Chile), sentido del peligro ("<" si los valores
 # más bajos son los peligrosos) y una referencia en texto para los que no tienen umbral.
 ATTRIBUTES = {
-    "shear_01": ("Cizalle 0–1 km (magnitud de la diferencia vectorial)", "m s-1", 12.0, ">", None),
-    "shear_03": ("Cizalle 0–3 km", "m s-1", None, None, None),
-    "shear_06": ("Cizalle 0–6 km", "m s-1", None, ">", "Sin criterio local de decisión"),
+    "shear_01": ("Cizalladura 0–1 km (magnitud de la diferencia vectorial)", "m s-1", 12.0, ">", None),
+    "shear_03": ("Cizalladura 0–3 km", "m s-1", None, None, None),
+    "shear_06": ("Cizalladura 0–6 km", "m s-1", None, ">", "Sin criterio local de decisión"),
     "u_lm": ("Movimiento Bunkers left-mover, componente u", "m s-1", None, None, None),
     "v_lm": ("Movimiento Bunkers left-mover, componente v", "m s-1", None, None, None),
     "u_rm": ("Movimiento Bunkers right-mover, componente u", "m s-1", None, None, None),
@@ -64,7 +64,7 @@ ATTRIBUTES = {
     "gamma_75": ("Gradiente térmico 700–500 hPa", "K km-1", None, None, None),
     "vgp_01": ("Parámetro de generación de vorticidad 0–1 km (VGP)", "m s-2", 0.1, ">", None),
     "stp_lm": ("Significant Tornado Parameter, rama left-mover (sin CIN)", "1", -0.3, "<", None),
-    "sherbs3": ("SHERBS3 (Sherburn y Parker 2014, cizalle 0–3 km)", "1", None, ">",
+    "sherbs3": ("SHERBS3 (Sherburn y Parker 2014, cizalladura 0–3 km)", "1", None, ">",
                 "SHERBE ≥ 1 corresponde a otra variante; no es un umbral de SHERBS3"),
     "sfc_height": ("Altura del terreno estimada desde la presión de superficie", "m", None, None,
                    None),
@@ -128,7 +128,7 @@ def hourly_indices(pl: xr.Dataset, sfc: xr.Dataset) -> dict[str, np.ndarray]:
         s = slice(level_index(h0), level_index(h1) + 1)
         return u[s].mean(axis=0), v[s].mean(axis=0)
 
-    # Bunkers (2000): viento medio 0–6 km ± 7,5 m/s perpendicular al cizalle (0–0,5 → 5,5–6 km).
+    # Bunkers (2000): viento medio 0–6 km ± 7,5 m/s perpendicular a la cizalladura (0–0,5 → 5,5–6 km).
     um, vm = mean(Z_10M, 6000)
     ub, vb = mean(Z_10M, 500)
     ut, vt = mean(5500, 6000)
@@ -173,7 +173,7 @@ def hourly_indices(pl: xr.Dataset, sfc: xr.Dataset) -> dict[str, np.ndarray]:
         "gamma_75": g75,
         "vgp_01": np.sqrt(cape) * c01 / 1000.0,  # √CAPE × (ΔV / Δz) en m/s²
         "stp_lm": stp,
-        # Sherburn y Parker (2014): 26 m/s con el cizalle 0–3 km; 27 m/s es el de SHERBE (capa efectiva).
+        # Sherburn y Parker (2014): 26 m/s con la cizalladura 0–3 km; 27 m/s es el de SHERBE (capa efectiva).
         "sherbs3": (c03 / 26.0) * (g03 / 5.2) * (g75 / 5.6),
         "sfc_height": h_sfc,
     }

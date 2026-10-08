@@ -100,7 +100,7 @@ _MC_BODY = """
       </g>
 """
 
-# CAPE contra cizalle 0–1 km: Chile (HSLC) frente a las Grandes Llanuras; comparación esquemática.
+# CAPE contra cizalladura 0–1 km: Chile (HSLC) frente a las Grandes Llanuras; comparación esquemática.
 _CAPE_BODY = """
      <text class="big" x="694" y="94" text-anchor="middle" fill="var(--cold)">comparación esquemática</text>
      <text x="694" y="110" text-anchor="middle" fill="var(--cold)">no es un límite de STP</text>
@@ -117,7 +117,7 @@ _CAPE_BODY = """
      <text x="80" y="404" text-anchor="end">0</text><text x="80" y="338" text-anchor="end">5</text>
      <text x="80" y="272" text-anchor="end">10</text><text x="80" y="206" text-anchor="end">15</text>
      <text x="80" y="140" text-anchor="end">20</text><text x="80" y="74" text-anchor="end">25</text>
-     <text class="big" x="30" y="240" text-anchor="middle" fill="var(--ink-2)" transform="rotate(-90 30 240)">cizalle 0–1 km  (m/s)</text>
+     <text class="big" x="30" y="240" text-anchor="middle" fill="var(--ink-2)" transform="rotate(-90 30 240)">cizalladura 0–1 km  (m/s)</text>
      <path d="M160 104 L253 214 L323 268 L435 324 L557 358 L668 376 L790 387" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-dasharray="7 5"/>
      <text class="big" x="300" y="180" fill="var(--accent)">VGP₀₋₁ = 0,1 m/s²</text>
      <text x="300" y="196" fill="var(--accent)">referencia del estudio citado</text>
@@ -172,5 +172,5 @@ def mesocyclone(stage: int) -> str:
 
 
 def cape_shear() -> str:
-    """SVG de CAPE contra cizalle 0–1 km."""
+    """SVG de CAPE contra cizalladura 0–1 km."""
     return _svg(880, 470, "", _CAPE_BODY)

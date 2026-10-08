@@ -197,7 +197,7 @@ def _body() -> bool:
     state.restore("data_search")
     query = st.text_input(
         "Buscar una variable", key="data_search", icon=":material/search:",
-        placeholder="CAPE, helicidad, C13, cizalle, Register…",
+        placeholder="CAPE, helicidad, C13, cizalladura, Register…",
     )  # fmt: skip
     state.save("data_search")
     if not available:

@@ -68,7 +68,7 @@ CASE_DETAILS = {
         "20–25 m/s en el nivel de presión de 850 hPa. Las presiones en hPa permiten "
         "referirse a distintos niveles atmosféricos. Una baja ocluida es un sistema de "
         "baja presión cuyo frente frío ha alcanzado al cálido.",
-        "Se citan cizalle 0–1 km de 12–20 m/s, SRH 0–1 km de −100 a −250 m²/s² y "
+        "Se citan cizalladura 0–1 km de 12–20 m/s, SRH 0–1 km de −100 a −250 m²/s² y "
         "una altura de condensación baja. El rango de CAPE de 200–1.000 J/kg aparece "
         "en el contexto del caso, mientras que otra referencia del documento presenta "
         "200–500 J/kg. Falta aclarar la fuente, el cálculo y el ámbito de ambos rangos.",
@@ -111,7 +111,7 @@ TOURS = {
         ),
         Step(
             "maps", "18:30",
-            "Compara la franja con cizalle 0–1 km superior a 12 m/s con las ubicaciones "
+            "Compara la franja con cizalladura 0–1 km superior a 12 m/s con las ubicaciones "
             "reportadas. La línea roja marca ese valor de referencia. Revisa la hora "
             "indicada en cada panel antes de comparar las dos fuentes.",
             event="Ángeles", panels=("idx:shear_01", "goes:C13"),
@@ -139,7 +139,7 @@ TOURS = {
         ),
         Step(
             "series", "21:50",
-            "Compara VGP, cizalle, SRH y temperatura de brillo antes y después de la hora "
+            "Compara VGP, cizalladura, SRH y temperatura de brillo antes y después de la hora "
             "reportada para Los Ángeles. Distingue los cambios observados de las "
             "inferencias sobre la tormenta. Las series resumen un área fija; no siguen "
             "automáticamente una misma nube.",

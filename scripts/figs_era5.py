@@ -5,7 +5,7 @@ Lee U, V, T y Z en 37 niveles de presión desde ``s3://nsf-ncar-era5/`` (acceso 
 el recuadro chileno de una hora, leyendo el HDF5 por rangos de bytes con s3fs + h5py, sin descargar
 los archivos globales completos (~1,4 GB cada uno).
 
-Produce ``figs/fig4_era5_20190530.png`` (500 hPa, viento en 850 hPa, cizalle 0-1 y 0-6 km) y guarda
+Produce ``figs/fig4_era5_20190530.png`` (500 hPa, viento en 850 hPa, cizalladura 0-1 y 0-6 km) y guarda
 los campos recortados en ``data/era5_cache.npy``. Uso: ``uv run python scripts/figs_era5.py``.
 """
 
@@ -86,13 +86,13 @@ def spd(k: int) -> np.ndarray:
 
 
 def shear(a: int, b: int) -> np.ndarray:
-    """Magnitud del cizalle vectorial (m/s) entre los niveles de índice ``a`` y ``b``."""
+    """Magnitud del cizalladura vectorial (m/s) entre los niveles de índice ``a`` y ``b``."""
     return np.hypot(D["u"][a] - D["u"][b], D["v"][a] - D["v"][b])
 
 
 sh01, sh06 = shear(i900, i1000), shear(i500, i1000)
 print(
-    f"cizalle 0-1 km: {sh01.min():.1f}-{sh01.max():.1f} m/s"
+    f"cizalladura 0-1 km: {sh01.min():.1f}-{sh01.max():.1f} m/s"
     f" | 0-6 km: {sh06.min():.1f}-{sh06.max():.1f} m/s"
 )
 
@@ -153,20 +153,20 @@ plt.colorbar(c, ax=b, orientation="horizontal", pad=0.09, shrink=0.92, aspect=24
     labelsize=7.5
 )
 
-# C · cizalle 0-1 km
+# C · cizalladura 0-1 km
 c3 = axs[2]
 cc = c3.contourf(X, Y, sh01, levels=np.arange(0, 26, 2), cmap="PuRd", extend="max")
 c3.contour(X, Y, sh01, levels=[12], colors=[SEV], linewidths=1.6)
-base(c3, "C · Cizalle 0–1 km", "m/s · línea roja = umbral chileno de 12 m/s")
+base(c3, "C · Cizalladura 0–1 km", "m/s · línea roja = umbral chileno de 12 m/s")
 plt.colorbar(cc, ax=c3, orientation="horizontal", pad=0.09, shrink=0.92, aspect=24).ax.tick_params(
     labelsize=7.5
 )
 
-# D · cizalle 0-6 km
+# D · cizalladura 0-6 km
 d = axs[3]
 cd = d.contourf(X, Y, sh06, levels=np.arange(0, 46, 3), cmap="PuBuGn", extend="max")
 d.contour(X, Y, sh06, levels=[18], colors=[ACC], linewidths=1.6)
-base(d, "D · Cizalle 0–6 km", "m/s · línea verde = umbral HSLC de 18 m/s")
+base(d, "D · Cizalladura 0–6 km", "m/s · línea verde = umbral HSLC de 18 m/s")
 plt.colorbar(cd, ax=d, orientation="horizontal", pad=0.09, shrink=0.92, aspect=24).ax.tick_params(
     labelsize=7.5
 )
