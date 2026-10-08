@@ -10,7 +10,7 @@ from streamlit.testing.v1 import AppTest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from viewer_app import data, p_sounding, variables  # noqa: E402
+from viewer_app import charts, data, p_sounding, variables  # noqa: E402
 
 
 class ViewerTest(unittest.TestCase):
@@ -50,6 +50,16 @@ class ViewerTest(unittest.TestCase):
     def test_sounding_sheets_exist(self) -> None:
         """Cada píldora «Fichas en Datos» de Sondeo apunta a una ficha que existe."""
         self.assertLessEqual(set(p_sounding.SHEETS), set(variables.BY_KEY))
+
+    def test_phone_grid_is_one_column(self) -> None:
+        """En el teléfono la grilla es de una columna, y la de escritorio sigue alcanzando para todos los paneles."""
+        for n in range(1, 7):
+            with self.subTest(paneles=n):
+                self.assertEqual(charts.grid_shape(n, narrow=True), (n, 1))
+                rows, cols = charts.grid_shape(n)
+                self.assertGreaterEqual(
+                    rows * cols, n
+                )  # y la grilla de escritorio sigue alcanzando
 
 
 if __name__ == "__main__":

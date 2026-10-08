@@ -256,7 +256,7 @@ def page() -> None:
     # En el teléfono los mapas van en una columna y sus controles, plegados encima: abiertos, seis filas
     # de controles alejaban el primer mapa unos 700 px.
     with (
-        st.expander(f"Paneles ({len(visible)})", icon=":material/tune:", expanded=len(visible) <= 2)
+        st.expander("Paneles", icon=":material/tune:", expanded=len(visible) <= 2)
         if narrow
         else st.container()
     ):
