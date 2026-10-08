@@ -275,7 +275,7 @@ def grid(
         yaxis={"scaleanchor": "x", "scaleratio": enc.aspect},
         height=height or (640 if rows == 1 else 470 * rows), showlegend=False, dragmode="pan",
         clickmode="event+select", hoverdistance=-1, uirevision="grid",
-        margin={"t": 110 if cols == 1 else 56, "r": 48},
+        margin={"t": 110 if cols == 1 and rows > 1 else 56, "r": 48},
     )  # fmt: skip
     return _style(fig), backgrounds
 

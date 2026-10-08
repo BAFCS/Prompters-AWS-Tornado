@@ -48,7 +48,11 @@ def map_columns() -> int:
     """Columnas de mapas que caben en el cuerpo, medidas sin depender del dispositivo."""
     with st.container(key="map_layout"):
         result = _MAP_LAYOUT(key="map_width", on_columns_change=lambda: None)
-    return max(1, min(3, int(result.columns or 1)))
+    # El componente responde recién en la segunda ejecución: mientras tanto se usa la última medida,
+    # para que los controles no salten de una columna a varias al volver a la página.
+    if result.columns:
+        st.session_state["_map_columns"] = int(result.columns)
+    return max(1, min(3, int(st.session_state.get("_map_columns", 1))))
 
 
 @dataclass(frozen=True)

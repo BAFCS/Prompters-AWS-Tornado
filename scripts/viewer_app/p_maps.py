@@ -79,40 +79,39 @@ def _controls(p: state.Panel, n: int, cat: dict[str, products.Product], d: data.
             kwargs={"key": products.neighbor(p.key, cat, step)},
         )  # fmt: skip
     indices = [k for k in cat if k.startswith("idx:")]
-    if prod.kind is not None or prod.source == "pl" or (prod.is_goes and indices):
-        with buttons.popover(
-            f"Opciones · {n}", icon=":material/tune:", help="Escala de color, nivel o contornos"
-        ):
-            if prod.kind is not None:
-                ops = colorscales.KINDS[prod.kind]
-                k_scale = f"p{p.id}_colorscale"
-                st.session_state[k_scale] = colorscales.pick(prod.kind, p.colorscale).name
-                st.selectbox(
-                    "Escala de color", [e.name for e in ops], key=k_scale,
-                    format_func=lambda name: colorscales.pick(str(prod.kind), name).display_label,
-                    on_change=_on_change, args=(p.id, "colorscale", k_scale),
-                    help="Escalas estándar para este tipo de dato. La primera es la predeterminada.",
-                )  # fmt: skip
-            if prod.source == "pl":
-                nv = layers.levels(d)
-                k_level = f"p{p.id}_level"
-                st.session_state[k_level] = (
-                    p.level if p.level in nv else (850.0 if 850.0 in nv else nv[0])
-                )
-                st.select_slider("Nivel (hPa)", options=nv, key=k_level, on_change=_on_change,
-                                 args=(p.id, "level", k_level),
-                                 help="Nivel de presión, expresado en hectopascales (hPa).")  # fmt: skip
-            elif prod.is_goes and indices:
-                k_cont = f"p{p.id}_cont"
-                st.session_state[k_cont] = p.contour or "—"
-                st.selectbox(
-                    "Contornos ERA5", ["—", *indices], key=k_cont,
-                    format_func=lambda k: "Sin contornos" if k == "—" else cat[k].short,
-                    on_change=_on_change, args=(p.id, "contour", k_cont),
-                    help="Líneas que unen lugares con el mismo valor del índice. El valor de comparación se muestra en rojo.",
-                )  # fmt: skip
-    buttons.button(f"Quitar · {n}", icon=":material/close:", key=f"p{p.id}_x", help=f"Quitar el panel {n}",
-              on_click=state.remove_panel, args=(p.id,))  # fmt: skip
+    with buttons.popover(
+        f"Opciones · {n}", icon=":material/tune:", help="Escala de color, nivel, contornos o quitar"
+    ):
+        if prod.kind is not None:
+            ops = colorscales.KINDS[prod.kind]
+            k_scale = f"p{p.id}_colorscale"
+            st.session_state[k_scale] = colorscales.pick(prod.kind, p.colorscale).name
+            st.selectbox(
+                "Escala de color", [e.name for e in ops], key=k_scale,
+                format_func=lambda name: colorscales.pick(str(prod.kind), name).display_label,
+                on_change=_on_change, args=(p.id, "colorscale", k_scale),
+                help="Escalas estándar para este tipo de dato. La primera es la predeterminada.",
+            )  # fmt: skip
+        if prod.source == "pl":
+            nv = layers.levels(d)
+            k_level = f"p{p.id}_level"
+            st.session_state[k_level] = (
+                p.level if p.level in nv else (850.0 if 850.0 in nv else nv[0])
+            )
+            st.select_slider("Nivel (hPa)", options=nv, key=k_level, on_change=_on_change,
+                             args=(p.id, "level", k_level),
+                             help="Nivel de presión, expresado en hectopascales (hPa).")  # fmt: skip
+        elif prod.is_goes and indices:
+            k_cont = f"p{p.id}_cont"
+            st.session_state[k_cont] = p.contour or "—"
+            st.selectbox(
+                "Contornos ERA5", ["—", *indices], key=k_cont,
+                format_func=lambda k: "Sin contornos" if k == "—" else cat[k].short,
+                on_change=_on_change, args=(p.id, "contour", k_cont),
+                help="Líneas que unen lugares con el mismo valor del índice. El valor de comparación se muestra en rojo.",
+            )  # fmt: skip
+        st.button(f"Quitar el panel {n}", icon=":material/close:", key=f"p{p.id}_x",
+                  on_click=state.remove_panel, args=(p.id,))  # fmt: skip
 
 
 def _panel_layer(

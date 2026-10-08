@@ -6,7 +6,7 @@ Fecha: 7 de octubre de 2026. Worktree `.worktrees/impeccable-audit`, rama `impec
 
 | ID | Prioridad original | Problema | Resolución comprobada |
 |---|---|---|---|
-| A1 | P1 | Botones de panel con nombres de iconos | Texto visible con función y número: Anterior, Siguiente, Opciones y Quitar. |
+| A1 | P1 | Botones de panel con nombres de iconos | Texto visible con función y número: Anterior, Siguiente y Opciones; «Quitar el panel n» está dentro de Opciones para que cada panel ocupe una sola fila. |
 | A2 | P1 | Punto arbitrario dependiente del ratón | «Elegir punto» con latitud/longitud, límites regionales y validación geográfica compartida; envío con Enter. |
 | A3 | P1 | Cuatro imágenes con `alt="0"` | Descripciones de contenido y etapa elegida en imágenes nativas, conservando pantalla completa. |
 | A4 | P1 | Seis mapas en tres columnas en teléfono | Una a tres columnas según ancho real; eje útil móvil de 56,58 a 207 px, con ejes compartidos. |
