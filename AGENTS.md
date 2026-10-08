@@ -90,16 +90,22 @@ uv run streamlit run scripts/viewer.py
 ```
 
 **Visor** (`scripts/viewer.py` + paquete `scripts/viewer_app/`, importado como *first-party* igual que
-`common`): páginas El proyecto, El caso, Mapas, Sondeo y Series. El proyecto (`viewer_app/p_project.py`,
+`common`): páginas El proyecto, Datos, El caso, Mapas, Sondeo y Series. El proyecto (`viewer_app/p_project.py`,
 diagramas en `viewer_app/diagrams.py`) presenta el proyecto con elementos de Streamlit: es la
-página por defecto y se muestra aunque no haya datos. La barra lateral (región, día, regla de tiempo,
+página por defecto y se muestra aunque no haya datos. Datos (`viewer_app/p_data.py`) es el catálogo
+de datos: una ficha por variable de docs §4–5 (qué es, por qué importa, fórmula, criterio chileno,
+cuidado, insumos y fuentes), también sin datos; `?v=<clave>` muestra una sola ficha. Las fichas, la
+bibliografía y el buscador viven en `viewer_app/variables.py`, que es además la fuente de la ayuda
+«Qué estás viendo» de Mapas: todo producto nuevo de `products.py` necesita su ficha
+(`tests/test_variables.py` lo comprueba). La barra lateral (región, día, regla de tiempo,
 evento, recorrido guiado) vive en `viewer.py` para que sus widgets sobrevivan al cambio de página; el
 estado compartido está en `viewer_app/state.py` (`restore`/`save` copian los widgets de cada
 página bajo `_<key>`). La página Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va
-sincronizado). Cada panel muestra un producto de `viewer_app/products.py` (claves `idx:`, `sfc:`, `pl:`,
+sincronizado); en el teléfono (`theme.is_phone`, por el User-Agent) los paneles van en una columna y sus controles en un desplegable. Cada panel muestra un producto de `viewer_app/products.py` (claves `idx:`, `sfc:`, `pl:`,
 `goes:`, `rgb:`), calculado por `viewer_app/layers.py` (incluye el RGB Airmass); la lista de paneles vive en
 `st.session_state["panels"]` (`state.Panel`), no en widgets, y el recorrido guiado la fija con `Step.panels`. Los textos, umbrales y el recorrido guiado salen de `docs/` y están en
-`viewer_app/texts.py`: si cambia el documento, hay que actualizarlos. El tema (claro y oscuro) está en
+`viewer_app/texts.py` y `viewer_app/variables.py`: si cambia el documento o un cálculo, hay que
+actualizarlos. El tema (claro y oscuro) está en
 `.streamlit/config.toml` (`[theme.light]`, `[theme.dark]`) y `viewer_app/theme.py` (`LIGHT`, `DARK`;
 `theme.colors()` da la paleta del modo activo): si cambia un color, hay que cambiarlo en los dos
 (`tests/test_colorscales.py` comprueba que coinciden y que los textos cumplen WCAG AA).

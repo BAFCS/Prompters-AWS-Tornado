@@ -107,6 +107,14 @@ def is_dark() -> bool:
         return False
 
 
+def is_phone() -> bool:
+    """Si el navegador es de teléfono: su User-Agent dice «Mobi» (las tablets no lo dicen)."""
+    try:
+        return "Mobi" in (st.context.headers.get("User-Agent") or "")
+    except Exception:  # fuera de una sesión (pruebas, scripts): escritorio
+        return False
+
+
 def colors() -> Palette:
     """La paleta del modo activo."""
     return DARK if is_dark() else LIGHT
@@ -301,17 +309,19 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 .notice {{ border: 1px solid {p.LINE}; background: {p.SURFACE}; padding: 14px 18px; margin: 1rem 0;
   border-radius: 6px; line-height: 1.5; max-width: 68ch; }}
 [class*="st-key-sheet_"] {{ background: {p.SURFACE}; }}
-.st-key-project {{ padding-top: 1.6rem; max-width: 1400px; container: project / inline-size; }}
+:is(.st-key-project, .st-key-data) {{ padding-top: 1.6rem; max-width: 1400px; container: project / inline-size; }}
 /* El cuerpo es su propio contenedor: tarjetas y cifras se acomodan al espacio que les deja el índice. */
-.st-key-project_body {{ container: body / inline-size; }}
-.st-key-project h1, .st-key-project h2, .st-key-project h3 {{ scroll-margin-top: 4.5rem; }}
-/* La prosa conserva una medida cómoda; las figuras y tablas usan todo el ancho. */
-[data-testid="stMain"] .st-key-project [data-testid="stMarkdownContainer"] > p,
-[data-testid="stMain"] .st-key-project [data-testid="stMarkdownContainer"] li,
-.st-key-project .lede {{ max-width: 68ch; }}
-[data-testid="stMain"] .st-key-project [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] > p,
-[data-testid="stMain"] .st-key-project [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] li,
-.st-key-project .note {{ max-width: 68ch; }}
+:is(.st-key-project_body, .st-key-data_body) {{ container: body / inline-size; }}
+/* Datos sin índice (búsqueda o una ficha): el mismo ancho de lectura que con el índice al lado. */
+.st-key-data_body {{ max-width: 44rem; }}
+:is(.st-key-project, .st-key-data) h1, :is(.st-key-project, .st-key-data) h2, :is(.st-key-project, .st-key-data) h3 {{ scroll-margin-top: 4.5rem; }}
+/* El proyecto: párrafos sueltos hasta 90ch; en tarjetas, figuras y notas el texto llega al borde. */
+[data-testid="stMain"] :is(.st-key-project, .st-key-data) [data-testid="stMarkdownContainer"] > p,
+[data-testid="stMain"] :is(.st-key-project, .st-key-data) [data-testid="stMarkdownContainer"] li,
+:is(.st-key-project, .st-key-data) .lede {{ max-width: 90ch; }}
+[data-testid="stMain"] :is(.st-key-project, .st-key-data) [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] > p,
+[data-testid="stMain"] :is(.st-key-project, .st-key-data) [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] li,
+:is(.st-key-project, .st-key-data) .note {{ max-width: none; }}
 /* Índice: columna fija a la derecha si la página mide 880 px o más; si no, desplegable arriba. */
 /* Streamlit 1.64 envuelve el contenedor de ancho fijo en un stLayoutWrapper: ese es el que se oculta y
    se fija (selectores internos; revisarlos al actualizar Streamlit). El contenedor también se oculta
@@ -326,15 +336,15 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
   .st-key-toc_compact {{ display: none; }}
 }}
 /* Tarjetas: grilla de n columnas que baja a una cuando el cuerpo es angosto. */
-.st-key-project [class*="st-key-cards"] {{ display: grid; gap: 1rem; align-items: stretch; }}
-.st-key-project [class*="st-key-cards3_"] {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
-.st-key-project [class*="st-key-cards2_"] {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-.st-key-project [class*="st-key-cards"] > * {{ width: auto; height: 100%; }}
+:is(.st-key-project, .st-key-data) [class*="st-key-cards"] {{ display: grid; gap: 1rem; align-items: stretch; }}
+:is(.st-key-project, .st-key-data) [class*="st-key-cards3_"] {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+:is(.st-key-project, .st-key-data) [class*="st-key-cards2_"] {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+:is(.st-key-project, .st-key-data) [class*="st-key-cards"] > * {{ width: auto; height: 100%; }}
 @container body (max-width: 760px) {{
-  .st-key-project [class*="st-key-cards3_"] {{ grid-template-columns: minmax(0, 1fr); }}
+  :is(.st-key-project, .st-key-data) [class*="st-key-cards3_"] {{ grid-template-columns: minmax(0, 1fr); }}
 }}
 @container body (max-width: 520px) {{
-  .st-key-project [class*="st-key-cards2_"] {{ grid-template-columns: minmax(0, 1fr); }}
+  :is(.st-key-project, .st-key-data) [class*="st-key-cards2_"] {{ grid-template-columns: minmax(0, 1fr); }}
 }}
 /* Columnas flexibles (``columns``): se apilan cuando no caben dos de 26rem; el corte lo pone el contenido. */
 [class*="st-key-flex_"] [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {{ flex-wrap: wrap;
@@ -343,8 +353,8 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 /* La ficha no se encoge bajo ~400 px: en teléfono se desplaza dentro de su caja, no la página entera. */
 [data-testid="stHtml"]:has(> .scorecard), [data-testid="stHtml"]:has(> * > .scorecard) {{ overflow-x: auto; }}
 /* Cifras de la portada: cuatro en fila o dos por dos, nunca una fila a medias. */
-.st-key-project .stats {{ grid-template-columns: repeat(4, 1fr); }}
-@container body (max-width: 760px) {{ .st-key-project .stats {{ grid-template-columns: repeat(2, 1fr); }} }}
+:is(.st-key-project, .st-key-data) .stats {{ grid-template-columns: repeat(4, 1fr); }}
+@container body (max-width: 760px) {{ :is(.st-key-project, .st-key-data) .stats {{ grid-template-columns: repeat(2, 1fr); }} }}
 .toc ol {{ list-style: none; margin: 0.6rem 0 0; padding: 0; border-left: 1px solid {p.LINE}; }}
 [data-testid="stMain"] .toc li {{ margin: 0; padding: 0; }}
 .toc a {{ display: flex; align-items: center; min-height: 44px; margin-left: -1px; padding: 5px 0 5px 12px; border-left: 1px solid transparent;
@@ -363,6 +373,27 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primary"] p,
 [data-testid="stBaseLinkButton-primary"], [data-testid="stBaseLinkButton-primary"] p {{ color: {p.ON_ACCENT}; }}
 .step b {{ font-family: {MONO}; font-weight: 600; color: {p.ACCENT}; font-size: 0.8rem; }}
+/* Datos: fichas de variables. El nombre es la ancla (?v= y el índice); el símbolo y la unidad, mono. */
+.var-name {{ font-size: 1.1rem; font-weight: 600; line-height: 1.3; margin: 0; padding: 0;
+  scroll-margin-top: 4.5rem; }}
+.var-meta {{ color: {p.MUTED}; font-size: 0.86rem; margin: 0.2rem 0 0.35rem; }}
+.facts {{ width: 100%; border-collapse: collapse; font-size: 0.92rem; }}
+.facts th {{ text-align: left; font-weight: 600; color: {p.MUTED}; white-space: nowrap; padding: 6px 16px 6px 0;
+  vertical-align: baseline; }}
+.facts td {{ padding: 6px 0; vertical-align: baseline; }}
+.facts tr + tr > * {{ border-top: 1px solid {p.SURFACE_2}; }}
+@container body (max-width: 520px) {{ .facts th, .facts td {{ display: block; padding: 0; border: 0; }}
+  .facts td {{ padding-bottom: 8px; }} .facts tr + tr > th {{ padding-top: 8px; }} }}
+[class*="st-key-threshold_"] p::before {{ content: ""; display: inline-block; {_TRIANGLE}
+  border-bottom: 9px solid {p.SEVERE}; margin-right: 8px; vertical-align: 0; }}
+/* Fórmulas largas: se desplazan dentro de la ficha en teléfono, no la página entera. */
+[data-testid="stMain"] .katex-display {{ overflow-x: auto; overflow-y: hidden; margin: 0.3rem 0; padding: 2px 0; }}
+.var-refs a, .bibliography a {{ text-underline-offset: 2px; }}
+.bibliography {{ padding-left: 1.1rem; }}
+[data-testid="stMain"] .bibliography li {{ margin: 0.4rem 0; max-width: 90ch; line-height: 1.45; }}
+.bibliography a {{ overflow-wrap: anywhere; }}
+.toc ol ol {{ margin: 0 0 0.35rem; border-left: none; }}
+.toc ol ol a {{ padding-left: 24px; font-size: 0.86rem; color: {p.MUTED}; }}
 /* Controles propios: rótulos legibles, foco nativo y blancos táctiles amplios. */
 .stApp button:not([data-testid="stTooltipIcon"]) {{ min-height: 44px; }}
 [data-testid="stMain"] a[data-testid="stPageLink-NavLink"] {{ min-height: 44px; }}

@@ -200,11 +200,14 @@ def grid(
     ``contornos[i]`` es un campo ERA5 que se dibuja como isolíneas sobre el panel ``i`` (o ``None``).
     Devuelve la figura y el índice de la primera traza de fondo de cada panel (``background``), para
     animarla con ``go.Frame``. ``height`` fija la altura en píxeles (si falta, depende del número de filas).
+    ``columns`` es el máximo de columnas que caben (ver ``grid_shape``).
     """
     rows, cols = grid_shape(len(layers), columns)
+    stacked = cols == 1 and rows > 1
+    height = height or (640 if rows == 1 else (400 if stacked else 470) * rows)
     fig = make_subplots(
         rows=rows, cols=cols, horizontal_spacing=0.09 if cols > 1 else 0.02,
-        vertical_spacing=0.12 / rows, subplot_titles=[c.title for c in layers],
+        vertical_spacing=72 / height if stacked else 0.12 / rows, subplot_titles=[c.title for c in layers],
     )  # fmt: skip
     backgrounds: list[int] = []
     for i, (c, cont) in enumerate(zip(layers, contours, strict=True)):
@@ -273,9 +276,9 @@ def grid(
     # hoverdistance=-1: con zoom los puntos de la grilla quedan separados y aun así responden.
     fig.update_layout(
         yaxis={"scaleanchor": "x", "scaleratio": enc.aspect},
-        height=height or (640 if rows == 1 else 470 * rows), showlegend=False, dragmode="pan",
+        height=height, showlegend=False, dragmode="pan",
         clickmode="event+select", hoverdistance=-1, uirevision="grid",
-        margin={"t": 110 if cols == 1 and rows > 1 else 56, "r": 48},
+        margin={"t": 110 if stacked else 56, "r": 48},
     )  # fmt: skip
     return _style(fig), backgrounds
 

@@ -6,7 +6,18 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from viewer_app import charts, colorscales, components, data, layers, products, state, texts, theme
+from viewer_app import (
+    charts,
+    colorscales,
+    components,
+    data,
+    layers,
+    products,
+    state,
+    texts,
+    theme,
+    variables,
+)
 
 ANIMATION_STEP = 3  # se dibuja uno de cada 3 píxeles GOES al animar
 MAX_ANIMATED = 3  # paneles GOES que se animan a la vez
@@ -289,12 +300,21 @@ def page() -> None:
             "No hay paneles. Agrega uno con «Agregar panel»: el RGB Airmass es un buen comienzo."
         )
         return
-    rows, cols = charts.grid_shape(len(visible), theme.map_columns())
-    for f in range(rows):
-        columns = st.columns(cols, gap="medium")
-        for j, p in enumerate(visible[f * cols : (f + 1) * cols]):
-            with columns[j]:
-                _controls(p, f * cols + j + 1, cat, ctx.day)
+    fit = theme.map_columns()
+    narrow = fit == 1
+    rows, cols = charts.grid_shape(len(visible), fit)
+    # Con una sola columna los controles van plegados encima de los mapas: abiertos, seis filas
+    # de controles alejaban el primer mapa unos 700 px.
+    with (
+        st.expander("Paneles", icon=":material/tune:", expanded=len(visible) <= 2)
+        if narrow
+        else st.container()
+    ):
+        for f in range(rows):
+            columns = st.columns(cols, gap="medium")
+            for j, p in enumerate(visible[f * cols : (f + 1) * cols]):
+                with columns[j]:
+                    _controls(p, f * cols + j + 1, cat, ctx.day)
 
     animate = bool(st.session_state.get("animate"))
     goes_idx = [i for i, p in enumerate(visible) if cat[p.key].is_goes]
@@ -314,11 +334,17 @@ def page() -> None:
     fig, backgrounds = charts.grid(
         layer_list, contours, enc, data.coast(ctx.reg), events=ctx.events, point=state.point(),
         wind=layers.wind_850(ctx.day, t, enc) if st.session_state.get("wind") else None,
-        columns=cols,
+        columns=fit,
     )  # fmt: skip
     n_frames = _animate(fig, backgrounds, animated, visible, cat, ctx.day, t) if animated else 0
     st.caption(
-        "Compara el entorno y las nubes cerca del evento. Todos los mapas comparten el encuadre."
+        "Compara el entorno y las nubes cerca del evento. Todos los mapas comparten el encuadre. "
+        + (
+            "Arrastra un mapa para moverlo y usa los botones + y − del gráfico para acercar; para "
+            "desplazar la página, toca fuera de los mapas."
+            if narrow
+            else "Usa la rueda del ratón o los botones del gráfico para acercar la vista."
+        )
     )
     if ref is not None:
         st.caption("«Elegir punto» acepta coordenadas con teclado. También puedes tocar el mapa.")
@@ -349,13 +375,14 @@ def page() -> None:
         if len(goes_idx) > MAX_ANIMATED:
             st.caption(f"Se animan los primeros {MAX_ANIMATED} paneles GOES.")
 
-    seen = dict.fromkeys(
-        [cat[p.key].variable for p in visible] + [cat[p.contour].variable for p in visible
-                                                     if p.contour in cat]
-    )  # fmt: skip
-    tips = [texts.HELP[v] for v in seen if v in texts.HELP]
+    seen = [p.key for p in visible] + [p.contour for p in visible if p.contour in cat]
+    tips = list(dict.fromkeys(variables.BY_PRODUCT[k] for k in seen if k in variables.BY_PRODUCT))
     if tips:
         with st.expander("Qué estás viendo", expanded=state.current_step() is not None):
-            for a in tips:
-                st.markdown(a)
+            for v in tips:
+                st.markdown(variables.summary(v))
+                st.button(
+                    f"Ficha completa de {v.symbol}", key=f"var_{v.key}", type="tertiary",
+                    icon=":material/arrow_forward:", on_click=state.go_to_variable, args=(v.key,),
+                )  # fmt: skip
             st.caption(texts.SOUTHERN_NOTE)
