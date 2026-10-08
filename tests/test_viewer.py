@@ -46,7 +46,7 @@ class ViewerTest(unittest.TestCase):
         indices = [m.value for m in app.markdown if "class='toc'" in m.value]
         self.assertEqual(len(indices), 2)  # el lateral y el del desplegable
         links = re.findall(r"href='#([\w-]+)'", indices[0])
-        self.assertEqual(len(links), 6)
+        self.assertEqual(len(links), 7)
         self.assertEqual(links, re.findall(r"href='#([\w-]+)'", indices[1]))
         for anchor in links:
             with self.subTest(anchor=anchor):
