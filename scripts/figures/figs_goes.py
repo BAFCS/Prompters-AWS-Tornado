@@ -26,8 +26,7 @@ import common  # noqa: E402
 warnings.filterwarnings("ignore")
 matplotlib.use("Agg")
 
-ROOT = common.ROOT
-OUT, DATA = ROOT / "figs", ROOT / "data"
+OUT, DATA = common.ROOT / "figs", common.DATA
 ACC, SEV, COLD, WARM, MUT = "#0E6A63", "#D2492A", "#4C7FB8", "#C98A3C", "#64757B"
 INK, LINE = "#0C1518", "#C9D3D6"
 plt.rcParams.update(

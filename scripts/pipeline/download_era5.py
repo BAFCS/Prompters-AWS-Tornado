@@ -240,7 +240,7 @@ def download_sfc(
 def merge_parts(parts: list[Path], out_file: Path) -> None:
     """Une los archivos de una variable ``parts`` en ``out_file`` y los borra."""
     ds = xr.merge([xr.load_dataset(f, engine="h5netcdf") for f in parts], combine_attrs="override")
-    ds.attrs["created"] = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
+    ds.attrs["created"] = common.now()
     common.write(ds, out_file)
     for f in parts:
         f.unlink()

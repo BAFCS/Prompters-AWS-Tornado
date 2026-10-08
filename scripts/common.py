@@ -125,11 +125,16 @@ def write(ds: xr.Dataset, out_file: Path, encoding: dict | None = None) -> None:
     tmp.rename(out_file)
 
 
+def now() -> str:
+    """Marca de tiempo UTC para el atributo ``created`` de un NetCDF."""
+    return dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
+
+
 def stamp(reg: Region) -> dict[str, str]:
     """Atributos ``region`` y ``created`` de un NetCDF de ``reg``."""
     return {
         "region": f"{reg.name}: {reg.north}..{reg.south} lat, {reg.west}..{reg.east} lon",
-        "created": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
+        "created": now(),
     }
 
 
