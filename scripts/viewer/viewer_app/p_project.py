@@ -132,10 +132,11 @@ def _importance() -> None:
         "<p>Sin radar, un tornado débil o breve se conoce solo si alguien lo ve y lo reporta. En zonas poco pobladas "
         "puede no quedar registro: el subregistro por baja densidad de población es la explicación que plantean "
         "Caballero-Morán y Rondanelli (2025) para zonas del sur con condiciones favorables "
-        "y sin eventos documentados. En entornos de baja energía y alta cizalladura la rotación puede ser poco profunda "
-        "y breve, lo que dificulta detectarla incluso con radar. Y como los tornados "
-        "<a href='https://www.cr2.cl/tornados-no-estarian-catalogados-como-una-amenaza-climatica-en-chile-el-mostrador/'>no figuran como una amenaza climática en el país</a> "
-        "(según planteó Roberto Rondanelli en 2025), tampoco hay un marco que obligue a medirlos.</p>"
+        "y sin eventos documentados. Y aun con radar, algunos tornados serían difíciles de ver "
+        "(lo explicamos más abajo, en «Por qué es difícil»).</p>"
+        "<p>Además, los tornados "
+        "<a href='https://www.cr2.cl/tornados-no-estarian-catalogados-como-una-amenaza-climatica-en-chile-el-mostrador/'>no figuran como una amenaza climática en el país</a>, "
+        "así que no hay un marco que obligue a medirlos (Rondanelli, 2025).</p>"
         "<p>Por eso el catálogo de 102 eventos es una muestra de lo que se vio, no de lo que ocurrió. Un modelo que "
         "reconozca desde datos públicos (ERA5 y GOES) qué tormentas desarrollan rotación no reemplaza a un radar ni "
         "emite alertas, pero sirve para estudiar los entornos favorables, revisar casos históricos que nadie "
@@ -195,7 +196,7 @@ def _difficulty() -> None:
                 "1",
                 "orange",
                 "Los umbrales deben evaluarse con datos chilenos",
-                "Los casos descritos presentan fuerte cambio del viento con la altura y energía convectiva relativamente baja. Este régimen se denomina HSLC, por sus siglas en inglés (high shear, low CAPE: fuerte cizalladura y bajo CAPE). La energía potencial convectiva disponible (CAPE) mide la energía disponible para el ascenso del aire. Los índices combinan estas y otras variables para resumir el entorno.",
+                "Los casos descritos presentan fuerte cambio del viento con la altura y energía convectiva relativamente baja. Este régimen se denomina HSLC, por sus siglas en inglés (high shear, low CAPE: fuerte cizalladura y bajo CAPE). La energía potencial convectiva disponible (CAPE) mide la energía disponible para el ascenso del aire. Los índices combinan estas y otras variables para resumir el entorno. En este régimen la rotación puede ser poco profunda y breve, lo que dificulta detectarla incluso con radar.",
             ),
             (
                 "2",
