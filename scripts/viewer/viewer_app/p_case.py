@@ -126,49 +126,53 @@ def page() -> None:
     ctx = state.context()
     c = texts.case_for(ctx.day.date, len(ctx.events))
     t = state.current_time()
-    st.title(c.title)
-    st.html(f"<p class='lede'>{c.lede}</p>")
-    st.markdown(
-        "Esta página explora un caso histórico: compara eventos reportados con el entorno "
-        "estimado por ERA5 y las nubes observadas por GOES. La capacidad de predicción "
-        "del proyecto está pendiente de evaluación."
-    )
-    st.caption(
-        "ERA5 tiene una resolución espacial de unos 31 km y datos horarios, "
-        "por lo que no representa directamente un mesociclón; una imagen satelital "
-        "tampoco confirma por sí sola un tornado. El catálogo reúne tornados y trombas "
-        "marinas reportados y no proporciona una etiqueta directa de mesociclón. "
-        "En la tabla, EF es una clasificación de intensidad basada en los daños observados."
-    )
     steps = texts.TOURS.get(ctx.day.date, ())
-    if steps and state.current_step() is None:
-        st.button(
-            "Empezar recorrido guiado", icon=":material/play_arrow:", key="case_tour",
-            on_click=state.apply_step, args=(ctx.day.date, 0, ctx.events),
-        )  # fmt: skip
+    top, tour = theme.columns([3, 1], "case_top")
+    with top:
+        st.title(c.title)
+        st.html(f"<p class='lede'>{c.lede}</p>")
+        st.markdown(
+            "Esta página explora un caso histórico: compara eventos reportados con el entorno "
+            "estimado por ERA5 y las nubes observadas por GOES. La capacidad de predicción "
+            "del proyecto está pendiente de evaluación."
+        )
+    with tour:
+        if steps and state.current_step() is None:
+            st.button(
+                "Empezar recorrido guiado", icon=":material/play_arrow:", key="case_tour",
+                on_click=state.apply_step, args=(ctx.day.date, 0, ctx.events),
+            )  # fmt: skip
 
-    left, right = theme.columns(2, "case_map_columns")
+    left, right = theme.columns([3, 2], "case_map_columns")
     with left:
         _map(ctx, None if t is None else pd.Timestamp(t))
     with right:
         _event_log(ctx)
-        _scorecard(ctx, None if t is None else pd.Timestamp(t))
+
+    _scorecard(ctx, None if t is None else pd.Timestamp(t))
 
     st.divider()
+    with st.expander("Cómo leer esta página", icon=":material/info:"):
+        st.markdown(
+            "ERA5 tiene una resolución espacial de unos 31 km y datos horarios, "
+            "por lo que no representa directamente un mesociclón; una imagen satelital "
+            "tampoco confirma por sí sola un tornado. El catálogo reúne tornados y trombas "
+            "marinas reportados y no proporciona una etiqueta directa de mesociclón. "
+            "En la tabla, EF es una clasificación de intensidad basada en los daños observados."
+        )
     left, right = theme.columns([3, 2], "case_context")
     with left:
         if c.context:
             st.header("Contexto")
             for paragraph in c.context:
                 st.markdown(paragraph)
+    with right:
         details = texts.CASE_DETAILS.get(ctx.day.date)
         if details:
             with st.expander("Detalles meteorológicos y referencias pendientes de aclaración"):
                 for paragraph in details:
                     st.markdown(paragraph)
-    with right:
-        st.header("Para seguir")
-        st.page_link(
-            state.page("maps"), label="Mapas: entorno y tormenta lado a lado",
-            icon=":material/map:",
-        )  # fmt: skip
+    st.page_link(
+        state.page("maps"), label="Para seguir: Mapas, entorno y tormenta lado a lado",
+        icon=":material/map:",
+    )  # fmt: skip
