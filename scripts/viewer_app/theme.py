@@ -52,7 +52,7 @@ def map_columns() -> int:
     # para que los controles no salten de una columna a varias al volver a la página.
     if result.columns:
         st.session_state["_map_columns"] = int(result.columns)
-    return max(1, min(3, int(st.session_state.get("_map_columns", 1 if is_phone() else 3))))
+    return max(1, min(3, int(st.session_state.get("_map_columns", 1))))
 
 
 @dataclass(frozen=True)
@@ -104,14 +104,6 @@ def is_dark() -> bool:
     try:
         return st.context.theme.type == "dark"
     except Exception:  # fuera de una sesión (pruebas, scripts): tema claro
-        return False
-
-
-def is_phone() -> bool:
-    """Si el navegador es de teléfono: su User-Agent dice «Mobi» (las tablets no lo dicen)."""
-    try:
-        return "Mobi" in (st.context.headers.get("User-Agent") or "")
-    except Exception:  # fuera de una sesión (pruebas, scripts): escritorio
         return False
 
 

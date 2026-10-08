@@ -55,7 +55,7 @@ class ViewerTest(unittest.TestCase):
         """En el teléfono la grilla es de una columna, y la de escritorio sigue alcanzando para todos los paneles."""
         for n in range(1, 7):
             with self.subTest(paneles=n):
-                self.assertEqual(charts.grid_shape(n, narrow=True), (n, 1))
+                self.assertEqual(charts.grid_shape(n, 1), (n, 1))
                 rows, cols = charts.grid_shape(n)
                 self.assertGreaterEqual(
                     rows * cols, n

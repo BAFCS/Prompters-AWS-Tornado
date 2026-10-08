@@ -300,9 +300,10 @@ def page() -> None:
             "No hay paneles. Agrega uno con «Agregar panel»: el RGB Airmass es un buen comienzo."
         )
         return
-    narrow = theme.map_columns() == 1
-    rows, cols = charts.grid_shape(len(visible), narrow, theme.map_columns())
-    # En el teléfono los mapas van en una columna y sus controles, plegados encima: abiertos, seis filas
+    fit = theme.map_columns()
+    narrow = fit == 1
+    rows, cols = charts.grid_shape(len(visible), fit)
+    # Con una sola columna los controles van plegados encima de los mapas: abiertos, seis filas
     # de controles alejaban el primer mapa unos 700 px.
     with (
         st.expander("Paneles", icon=":material/tune:", expanded=len(visible) <= 2)
@@ -333,21 +334,20 @@ def page() -> None:
     fig, backgrounds = charts.grid(
         layer_list, contours, enc, data.coast(ctx.reg), events=ctx.events, point=state.point(),
         wind=layers.wind_850(ctx.day, t, enc) if st.session_state.get("wind") else None,
-        narrow=narrow, columns=theme.map_columns(),
+        columns=fit,
     )  # fmt: skip
     n_frames = _animate(fig, backgrounds, animated, visible, cat, ctx.day, t) if animated else 0
     st.caption(
-        "Arrastra un mapa para moverlo y usa los botones + y − del gráfico para acercar; para "
-        "desplazar la página, toca fuera de los mapas. Todos los paneles se mueven juntos."
-        if narrow
-        else "Usa la rueda del ratón o los botones del gráfico para acercar la vista. "
-        "Todos los paneles se mueven juntos."
+        "Compara el entorno y las nubes cerca del evento. Todos los mapas comparten el encuadre. "
+        + (
+            "Arrastra un mapa para moverlo y usa los botones + y − del gráfico para acercar; para "
+            "desplazar la página, toca fuera de los mapas."
+            if narrow
+            else "Usa la rueda del ratón o los botones del gráfico para acercar la vista."
+        )
     )
     if ref is not None:
-        st.caption(
-            f"{'Toca' if narrow else 'Haz clic en'} cualquier panel para seleccionar el punto que se "
-            "usará en Sondeo y Series."
-        )
+        st.caption("«Elegir punto» acepta coordenadas con teclado. También puedes tocar el mapa.")
     st.plotly_chart(
         fig, width="stretch", theme=None, key="grid", on_select=_on_click,
         selection_mode="points", config={"scrollZoom": True},

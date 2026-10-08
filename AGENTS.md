@@ -101,7 +101,7 @@ bibliografía y el buscador viven en `viewer_app/variables.py`, que es además l
 evento, recorrido guiado) vive en `viewer.py` para que sus widgets sobrevivan al cambio de página; el
 estado compartido está en `viewer_app/state.py` (`restore`/`save` copian los widgets de cada
 página bajo `_<key>`). La página Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va
-sincronizado); en el teléfono (`theme.is_phone`, por el User-Agent) los paneles van en una columna y sus controles en un desplegable. Cada panel muestra un producto de `viewer_app/products.py` (claves `idx:`, `sfc:`, `pl:`,
+sincronizado); `theme.map_columns()` mide el ancho real del cuerpo (1 a 3 columnas); con una sola, los controles van en un desplegable. Cada panel muestra un producto de `viewer_app/products.py` (claves `idx:`, `sfc:`, `pl:`,
 `goes:`, `rgb:`), calculado por `viewer_app/layers.py` (incluye el RGB Airmass); la lista de paneles vive en
 `st.session_state["panels"]` (`state.Panel`), no en widgets, y el recorrido guiado la fija con `Step.panels`. Los textos, umbrales y el recorrido guiado salen de `docs/` y están en
 `viewer_app/texts.py` y `viewer_app/variables.py`: si cambia el documento o un cálculo, hay que

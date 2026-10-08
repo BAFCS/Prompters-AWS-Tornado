@@ -26,7 +26,6 @@ class ExplorationTest(unittest.TestCase):
             charts.Extent(-35, -39, -75, -70),
             ([], []),
             columns=1,
-            narrow=True,
         )
         self.assertEqual(len(backgrounds), 6)
         self.assertEqual(tuple(fig.layout.xaxis.domain), (0, 1))
