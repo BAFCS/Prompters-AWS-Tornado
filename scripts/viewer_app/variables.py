@@ -228,8 +228,8 @@ SOURCES = (
             ),
         ),
         "Chile está en el borde del disco. A 53°S un píxel de 2 km se comporta como uno de ~2 × 4 km, y el "
-        "**paralaje** desplaza un tope de 12–15 km de altura unos 10 km a 40°S y 20 km a 53°S, hacia el "
-        "sur, alejándose del punto subsatelital: varias celdas de ERA5. **El visor todavía no corrige el paralaje.** El detector de "
+        "**paralaje** desplaza un tope de 12 km de altura unos 10 km en Santiago y 20 km a 53°S, hacia el "
+        "sur y apenas al este, alejándose del punto subsatelital: varias celdas de GOES. **El visor todavía no corrige el paralaje.** El detector de "
         "rayos GLM declara cobertura hasta ~52°S: que no haya rayos en el extremo sur no significa que no "
         "los hubo. Filtra los archivos por la hora de inicio del barrido (`s`), nunca por la de creación.",
         refs=("goes-aws", "goes-abi"),
