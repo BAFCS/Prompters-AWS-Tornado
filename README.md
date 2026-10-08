@@ -192,8 +192,7 @@ uv run streamlit run scripts/viewer/viewer.py --server.runOnSave true
 
 - Arriba están las páginas. **Problema** explica el problema y funciona aunque no hayas
   descargado datos. **El caso** resume el día elegido, **Mapas** muestra hasta seis mapas con el zoom
-  sincronizado, **Sondeo** muestra el perfil vertical de la atmósfera en un punto y **Series** su
-  evolución durante el día.
+  sincronizado.
 - La barra de la izquierda elige la región, el día, la hora y el evento. Lo que elijas ahí se
   mantiene al cambiar de página.
 - Las horas están en tiempo universal coordinado (UTC). En mayo, la hora de Chile continental es

@@ -586,7 +586,7 @@ VARIABLES = (
         why="La curvatura distingue el perfil poco favorable del muy favorable para supercélulas. Se "
         "resume en unos pocos números: curvatura integrada, longitud de arco y área en los primeros 3 km.",
         formula=r"L_{0\text{–}3} = \int_0^{3\ \mathrm{km}} \left|\frac{\partial \vec V}{\partial z}\right| dz",
-        method="La página Sondeo dibuja el hodógrafo del punto elegido.",
+        method="Se calcula con el perfil de viento del punto elegido.",
         inputs=("viento",), synonyms="hodograph curvatura",
     ),
     Variable(

@@ -94,7 +94,7 @@ def case_for(day: dt.date, n_events: int) -> Case:
 class Step:
     """Un paso del recorrido: a qué página, hora, capa y punto lleva el visor, y qué contar."""
 
-    page: str  # "case", "maps", "sounding" o "series"
+    page: str  # "case" o "maps"
     hour: str  # "HH:MM" UTC; se usa la imagen o la hora ERA5 más cercana
     text: str
     event: str | None = None  # parte del nombre del lugar en el catálogo
@@ -124,26 +124,11 @@ TOURS = {
             event="Quilelto", panels=("idx:vgp_01", "goes:C13"),
         ),
         Step(
-            "sounding", "20:00",
-            "En el perfil de Coihueco, observa el CAPE, la altura estimada de la base de "
-            "nube y el cambio del viento con la altura. El cálculo de SRH utiliza la rama "
-            "left-mover, una estimación del movimiento de la tormenta.",
-            event="Coihueco",
-        ),
-        Step(
             "maps", "21:50",
             "La hora seleccionada es anterior al reporte de Los Ángeles. A la derecha, "
             "los azules indican enfriamiento entre imágenes; comprueba el intervalo del "
             "panel y considera también el desplazamiento de las nubes.",
             event="Ángeles", panels=("idx:srh_01", "goes:dT"),
-        ),
-        Step(
-            "series", "21:50",
-            "Compara VGP, cizalladura, SRH y temperatura de brillo antes y después de la hora "
-            "reportada para Los Ángeles. Distingue los cambios observados de las "
-            "inferencias sobre la tormenta. Las series resumen un área fija; no siguen "
-            "automáticamente una misma nube.",
-            event="Ángeles",
         ),
     ),
 }  # fmt: skip

@@ -11,7 +11,7 @@ from streamlit.testing.v1 import AppTest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "viewer"))
 
-from viewer_app import charts, data, p_sounding, variables  # noqa: E402
+from viewer_app import charts, data, variables  # noqa: E402
 
 
 class ViewerTest(unittest.TestCase):
@@ -51,10 +51,6 @@ class ViewerTest(unittest.TestCase):
         for anchor in links:
             with self.subTest(anchor=anchor):
                 self.assertIn(anchor, anchors)
-
-    def test_sounding_sheets_exist(self) -> None:
-        """Cada píldora «Fichas en Datos» de Sondeo apunta a una ficha que existe."""
-        self.assertLessEqual(set(p_sounding.SHEETS), set(variables.BY_KEY))
 
     def test_phone_grid_is_one_column(self) -> None:
         """En el teléfono la grilla es de una columna, y la de escritorio sigue alcanzando para todos los paneles."""

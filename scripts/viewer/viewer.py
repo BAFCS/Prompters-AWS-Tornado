@@ -35,8 +35,6 @@ from viewer_app import (  # noqa: E402
     p_data,
     p_maps,
     p_project,
-    p_series,
-    p_sounding,
     state,
     texts,
     theme,
@@ -52,10 +50,6 @@ PAGES = {
     "data": st.Page(p_data.page, title="Datos", icon=":material/dataset:", url_path="datos"),
     "case": st.Page(p_case.page, title="El caso", icon=":material/history_edu:", url_path="caso"),
     "maps": st.Page(p_maps.page, title="Mapas", icon=":material/map:", url_path="mapas"),
-    "sounding": st.Page(p_sounding.page, title="Sondeo", icon=":material/stacked_line_chart:",
-                      url_path="sondeo"),
-    "series": st.Page(p_series.page, title="Series", icon=":material/timeline:",
-                      url_path="series"),
 }  # fmt: skip
 st.session_state["pages"] = PAGES
 navigation = st.navigation(list(PAGES.values()), position="top")
@@ -65,7 +59,7 @@ sidebar = st.sidebar
 sidebar.markdown("## Mesociclones en Chile")
 sidebar.caption(
     "Selecciona la región, el día y la hora que quieres explorar. La selección se comparte "
-    "entre El caso, Mapas, Sondeo y Series. Las fechas y horas se expresan en tiempo universal "
+    "entre El caso y Mapas. Las fechas y horas se expresan en tiempo universal "
     "coordinado (UTC), que puede diferir de la hora local de Chile."
 )
 theme.mode_button()

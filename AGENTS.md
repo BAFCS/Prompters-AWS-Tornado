@@ -94,7 +94,7 @@ uv run streamlit run scripts/viewer/viewer.py
 ```
 
 **Visor** (`scripts/viewer/viewer.py` + paquete `scripts/viewer/viewer_app/`, importado como *first-party* igual que
-`common`): páginas Problema, Datos, El caso, Mapas, Sondeo y Series. Problema (`viewer_app/p_project.py`,
+`common`): páginas Problema, Datos, El caso y Mapas. Problema (`viewer_app/p_project.py`,
 diagramas en `viewer_app/diagrams.py`) presenta el proyecto con elementos de Streamlit: es la
 página por defecto y se muestra aunque no haya datos. Datos (`viewer_app/p_data.py`) es el catálogo
 de datos: una ficha por variable de docs §4–5 (qué es, por qué importa, fórmula, criterio chileno,

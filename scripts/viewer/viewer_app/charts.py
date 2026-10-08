@@ -167,7 +167,7 @@ def grid_shape(n: int, columns: int = 3) -> tuple[int, int]:
 # Lado mayor de la grilla invisible que da el valor bajo el cursor y recibe el clic.
 HOVER_CELLS = 120
 ERA5_STEP = (
-    0.25  # la grilla de clic nunca es más gruesa que ERA5, que es lo que usan Sondeo y Series
+    0.25  # la grilla de clic nunca es más gruesa que ERA5, que es lo que usa el punto elegido
 )
 
 

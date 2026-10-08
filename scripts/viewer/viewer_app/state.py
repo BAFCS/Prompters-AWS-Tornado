@@ -31,7 +31,7 @@ class Context:
 
 
 def page(name: str) -> Page:
-    """La página ``name`` ("data", "case", "maps", "sounding" o "series"), para ``st.page_link``."""
+    """La página ``name`` ("data", "case" o "maps"), para ``st.page_link``."""
     return st.session_state["pages"][name]
 
 

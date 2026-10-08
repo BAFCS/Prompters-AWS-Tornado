@@ -172,11 +172,3 @@ def page() -> None:
             state.page("maps"), label="Mapas: entorno y tormenta lado a lado",
             icon=":material/map:",
         )  # fmt: skip
-        st.page_link(
-            state.page("sounding"), label="Sondeo: perfil e hodógrafo del punto",
-            icon=":material/stacked_line_chart:",
-        )  # fmt: skip
-        st.page_link(
-            state.page("series"), label="Series: la evolución alrededor del evento",
-            icon=":material/timeline:",
-        )  # fmt: skip
