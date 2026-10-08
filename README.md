@@ -190,7 +190,7 @@ uv run streamlit run scripts/viewer/viewer.py --server.runOnSave true
 
 ### Cómo se usa
 
-- Arriba están las páginas. **El proyecto** explica el problema y funciona aunque no hayas
+- Arriba están las páginas. **Problema** explica el problema y funciona aunque no hayas
   descargado datos. **El caso** resume el día elegido, **Mapas** muestra hasta seis mapas con el zoom
   sincronizado, **Sondeo** muestra el perfil vertical de la atmósfera en un punto y **Series** su
   evolución durante el día.
@@ -351,5 +351,5 @@ La lista completa está en `docs/mesociclones_chile.md`.
 
 ---
 
-*Los diagramas de la página El proyecto del visor son esquemas dibujados a mano en SVG; las cuatro figuras de `figs/` sí
+*Los diagramas de la página Problema del visor son esquemas dibujados a mano en SVG; las cuatro figuras de `figs/` sí
 se generan desde los datos reales con los scripts de `scripts/`.*

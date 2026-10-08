@@ -10,7 +10,7 @@ un mesociclón, usando el reanálisis ERA5 y las imágenes GOES. Hoy el repo es 
 interactivo**. La documentación, los docstrings, los comentarios, los textos de la interfaz y los mensajes de commit
 están en **español**; el código va en **inglés**: módulos, identificadores, claves de estado, flags de la
 CLI, rutas de datos, variables y atributos NetCDF y clases CSS. Las URL visibles del visor (`url_path` de
-las páginas y anclas de El proyecto) siguen en español porque son parte de la interfaz.
+las páginas y anclas de Problema) siguen en español porque son parte de la interfaz.
 
 - `docs/mesociclones_chile.md` es el documento principal y la fuente de verdad del proyecto
   (física, datos, variables, planteamiento del modelo, arquitectura AWS, tareas abiertas en la sección 8).
@@ -94,7 +94,7 @@ uv run streamlit run scripts/viewer/viewer.py
 ```
 
 **Visor** (`scripts/viewer/viewer.py` + paquete `scripts/viewer/viewer_app/`, importado como *first-party* igual que
-`common`): páginas El proyecto, Datos, El caso, Mapas, Sondeo y Series. El proyecto (`viewer_app/p_project.py`,
+`common`): páginas Problema, Datos, El caso, Mapas, Sondeo y Series. Problema (`viewer_app/p_project.py`,
 diagramas en `viewer_app/diagrams.py`) presenta el proyecto con elementos de Streamlit: es la
 página por defecto y se muestra aunque no haya datos. Datos (`viewer_app/p_data.py`) es el catálogo
 de datos: una ficha por variable de docs §4–5 (qué es, por qué importa, fórmula, criterio chileno,

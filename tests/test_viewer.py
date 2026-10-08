@@ -32,7 +32,7 @@ class ViewerTest(unittest.TestCase):
         self.assertIn("Predicción de tormentas mesociclónicas", app.title[0].value)
 
     def test_project_without_regions_links_each_section(self) -> None:
-        """Sin regiones, la página por defecto es El proyecto y su índice enlaza anclas que existen."""
+        """Sin regiones, la página por defecto es Problema y su índice enlaza anclas que existen."""
         app = AppTest.from_file(
             Path(__file__).resolve().parents[1] / "scripts" / "viewer" / "viewer.py"
         )

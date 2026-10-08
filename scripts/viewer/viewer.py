@@ -48,7 +48,7 @@ st.set_page_config(
 theme.apply()
 
 PAGES = {
-    "project": st.Page(p_project.page, title="El proyecto", icon=":material/info:", default=True),
+    "project": st.Page(p_project.page, title="Problema", icon=":material/info:", default=True),
     "data": st.Page(p_data.page, title="Datos", icon=":material/dataset:", url_path="datos"),
     "case": st.Page(p_case.page, title="El caso", icon=":material/history_edu:", url_path="caso"),
     "maps": st.Page(p_maps.page, title="Mapas", icon=":material/map:", url_path="mapas"),
@@ -72,7 +72,7 @@ theme.mode_button()
 
 
 def no_data(message: str, prepare: bool = False) -> NoReturn:
-    """Detiene la app sin datos: El proyecto y Datos se muestran igual; las demás avisan con ``message``."""
+    """Detiene la app sin datos: Problema y Datos se muestran igual; las demás avisan con ``message``."""
     if navigation.url_path in {PAGES["project"].url_path, PAGES["data"].url_path}:
         # Datos no debe ofrecer productos de un día ya no disponible.
         st.session_state.pop("ctx", None)
@@ -80,7 +80,7 @@ def no_data(message: str, prepare: bool = False) -> NoReturn:
         st.stop()
     st.error(message)
     if prepare:
-        st.page_link(PAGES["project"], label="Leer El proyecto")
+        st.page_link(PAGES["project"], label="Leer Problema")
         with st.expander("Preparar datos en la instalación local"):
             st.markdown(
                 "Desde la raíz del repositorio, descarga y procesa un día. Los archivos se guardan "
@@ -99,7 +99,7 @@ def no_data(message: str, prepare: bool = False) -> NoReturn:
 names = data.regions()
 if not names:
     no_data(
-        "No hay datos preparados para explorar. Puedes leer la descripción en El proyecto.",
+        "No hay datos preparados para explorar. Puedes leer la descripción en Problema.",
         prepare=True,
     )
 state.restore("region")

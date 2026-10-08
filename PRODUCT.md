@@ -35,7 +35,7 @@ Chile, las imágenes GOES cada 10 minutos y los eventos del catálogo de tornado
   descargados en `data/crops/<region>/` por los scripts de descarga y procesamiento. Se
   desplegará en AWS más adelante; el cómo (servicio, acceso, datos) está sin decidir.
 - Solo muestra días ya descargados. Caso de referencia: brote del 30–31 de mayo de 2019 (Biobío).
-- La página El proyecto es la entrada por defecto y funciona sin ningún dato descargado: es lo
+- La página Problema es la entrada por defecto y funciona sin ningún dato descargado: es lo
   primero que ve quien llega al repo.
 - Se usa en escritorio, tablet y móvil (sesiones de trabajo, presentaciones de la hackathon,
   consulta rápida); los tres son un compromiso, no un extra.

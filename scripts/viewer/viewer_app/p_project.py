@@ -1,4 +1,4 @@
-"""Página «El proyecto»: la presentación del proyecto con elementos de Streamlit.
+"""Página «Problema»: la presentación del proyecto con elementos de Streamlit.
 
 Los dos diagramas viven en ``diagrams.py``. Esta página no usa datos: se muestra aunque no haya recortes.
 """

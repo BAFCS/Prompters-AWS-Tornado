@@ -1,4 +1,4 @@
-"""Los dos diagramas de la página «El proyecto», dibujados a mano en SVG.
+"""Los dos diagramas de la página «Problema», dibujados a mano en SVG.
 
 Se dibujan con ``st.image`` (un SVG como imagen): ``st.html`` sanea el SVG. Dentro de una imagen no
 hay JavaScript ni variables CSS de la página, así que cada SVG lleva su propia hoja de estilo con la
