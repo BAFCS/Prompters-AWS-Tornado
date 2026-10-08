@@ -17,6 +17,7 @@ DOCUMENT = "https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesocicl
 REPOSITORY = "https://github.com/fforster/aws-mesocyclonic"
 CATALOG = "https://doi.org/10.6084/m9.figshare.25119566"
 FIGS = common.ROOT / "figs"
+ASSETS = Path(__file__).resolve().parent.parent / "assets"
 Color = Literal["orange", "primary"]
 # Secciones del índice: (ancla del encabezado, texto del enlace).
 SECTIONS = (
@@ -75,6 +76,12 @@ def _cards(key: str, cards: list[tuple[str, Color, str, str]], n_columns: int = 
 def _cover() -> None:
     """Presenta el objetivo, las referencias del caso y los enlaces."""
     st.title("Predicción de tormentas mesociclónicas en el centro-sur de Chile", anchor="inicio")
+    _image(ASSETS / "tornado_stock.webp", "Tornado y rayos sobre un valle con casas; imagen ilustrativa.")
+    st.markdown(
+        "<p class='note'>Imagen ilustrativa; no corresponde a Chile ni a un evento del catálogo. "
+        "Fuente: <a href='https://www.pexels.com/photo/lightning-and-tornado-hitting-village-1446076/'>Pexels</a>.</p>",
+        unsafe_allow_html=True,
+    )
     st.markdown(
         '<p class="lede">El 30 de mayo de 2019, en pleno otoño, tormentas del centro-sur de Chile produjeron tornados que nadie esperaba. No hubo una advertencia a tiempo, y los índices que usan los pronosticadores del hemisferio norte no los habrían marcado: fueron diseñados para otro clima. Sabemos que algunas tormentas, las que desarrollan un mesociclón, son las que preceden a esos tornados. Lo que no sabemos es cómo reconocerlas antes, con los datos que ya existen para Chile.</p>'
         "<p>Este es un proyecto abierto para la hackathon AWS Breaking Barriers. Tenemos 102 eventos documentados, el reanálisis ERA5 y las imágenes del satélite GOES. Falta entender qué distingue a las tormentas que rotan de las que no, y esa pregunta puede responderla cualquier persona que sepa mirar datos, con o sin formación en meteorología.</p>",
