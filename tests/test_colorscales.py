@@ -12,6 +12,7 @@ import numpy as np
 import plotly.colors as pc
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "viewer"))
 
 from viewer_app import colorscales, components, layers, products, state, theme  # noqa: E402
 

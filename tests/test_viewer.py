@@ -9,6 +9,7 @@ from unittest.mock import patch
 from streamlit.testing.v1 import AppTest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "viewer"))
 
 from viewer_app import charts, data, p_sounding, variables  # noqa: E402
 
@@ -18,7 +19,9 @@ class ViewerTest(unittest.TestCase):
 
     def test_project_shows_with_region_without_days(self) -> None:
         """Un directorio regional vacío no debe bloquear la descripción del proyecto."""
-        app = AppTest.from_file(Path(__file__).resolve().parents[1] / "scripts" / "viewer.py")
+        app = AppTest.from_file(
+            Path(__file__).resolve().parents[1] / "scripts" / "viewer" / "viewer.py"
+        )
         with (
             patch.object(data, "regions", return_value=["empty-region"]),
             patch.object(data, "days", return_value={}),
@@ -30,7 +33,9 @@ class ViewerTest(unittest.TestCase):
 
     def test_project_without_regions_links_each_section(self) -> None:
         """Sin regiones, la página por defecto es El proyecto y su índice enlaza anclas que existen."""
-        app = AppTest.from_file(Path(__file__).resolve().parents[1] / "scripts" / "viewer.py")
+        app = AppTest.from_file(
+            Path(__file__).resolve().parents[1] / "scripts" / "viewer" / "viewer.py"
+        )
         with patch.object(data, "regions", return_value=[]):
             app.run(timeout=30)
         self.assertEqual(len(app.exception), 0)

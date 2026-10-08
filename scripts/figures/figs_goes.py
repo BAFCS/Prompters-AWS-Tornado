@@ -4,11 +4,12 @@
 Lee imágenes consecutivas de ``ABI-L2-CMIPF`` (disco completo, 2 km, cada 10 min) desde
 ``data/goes/*.nc``, recorta Chile centro-sur con la proyección geoestacionaria del ABI (la directa,
 ``fwd``, está aquí; la inversa es ``common.latlon``) y dibuja la temperatura de brillo de la primera y la última imagen, más su tendencia en diez
-minutos. Produce ``figs/fig3_goes_20190530.png``. Uso: ``uv run python scripts/figs_goes.py``.
+minutos. Produce ``figs/fig3_goes_20190530.png``. Uso: ``uv run python scripts/figures/figs_goes.py``.
 """
 
 import glob
 import re
+import sys
 import warnings
 from pathlib import Path
 
@@ -19,12 +20,13 @@ import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from scipy.ndimage import median_filter
 
-import common
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import common  # noqa: E402
 
 warnings.filterwarnings("ignore")
 matplotlib.use("Agg")
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 OUT, DATA = ROOT / "figs", ROOT / "data"
 ACC, SEV, COLD, WARM, MUT = "#0E6A63", "#D2492A", "#4C7FB8", "#C98A3C", "#64757B"
 INK, LINE = "#0C1518", "#C9D3D6"

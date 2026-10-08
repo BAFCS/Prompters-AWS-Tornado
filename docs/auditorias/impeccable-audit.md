@@ -8,7 +8,7 @@ El sistema expresa un producto concreto: cuaderno de campo para reconstruir torm
 
 ## Evidencia y límites
 
-Ver `impeccable-audit-evidencia.md`. Datos reales del 30 de mayo de 2019, 20 pruebas OK, Ruff y Pyright limpios. Navegación de las cinco páginas a 1440×900, 1024×768 con barra lateral abierta y 390×844. La auditoría combina inspección estática y observación; no equivale a una certificación WCAG. No hay benchmark remoto ni prueba con NVDA/VoiceOver.
+Evidencia no versionada. Datos reales del 30 de mayo de 2019, 20 pruebas OK, Ruff y Pyright limpios. Navegación de las cinco páginas a 1440×900, 1024×768 con barra lateral abierta y 390×844. La auditoría combina inspección estática y observación; no equivale a una certificación WCAG. No hay benchmark remoto ni prueba con NVDA/VoiceOver.
 
 ## Fortalezas verificadas
 
@@ -55,7 +55,7 @@ Puntuación de revisión acotada, no resultado de una certificación ni de un be
 
 CLI archivado en `impeccable-detector-b.json`: `[]`. **No es evidencia de que la app esté limpia:** el detector está orientado a markup y no ofrece cobertura fiable de páginas Python Streamlit.
 
-Escaneo en DOM real en cinco páginas: **101 alertas brutas** (46 proyecto, 17 caso, 13 mapas, 11 sondeo, 14 series). Son alertas de máquina, no 101 problemas verificados. Evidencia íntegra: `impeccable-browser-b.json` y `impeccable-critique-b.md`.
+Escaneo en DOM real en cinco páginas: **101 alertas brutas** (46 proyecto, 17 caso, 13 mapas, 11 sondeo, 14 series). Son alertas de máquina, no 101 problemas verificados. La evidencia íntegra no se versionó.
 
 Confirmadas: jerarquía de encabezados y controles/alternativas revisadas por árbol accesible. La revisión humana agrega el bloqueo de selección espacial y el colapso de grilla móvil. Los avisos de contraste en elementos fuera de pantalla, recorte genérico de contenedores y paleta azul no justifican cambiar tokens o declarar problemas de marca. La paleta está fijada en PRODUCT.md y cubierta por pruebas; no se cambia por una heurística estética del detector.
 

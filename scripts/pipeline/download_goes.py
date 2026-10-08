@@ -15,13 +15,14 @@ Salida (un archivo por hora, hasta 6 imágenes; 4 antes del 2-abr-2019)::
 
 Uso::
 
-    uv run python scripts/download_goes.py --start 2019-05-30
-    uv run python scripts/download_goes.py --start 2019-05-30 --bands 8 13 --hours 18 23
+    uv run python scripts/pipeline/download_goes.py --start 2019-05-30
+    uv run python scripts/pipeline/download_goes.py --start 2019-05-30 --bands 8 13 --hours 18 23
 """
 
 import datetime as dt
 import multiprocessing as mp
 import re
+import sys
 import time
 import zlib
 from collections import defaultdict
@@ -32,7 +33,8 @@ import h5py
 import numpy as np
 import xarray as xr
 
-import common
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import common  # noqa: E402
 
 PRODUCT = "ABI-L2-MCMIPF"
 G19_SWITCH = dt.datetime(2025, 4, 4, 15)

@@ -59,7 +59,7 @@ con apuntar a los equipos a los buckets públicos.
 - Para los días que proponemos (sección 4), bajar los archivos originales serían **~7 TB de ERA5 y
   ~11 TB de GOES**.
 
-`scripts/figs_era5.py` ya demuestra que se puede leer solo el recuadro por rangos de bytes (unos
+`scripts/figures/figs_era5.py` ya demuestra que se puede leer solo el recuadro por rangos de bytes (unos
 20–50 s por variable y día), pero hacerlo para más de mil días toma horas incluso en paralelo y
 necesita estar cerca de los buckets. No es algo que un equipo pueda hacer al comienzo de la
 hackathon. Por eso: **la organización genera el dataset una vez, antes del evento, y lo publica**

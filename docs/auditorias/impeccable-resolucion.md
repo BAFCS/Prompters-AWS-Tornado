@@ -30,7 +30,7 @@ Los ID siguen [audit](impeccable-audit.md) y [critique](impeccable-critique.md);
 - Cierre del último paso y enlace a cómo participar; recorrido completo comprobado en navegador.
 - Rótulos de comparación y evento de Series a 12 px; evento separado del título y la leyenda.
 
-`DESIGN.md` refleja los cambios implementados. El snapshot de critique quedó cerrado por el cambio de huella de `scripts/viewer.py`, conservando la historia.
+`DESIGN.md` refleja los cambios implementados. El snapshot de critique quedó cerrado por el cambio de huella de `scripts/viewer/viewer.py`, conservando la historia.
 
 ## Validación
 

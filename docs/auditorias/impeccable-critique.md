@@ -2,7 +2,7 @@ Method: dual-agent (A: /root/critique_design · B: /root/critique_evidence)
 
 # Impeccable critique — toda la app
 
-Fecha: 2026-10-07. Objetivo estable: `scripts/viewer.py` y `scripts/viewer_app/`. Base: `origin/main`, `79dbf04`. Visitante: Operate, con portada Read. Evaluación A terminada antes de incorporar evidencia B; acceso al perfil Playwright serializado, evaluaciones independientes.
+Fecha: 2026-10-07. Objetivo estable: `scripts/viewer/viewer.py` y `scripts/viewer/viewer_app/`. Base: `origin/main`, `79dbf04`. Visitante: Operate, con portada Read. Evaluación A terminada antes de incorporar evidencia B; acceso al perfil Playwright serializado, evaluaciones independientes.
 
 
 
@@ -65,7 +65,7 @@ Región muestra una clave técnica inglesa; instrucciones de zoom hablan de rued
 1. Prioridad: accesibilidad de selección/control o comparación móvil.
 2. Alcance: resolver primero P1 o incluir también entrada y orientación P2.
 
-Los reportes A y B completos se conservan en `docs/impeccable-critique-a.md` y `docs/impeccable-critique-b.md`. La auditoría técnica y su evidencia se guardan aparte.
+Los reportes A y B completos no se versionaron en el repositorio.
 
 ## Cruce de evaluaciones
 

@@ -18,13 +18,14 @@ Salida::
 
 Uso::
 
-    uv run python scripts/download_era5.py --start 2019-05-30
-    uv run python scripts/download_era5.py --start 2019-05-29 --end 2019-05-31 --pl u v t --sfc cape
+    uv run python scripts/pipeline/download_era5.py --start 2019-05-30
+    uv run python scripts/pipeline/download_era5.py --start 2019-05-29 --end 2019-05-31 --pl u v t --sfc cape
 """
 
 import calendar
 import datetime as dt
 import multiprocessing as mp
+import sys
 import time
 import zlib
 from concurrent.futures import ProcessPoolExecutor
@@ -34,7 +35,8 @@ import h5py
 import numpy as np
 import xarray as xr
 
-import common
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import common  # noqa: E402
 
 BUCKET = "nsf-ncar-era5"
 

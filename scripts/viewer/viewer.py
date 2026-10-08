@@ -2,7 +2,7 @@
 
 Página de entrada de una app de varias páginas (``st.navigation``): dibuja la barra lateral común
 (región, día, regla de tiempo, eventos y recorrido guiado), publica el contexto en
-``st.session_state`` y corre la página elegida. Las páginas viven en ``scripts/viewer_app/``.
+``st.session_state`` y corre la página elegida. Las páginas viven en ``scripts/viewer/viewer_app/``.
 
 Lee lo que dejan los scripts de descarga y procesamiento::
 
@@ -13,19 +13,22 @@ Lee lo que dejan los scripts de descarga y procesamiento::
 
 Uso::
 
-    uv run streamlit run scripts/viewer.py
+    uv run streamlit run scripts/viewer/viewer.py
 """
 
 import datetime as dt
 import html
+import sys
+from pathlib import Path
 from typing import NoReturn
 
 import numpy as np
 import pandas as pd
 import streamlit as st
 
-import common
-from viewer_app import (
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import common  # noqa: E402
+from viewer_app import (  # noqa: E402
     components,
     data,
     p_case,
@@ -84,10 +87,10 @@ def no_data(message: str, prepare: bool = False) -> NoReturn:
                 "en `data/crops/`. Después, recarga esta página."
             )
             st.code(
-                "uv run python scripts/download_era5.py --start 2019-05-30\n"
-                "uv run python scripts/download_goes.py --start 2019-05-30\n"
-                "uv run python scripts/process_goes.py --start 2019-05-30\n"
-                "uv run python scripts/process_era5.py --start 2019-05-30",
+                "uv run python scripts/pipeline/download_era5.py --start 2019-05-30\n"
+                "uv run python scripts/pipeline/download_goes.py --start 2019-05-30\n"
+                "uv run python scripts/pipeline/process_goes.py --start 2019-05-30\n"
+                "uv run python scripts/pipeline/process_era5.py --start 2019-05-30",
                 language="bash",
             )
     st.stop()

@@ -24,17 +24,20 @@ Entrada y salida::
 
 Uso::
 
-    uv run python scripts/process_era5.py --start 2019-05-30
-    uv run python scripts/process_era5.py --start 2019-05-30 --end 2019-05-31 --force
+    uv run python scripts/pipeline/process_era5.py --start 2019-05-30
+    uv run python scripts/pipeline/process_era5.py --start 2019-05-30 --end 2019-05-31 --force
 """
 
 import datetime as dt
+import sys
 import time
+from pathlib import Path
 
 import numpy as np
 import xarray as xr
 
-import common
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import common  # noqa: E402
 
 STEP = 100.0  # m, resolución del perfil interpolado
 TOP = 6000.0  # m, altura máxima del perfil interpolado
@@ -193,7 +196,7 @@ def process_day(pl: xr.Dataset, sfc: xr.Dataset, reg: common.Region) -> xr.Datas
         data,
         coords={"time": times, "latitude": pl["latitude"], "longitude": pl["longitude"]},
         attrs={
-            "source": "índices calculados por scripts/process_era5.py desde ERA5 (NSF NCAR)",
+            "source": "índices calculados por scripts/pipeline/process_era5.py desde ERA5 (NSF NCAR)",
             "region": f"{reg.name}: {reg.north}..{reg.south} lat, {reg.west}..{reg.east} lon",
             "note": "hemisferio sur: tormenta left-mover, SRH y STP negativos en casos tornádicos",
             "created": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),

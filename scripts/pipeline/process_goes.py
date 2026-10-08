@@ -13,10 +13,11 @@ Entrada y salida::
 
 Uso::
 
-    uv run python scripts/process_goes.py --start 2019-05-30
-    uv run python scripts/process_goes.py --start 2019-05-30 --resolution 0.04
+    uv run python scripts/pipeline/process_goes.py --start 2019-05-30
+    uv run python scripts/pipeline/process_goes.py --start 2019-05-30 --resolution 0.04
 """
 
+import sys
 import time
 from pathlib import Path
 
@@ -24,7 +25,8 @@ import numpy as np
 import xarray as xr
 from scipy.spatial import KDTree
 
-import common
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import common  # noqa: E402
 
 
 def grid(reg: common.Region, res: float) -> tuple[np.ndarray, np.ndarray]:

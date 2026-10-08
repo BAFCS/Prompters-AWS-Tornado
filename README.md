@@ -16,9 +16,9 @@ a partir del reanálisis **ERA5** y las imágenes multiespectrales del satélite
 |---|---|
 | `docs/mesociclones_chile.md` | **El documento principal.** El problema, la física, el caso chileno, los datos de entrada, las variables a calcular, cómo plantear el modelo, la arquitectura en AWS y las tareas abiertas. |
 | `docs/mesociclones_chile.pdf` | El mismo documento en A4 (33 páginas), con las figuras. |
-| `scripts/viewer.py` y `scripts/viewer_app/` | **El visor**: una aplicación web local para explorar un día de datos (mapas, sondeos y series). |
-| `scripts/download_*.py`, `scripts/process_*.py` | Descargan ERA5 y GOES recortados a Chile y calculan los índices que usa el visor. |
-| `scripts/figs_*.py` | Generan las cuatro figuras de `figs/` desde los datos reales. |
+| `scripts/viewer/viewer.py` y `scripts/viewer/viewer_app/` | **El visor**: una aplicación web local para explorar un día de datos (mapas, sondeos y series). |
+| `scripts/pipeline/download_*.py`, `scripts/pipeline/process_*.py` | Descargan ERA5 y GOES recortados a Chile y calculan los índices que usa el visor. |
+| `scripts/figures/figs_*.py` | Generan las cuatro figuras de `figs/` desde los datos reales. |
 | `tests/` | Pruebas automáticas del visor. |
 
 ## Cómo lanzar el visor, paso a paso
@@ -133,10 +133,10 @@ El visor no descarga nada por su cuenta: lee los archivos que dejan estos cuatro
 `data/crops/`. Ejecútalos **en este orden**, porque cada uno usa lo que dejó el anterior:
 
 ```bash
-uv run python scripts/download_era5.py --start 2019-05-30
-uv run python scripts/download_goes.py --start 2019-05-30
-uv run python scripts/process_goes.py --start 2019-05-30
-uv run python scripts/process_era5.py --start 2019-05-30
+uv run python scripts/pipeline/download_era5.py --start 2019-05-30
+uv run python scripts/pipeline/download_goes.py --start 2019-05-30
+uv run python scripts/pipeline/process_goes.py --start 2019-05-30
+uv run python scripts/pipeline/process_era5.py --start 2019-05-30
 ```
 
 Qué hace cada uno:
@@ -162,12 +162,12 @@ Qué hace cada uno:
 
 Para preparar otro día, cambia la fecha (formato año-mes-día). Para varios días seguidos, agrega
 `--end`, por ejemplo `--start 2019-05-30 --end 2019-05-31`. Cada script explica todas sus opciones
-con `--help`, por ejemplo `uv run python scripts/download_goes.py --help`.
+con `--help`, por ejemplo `uv run python scripts/pipeline/download_goes.py --help`.
 
 ### Paso 6. Abrir el visor
 
 ```bash
-uv run streamlit run scripts/viewer.py
+uv run streamlit run scripts/viewer/viewer.py
 ```
 
 La terminal mostrará una dirección (`Local URL`). Ábrela en tu navegador. Casi siempre es
@@ -211,9 +211,9 @@ con `--force` (ajusta las fechas a las que tengas).
 ```bash
 mv data/recortes data/crops
 mv data/crops/centro-sur-austral data/crops/south-central-austral   # centro-sur → south-central, completo → full
-uv run python scripts/download_goes.py --start 2019-05-30 --force
-uv run python scripts/process_goes.py --start 2019-05-30 --force
-uv run python scripts/process_era5.py --start 2019-05-30 --force
+uv run python scripts/pipeline/download_goes.py --start 2019-05-30 --force
+uv run python scripts/pipeline/process_goes.py --start 2019-05-30 --force
+uv run python scripts/pipeline/process_era5.py --start 2019-05-30 --force
 ```
 
 **El mapa no muestra triángulos rojos de eventos ni la costa.**
@@ -251,7 +251,7 @@ de bytes que recomienda el documento. `figs_goes.py` baja tres imágenes consecu
 `ABI-L2-CMIPF` del 30 de mayo de 2019, implementa la proyección geoestacionaria del ABI y
 calcula la tendencia de temperatura de brillo en diez minutos.
 
-Cada figura se regenera con su script, por ejemplo `uv run python scripts/figs_era5.py`.
+Cada figura se regenera con su script, por ejemplo `uv run python scripts/figures/figs_era5.py`.
 `AGENTS.md` indica qué archivos de entrada necesita cada uno.
 
 ## Las etiquetas

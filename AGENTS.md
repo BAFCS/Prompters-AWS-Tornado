@@ -27,8 +27,8 @@ método (lo exige `ANN`), no las variables; cada módulo y función lleva docstr
 
 ```bash
 uv sync                              # crea .venv con dependencias + grupo dev
-uv run python scripts/figs_era5.py   # ejecutar un script
-uv run streamlit run scripts/viewer.py  # visor interactivo ERA5 + GOES
+uv run python scripts/figures/figs_era5.py   # ejecutar un script
+uv run streamlit run scripts/viewer/viewer.py  # visor interactivo ERA5 + GOES
 uv run ruff check scripts            # lint (uv run ruff check --fix para autocorregir)
 uv run ruff format scripts           # formato
 uv run pyright                       # chequeo de tipos
@@ -50,11 +50,16 @@ anterior (las figuras son deterministas: mismo entorno y datos dan los mismos p�
 
 ## Scripts de figuras
 
+Viven en `scripts/figures/`. Estructura de `scripts/`: `figures/` (figuras), `pipeline/` (descarga y
+procesamiento), `viewer/` (visor y `viewer_app/`) y `common.py` (compartido). `docs/auditorias/` guarda las
+auditorías del visor y `docs/historico/` los planes y especificaciones ya ejecutados. `PRODUCT.md`,
+`DESIGN.md` y `.impeccable/` siguen en la raíz porque Impeccable los busca ahí (no tiene opción para moverlos).
+
 Cada script es un programa lineal sin funciones `main` ni argumentos: carga datos, dibuja y guarda
 en `figs/`. Los accesos a HDF5 pasan por `common.dataset()`, que acota el tipo a `h5py.Dataset`
 (`figs_era5.py` y `figs_goes.py` importan `common`, como los scripts de datos). Las rutas son relativas a la raíz del repo (`ROOT`, `OUT = figs/`, `DATA = data/`).
 Comparten una paleta y `rcParams` copiados en cada archivo (`ACC`, `SEV`, `COLD`, `WARM`, `MUT`,
-`INK`, `LINE`), que coinciden con la paleta de `scripts/viewer_app/theme.py` (salvo `MUT`: el visor usa
+`INK`, `LINE`), que coinciden con la paleta de `scripts/viewer/viewer_app/theme.py` (salvo `MUT`: el visor usa
 un apagado más oscuro porque va sobre fondo niebla).
 
 | Script | Figura | Entrada |
@@ -66,8 +71,8 @@ un apagado más oscuro porque va sobre fondo niebla).
 ## Scripts de datos y visor
 
 A diferencia de los de figuras, son programas de línea de comandos con `main()` y `argparse`
-(`--help` muestra las opciones). Comparten `scripts/common.py`, que se importa como módulo hermano
-(`import common`, declarado *first-party* para isort): regiones (`REGIONS`, `--region`, `--bbox`),
+(`--help` muestra las opciones). Viven en `scripts/pipeline/`; comparten `scripts/common.py`, que importan como módulo
+(`import common`, declarado *first-party* para isort; cada punto de entrada añade `scripts/` a `sys.path`): regiones (`REGIONS`, `--region`, `--bbox`),
 fechas (`--start`, `--end`), rutas, acceso S3 anónimo y la proyección del ABI (`latlon_abi`).
 Escriben NetCDF comprimido (gzip + shuffle) en `data/crops/<region>/`, saltan lo que ya existe
 (`--force` lo rehace) y reparten las lecturas en procesos con contexto `spawn` (s3fs no tolera
@@ -79,17 +84,17 @@ Escriben NetCDF comprimido (gzip + shuffle) en `data/crops/<region>/`, saltan lo
 | `download_goes.py` | GOES `ABI-L2-MCMIPF` (16 bandas, 2 km), recortado en la grilla fija; un archivo por hora | `goes/AAAAMMDD/goes_AAAAMMDDHH.nc` |
 | `process_goes.py` | Reproyecta GOES a lat/lon regular (vecino más cercano, sin alterar valores) | `goes_latlon/AAAAMMDD/goes_AAAAMMDDHH.nc` |
 | `process_era5.py` | Índices australes por columna (cizalladura, Bunkers *left-mover*, SRH, VGP₀₋₁, STP LM sin CIN, SHERBS3, LCL), vectorizados con las fórmulas de MetPy | `era5_indices/era5_idx_AAAAMMDD.nc` |
-| `viewer.py` | App Streamlit de varias páginas (`st.navigation`); el código de las páginas vive en `scripts/viewer_app/` | — |
+| `viewer.py` | App Streamlit de varias páginas (`st.navigation`); el código de las páginas vive en `scripts/viewer/viewer_app/` | — |
 
 ```bash
-uv run python scripts/download_era5.py --start 2019-05-30          # región south-central-austral
-uv run python scripts/download_goes.py --start 2019-05-30
-uv run python scripts/process_goes.py  --start 2019-05-30
-uv run python scripts/process_era5.py  --start 2019-05-30          # tras download_era5.py
-uv run streamlit run scripts/viewer.py
+uv run python scripts/pipeline/download_era5.py --start 2019-05-30          # región south-central-austral
+uv run python scripts/pipeline/download_goes.py --start 2019-05-30
+uv run python scripts/pipeline/process_goes.py  --start 2019-05-30
+uv run python scripts/pipeline/process_era5.py  --start 2019-05-30          # tras download_era5.py
+uv run streamlit run scripts/viewer/viewer.py
 ```
 
-**Visor** (`scripts/viewer.py` + paquete `scripts/viewer_app/`, importado como *first-party* igual que
+**Visor** (`scripts/viewer/viewer.py` + paquete `scripts/viewer/viewer_app/`, importado como *first-party* igual que
 `common`): páginas El proyecto, Datos, El caso, Mapas, Sondeo y Series. El proyecto (`viewer_app/p_project.py`,
 diagramas en `viewer_app/diagrams.py`) presenta el proyecto con elementos de Streamlit: es la
 página por defecto y se muestra aunque no haya datos. Datos (`viewer_app/p_data.py`) es el catálogo

@@ -1,6 +1,6 @@
 ---
 name: viewer
-description: Levanta el visor Streamlit del repo (scripts/viewer.py) y lo revisa en el navegador con Playwright MCP, en modo claro y oscuro. Úsala para ver, probar o capturar el visor, o para confirmar en la app real un cambio en scripts/viewer.py o scripts/viewer_app/ (no basta con las pruebas de tests/). No la uses para los scripts de figuras ni de datos.
+description: Levanta el visor Streamlit del repo (scripts/viewer/viewer.py) y lo revisa en el navegador con Playwright MCP, en modo claro y oscuro. Úsala para ver, probar o capturar el visor, o para confirmar en la app real un cambio en scripts/viewer/viewer.py o scripts/viewer/viewer_app/ (no basta con las pruebas de tests/). No la uses para los scripts de figuras ni de datos.
 ---
 
 # Revisar el visor en el navegador
@@ -12,7 +12,7 @@ Las pruebas de `tests/` (AppTest) no ejecutan el JavaScript ni el CSS del tema, 
 
 ```bash
 PUERTO=$(python3 -c 'import socket; s = socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')
-uv run streamlit run scripts/viewer.py --server.headless true --server.port "$PUERTO" \
+uv run streamlit run scripts/viewer/viewer.py --server.headless true --server.port "$PUERTO" \
   > "${TMPDIR:-/tmp}/visor-$PUERTO.log" 2>&1 &
 ```
 
