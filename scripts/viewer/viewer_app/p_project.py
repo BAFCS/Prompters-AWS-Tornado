@@ -113,7 +113,7 @@ def _importance() -> None:
         "<p>En 2019 Chile no tenía radares meteorológicos ni un sistema de alerta de tornados "
         "(Vicencio et al., 2021). En noviembre de 2025 la Universidad de Valparaíso "
         "<a href='https://www.uv.cl/archivo-noticias-uv/28540-chile-tendra-su-primer-radar-meteorologico-universidad-de-valparaiso-lidera-el-proyecto-que-transformara-la-investigacion-y-la-gestion-climatica-del-pais'>anunció la adjudicación del primer radar</a>, móvil, pero eso no equivale a una red permanente "
-        f"con cobertura nacional, y los expertos siguen <a href='https://www.cr2.cl/chile-pais-de-tornados-expertos-insiste-en-instalar-radares-ante-nueva-realidad-t13/'>insistiendo en instalar radares</a> "
+        "con cobertura nacional, y los expertos siguen <a href='https://www.cr2.cl/chile-pais-de-tornados-expertos-insiste-en-instalar-radares-ante-nueva-realidad-t13/'>insistiendo en instalar radares</a> "
         "(T13, 2025).</p>"
         "<p>Sin radar, un tornado débil o breve se conoce solo si alguien lo ve y lo reporta. En zonas poco pobladas "
         "puede no quedar registro: el subregistro por baja densidad de población es la explicación que plantean "
