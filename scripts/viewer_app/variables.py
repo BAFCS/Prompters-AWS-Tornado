@@ -665,6 +665,9 @@ VARIABLES = (
         "primer kilómetro.",
         why="Según Vicencio et al. (2021) es el mejor discriminante disponible para Chile.",
         formula=r"\mathrm{VGP}_{0\text{–}1} = \sqrt{\mathrm{CAPE}}\;\frac{\mathrm{BWD}_{0\text{–}1}}{1000\ \mathrm{m}}",
+        method="Es la variante de bajo nivel del VGP de Rasmussen y Blanchard (1998), que multiplica la raíz "
+        "de la CAPE por el cizalle de una capa más profunda; el cizalle de 0–1 km es la adaptación que "
+        "propone Vicencio et al. (2021).",
         threshold="Mayor que 0,1 m/s² en los cinco días tornádicos analizados entre 2008 y 2019 (Vicencio et "
         "al. 2021). Su alcance fuera de esos casos requiere evaluación.",
         inputs=("cape", "shear_01"), products=("idx:vgp_01",),
