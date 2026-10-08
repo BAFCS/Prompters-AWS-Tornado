@@ -74,6 +74,14 @@ def is_dark() -> bool:
         return False
 
 
+def is_phone() -> bool:
+    """Si el navegador es de teléfono: su User-Agent dice «Mobi» (las tablets no lo dicen)."""
+    try:
+        return "Mobi" in (st.context.headers.get("User-Agent") or "")
+    except Exception:  # fuera de una sesión (pruebas, scripts): escritorio
+        return False
+
+
 def colors() -> Palette:
     """La paleta del modo activo."""
     return DARK if is_dark() else LIGHT

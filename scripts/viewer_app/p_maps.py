@@ -251,12 +251,20 @@ def page() -> None:
             "No hay paneles. Agrega uno con «Agregar panel»: el RGB Airmass es un buen comienzo."
         )
         return
-    rows, cols = charts.grid_shape(len(visible))
-    for f in range(rows):
-        columns = st.columns(cols, gap="medium")
-        for j, p in enumerate(visible[f * cols : (f + 1) * cols]):
-            with columns[j]:
-                _controls(p, f * cols + j + 1, cat, ctx.day)
+    narrow = theme.is_phone()
+    rows, cols = charts.grid_shape(len(visible), narrow)
+    # En el teléfono los mapas van en una columna y sus controles, plegados encima: abiertos, seis filas
+    # de controles alejaban el primer mapa unos 700 px.
+    with (
+        st.expander(f"Paneles ({len(visible)})", icon=":material/tune:", expanded=len(visible) <= 2)
+        if narrow
+        else st.container()
+    ):
+        for f in range(rows):
+            columns = st.columns(cols, gap="medium")
+            for j, p in enumerate(visible[f * cols : (f + 1) * cols]):
+                with columns[j]:
+                    _controls(p, f * cols + j + 1, cat, ctx.day)
 
     animate = bool(st.session_state.get("animate"))
     goes_idx = [i for i, p in enumerate(visible) if cat[p.key].is_goes]
@@ -277,15 +285,20 @@ def page() -> None:
         layer_list, contours, enc, data.coast(ctx.reg), events=ctx.events, point=state.point(),
         click=None if ref is None else (ref["latitude"].values, ref["longitude"].values),
         wind=layers.wind_850(ctx.day, t, enc) if st.session_state.get("wind") else None,
+        narrow=narrow,
     )  # fmt: skip
     n_frames = _animate(fig, backgrounds, animated, visible, cat, ctx.day, t) if animated else 0
     st.caption(
-        "Usa la rueda del ratón o los botones del gráfico para acercar la vista. "
+        "Arrastra un mapa para moverlo y usa los botones + y − del gráfico para acercar; para "
+        "desplazar la página, toca fuera de los mapas. Todos los paneles se mueven juntos."
+        if narrow
+        else "Usa la rueda del ratón o los botones del gráfico para acercar la vista. "
         "Todos los paneles se mueven juntos."
     )
     if ref is not None:
         st.caption(
-            "Haz clic en cualquier panel para seleccionar el punto que se usará en Sondeo y Series."
+            f"{'Toca' if narrow else 'Haz clic en'} cualquier panel para seleccionar el punto que se "
+            "usará en Sondeo y Series."
         )
     st.plotly_chart(
         fig, width="stretch", theme=None, key="grid", on_select=_on_click,
