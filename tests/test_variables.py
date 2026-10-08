@@ -95,7 +95,7 @@ class PageTest(unittest.TestCase):
         """El índice con botones trae un enlace por variable, hacia su ficha."""
         app = AppTest.from_function(_page)
         app.run(timeout=30)
-        html = "".join(m.value for m in app.markdown if "class='var-index'" in m.value)
+        html = "".join(m.value for m in app.markdown if "class='var-table'" in m.value)
         self.assertEqual(len(re.findall(r"href='#", html)), len(variables.VARIABLES))
 
     def test_v_query_shows_one_variable(self) -> None:

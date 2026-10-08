@@ -163,20 +163,20 @@ def _toc() -> str:
 
 _INTRO = (
     (
-        "ERA5 · el entorno",
+        "ERA5",
         "El reanálisis global del ECMWF: una reconstrucción de la atmósfera hora a hora desde 1940, "
         "que combina un modelo con observaciones de radiosondas, satélites, aviones y estaciones. "
         "Entrega viento, temperatura, humedad y energía disponible en una grilla de ~31 km. Describe "
         "el entorno donde nace una tormenta, no la tormenta.",
     ),
     (
-        "GOES · la tormenta",
+        "GOES",
         "Un satélite geoestacionario sobre 75,2° O. Su radiómetro ABI mide 16 bandas, del visible al "
         "infrarrojo, cada 10 minutos y con píxeles de 2 km. De ahí salen la altura del tope de las "
         "nubes y su evolución. Ve la nube, no el giro dentro de ella.",
     ),
     (
-        "Catálogo · las etiquetas",
+        "Catálogo",
         "102 tornados y trombas marinas en Chile entre 1554 y 2025, reunidos desde crónicas, prensa y "
         "literatura científica (Bastías-Curivil et al.). Son los eventos con los que se comparan ERA5 "
         "y GOES. Solo hay positivos: falta saber dónde no ocurrió nada.",
@@ -197,19 +197,37 @@ def _intro() -> None:
 
 
 def _index() -> None:
-    """Un botón por variable, agrupado como las fichas, que lleva a su definición."""
+    """Tabla origen | categoría | variables | ir a: una fila por variable, con su botón a la ficha."""
     st.subheader("Ir a una variable", anchor=False)
-    blocks = []
-    for g in variables.GROUPS:
-        links = "".join(
-            f"<a href='#{v.key}' title='{html.escape(v.name)}'>{html.escape(v.symbol)}</a>"
+    rows = []
+    for s in variables.SOURCES:
+        first_in_source = True
+        n_source = sum(
+            v.group == g.key
+            for g in variables.GROUPS
+            if g.source == s.key
             for v in variables.VARIABLES
-            if v.group == g.key
         )
-        blocks.append(
-            f"<p class='var-index-group'>{g.title}</p><div class='var-index'>{links}</div>"
-        )
-    st.markdown("".join(blocks), unsafe_allow_html=True)
+        for g in variables.GROUPS:
+            if g.source != s.key:
+                continue
+            vs = [v for v in variables.VARIABLES if v.group == g.key]
+            for i, v in enumerate(vs):
+                cells = ""
+                if first_in_source:
+                    cells += f"<td rowspan='{n_source}'>{html.escape(s.title.split(' · ')[0])}</td>"
+                    first_in_source = False
+                if i == 0:
+                    cells += f"<td rowspan='{len(vs)}'>{html.escape(g.title)}</td>"
+                cells += (
+                    f"<td>{html.escape(v.name)}</td><td><a class='go' href='#{v.key}'>Ir a</a></td>"
+                )
+                rows.append(f"<tr>{cells}</tr>")
+    head = "<tr><th>Origen</th><th>Categoría</th><th>Variable</th><th>Ir a</th></tr>"
+    st.markdown(
+        f"<div class='var-table-wrap'><table class='var-table'>{head}{''.join(rows)}</table></div>",
+        unsafe_allow_html=True,
+    )
 
 
 def _body() -> bool:

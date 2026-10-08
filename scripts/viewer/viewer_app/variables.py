@@ -211,7 +211,7 @@ REFERENCES = {
 SOURCES = (
     Source(
         "era5",
-        "ERA5 · el entorno",
+        "ERA5",
         "Un reanálisis: el estado completo de la atmósfera, hora por hora desde 1940, reconstruido con "
         "un modelo que combina las observaciones históricas disponibles. Describe el escenario en el que una "
         "tormenta puede organizarse o no.",
@@ -238,7 +238,7 @@ SOURCES = (
     ),
     Source(
         "goes",
-        "GOES-16 · la tormenta",
+        "GOES-16",
         "Un satélite geoestacionario sobre el ecuador a 75,2°W, casi sobre el meridiano de Chile. Su "
         "radiómetro ABI mide 16 bandas, del visible al infrarrojo térmico, y barre el disco completo "
         "cada 10 minutos: 144 imágenes por día, de día y de noche.",
@@ -265,7 +265,7 @@ SOURCES = (
     ),
     Source(
         "catalogo",
-        "Catálogo de tornados · las etiquetas",
+        "Catálogo de tornados",
         "La base «Tornadoes and Waterspouts in Chile» (Bastías-Curivil et al., figshare, CC BY 4.0): "
         "casos en los que sus autores consideran más probable que haya ocurrido un tornado o una tromba "
         "que lo contrario, "
@@ -285,7 +285,7 @@ SOURCES = (
     ),
     Source(
         "contexto",
-        "Geográficos y temporales · el contexto",
+        "Geográficos y temporales",
         "Variables que no salen de ninguna de las tres fuentes, sino del terreno, la geometría de la "
         "observación y el calendario. Ayudan al modelo a separar lo que es física de lo que es dónde y "
         "cuándo se mira.",
