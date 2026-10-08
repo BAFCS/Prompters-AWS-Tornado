@@ -2,8 +2,8 @@
 
 Los textos viven en ``variables.py``. Esta página no necesita datos: sin recortes muestra todas las
 fichas; con recortes, cada ficha cuyo producto existe el día elegido trae un botón «Ver en Mapas».
-Una ficha sola se pide con ``?v=<clave>`` en la URL o desde la ayuda de Mapas
-(``state.go_to_variable``).
+La página siempre muestra todas las fichas: ``?v=<clave>`` en la URL, o la ayuda de Mapas
+(``state.go_to_variable``), lleva a la ficha pedida desplazando la página hasta ella.
 """
 
 import html
@@ -21,28 +21,22 @@ def _citations(keys: list[str] | tuple[str, ...]) -> str:
     )
 
 
-def _focus() -> Variable | None:
-    """La ficha pedida por la URL o por otra página; la URL queda al día para compartirla."""
+def _scroll_target() -> str | None:
+    """La clave de la ficha a la que ir: la pedida por la URL o por otra página, si existe."""
     requested = st.session_state.pop("data_focus", None) or st.query_params.get("v")
-    if requested in variables.BY_KEY:
-        st.query_params["v"] = requested
-        return variables.BY_KEY[requested]
     st.query_params.pop("v", None)
-    return None
+    return requested if requested in variables.BY_KEY else None
 
 
-def _set_focus(key: str | None) -> None:
-    """Callback: muestra solo la ficha ``key`` (``None``: todas)."""
-    if key is None:
-        st.query_params.pop("v", None)
-    else:
-        st.session_state["data_focus"] = key
-
-
-def _on_input(widget: str) -> None:
-    """Callback de las píldoras «Se calcula con»: abre la ficha del insumo elegido."""
-    _set_focus(st.session_state[widget])
-    st.session_state[widget] = None
+def _scroll_to(key: str) -> None:
+    """Desplaza la página hasta la ficha ``key`` cuando ya está dibujada (Streamlit la va armando)."""
+    st.html(
+        "<script>(() => { let n = 0; const t = setInterval(() => {"
+        f"const el = document.getElementById('{key}');"
+        "if (el) { el.scrollIntoView(); clearInterval(t); } else if (++n > 50) clearInterval(t);"
+        "}, 100); })();</script>",
+        unsafe_allow_javascript=True,
+    )
 
 
 def _available() -> set[str]:
@@ -51,28 +45,30 @@ def _available() -> set[str]:
     return set(products.catalog(ctx.day)) if ctx is not None else set()
 
 
-def _variable(v: Variable, available: set[str], suffix: str = "", level: int = 4) -> None:
-    """Dibuja la ficha de ``v``. ``suffix`` distingue las claves de widget si la ficha se repite.
-
-    ``level`` es el nivel del encabezado: sin fuente ni grupo encima (una ficha sola) sube para no
-    saltarse niveles bajo el título. La ficha es un riel (identidad y enlaces) junto al cuerpo.
-    """
-    k = f"{v.key}{suffix}"
+def _variable(v: Variable, available: set[str]) -> None:
+    """Dibuja la ficha de ``v``: un riel (identidad y enlaces) junto al cuerpo."""
+    k = v.key
     in_maps = next((p for p in v.products if p in available), None)
     with st.container(border=True, key=f"sheet_v_{k}", gap="small"):
         with st.container(key=f"rail_{k}", gap="small"):
             meta = " · ".join(html.escape(x) for x in (v.symbol, v.unit) if x)
+            # Streamlit reescribe el id de los encabezados con su texto: el ancla va en un span aparte.
             st.markdown(
-                f"<h{level} class='var-name' id='{html.escape(v.key)}'>{html.escape(v.name)}</h{level}>"
+                f"<span class='var-anchor' id='{html.escape(v.key)}'></span>"
+                f"<h4 class='var-name'>{html.escape(v.name)}</h4>"
                 f"<p class='var-meta mono'>{meta}</p>",
                 unsafe_allow_html=True,
             )
             if v.inputs:
-                st.pills(
-                    "Se calcula con", list(v.inputs), key=f"inputs_{k}",
-                    format_func=lambda c: variables.BY_KEY[c].symbol,
-                    on_change=_on_input, args=(f"inputs_{k}",),
-                )  # fmt: skip
+                links = " ".join(
+                    f"<a class='go' href='#{c}' title='Ir a la ficha de {html.escape(variables.BY_KEY[c].name)}'>"
+                    f"{html.escape(variables.BY_KEY[c].symbol)}</a>"
+                    for c in v.inputs
+                )
+                st.markdown(
+                    f"<p class='var-inputs'><span class='note'>Se calcula con</span> {links}</p>",
+                    unsafe_allow_html=True,
+                )
             if in_maps is not None:
                 st.button(
                     "Ver en Mapas", key=f"map_{k}", icon=":material/map:", type="tertiary",
@@ -223,11 +219,8 @@ def _index() -> None:
     )
 
 
-def _body() -> bool:
-    """Portada, índice y fichas (todas o una sola).
-
-    Devuelve si se dibujó la lista completa: solo entonces existen todas las anclas del índice.
-    """
+def _body() -> None:
+    """Portada, índice y todas las fichas."""
     st.title("Datos", anchor="inicio")
     st.markdown(
         f"<p class='lede'>El proyecto usa {len(variables.VARIABLES)} variables. Casi todas salen de "
@@ -239,14 +232,7 @@ def _body() -> bool:
     )
     _intro()
     available = _available()
-    focus = _focus()
-    if focus is not None:
-        st.button("Ver todas las variables", icon=":material/arrow_back:", on_click=_set_focus,
-                  args=(None,))  # fmt: skip
-        _variable(focus, available, suffix="_focus", level=2)
-        _bibliography()
-        return False
-
+    target = _scroll_target()
     _index()
     if not available:
         st.caption(
@@ -259,18 +245,17 @@ def _body() -> bool:
             if g.source == s.key:
                 _group(g, [v for v in variables.VARIABLES if v.group == g.key], available)
     _bibliography()
-    return True
+    if target:
+        _scroll_to(target)
 
 
 def page() -> None:
     """Dibuja la página con el índice al costado (o desplegable arriba en pantallas angostas)."""
     with st.container(key="data"), st.container(horizontal=True, wrap=False, gap="large"):
         with st.container(key="data_body"):
-            compact = st.empty()  # el índice va arriba, pero se decide después de dibujar el cuerpo
-            full = _body()
-        if full:
-            with compact.expander("En esta página", key="toc_compact", icon=":material/toc:"):
+            with st.expander("En esta página", key="toc_compact", icon=":material/toc:"):
                 st.markdown(_toc(), unsafe_allow_html=True)
-            with st.container(width=220, key="toc_side"):
-                st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
-                st.markdown(_toc(), unsafe_allow_html=True)
+            _body()
+        with st.container(width=220, key="toc_side"):
+            st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
+            st.markdown(_toc(), unsafe_allow_html=True)

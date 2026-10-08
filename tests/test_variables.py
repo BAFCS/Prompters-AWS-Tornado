@@ -98,16 +98,14 @@ class PageTest(unittest.TestCase):
         html = "".join(m.value for m in app.markdown if "class='var-table'" in m.value)
         self.assertEqual(len(re.findall(r"href='#", html)), len(variables.VARIABLES))
 
-    def test_v_query_shows_one_variable(self) -> None:
-        """``?v=vgp_01`` deja solo esa ficha, con su criterio chileno y la vuelta a todas."""
+    def test_v_query_keeps_every_variable(self) -> None:
+        """``?v=vgp_01`` no descarta fichas: se dibujan todas y la página se desplaza a esa."""
         app = AppTest.from_function(_page)
         app.query_params["v"] = "vgp_01"
         app.run(timeout=30)
         names = [m.value for m in app.markdown if "class='var-name'" in m.value]
-        self.assertEqual(len(names), 1)
-        self.assertIn("vorticidad", names[0])
-        self.assertTrue(any("Criterio en Chile" in m.value for m in app.markdown))
-        self.assertTrue(any(b.label == "Ver todas las variables" for b in app.button))
+        self.assertEqual(len(names), len(variables.VARIABLES))
+        self.assertTrue(any("id='vgp_01'" in n for n in names))
 
 
 if __name__ == "__main__":

@@ -98,7 +98,7 @@ uv run streamlit run scripts/viewer/viewer.py
 diagramas en `viewer_app/diagrams.py`) presenta el proyecto con elementos de Streamlit: es la
 página por defecto y se muestra aunque no haya datos. Datos (`viewer_app/p_data.py`) es el catálogo
 de datos: una ficha por variable de docs §4–5 (qué es, por qué importa, fórmula, criterio chileno,
-cuidado, insumos y fuentes), también sin datos; `?v=<clave>` muestra una sola ficha. Las fichas, la
+cuidado, insumos y fuentes), también sin datos; `?v=<clave>` desplaza la página a esa ficha. Las fichas, la
 bibliografía viven en `viewer_app/variables.py`, que es además la fuente de la ayuda
 «Qué estás viendo» de Mapas: todo producto nuevo de `products.py` necesita su ficha
 (`tests/test_variables.py` lo comprueba). La barra lateral (región, día, regla de tiempo,

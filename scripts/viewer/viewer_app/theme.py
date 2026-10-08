@@ -396,9 +396,9 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 .var-table td {{ padding: 2px 12px; border-top: 1px solid {p.LINE}; vertical-align: middle; }}
 .var-table td[rowspan] {{ vertical-align: top; padding-top: 10px; font-weight: 600; color: {p.INK_2}; }}
 .var-table td:last-child, .var-table th:last-child {{ width: 1%; white-space: nowrap; }}
-.var-table a.go {{ display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; margin: 3px 0; border: 1px solid {p.LINE};
+.var-table a.go, .var-inputs a.go {{ display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; margin: 3px 0; border: 1px solid {p.LINE};
   border-radius: var(--radius); color: {p.ACCENT}; text-decoration: none; font-weight: 600; }}
-.var-table a.go:hover, .var-table a.go:focus-visible {{ border-color: {p.ACCENT}; }}
+.var-table a.go:hover, .var-table a.go:focus-visible, .var-inputs a.go:hover, .var-inputs a.go:focus-visible {{ border-color: {p.ACCENT}; }}
 .toc ol {{ list-style: none; margin: 0.6rem 0 0; padding: 0; border-left: 1px solid {p.LINE}; }}
 [data-testid="stMain"] .toc li {{ margin: 0; padding: 0; }}
 .toc a {{ display: flex; align-items: center; min-height: var(--touch); margin-left: -1px; padding: 5px 0 5px 12px; border-left: 1px solid transparent;
@@ -427,9 +427,11 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
     align-items: center; justify-content: center; }}
   .js-plotly-plot .modebar {{ display: flex; flex-wrap: wrap; max-width: 100%; }}
 }}
-/* Datos: fichas de variables. El nombre es la ancla (?v= y el índice); el símbolo y la unidad, mono. */
+/* Datos: fichas de variables. El span .var-anchor es la ancla (índice, ?v= y «Se calcula con»); el símbolo y la unidad, mono. */
 .var-name {{ font-size: 1.1rem; font-weight: 600; line-height: 1.3; margin: 0; padding: 0;
   scroll-margin-top: var(--anchor-offset); }}
+.var-anchor {{ display: block; scroll-margin-top: var(--anchor-offset); }}
+.var-inputs {{ margin: 0.2rem 0; }}
 .var-meta {{ color: {p.MUTED}; font-size: 0.86rem; margin: 0.2rem 0 0.35rem; }}
 .facts {{ width: 100%; max-width: var(--measure); border-collapse: collapse; font-size: 0.92rem; }}
 .facts th {{ text-align: left; font-weight: 600; color: {p.MUTED}; white-space: nowrap; padding: 6px 16px 6px 0;
