@@ -409,7 +409,7 @@ def _data_section() -> None:
 
 
 def _participate() -> None:
-    """Propone tareas y hace explícitas las decisiones pendientes de la hackathon."""
+    """Propone tareas para quien quiera participar."""
     _section(
         "participar",
         "Por dónde empezar",
@@ -446,13 +446,6 @@ def _participate() -> None:
     )
     st.markdown(
         "El documento completo desarrolla la física, las fuentes de datos, las variables derivadas, el planteamiento del modelo, una arquitectura sugerida en AWS y las líneas de trabajo.",
-    )
-    st.subheader("Por definir para la hackathon", anchor=False)
-    st.markdown(
-        "La organización debe precisar qué parte del objetivo general corresponde a la hackathon y qué resultado se espera de los equipos. Los siguientes puntos están pendientes de definición; no constituyen requisitos confirmados.",
-    )
-    st.markdown(
-        "- Unidad de predicción: qué representa cada caso que debe analizar el modelo.\n- Horizonte temporal: con cuánta anticipación se busca estimar el desarrollo del mesociclón.\n- Forma de validar mesociclones con las evidencias disponibles; el catálogo etiqueta tornados y trombas, no mesociclones.\n- Resultado que debe presentar cada equipo, criterios de evaluación y requisitos de uso de AWS."
     )
     _links("participate")
     st.divider()
