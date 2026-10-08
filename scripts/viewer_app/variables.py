@@ -503,7 +503,7 @@ VARIABLES = (
         inputs=("viento", "viento10", "z", "sp"), products=("idx:shear_06",), synonyms="shear",
     ),
     Variable(
-        "bunkers", "C_LM", "Movimiento de la tormenta (Bunkers)", "m/s", "era5-cinematicos",
+        "bunkers", "Bunkers LM", "Movimiento de la tormenta (Bunkers)", "m/s", "era5-cinematicos",
         "Una estimación de hacia dónde se mueve una supercélula: el viento medio de 0–6 km desplazado "
         "7,5 m/s perpendicular al cizalle. Da dos soluciones, *right-mover* y *left-mover*.",
         why="La helicidad relativa a la tormenta necesita este vector.",

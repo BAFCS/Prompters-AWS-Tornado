@@ -10,7 +10,7 @@ from streamlit.testing.v1 import AppTest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from viewer_app import data  # noqa: E402
+from viewer_app import data, p_sounding, variables  # noqa: E402
 
 
 class ViewerTest(unittest.TestCase):
@@ -46,6 +46,10 @@ class ViewerTest(unittest.TestCase):
         for anchor in links:
             with self.subTest(anchor=anchor):
                 self.assertIn(anchor, anchors)
+
+    def test_sounding_sheets_exist(self) -> None:
+        """Cada píldora «Fichas en Datos» de Sondeo apunta a una ficha que existe."""
+        self.assertLessEqual(set(p_sounding.SHEETS), set(variables.BY_KEY))
 
 
 if __name__ == "__main__":
