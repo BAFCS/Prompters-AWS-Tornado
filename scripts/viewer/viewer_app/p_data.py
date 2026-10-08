@@ -160,20 +160,21 @@ _INTRO = (
         "ERA5",
         "El reanálisis global del ECMWF: una reconstrucción de la atmósfera hora a hora desde 1940, "
         "que combina un modelo con observaciones de radiosondas, satélites, aviones y estaciones. "
-        "Entrega viento, temperatura, humedad y energía disponible en una grilla de ~31 km. Describe "
-        "el entorno donde nace una tormenta, no la tormenta.",
+        "Entrega viento, temperatura, humedad y energía disponible en una grilla de ~31 km. Sus "
+        "celdas son demasiado grandes para ver una tormenta, pero muestran el ambiente en que se forma.",
     ),
     (
         "GOES",
         "Un satélite geoestacionario sobre 75,2° O. Su radiómetro ABI mide 16 bandas, del visible al "
         "infrarrojo, cada 10 minutos y con píxeles de 2 km. De ahí salen la altura del tope de las "
-        "nubes y su evolución. Ve la nube, no el giro dentro de ella.",
+        "nubes y su evolución. Ve la nube, pero no el giro dentro de ella.",
     ),
     (
         "Catálogo",
         "102 tornados y trombas marinas en Chile entre 1554 y 2025, reunidos desde crónicas, prensa y "
         "literatura científica (Bastías-Curivil et al.). Son los eventos con los que se comparan ERA5 "
-        "y GOES. Solo hay positivos: falta saber dónde no ocurrió nada.",
+        "y GOES. Solo incluye eventos que ocurrieron: faltan ejemplos de días de tormenta sin tornado, "
+        "que un modelo necesita para aprender.",
     ),
 )
 
@@ -229,11 +230,11 @@ def _body() -> bool:
     """
     st.title("Datos", anchor="inicio")
     st.markdown(
-        f"<p class='lede'>El proyecto usa {len(variables.VARIABLES)} variables, y casi todas "
-        "descienden de tres fuentes. Aquí van ordenadas por linaje: cada fuente primero, con los "
-        "campos tal como llegan, y debajo lo que se calcula a partir de ellos. Cada ficha explica qué "
-        "es la variable, por qué importa para un mesociclón, cómo se calcula y qué cuidar en el "
-        "hemisferio sur.</p>",
+        f"<p class='lede'>El proyecto usa {len(variables.VARIABLES)} variables. Casi todas salen de "
+        "tres fuentes: ERA5, GOES y el catálogo de tornados. Cada fuente va primero, con sus datos tal "
+        "como llegan, y debajo lo que se calcula a partir de ellos. Cada ficha explica qué es la "
+        "variable, por qué importa para un mesociclón, cómo se calcula y qué cuidar en el hemisferio "
+        "sur.</p>",
         unsafe_allow_html=True,
     )
     _intro()
