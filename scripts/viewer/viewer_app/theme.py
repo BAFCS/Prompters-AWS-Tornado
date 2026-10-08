@@ -194,13 +194,11 @@ _WATCHER = """
   };
   root.dataset.theme = mode() || root.dataset.theme || "light";
   if (window.__themeWatcher) return;
-  // El botón de la barra elige el otro modo en el menú de Streamlit, oculto mientras tanto.
-  document.addEventListener("click", (ev) => {
-    if (!ev.target.closest(".st-key-theme_mode button")) return;
-    const target = root.dataset.theme === "dark" ? "Light" : "Dark";
+  // Elige el modo en el menú de Streamlit, oculto mientras tanto.
+  const choose = (target) => {
     const menu = document.querySelector('[data-testid="stMainMenu"] button')
       || document.querySelector('[data-testid="stMainMenu"]');
-    if (!menu) return;
+    if (!menu) return false;
     root.classList.add("theme-switching");
     menu.click();
     let attempts = 0;
@@ -213,7 +211,21 @@ _WATCHER = """
         setTimeout(() => root.classList.remove("theme-switching"), 300);
       }
     }, 25);
+    return true;
+  };
+  document.addEventListener("click", (ev) => {
+    if (ev.target.closest(".st-key-theme_mode button")) choose(root.dataset.theme === "dark" ? "Light" : "Dark");
   }, true);
+  // Primera visita de este navegador: arranca en oscuro. Streamlit guarda después la elección de la persona.
+  let firstVisit = false;
+  try { firstVisit = !localStorage.getItem("meso_theme_init"); } catch (e) {}
+  const toDark = setInterval(() => {
+    const m = mode();
+    if (!firstVisit || !m) return;
+    clearInterval(toDark);
+    try { localStorage.setItem("meso_theme_init", "1"); } catch (e) {}
+    if (m === "light") choose("Dark");
+  }, 300);
   window.__watcherRequestedAt = 0;
   window.__watcherMismatches = 0;
   // Verificado con Streamlit 1.64: depende de su DOM (botones de la barra lateral e imágenes).

@@ -119,19 +119,57 @@ def _scorecard(ctx: state.Context, t: pd.Timestamp | None) -> None:
 
 def _toc(has_context: bool) -> str:
     """El índice de la página como lista de enlaces a sus secciones."""
-    items = [
+    items = [("resumen", "Resumen")]
+    if has_context:
+        items.append(("contexto", "Qué pasó"))
+    items += [
         ("mapa", "Mapa"),
         ("eventos", "Eventos reportados"),
         ("indices", "Índices del entorno"),
+        ("limites", "Límites de este análisis"),
     ]
-    if has_context:
-        items.append(("contexto", "Contexto"))
     links = "".join(f"<li><a href='#{a}'>{t}</a></li>" for a, t in items)
     return f"<nav class='toc' aria-label='En esta página'><ol>{links}</ol></nav>"
 
 
+def _summary(ctx: state.Context) -> None:
+    """Cifras del día: eventos, EF máximo y primer y último reporte (UTC)."""
+    ev = ctx.events
+    st.header("Resumen del día", anchor="resumen")
+    if ev.empty:
+        st.caption("El catálogo no tiene reportes para este día.")
+        return
+    grades = pd.to_numeric(ev["ef"].str.extract(r"(\d)")[0], errors="coerce").dropna()
+    hours = sorted(ev["hour_txt"])
+    cols = st.columns(4)  # cifras cortas: caben en 4 columnas aun con el cuerpo angosto
+    for col, (label, value) in zip(
+        cols,
+        [
+            ("Eventos", str(len(ev))),
+            ("EF máximo", f"EF{int(grades.max())}" if len(grades) else "—"),
+            ("Primer reporte (UTC)", hours[0].split("-")[0]),
+            ("Último reporte (UTC)", hours[-1].split("-")[-1]),
+        ],
+        strict=True,
+    ):
+        col.metric(label, value, border=True)
+
+
+def _limits() -> None:
+    """Lo que ERA5, GOES y el catálogo no permiten concluir, visible al cierre."""
+    st.header("Límites de este análisis", anchor="limites")
+    st.markdown(
+        "- **ERA5** tiene una resolución de unos 31 km y datos horarios, por lo que no representa "
+        "directamente un mesociclón.\n"
+        "- **GOES**: una imagen satelital tampoco confirma por sí sola un tornado.\n"
+        "- **El catálogo** reúne tornados y trombas marinas reportados y no proporciona una "
+        "etiqueta directa de mesociclón. En la tabla, EF es una clasificación de intensidad "
+        "basada en los daños observados."
+    )
+
+
 def _body(ctx: state.Context, c: texts.Case, t: pd.Timestamp | None) -> None:
-    """Título, mapa con los eventos debajo, índices y contexto."""
+    """Título, resumen, contexto, mapa con los eventos debajo, índices y límites."""
     steps = texts.TOURS.get(ctx.day.date, ())
     st.title(c.title, anchor="inicio")
     st.html(f"<p class='lede'>{c.lede}</p>")
@@ -145,31 +183,19 @@ def _body(ctx: state.Context, c: texts.Case, t: pd.Timestamp | None) -> None:
             "Empezar recorrido guiado", icon=":material/play_arrow:", key="case_tour",
             on_click=state.apply_step, args=(ctx.day.date, 0, ctx.events),
         )  # fmt: skip
+    _summary(ctx)
+    if c.context:
+        st.header("Qué pasó", anchor="contexto")
+        for paragraph in c.context:
+            st.markdown(paragraph)
     st.header("Mapa", anchor="mapa")
     _map(ctx, t)
     _event_log(ctx)
     _scorecard(ctx, t)
-
+    _limits()
     st.divider()
-    with st.expander("Cómo leer esta página", icon=":material/info:"):
-        st.markdown(
-            "ERA5 tiene una resolución espacial de unos 31 km y datos horarios, "
-            "por lo que no representa directamente un mesociclón; una imagen satelital "
-            "tampoco confirma por sí sola un tornado. El catálogo reúne tornados y trombas "
-            "marinas reportados y no proporciona una etiqueta directa de mesociclón. "
-            "En la tabla, EF es una clasificación de intensidad basada en los daños observados."
-        )
-    if c.context:
-        st.header("Contexto", anchor="contexto")
-        for paragraph in c.context:
-            st.markdown(paragraph)
-    details = texts.CASE_DETAILS.get(ctx.day.date)
-    if details:
-        with st.expander("Detalles meteorológicos y referencias pendientes de aclaración"):
-            for paragraph in details:
-                st.markdown(paragraph)
     st.page_link(
-        state.page("maps"), label="Para seguir: Mapas, entorno y tormenta lado a lado",
+        state.page("maps"), label="Seguir en Mapas: el entorno y la tormenta lado a lado",
         icon=":material/map:",
     )  # fmt: skip
 
