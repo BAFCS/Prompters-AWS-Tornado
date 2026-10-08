@@ -219,9 +219,7 @@ def _index() -> None:
                     first_in_source = False
                 if i == 0:
                     cells += f"<td rowspan='{len(vs)}'>{html.escape(g.title)}</td>"
-                cells += (
-                    f"<td>{html.escape(v.name)}</td><td><a class='go' href='#{v.key}'>Ir a</a></td>"
-                )
+                cells += f"<td>{html.escape(v.name)}</td><td><a class='go' href='#{v.key}' title='Ir a la ficha de {html.escape(v.name)}'>{html.escape(v.symbol)}</a></td>"
                 rows.append(f"<tr>{cells}</tr>")
     head = "<tr><th>Origen</th><th>Categoría</th><th>Variable</th><th>Ir a</th></tr>"
     st.markdown(
