@@ -1,4 +1,4 @@
-"""Página «El caso»: eventos reportados y comparación de su entorno atmosférico."""
+"""Página «Caso de estudio»: eventos reportados y comparación de su entorno atmosférico."""
 
 import dataclasses
 

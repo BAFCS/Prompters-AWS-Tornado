@@ -48,7 +48,7 @@ theme.apply()
 PAGES = {
     "project": st.Page(p_project.page, title="Problema", icon=":material/info:", default=True),
     "data": st.Page(p_data.page, title="Datos", icon=":material/dataset:", url_path="datos"),
-    "case": st.Page(p_case.page, title="El caso", icon=":material/history_edu:", url_path="caso"),
+    "case": st.Page(p_case.page, title="Caso de estudio", icon=":material/history_edu:", url_path="caso"),
     "maps": st.Page(p_maps.page, title="Mapas", icon=":material/map:", url_path="mapas"),
 }  # fmt: skip
 st.session_state["pages"] = PAGES
@@ -59,7 +59,7 @@ sidebar = st.sidebar
 sidebar.markdown("## Mesociclones en Chile")
 sidebar.caption(
     "Selecciona la región, el día y la hora que quieres explorar. La selección se comparte "
-    "entre El caso y Mapas. Las fechas y horas se expresan en tiempo universal "
+    "entre Caso de estudio y Mapas. Las fechas y horas se expresan en tiempo universal "
     "coordinado (UTC), que puede diferir de la hora local de Chile."
 )
 theme.mode_button()

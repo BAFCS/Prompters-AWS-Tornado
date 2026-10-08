@@ -191,7 +191,7 @@ uv run streamlit run scripts/viewer/viewer.py --server.runOnSave true
 ### Cómo se usa
 
 - Arriba están las páginas. **Problema** explica el problema y funciona aunque no hayas
-  descargado datos. **El caso** resume el día elegido, **Mapas** muestra hasta seis mapas con el zoom
+  descargado datos. **Caso de estudio** resume el día elegido, **Mapas** muestra hasta seis mapas con el zoom
   sincronizado.
 - La barra de la izquierda elige la región, el día, la hora y el evento. Lo que elijas ahí se
   mantiene al cambiar de página.
