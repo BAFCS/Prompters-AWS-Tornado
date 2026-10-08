@@ -77,7 +77,7 @@ UNITS = {"m s-1": "m/s", "m2 s-2": "m²/s²", "m s-2": "m/s²", "K km-1": "K/km"
 
 
 SHORT_NAMES = {"vgp_01": "VGP₀₋₁", "srh_01": "SRH₀₋₁ left-mover", "srh_03": "SRH₀₋₃ left-mover",
-          "shear_01": "Cizalle 0–1 km", "shear_03": "Cizalle 0–3 km", "shear_06": "Cizalle 0–6 km",
+          "shear_01": "Cizalladura 0–1 km", "shear_03": "Cizalladura 0–3 km", "shear_06": "Cizalladura 0–6 km",
           "stp_lm": "STP aproximado left-mover (sin CIN)", "sherbs3": "SHERBS3", "lcl": "Altura del LCL"}  # fmt: skip
 
 

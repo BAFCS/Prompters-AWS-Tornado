@@ -227,9 +227,10 @@ SOURCES = (
                 "recortes por hora en `goes/` y reproyectados a lat/lon en `goes_latlon/`",
             ),
         ),
-        "Chile está en el borde del disco. A 53°S un píxel de 2 km se comporta como uno de ~2 × 4 km, y el "
-        "**paralaje** desplaza un tope de 12–15 km de altura unos 10 km a 40°S y 20 km a 53°S, hacia el "
-        "sur, alejándose del punto subsatelital: varias celdas de ERA5. **El visor todavía no corrige el paralaje.** El detector de "
+        "Chile queda lejos del punto que el satélite ve de frente (el ecuador, 75,2°W), cerca del borde de "
+        "la imagen. A 53°S un píxel de 2 km se comporta como uno de ~2 × 4 km, y el **paralaje** hace que "
+        "el tope de una nube de 12 km de altura aparezca unos 10 km más al sur en Santiago y 21 km a 53°S, "
+        "con una pequeña componente hacia el este: varias celdas de GOES. **El visor todavía no corrige el paralaje.** El detector de "
         "rayos GLM declara cobertura hasta ~52°S: que no haya rayos en el extremo sur no significa que no "
         "los hubo. Filtra los archivos por la hora de inicio del barrido (`s`), nunca por la de creación.",
         refs=("goes-aws", "goes-abi"),
@@ -316,7 +317,7 @@ VARIABLES = (
         "viento", "u, v", "Viento horizontal", "m/s", "era5-presion",
         "Las componentes zonal (u, positiva hacia el este) y meridional (v, positiva hacia el norte) del "
         "viento en cada nivel de presión.",
-        why="Es la materia prima de todos los índices cinemáticos: cizalle, helicidad, movimiento de "
+        why="Es la materia prima de todos los índices cinemáticos: cizalladura, helicidad, movimiento de "
         "Bunkers y forma del hodógrafo.",
         formula=r"|\vec V| = \sqrt{u^2 + v^2}",
         products=("pl:u", "pl:v"), level=850.0, synonyms="viento zonal meridional rapidez",
@@ -350,7 +351,7 @@ VARIABLES = (
         "z", "z", "Geopotencial", "m²/s²", "era5-presion",
         "La energía potencial por unidad de masa de un nivel de presión respecto del nivel del mar. "
         "Dividida por la gravedad estándar da la **altura geopotencial**, en metros.",
-        why="Convierte niveles de presión en alturas: es lo que permite calcular cizalle «entre 10 m y "
+        why="Convierte niveles de presión en alturas: es lo que permite calcular cizalladura «entre 10 m y "
         "1 km». En 500 hPa dibuja vaguadas y bajas segregadas.",
         formula=r"Z = \frac{\Phi}{g_0}, \qquad g_0 = 9{,}80665\ \mathrm{m\,s^{-2}}",
         products=("pl:z",), level=500.0, synonyms="altura geopotencial",
@@ -394,7 +395,7 @@ VARIABLES = (
     Variable(
         "viento100", "100u, 100v", "Viento a 100 m", "m/s", "era5-superficie",
         "Componentes del viento a 100 m sobre el terreno.",
-        why="Ayuda a ver el cizalle en los primeros cientos de metros, donde importa para la "
+        why="Ayuda a ver la cizalladura en los primeros cientos de metros, donde importa para la "
         "tornadogénesis.",
         products=("sfc:100u", "sfc:100v"),
     ),
@@ -476,37 +477,38 @@ VARIABLES = (
     ),
     # --- ERA5 · derivados cinemáticos ------------------------------------------------------------
     Variable(
-        "shear_01", "Cizalle 0–1 km", "Cizalle de capa baja", "m/s", "era5-cinematicos",
+        "shear_01", "Cizalladura 0–1 km", "Cizalladura de capa baja", "m/s", "era5-cinematicos",
         "La magnitud de la diferencia vectorial del viento entre 10 m y 1 km sobre el terreno.",
-        why="Es el cizalle que importa para la tornadogénesis. Es una diferencia de vectores, no de "
-        "rapideces: un viento que gira 90° sin acelerar tiene cizalle grande.",
+        why="Es la cizalladura que importa para la tornadogénesis. Es una diferencia de vectores, no de "
+        "rapideces: un viento que gira 90° sin acelerar tiene cizalladura grande.",
         formula=r"\mathrm{BWD}_{0\text{–}1} = \left|\vec V(1\ \mathrm{km}) - \vec V(10\ \mathrm{m})\right|",
         method="El visor interpola el perfil cada 100 m sobre el terreno, partiendo del viento a 10 m.",
         threshold="12 m/s es el valor de comparación citado para los días tornádicos estudiados en Chile. "
         "Cumplirlo describe el entorno; no confirma un tornado.",
         inputs=("viento", "viento10", "z", "sp"), products=("idx:shear_01",),
-        synonyms="shear bulk wind difference bwd",
+        synonyms="shear cizalle bulk wind difference bwd",
     ),
     Variable(
-        "shear_03", "Cizalle 0–3 km", "Cizalle de 0 a 3 km", "m/s", "era5-cinematicos",
+        "shear_03", "Cizalladura 0–3 km", "Cizalladura de 0 a 3 km", "m/s", "era5-cinematicos",
         "La magnitud de la diferencia vectorial del viento entre 10 m y 3 km.",
-        why="Entra en SHERBS3, el índice para entornos de mucho cizalle y poco CAPE.",
+        why="Entra en SHERBS3, el índice para entornos de mucha cizalladura y poco CAPE.",
         formula=r"\mathrm{BWD}_{0\text{–}3} = \left|\vec V(3\ \mathrm{km}) - \vec V(10\ \mathrm{m})\right|",
-        inputs=("viento", "viento10", "z", "sp"), products=("idx:shear_03",), synonyms="shear",
+        inputs=("viento", "viento10", "z", "sp"), products=("idx:shear_03",), synonyms="shear cizalle",
     ),
     Variable(
-        "shear_06", "Cizalle 0–6 km", "Cizalle de capa profunda", "m/s", "era5-cinematicos",
+        "shear_06", "Cizalladura 0–6 km", "Cizalladura de capa profunda", "m/s", "era5-cinematicos",
         "La magnitud de la diferencia vectorial del viento entre 10 m y 6 km.",
         why="Es el discriminante clásico entre tormentas ordinarias y organizadas.",
         formula=r"\mathrm{BWD}_{0\text{–}6} = \left|\vec V(6\ \mathrm{km}) - \vec V(10\ \mathrm{m})\right|",
         caveat="En el caso de 2019 supera 18 m/s en casi toda la región, así que distingue poco entre "
         "lugares de esa situación. No tiene un criterio local de decisión.",
-        inputs=("viento", "viento10", "z", "sp"), products=("idx:shear_06",), synonyms="shear",
+        inputs=("viento", "viento10", "z", "sp"), products=("idx:shear_06",), synonyms="shear cizalle",
     ),
     Variable(
-        "bunkers", "C_LM", "Movimiento de la tormenta (Bunkers)", "m/s", "era5-cinematicos",
+        "bunkers", "Bunkers LM", "Movimiento de la tormenta (Bunkers)", "m/s", "era5-cinematicos",
         "Una estimación de hacia dónde se mueve una supercélula: el viento medio de 0–6 km desplazado "
-        "7,5 m/s perpendicular al cizalle. Da dos soluciones, *right-mover* y *left-mover*.",
+        "7,5 m/s perpendicular a la cizalladura. Da dos soluciones: *right-mover* (se desvía a la derecha del "
+        "viento medio) y *left-mover* (a la izquierda, la favorecida en el hemisferio sur).",
         why="La helicidad relativa a la tormenta necesita este vector.",
         formula=r"\vec C_{\mathrm{LM}} = \bar{\vec V}_{0\text{–}6} + D\,\frac{\hat k \times \vec S}{|\vec S|}, \qquad \vec S = \bar{\vec V}_{5{,}5\text{–}6} - \bar{\vec V}_{0\text{–}0{,}5}",
         method="D = 7,5 m/s; las barras son vientos medios sin ponderar en esas capas (km sobre el "
@@ -561,7 +563,7 @@ VARIABLES = (
     Variable(
         "llj", "LLJ", "Jet de niveles bajos", "m/s", "era5-cinematicos",
         "La magnitud y la altura del máximo de viento bajo 1,5 km.",
-        why="Transporta humedad y concentra cizalle cerca del suelo. El 30 de mayo de 2019 el jet del "
+        why="Transporta humedad y concentra cizalladura cerca del suelo. El 30 de mayo de 2019 el jet del "
         "noroeste en 850 hPa llegaba a 20–30 m/s y se frenaba contra la cordillera.",
         formula=r"V_{\mathrm{LLJ}} = \max_{z < 1{,}5\ \mathrm{km}} |\vec V(z)|",
         inputs=("viento",), synonyms="low level jet chorro",
@@ -667,6 +669,8 @@ VARIABLES = (
         why="Vicencio et al. (2021) lo utilizan para distinguir los cinco días tornádicos analizados. "
         "Su capacidad de separación debe evaluarse con otros casos.",
         formula=r"\mathrm{VGP}_{0\text{–}1} = \sqrt{\mathrm{CAPE}}\;\frac{\mathrm{BWD}_{0\text{–}1}}{1000\ \mathrm{m}}",
+        method="El VGP original (Rasmussen y Blanchard, 1998) multiplica la raíz de la CAPE por la cizalladura "
+        "de una capa de varios kilómetros; Vicencio et al. (2021) lo evalúan con la capa de 0–1 km.",
         threshold="Mayor que 0,1 m/s² en los cinco días tornádicos analizados entre 2008 y 2019 (Vicencio et "
         "al. 2021). Su alcance fuera de esos casos requiere evaluación.",
         inputs=("cape", "shear_01"), products=("idx:vgp_01",),
@@ -674,13 +678,13 @@ VARIABLES = (
     ),
     Variable(
         "stp_lm", "STP", "Parámetro significativo de tornado, rama left-mover", "", "era5-compuestos",
-        "Combina energía, base de nube, helicidad y cizalle profundo en un número (Thompson et al. 2003, "
+        "Combina energía, base de nube, helicidad y cizalladura profunda en un número (Thompson et al. 2003, "
         "2012).",
         why="Es el índice compuesto estándar para tornados significativos. El STP clásico no habría "
         "detectado el brote de 2019: recalibrarlo con datos chilenos sería un resultado publicable.",
         formula=r"\mathrm{STP} = \frac{\mathrm{CAPE}}{1500}\cdot\frac{2000 - \mathrm{LCL}}{1000}\cdot\frac{\mathrm{SRH}_{0\text{–}1}}{150}\cdot\frac{\mathrm{BWD}_{0\text{–}6}}{20}",
         method="Es la versión de capa fija de Thompson et al. (2012). El término del LCL vale 1 bajo "
-        "1000 m y 0 sobre 2000 m; el del cizalle vale 0 bajo 12,5 m/s y se satura en 30 m/s. "
+        "1000 m y 0 sobre 2000 m; el de la cizalladura vale 0 bajo 12,5 m/s y se satura en 30 m/s. "
         "**Aproximación del visor**: usa la CAPE de ERA5 y omite el término de CIN, (200 + CIN)/150.",
         threshold="≤ −0,3 con la rama *left-mover* (Marín et al. 2024), no el +1 norteamericano. Aplicarlo a "
         "esta aproximación sin CIN requiere validación.",
@@ -690,13 +694,13 @@ VARIABLES = (
     ),
     Variable(
         "sherbs3", "SHERBS3", "Índice para entornos HSLC", "", "era5-compuestos",
-        "Severe Hazards in Environments with Reduced Buoyancy (Sherburn y Parker 2014): combina cizalle "
-        "con gradientes térmicos, sin usar CAPE. Diseñado para entornos de mucho cizalle y poca "
+        "Severe Hazards in Environments with Reduced Buoyancy (Sherburn y Parker 2014): combina cizalladura "
+        "con gradientes térmicos, sin usar CAPE. Diseñado para entornos de mucha cizalladura y poca "
         "energía (HSLC), como el chileno.",
         why="Donde la CAPE es tan baja que los índices clásicos fallan, los gradientes térmicos "
         "capturan la inestabilidad.",
         formula=r"\mathrm{SHERBS3} = \frac{\mathrm{BWD}_{0\text{–}3}}{26\ \mathrm{m\,s^{-1}}}\cdot\frac{\Gamma_{0\text{–}3}}{5{,}2\ \mathrm{K\,km^{-1}}}\cdot\frac{\Gamma_{700\text{–}500}}{5{,}6\ \mathrm{K\,km^{-1}}}",
-        method="La variante **SHERBE** usa el cizalle de la capa efectiva y lo normaliza por 27 m/s; "
+        method="La variante **SHERBE** usa la cizalladura de la capa efectiva y lo normaliza por 27 m/s; "
         "los gradientes térmicos son los mismos.",
         caveat="SHERBE ≥ 1 es el umbral propuesto para Chile, pero corresponde a la variante efectiva: "
         "SHERBS3 no tiene un umbral validado.",
@@ -713,7 +717,7 @@ VARIABLES = (
     ),
     Variable(
         "scp", "SCP", "Parámetro compuesto de supercélula", "", "era5-compuestos",
-        "Combina la CAPE de la parcela más inestable, la helicidad y el cizalle de la capa efectiva "
+        "Combina la CAPE de la parcela más inestable, la helicidad y la cizalladura de la capa efectiva "
         "(versión de capa efectiva de Thompson et al. 2012).",
         why="Discrimina entornos de supercélula de los de tormentas ordinarias.",
         formula=r"\mathrm{SCP} = \frac{\mathrm{MUCAPE}}{1000}\cdot\frac{\mathrm{SRH}_{\mathrm{ef}}}{50}\cdot\frac{\mathrm{BWD}_{\mathrm{ef}}}{20}",
@@ -723,9 +727,9 @@ VARIABLES = (
     ),
     Variable(
         "brn", "BRN", "Número de Richardson global", "", "era5-compuestos",
-        "La razón entre la flotabilidad y el cizalle: cuánto domina la energía del ascenso sobre la "
+        "La razón entre la flotabilidad y la cizalladura: cuánto domina la energía del ascenso sobre la "
         "organización que da el viento.",
-        why="Discrimina el modo convectivo: valores bajos favorecen tormentas organizadas por el cizalle.",
+        why="Discrimina el modo convectivo: valores bajos favorecen tormentas organizadas por la cizalladura.",
         formula=r"\mathrm{BRN} = \frac{\mathrm{CAPE}}{\tfrac12 \left|\bar{\vec V}_{0\text{–}6} - \bar{\vec V}_{0\text{–}0{,}5}\right|^2}",
         method="Los vientos medios se ponderan por densidad.",
         inputs=("cape", "viento"), synonyms="bulk richardson number",

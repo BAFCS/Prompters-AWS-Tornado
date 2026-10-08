@@ -434,12 +434,11 @@ El GOES-East está sobre el ecuador, y Chile se extiende hasta los 56°S. El án
 | Arica | 18°S | ~20° | geometría cómoda |
 | Santiago | 33°S | ~40° | paralaje ~10 km en un tope de 12 km |
 | Chiloé | 42°S | ~50° | píxel efectivo notoriamente alargado |
-| Punta Arenas | 53°S | ~60° | píxel IR de 2 km se comporta como ~2 × 4 km; paralaje ~20 km |
+| Punta Arenas | 53°S | ~60° | píxel IR de 2 km se comporta como ~2 × 4 km; paralaje ~21 km en un tope de 12 km |
 
 Dos efectos concretos:
 
-1. El píxel se estira. Un píxel infrarrojo nominal de 2 km, visto a 60° de oblicuidad, cubre en realidad unos 2 × 4 km sobre el terreno. La resolución efectiva en el sur de Chile es peor que la nominal.
-2. Paralaje. El tope de una tormenta está a 12–15 km de altura, y el satélite lo ve *de lado*. El tope aparece desplazado respecto de su posición real en superficie, en dirección contraria al punto subsatelital (hacia el sur-suroeste), por una distancia aproximada de `h · tan(θ)`: unos 10 km a 40°S y 20 km a 53°S. Eso es varias celdas de grilla. Superponer sin esa corrección una imagen GOES con una posición de tornado reportada, o con la grilla de ERA5, introduce un error sistemático mayor que el fenómeno que se quiere estudiar.
+2. Paralaje. El tope de una tormenta está a 12–15 km de altura, y el satélite lo ve *de lado*. El tope aparece desplazado respecto de su posición real en superficie, en dirección contraria al punto subsatelital (el punto de la Tierra que queda justo bajo el satélite, en 0°, 75,2°W). Como Chile continental queda casi al sur de ese punto, el tope se corre hacia el sur, con una pequeña componente hacia el este. La distancia es aproximadamente `h · tan(θ)`, donde `h` es la altura del tope y `θ` el ángulo cenital local (el ángulo entre la vertical del lugar y la línea de visión del satélite). Para un tope de 12 km, el desplazamiento es de unos 10 km en Santiago (33°S), 13 km a 40°S y 21 km a 53°S. Eso equivale a varias celdas de la grilla de 2 km de GOES. Superponer una imagen GOES con la posición de un tornado reportado, o con la grilla de ERA5, sin corregir el paralaje introduce un error sistemático comparable o mayor que el tamaño de un mesociclón (2–10 km).
 
 > Recomendación: aplicar corrección de paralaje explícita usando la altura de tope de `ABI-L2-ACHAF` junto con los parámetros de la proyección (`goes_imager_projection`, presente en cada archivo NetCDF) y el punto subsatelital (0°, 75,2°W). No tratar la lat/lon de la grilla fija como geolocalización en superficie.
 

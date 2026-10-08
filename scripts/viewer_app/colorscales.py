@@ -24,7 +24,7 @@ class Colorscale:
 
 # Orden: la predeterminada primero, luego las aptas para daltonismo y al final las que no lo son.
 KINDS: dict[str, tuple[Colorscale, ...]] = {
-    # Magnitudes que crecen desde cero (VGP, cizalle, CAPE, LCL, C08 − C13).
+    # Magnitudes que crecen desde cero (VGP, cizalladura, CAPE, LCL, C08 − C13).
     "sequential": (
         Colorscale("Viridis", "Viridis", True),
         Colorscale("Cividis", "Cividis", True),

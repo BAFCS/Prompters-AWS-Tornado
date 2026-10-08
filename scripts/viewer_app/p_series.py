@@ -44,7 +44,7 @@ def page() -> None:
     state.save("radius")
     st.html(
         f"<p class='lede'>{html.escape(p.name)} · <span class='mono'>{components.coord(p.lat, p.lon)}</span>. "
-        "«Punto» es la celda ERA5 más cercana. «Área» muestra el máximo de VGP y cizalle, "
+        "«Punto» es la celda ERA5 más cercana. «Área» muestra el máximo de VGP y cizalladura, "
         "o el mínimo de SRH, dentro del rectángulo elegido. La comparación permite explorar "
         "diferencias espaciales alrededor del lugar reportado.</p>"
     )
@@ -60,7 +60,7 @@ def page() -> None:
         for v, title, unit, threshold, sense in (
             ("vgp_01", "VGP₀₋₁", "m/s²", 0.1, ">"),
             ("srh_01", "SRH₀₋₁ left-mover", "m²/s²", None, "<"),
-            ("shear_01", "Cizalle 0–1 km", "m/s", 12.0, ">"),
+            ("shear_01", "Cizalladura 0–1 km", "m/s", 12.0, ">"),
         ):
             s_p, s_v = _era5_series(ctx, v, p, radius, sense)
             rows.append(charts.SeriesRow(title, unit, ((s_p, "punto", theme.colors().SELECTION),
@@ -107,7 +107,7 @@ def page() -> None:
     st.plotly_chart(fig, width="stretch", theme=None)
     st.caption(
         "Rojo continuo: la hora del evento elegido; punteado: los demás eventos del día. Línea "
-        "azul: la hora seleccionada. Rayas rojas: valores de comparación de VGP y cizalle 0–1 km. "
+        "azul: la hora seleccionada. Rayas rojas: valores de comparación de VGP y cizalladura 0–1 km. "
         "Para SRH no se dibuja un valor de comparación. Cumplir estos criterios no confirma un tornado."
     )
     st.caption(

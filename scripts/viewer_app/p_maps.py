@@ -24,10 +24,15 @@ MAX_ANIMATED = 3  # paneles GOES que se animan a la vez
 
 
 def _on_click() -> None:
-    """Callback de la grilla: el punto clicado en cualquier panel pasa a ser el punto elegido."""
+    """Callback de la grilla: el nodo ERA5 más cercano al clic pasa a ser el punto elegido.
+
+    Es el nodo que leen Sondeo y Series; sin ERA5 esas páginas no tienen qué mostrar y el clic se ignora.
+    """
     points = st.session_state["grid"].selection.points
-    if points:
-        la, lo = float(points[0]["y"]), float(points[0]["x"])
+    ref = data.era5_ref(state.context().day)
+    if points and ref is not None:
+        node = ref.sel(latitude=points[0]["y"], longitude=points[0]["x"], method="nearest")
+        la, lo = float(node["latitude"]), float(node["longitude"])
         state.select_point(state.Point(la, lo, components.coord(la, lo)))
 
 
@@ -145,14 +150,15 @@ def _animate(
         if any(c is None for c in cs.values()):
             continue
         annots = [dict(a) for a in titles]
-        frame_data = []
+        frame_data, traces = [], []
         for i, c in cs.items():
             assert c is not None
             annots[i]["text"] = f"{i + 1} · {c.title}"
-            z = charts.background_z(c)
-            frame_data.append(go.Image(z=z) if c.is_rgb else go.Heatmap(z=z))
-        frames.append(go.Frame(data=frame_data, traces=[backgrounds[i] for i in cs],
-                                name=str(len(frames)), layout={"annotations": annots}))  # fmt: skip
+            bg = charts.background(c.with_colorscale(visible[i].colorscale))
+            frame_data += bg
+            traces += range(backgrounds[i], backgrounds[i] + len(bg))
+        frames.append(go.Frame(data=frame_data, traces=traces, name=str(len(frames)),
+                                layout={"annotations": annots}))  # fmt: skip
         labels.append(pd.Timestamp(ti).strftime("%H:%M"))
     if len(frames) < 2:
         return len(frames)
@@ -251,12 +257,20 @@ def page() -> None:
             "No hay paneles. Agrega uno con «Agregar panel»: el RGB Airmass es un buen comienzo."
         )
         return
-    rows, cols = charts.grid_shape(len(visible))
-    for f in range(rows):
-        columns = st.columns(cols, gap="medium")
-        for j, p in enumerate(visible[f * cols : (f + 1) * cols]):
-            with columns[j]:
-                _controls(p, f * cols + j + 1, cat, ctx.day)
+    narrow = theme.is_phone()
+    rows, cols = charts.grid_shape(len(visible), narrow)
+    # En el teléfono los mapas van en una columna y sus controles, plegados encima: abiertos, seis filas
+    # de controles alejaban el primer mapa unos 700 px.
+    with (
+        st.expander("Controles de los paneles", icon=":material/tune:", expanded=len(visible) <= 2)
+        if narrow
+        else st.container()
+    ):
+        for f in range(rows):
+            columns = st.columns(cols, gap="medium")
+            for j, p in enumerate(visible[f * cols : (f + 1) * cols]):
+                with columns[j]:
+                    _controls(p, f * cols + j + 1, cat, ctx.day)
 
     animate = bool(st.session_state.get("animate"))
     goes_idx = [i for i, p in enumerate(visible) if cat[p.key].is_goes]
@@ -275,17 +289,21 @@ def page() -> None:
     ref = data.era5_ref(ctx.day)
     fig, backgrounds = charts.grid(
         layer_list, contours, enc, data.coast(ctx.reg), events=ctx.events, point=state.point(),
-        click=None if ref is None else (ref["latitude"].values, ref["longitude"].values),
         wind=layers.wind_850(ctx.day, t, enc) if st.session_state.get("wind") else None,
+        narrow=narrow,
     )  # fmt: skip
     n_frames = _animate(fig, backgrounds, animated, visible, cat, ctx.day, t) if animated else 0
     st.caption(
-        "Usa la rueda del ratón o los botones del gráfico para acercar la vista. "
-        "Todos los paneles se mueven juntos."
+        "Arrastra un mapa para moverlo y usa los botones + y − del gráfico para acercar; para "
+        "desplazar la página, toca fuera de los mapas. Todos los paneles se mueven y se acercan juntos."
+        if narrow
+        else "Usa la rueda del ratón o los botones del gráfico para acercar la vista. "
+        "Todos los paneles se mueven y se acercan juntos."
     )
     if ref is not None:
         st.caption(
-            "Haz clic en cualquier panel para seleccionar el punto que se usará en Sondeo y Series."
+            f"{'Toca' if narrow else 'Haz clic en'} un panel para elegir un punto. Se usa el nodo de ERA5 "
+            "más cercano (la grilla es de 0,25°, unos 25 km), y ese punto alimenta Sondeo y Series."
         )
     st.plotly_chart(
         fig, width="stretch", theme=None, key="grid", on_select=_on_click,

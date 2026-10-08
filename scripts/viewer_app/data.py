@@ -113,26 +113,30 @@ def _version(path: Path) -> float:
     return path.stat().st_mtime if path.exists() else 0.0
 
 
-def coast(reg: common.Region) -> tuple[list[float | None], list[float | None]]:
-    """Líneas de costa de ``data/coast.zip`` dentro de ``reg``, como listas x/y separadas por None."""
+def coast(reg: common.Region) -> tuple[np.ndarray, np.ndarray]:
+    """Líneas de costa de ``data/coast.zip`` dentro de ``reg``, como arreglos x/y separados por NaN."""
     return _coast(reg, _version(COAST))
 
 
 @st.cache_data
-def _coast(reg: common.Region, version: float) -> tuple[list[float | None], list[float | None]]:
-    """Lee y recorta la costa; ``version`` (mtime) solo separa entradas de caché."""
+def _coast(reg: common.Region, version: float) -> tuple[np.ndarray, np.ndarray]:
+    """Lee, recorta y simplifica la costa; ``version`` (mtime) solo separa entradas de caché.
+
+    Simplificada a 0,005° (~500 m, menos que un píxel GOES) y en ``float32``: plotly la recibe como
+    arreglo binario y no como lista JSON, y cada panel la repite.
+    """
     path = COAST
     if not path.exists():
-        return [], []
+        return np.array([], np.float32), np.array([], np.float32)
     g = gpd.read_file(f"zip://{path}").clip(box(reg.west, reg.south, reg.east, reg.north))
-    xs: list[float | None] = []
-    ys: list[float | None] = []
-    for geom in g.geometry:
+    xs: list[float] = []
+    ys: list[float] = []
+    for geom in g.geometry.simplify(0.005):
         for line in getattr(geom, "geoms", [geom]):
             x, y = line.xy
-            xs += [*x, None]
-            ys += [*y, None]
-    return xs, ys
+            xs += [*x, np.nan]
+            ys += [*y, np.nan]
+    return np.array(xs, np.float32), np.array(ys, np.float32)
 
 
 def coordinate(v: object) -> float:

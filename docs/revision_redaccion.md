@@ -62,3 +62,15 @@ Prioridad sugerida: primero corregir las equivalencias entre tornados, mesociclo
 La propuesta 20 utiliza el mapa existente de la figura 3 y sus paneles A–B para acompañar la explicación del entorno. En la propuesta 28, la lectura de `scripts/figs_goes.py` confirmó que el tercer panel resta las imágenes de 21:40 y 21:50; se corrigió el pie y el texto alternativo con ese intervalo. La sección de radar quedó fechada con el anuncio de la Universidad de Valparaíso del 7 de noviembre de 2025, sin presentar esa adjudicación como prueba de una red operativa actual. La definición de reanálisis se contrastó con la ficha del ECMWF citada en el documento.
 
 Verificación de la edición: índice y diez secciones, cuatro rutas de figuras, referencias enlazadas y bloques de código/fórmulas conservados; `git diff --check`, Ruff, formato y Pyright sin errores; 29 pruebas de regresión aprobadas. Se revisaron El proyecto, Datos, El caso, Mapas, Sondeo y Series en modo claro y oscuro, y las fichas a 1024 × 768 con la barra lateral abierta. El worktree no contiene recortes de datos: las páginas que los requieren mostraron el estado esperado sin datos. Las capturas quedan en `.playwright-mcp/`. Se utilizó un Chromium independiente porque el navegador del MCP estaba ocupado. Los sondeos de rutas internas de Streamlit produjeron 44 respuestas 404 bajo las rutas de página y después 48 respuestas válidas en la raíz; no hubo errores inesperados ni excepciones de la app. El PDF conserva la versión anterior porque su conversor no está en el repositorio.
+
+## Segunda pasada: cambios posteriores a `cd5a7e1`
+
+Se auditaron los textos nuevos de `pagina-datos` (paralaje, nota del VGP, símbolo de Bunkers, ayudas de Mapas y Sondeo) y se aplicaron 12 cambios:
+
+- **Paralaje (A1–A5):** se definieron `θ` y el punto subsatelital, se sustituyó «ingenuamente» y se comparó el error con el tamaño de un mesociclón (2–10 km). El texto del visor y la tabla del `.md` quedaron con las mismas cifras (10, 13 y 21 km).
+- **VGP (A6):** la nota ya no atribuye a Vicencio et al. (2021) la autoría de la variante. **Pendiente de verificar:** la capa exacta del VGP original (Rasmussen y Blanchard, 1998); el texto dice «varios kilómetros».
+- **Bunkers (A7):** se definen *left-mover* y *right-mover*.
+- **Mapas y Sondeo (A9–A12):** la ayuda del clic explica el ajuste al nodo ERA5 más cercano; los rótulos de la ayuda se aclararon.
+- **Vocabulario (A8):** «cizalladura» sustituye a «cizalle» en `scripts/viewer_app/` (con concordancia de género); «cizalle» queda como sinónimo del buscador. `process_era5.py` conserva «cizalle» en sus `long_name` y docstrings.
+
+Quedaron fuera A13 y A14 (documentos de desarrollo: `DESIGN.md` y `AGENTS.md`).
