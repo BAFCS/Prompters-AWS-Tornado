@@ -171,7 +171,7 @@ def _difficulty() -> None:
     with st.container(border=True, key="sheet_cape"):
         _image(
             diagrams.cape_shear(),
-            "Comparación esquemática de CAPE y cizalle: los casos chilenos de mayo de 2019 combinan baja energía convectiva con fuerte cambio del viento en el primer kilómetro. No es una frontera de detección.",
+            "Comparación esquemática de CAPE y cizalladura: los casos chilenos de mayo de 2019 combinan baja energía convectiva con fuerte cambio del viento en el primer kilómetro. No es una frontera de detección.",
         )
         st.markdown(
             "Comparación esquemática de CAPE y cizalladura; no representa una frontera de detección del STP. Los casos chilenos de mayo de 2019 combinan CAPE relativamente bajo con fuerte cizalladura en el primer kilómetro. La referencia de 15–45 J/kg corresponde al CAPE medio a fines de mayo en Biobío descrito en el documento. Requiere verificación: confirmar las fuentes y el ámbito de las referencias del esquema antes de utilizarlas en una decisión."
