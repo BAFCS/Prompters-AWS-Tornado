@@ -28,6 +28,7 @@ SECTIONS = (
     ("problema", "El problema"),
     ("dificultad", "Por qué es difícil"),
     ("datos", "Los datos"),
+    ("volumen", "El volumen de los datos"),
     ("participar", "Participar"),
 )
 
@@ -416,6 +417,86 @@ def _data_section() -> None:
         )
 
 
+def _volume() -> None:
+    """Cuánto pesan los datos por día y por subconjunto, y por qué hay que trabajarlos dentro de AWS."""
+    _section(
+        "volumen",
+        "El volumen de los datos",
+        "Un día de ERA5 y GOES pesa decenas de gigabytes en origen y deja poco más de uno en disco. "
+        "Esa diferencia decide dónde conviene trabajar.",
+    )
+    st.subheader("Un día de datos", anchor=False)
+    st.markdown(
+        "ERA5 guarda cada variable de niveles de presión en un archivo global, y el servidor no permite pedir "
+        "solo Chile: cada hora es un bloque del planeta entero (50–65 MB) que hay que traer completo para "
+        "recortarlo después. GOES publica el disco completo en cada imagen, 144 al día. Lo que queda "
+        "guardado es una fracción de lo que se lee.\n\n"
+        "| Conjunto | Tamaño en origen | A transferir | Queda guardado |\n"
+        "|---|---|---|---|\n"
+        "| ERA5, niveles de presión (8 variables) | ≈ 11 GB (8 archivos de ≈ 1,4 GB) | ≈ 11 GB | ≈ 64 MB |\n"
+        "| ERA5, superficie (12 variables) | archivos mensuales | pocos MB | ≈ 3 MB |\n"
+        "| GOES, 16 bandas a 2 km | ≈ 52 GB (144 imágenes de ≈ 360 MB) | ≈ 0,7 GB | ≈ 0,7 GB, más ≈ 0,75 GB reproyectado |\n"
+        "| Índices de ERA5 | se calculan | — | ≈ 5 MB |\n"
+        "| Catálogo de tornados | un archivo | 160 kB | 160 kB |\n"
+        "| **Total por día** | **≈ 63 GB** | **≈ 12 GB** | **≈ 1,5 GB** |"
+    )
+    st.caption(
+        "Medido: lo que queda guardado, con los recortes del 30 y 31 de mayo de 2019 y el catálogo, y el "
+        "tamaño por archivo que documenta el proyecto. Estimado: lo que transfiere GOES (solo los bloques "
+        "que tocan la región, del orden de lo que se guarda) y la superficie de ERA5."
+    )
+    st.subheader("Los subconjuntos que importan", anchor=False)
+    st.markdown(
+        "Cuánto hay que leer depende de qué días se necesiten. El catálogo tiene 70 días distintos con "
+        "tornado desde 1940, el inicio de ERA5, y 38 desde 2018, cuando GOES-16 ya operaba. Un modelo "
+        "también necesita días sin tornado, que el catálogo no trae; la fila de controles supone, como "
+        "ejemplo, diez días de control por cada día con tornado.\n\n"
+        "| Subconjunto | Días | ERA5 a transferir | GOES a transferir | Queda guardado |\n"
+        "|---|---|---|---|---|\n"
+        "| Un día | 1 | 11 GB | 0,7 GB | 1,5 GB |\n"
+        "| Caso de estudio (30 y 31 de mayo de 2019) | 2 | 22 GB | 1,4 GB | 3 GB |\n"
+        "| Días con tornado, era GOES (desde 2018) | 38 | 418 GB | 27 GB | 57 GB |\n"
+        "| Días con tornado, era ERA5 (desde 1940) | 70 | 770 GB | 27 GB (solo los 38 con GOES) | 59 GB |\n"
+        "| Casos y controles, era GOES (supuesto: 10 controles por caso) | 418 | 4,6 TB | 301 GB | 627 GB |\n"
+        "| Un año completo | 365 | 4,0 TB | 263 GB | 548 GB |\n"
+        "| Diez años (GOES existe en unos 8) | 3 650 | 40 TB | 2,1 TB | 4,4 TB |"
+    )
+    st.subheader("Cuánto tarda traerlo", anchor=False)
+    st.markdown(
+        "ERA5 domina el tiempo: es casi todo lo que se transfiere. La tabla cuenta solo su transferencia, "
+        "con el enlace lleno todo el rato, así que son tiempos mínimos. El supuesto de AWS es 1 Gbps "
+        "sostenido, lo que da una instancia pequeña en la misma región que los datos; instancias más "
+        "grandes y varias en paralelo lo reducen.\n\n"
+        "| Subconjunto | Desde un computador con 100 Mbps | Dentro de AWS (1 Gbps) |\n"
+        "|---|---|---|\n"
+        "| Un día | 15 min | 1,5 min |\n"
+        "| Caso de estudio | 29 min | 3 min |\n"
+        "| 38 días con tornado | 9 h | 56 min |\n"
+        "| Casos y controles | 4,3 días | 10 h |\n"
+        "| Un año completo | 3,7 días | 9 h |\n"
+        "| Diez años | 37 días | 3,7 días |"
+    )
+    st.subheader("Qué se hace dónde", anchor=False)
+    st.markdown(
+        "Traer a un computador personal lo que hay que leer no tiene sentido: el tiempo se va en la red y "
+        "no en el análisis. Leer ERA5 y GOES y recortarlos es el trabajo que tiene que ocurrir dentro de AWS, "
+        "porque no hay forma de pedirle menos al servidor. Una vez hechos los recortes, el volumen cae "
+        "unas 40 veces y ya es manejable.\n\n"
+        "| Etapa | Dónde | Por qué |\n"
+        "|---|---|---|\n"
+        "| Leer ERA5 y GOES y recortar la región | AWS, en la región de cada bucket | ≈ 12 GB por día que no se pueden reducir antes de leerlos |\n"
+        "| Calcular índices y armar los ejemplos | AWS, junto a los recortes | Los recortes de un año pesan ≈ 0,5 TB |\n"
+        "| Entrenar y evaluar el modelo | AWS | Lee los recortes completos varias veces |\n"
+        "| Explorar un caso en el visor | En cualquier computador | Un caso son unos 3 GB de recortes |\n\n"
+        "La sección «Cómo obtener los datos», en Datos, dice en qué región conviene trabajar."
+    )
+    st.page_link(
+        state.page("data"),
+        label="Ver cómo obtener los datos y los scripts del proyecto",
+        icon=":material/dataset:",
+    )
+
+
 def _participate() -> None:
     """Propone tareas para quien quiera participar."""
     _section(
@@ -491,6 +572,7 @@ def page() -> None:
             _problem()
             _difficulty()
             _data_section()
+            _volume()
             _participate()
         with st.container(width=220, key="toc_side"):
             st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
