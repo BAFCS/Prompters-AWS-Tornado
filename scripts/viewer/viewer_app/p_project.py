@@ -77,12 +77,13 @@ def _cards(key: str, cards: list[tuple[str, Color, str, str]], n_columns: int = 
 def _cover() -> None:
     """Presenta el objetivo, las referencias del caso y los enlaces."""
     st.title("Predicción de tormentas mesociclónicas en el centro-sur de Chile", anchor="inicio")
-    _image(ASSETS / "tornado_stock.webp", "Tornado y rayos sobre un valle con casas; imagen ilustrativa.")
-    st.markdown(
-        "<p class='note'>Imagen ilustrativa; no corresponde a Chile ni a un evento del catálogo. "
-        "Fuente: <a href='https://www.pexels.com/photo/lightning-and-tornado-hitting-village-1446076/'>Pexels</a>.</p>",
-        unsafe_allow_html=True,
-    )
+    with st.container(key="hero"):
+        _image(ASSETS / "tornado_stock.webp", "Tornado y rayos sobre un valle con casas; imagen ilustrativa.")
+        st.markdown(
+            "<p class='note'>Imagen ilustrativa; no corresponde a Chile ni a un evento del catálogo. "
+            "Fuente: <a href='https://www.pexels.com/photo/lightning-and-tornado-hitting-village-1446076/'>Pexels</a>.</p>",
+            unsafe_allow_html=True,
+        )
     st.markdown(
         '<p class="lede">El 30 y 31 de mayo de 2019, en pleno otoño, el centro-sur de Chile vivió un brote histórico de tornados: al menos siete en 24 horas, con cientos de viviendas destruidas y miles de personas afectadas (<a href="https://www.biobiochile.cl/noticias/ciencia-y-tecnologia/ciencia/2026/07/11/se-cumplen-7-anos-del-historico-brote-de-tornados-en-chile-y-advierten-que-puede-volver-a-ocurrir.shtml">BioBioChile, 2026</a>). Los índices que usan los pronosticadores del hemisferio norte no fueron diseñados para este clima, y los especialistas advierten que puede volver a ocurrir. Sabemos que las tormentas que desarrollan un mesociclón son las que preceden a esos tornados. Lo que no sabemos es cómo reconocerlas antes, con los datos que ya existen para Chile.</p>'
         "<p>Este es un proyecto abierto para la hackathon AWS Breaking Barriers. Tenemos 102 eventos documentados, el reanálisis ERA5 y las imágenes del satélite GOES. Falta entender qué distingue a las tormentas que rotan de las que no, y esa pregunta puede responderla cualquier persona que sepa mirar datos, con o sin formación en meteorología.</p>",
