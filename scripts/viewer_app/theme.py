@@ -225,6 +225,13 @@ _WATCHER = """
       const control = document.querySelector(`[data-testid="${testid}"]`);
       (control?.matches('button') ? control : control?.querySelector('button'))?.setAttribute('aria-label', label);
     }
+    document.documentElement.lang = 'es';
+    document.querySelectorAll('a[aria-label="Link to heading"]').forEach(a => a.setAttribute('aria-label', 'Enlace a este encabezado'));
+    document.querySelectorAll('.katex-display').forEach(f => {
+      if (f.scrollWidth > f.clientWidth && !f.hasAttribute('tabindex')) {
+        f.tabIndex = 0; f.setAttribute('role', 'region'); f.setAttribute('aria-label', 'Fórmula, desplazable');
+      }
+    });
     document.querySelectorAll('.project-image-alt').forEach(marker => {
       const image = marker.closest('[class*="st-key-image_"]')?.querySelector('img');
       if (image && image.alt !== marker.dataset.description) image.alt = marker.dataset.description;
@@ -307,13 +314,13 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 /* Datos sin índice (búsqueda o una ficha): el mismo ancho de lectura que con el índice al lado. */
 .st-key-data_body {{ max-width: 44rem; }}
 :is(.st-key-project, .st-key-data) h1, :is(.st-key-project, .st-key-data) h2, :is(.st-key-project, .st-key-data) h3 {{ scroll-margin-top: 4.5rem; }}
-/* El proyecto: párrafos sueltos hasta 90ch; en tarjetas, figuras y notas el texto llega al borde. */
+/* La prosa conserva una medida cómoda; las figuras y tablas usan todo el ancho. */
 [data-testid="stMain"] :is(.st-key-project, .st-key-data) [data-testid="stMarkdownContainer"] > p,
 [data-testid="stMain"] :is(.st-key-project, .st-key-data) [data-testid="stMarkdownContainer"] li,
-:is(.st-key-project, .st-key-data) .lede {{ max-width: 90ch; }}
+:is(.st-key-project, .st-key-data) .lede {{ max-width: 68ch; }}
 [data-testid="stMain"] :is(.st-key-project, .st-key-data) [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] > p,
 [data-testid="stMain"] :is(.st-key-project, .st-key-data) [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] li,
-:is(.st-key-project, .st-key-data) .note {{ max-width: none; }}
+:is(.st-key-project, .st-key-data) .note {{ max-width: 68ch; }}
 /* Índice: columna fija a la derecha si la página mide 880 px o más; si no, desplegable arriba. */
 /* Streamlit 1.64 envuelve el contenedor de ancho fijo en un stLayoutWrapper: ese es el que se oculta y
    se fija (selectores internos; revisarlos al actualizar Streamlit). El contenedor también se oculta
@@ -365,6 +372,16 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primary"] p,
 [data-testid="stBaseLinkButton-primary"], [data-testid="stBaseLinkButton-primary"] p {{ color: {p.ON_ACCENT}; }}
 .step b {{ font-family: {MONO}; font-weight: 600; color: {p.ACCENT}; font-size: 0.8rem; }}
+/* Controles propios: rótulos legibles, foco nativo y blancos táctiles amplios. */
+.stApp button:not([data-testid="stTooltipIcon"]), .stApp [data-testid="stTextInput"] input {{ min-height: 44px; }}
+[data-testid="stHeadingWithActionElements"] a {{ min-width: 24px; min-height: 24px; display: inline-flex;
+  align-items: center; justify-content: center; }}
+[data-testid="stMain"] a[data-testid="stPageLink-NavLink"] {{ min-height: 44px; }}
+@media (max-width: 760px), (pointer: coarse) {{
+  .js-plotly-plot .modebar-btn {{ min-width: 44px; min-height: 44px; display: inline-flex;
+    align-items: center; justify-content: center; }}
+  .js-plotly-plot .modebar {{ display: flex; flex-wrap: wrap; max-width: 100%; }}
+}}
 /* Datos: fichas de variables. El nombre es la ancla (?v= y el índice); el símbolo y la unidad, mono. */
 .var-name {{ font-size: 1.1rem; font-weight: 600; line-height: 1.3; margin: 0; padding: 0;
   scroll-margin-top: 4.5rem; }}
@@ -386,14 +403,6 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 .bibliography a {{ overflow-wrap: anywhere; }}
 .toc ol ol {{ margin: 0 0 0.35rem; border-left: none; }}
 .toc ol ol a {{ padding-left: 24px; font-size: 0.86rem; color: {p.MUTED}; }}
-/* Controles propios: rótulos legibles, foco nativo y blancos táctiles amplios. */
-.stApp button:not([data-testid="stTooltipIcon"]) {{ min-height: 44px; }}
-[data-testid="stMain"] a[data-testid="stPageLink-NavLink"] {{ min-height: 44px; }}
-@media (max-width: 760px), (pointer: coarse) {{
-  .js-plotly-plot .modebar-btn {{ min-width: 44px; min-height: 44px; display: inline-flex;
-    align-items: center; justify-content: center; }}
-  .js-plotly-plot .modebar {{ display: flex; flex-wrap: wrap; max-width: 100%; }}
-}}
 </style>
 """
 
