@@ -133,6 +133,23 @@ REFERENCES = {
         "advierten que puede volver a ocurrir. *BioBioChile*.",
         "https://www.biobiochile.cl/noticias/ciencia-y-tecnologia/ciencia/2026/07/11/se-cumplen-7-anos-del-historico-brote-de-tornados-en-chile-y-advierten-que-puede-volver-a-ocurrir.shtml",
     ),
+    "t13-2025": Reference(
+        "T13 (2025)",
+        "T13 (2025, 22 de septiembre). Chile, país de tornados: expertos insiste en instalar radares ante nueva "
+        "realidad. Reproducido por CR2.",
+        "https://www.cr2.cl/chile-pais-de-tornados-expertos-insiste-en-instalar-radares-ante-nueva-realidad-t13/",
+    ),
+    "mostrador2025": Reference(
+        "El Mostrador (2025)",
+        "El Mostrador (2025, 22 de agosto). Tornados no estarían catalogados como una amenaza climática en Chile. "
+        "Reproducido por CR2.",
+        "https://www.cr2.cl/tornados-no-estarian-catalogados-como-una-amenaza-climatica-en-chile-el-mostrador/",
+    ),
+    "uv2025": Reference(
+        "Universidad de Valparaíso (2025)",
+        "Universidad de Valparaíso (2025, 7 de noviembre). Chile tendrá su primer radar meteorológico.",
+        "https://www.uv.cl/archivo-noticias-uv/28540-chile-tendra-su-primer-radar-meteorologico-universidad-de-valparaiso-lidera-el-proyecto-que-transformara-la-investigacion-y-la-gestion-climatica-del-pais",
+    ),
     "sherburn2014": Reference(
         "Sherburn y Parker (2014)",
         "Sherburn, K. D. & Parker, M. D. (2014). Climatology and ingredients of significant severe "

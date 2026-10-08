@@ -22,6 +22,7 @@ Color = Literal["orange", "primary"]
 # Secciones del índice: (ancla del encabezado, texto del enlace).
 SECTIONS = (
     ("inicio", "Inicio"),
+    ("importancia", "Por qué importa"),
     ("mesociclones", "Mesociclones"),
     ("problema", "El problema"),
     ("dificultad", "Por qué es difícil"),
@@ -99,6 +100,34 @@ def _cover() -> None:
     cells = "".join(f"<div class='stat{c}'><b>{v}</b><span>{r}</span></div>" for v, r, c in stats)
     st.markdown(f"<div class='stats'>{cells}</div>", unsafe_allow_html=True)
     _links("cover")
+
+
+def _importance() -> None:
+    """Por qué importa: sin radares ni alertas, muchos tornados pasan desapercibidos."""
+    _section(
+        "importancia",
+        "Por qué importa",
+        "Un tornado se vigila con radar. En Chile casi no hay con qué, y lo que no se observa no se puede avisar ni estudiar.",
+    )
+    st.markdown(
+        "<p>En 2019 Chile no tenía radares meteorológicos ni un sistema de alerta de tornados "
+        "(Vicencio et al., 2021). En noviembre de 2025 la Universidad de Valparaíso "
+        "<a href='https://www.uv.cl/archivo-noticias-uv/28540-chile-tendra-su-primer-radar-meteorologico-universidad-de-valparaiso-lidera-el-proyecto-que-transformara-la-investigacion-y-la-gestion-climatica-del-pais'>anunció la adjudicación del primer radar</a>, móvil, pero eso no equivale a una red permanente "
+        f"con cobertura nacional, y los expertos siguen <a href='https://www.cr2.cl/chile-pais-de-tornados-expertos-insiste-en-instalar-radares-ante-nueva-realidad-t13/'>insistiendo en instalar radares</a> "
+        "(T13, 2025).</p>"
+        "<p>Sin radar, un tornado débil o breve se conoce solo si alguien lo ve y lo reporta. En zonas poco pobladas "
+        "puede no quedar registro: el subregistro por baja densidad de población es la explicación que plantean "
+        "Caballero-Morán y Rondanelli (2025) para zonas del sur con condiciones favorables "
+        "y sin eventos documentados. En entornos de baja energía y alta cizalladura la rotación puede ser poco profunda "
+        "y breve, lo que dificulta detectarla incluso con radar. Y como los tornados "
+        "<a href='https://www.cr2.cl/tornados-no-estarian-catalogados-como-una-amenaza-climatica-en-chile-el-mostrador/'>no figuran como una amenaza climática en el país</a> "
+        "(según planteó Roberto Rondanelli en 2025), tampoco hay un marco que obligue a medirlos.</p>"
+        "<p>Por eso el catálogo de 102 eventos es una muestra de lo que se vio, no de lo que ocurrió. Un modelo que "
+        "reconozca desde datos públicos (ERA5 y GOES) qué tormentas desarrollan rotación no reemplaza a un radar ni "
+        "emite alertas, pero sirve para estudiar los entornos favorables, revisar casos históricos que nadie "
+        "reportó y decidir mejor dónde observar.</p>",
+        unsafe_allow_html=True,
+    )
 
 
 def _animation() -> None:
@@ -302,6 +331,7 @@ def page() -> None:
             with st.expander("En esta página", key="toc_compact", icon=":material/toc:"):
                 st.markdown(_toc(), unsafe_allow_html=True)
             _cover()
+            _importance()
             _animation()
             _problem()
             _difficulty()
