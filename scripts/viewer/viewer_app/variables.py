@@ -127,6 +127,12 @@ REFERENCES = {
         "*Geophysical Research Letters*, 52, e2024GL110900.",
         "https://doi.org/10.1029/2024GL110900",
     ),
+    "jerez2026": Reference(
+        "Jerez (2026)",
+        "Jerez, S. (2026, 11 de julio). Se cumplen 7 años del histórico brote de tornados en Chile y "
+        "advierten que puede volver a ocurrir. *BioBioChile*.",
+        "https://www.biobiochile.cl/noticias/ciencia-y-tecnologia/ciencia/2026/07/11/se-cumplen-7-anos-del-historico-brote-de-tornados-en-chile-y-advierten-que-puede-volver-a-ocurrir.shtml",
+    ),
     "sherburn2014": Reference(
         "Sherburn y Parker (2014)",
         "Sherburn, K. D. & Parker, M. D. (2014). Climatology and ingredients of significant severe "

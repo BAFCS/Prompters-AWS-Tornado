@@ -83,7 +83,7 @@ def _cover() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<p class="lede">El 30 de mayo de 2019, en pleno otoño, tormentas del centro-sur de Chile produjeron tornados que nadie esperaba. No hubo una advertencia a tiempo, y los índices que usan los pronosticadores del hemisferio norte no los habrían marcado: fueron diseñados para otro clima. Sabemos que algunas tormentas, las que desarrollan un mesociclón, son las que preceden a esos tornados. Lo que no sabemos es cómo reconocerlas antes, con los datos que ya existen para Chile.</p>'
+        '<p class="lede">El 30 y 31 de mayo de 2019, en pleno otoño, el centro-sur de Chile vivió un brote histórico de tornados: al menos siete en 24 horas, con cientos de viviendas destruidas y miles de personas afectadas (<a href="https://www.biobiochile.cl/noticias/ciencia-y-tecnologia/ciencia/2026/07/11/se-cumplen-7-anos-del-historico-brote-de-tornados-en-chile-y-advierten-que-puede-volver-a-ocurrir.shtml">BioBioChile, 2026</a>). Los índices que usan los pronosticadores del hemisferio norte no fueron diseñados para este clima, y los especialistas advierten que puede volver a ocurrir. Sabemos que las tormentas que desarrollan un mesociclón son las que preceden a esos tornados. Lo que no sabemos es cómo reconocerlas antes, con los datos que ya existen para Chile.</p>'
         "<p>Este es un proyecto abierto para la hackathon AWS Breaking Barriers. Tenemos 102 eventos documentados, el reanálisis ERA5 y las imágenes del satélite GOES. Falta entender qué distingue a las tormentas que rotan de las que no, y esa pregunta puede responderla cualquier persona que sepa mirar datos, con o sin formación en meteorología.</p>",
         unsafe_allow_html=True,
     )
