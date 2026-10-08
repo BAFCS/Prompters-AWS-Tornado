@@ -29,6 +29,7 @@ método (lo exige `ANN`), no las variables; cada módulo y función lleva docstr
 uv sync                              # crea .venv con dependencias + grupo dev
 uv run python scripts/figures/figs_era5.py   # ejecutar un script
 uv run streamlit run scripts/viewer/viewer.py  # visor interactivo ERA5 + GOES
+uv run streamlit run scripts/viewer/viewer.py --server.runOnSave true  # recarga al guardar
 uv run ruff check scripts            # lint (uv run ruff check --fix para autocorregir)
 uv run ruff format scripts           # formato
 uv run pyright                       # chequeo de tipos

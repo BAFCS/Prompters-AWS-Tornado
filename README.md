@@ -177,6 +177,13 @@ La terminal mostrará una dirección (`Local URL`). Ábrela en tu navegador. Cas
 El visor queda funcionando mientras la terminal siga abierta. Para cerrarlo, vuelve a la terminal y
 pulsa <kbd>Ctrl</kbd> + <kbd>C</kbd>.
 
+Si estás modificando el código del visor, agrega `--server.runOnSave true` para que se actualice solo
+al guardar un archivo, sin pulsar *Rerun*:
+
+```bash
+uv run streamlit run scripts/viewer/viewer.py --server.runOnSave true
+```
+
 > [!NOTE]
 > El visor corre en tu computador. La dirección `localhost` significa «este mismo equipo»: desde
 > otro computador no se puede abrir.
