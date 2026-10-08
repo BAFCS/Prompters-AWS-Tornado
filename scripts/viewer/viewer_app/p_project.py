@@ -111,8 +111,18 @@ def _importance() -> None:
     _section(
         "importancia",
         "Por qué importa",
-        "Un tornado se vigila con radar. En Chile casi no hay con qué, y lo que no se observa no se puede avisar ni estudiar.",
+        "Un radar meteorológico mide dónde llueve y, con el efecto Doppler, hacia dónde se mueve la lluvia. Con eso se ve cómo gira una tormenta antes de que baje un tornado. Chile no tiene hoy una red de radares, así que esa información no existe ni para avisar ni para estudiar lo ocurrido.",
     )
+    with st.container(key="hero_radar"):
+        _image(
+            ASSETS / "weather_station.webp",
+            "Radar meteorológico con su cúpula blanca sobre una ladera boscosa de montaña.",
+        )
+        st.markdown(
+            "<p class='note'>Radar meteorológico en una montaña de Turquía; imagen ilustrativa. "
+            "Fuente: <a href='https://www.pexels.com/photo/scenic-view-of-weather-station-in-turkish-mountains-30617293/'>Pexels</a>.</p>",
+            unsafe_allow_html=True,
+        )
     st.markdown(
         "<p>En 2019 Chile no tenía radares meteorológicos ni un sistema de alerta de tornados "
         "(Vicencio et al., 2021). En noviembre de 2025 la Universidad de Valparaíso "

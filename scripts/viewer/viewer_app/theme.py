@@ -326,8 +326,8 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 :is(.st-key-project, .st-key-data) h1, :is(.st-key-project, .st-key-data) h2, :is(.st-key-project, .st-key-data) h3 {{ scroll-margin-top: var(--anchor-offset); }}
 :is(.st-key-project, .st-key-data) [data-testid="stHeading"] {{ max-width: var(--measure); }}  /* en el contenedor, no en h1-h3: el ch depende del cuerpo de la fuente */
 /* Imagen de portada: más chica, centrada, con su nota centrada debajo. */
-.st-key-project .st-key-hero {{ max-width: 40rem; margin-inline: auto; }}
-.st-key-project .st-key-hero .note {{ text-align: center; max-width: none; }}
+.st-key-project [class*="st-key-hero"] {{ max-width: 40rem; margin-inline: auto; }}
+.st-key-project [class*="st-key-hero"] .note {{ text-align: center; max-width: none; }}
 /* La prosa conserva una medida cómoda; las figuras y tablas usan todo el ancho. */
 [data-testid="stMain"] :is(.st-key-project, .st-key-data) [data-testid="stMarkdownContainer"] > p,
 [data-testid="stMain"] :is(.st-key-project, .st-key-data) [data-testid="stMarkdownContainer"] li,
