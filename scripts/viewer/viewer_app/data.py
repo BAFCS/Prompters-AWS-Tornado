@@ -177,6 +177,16 @@ def _catalog(version: float) -> pd.DataFrame:
     return d
 
 
+def kind_of(d: pd.DataFrame) -> np.ndarray:
+    """Tipo de cada evento del catálogo: tornado, tromba, ambos o sin clasificación."""
+    tornado, waterspout = d["Tornado"] == 1, d["Waterspout"] == 1
+    return np.select(
+        [tornado & waterspout, tornado, waterspout],
+        ["tornado y tromba", "tornado", "tromba"],
+        "sin clasificación",
+    )
+
+
 def events(day: dt.date) -> pd.DataFrame:
     """Eventos del catálogo en ``day``, ordenados por hora, con columnas listas para mostrar."""
     return _events(day, _version(CATALOG))
@@ -192,12 +202,7 @@ def _events(day: dt.date, version: float) -> pd.DataFrame:
     d["place"] = d["Location"].astype(str).str.replace(r"\s+", " ", regex=True).str.strip()
     d["hour"] = [utc_hour(h, day) for h in d["Hour (UTC)"]]
     d["hour_txt"] = d["Hour (UTC)"].astype(str).str.strip().str.replace(":00$", "", regex=True)
-    tornado, waterspout = d["Tornado"] == 1, d["Waterspout"] == 1
-    d["kind"] = np.select(
-        [tornado & waterspout, tornado, waterspout],
-        ["tornado y tromba", "tornado", "tromba"],
-        "sin clasificación",
-    )
+    d["kind"] = kind_of(d)
     d["ef"] = d["Max. EF Rating"].fillna("?").astype(str).str.replace(r"\.0$", "", regex=True)
     d["confidence"] = np.where(d["Register"] == 1, "registro confirmado", "registro débil")
     d = d.sort_values("hour", na_position="last").reset_index(drop=True)

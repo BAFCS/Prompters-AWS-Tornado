@@ -7,6 +7,7 @@ líneas de umbral chileno, nunca para texto; el color de selección marca el pun
 
 import base64
 import io
+import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -19,7 +20,7 @@ from PIL import Image
 from plotly.subplots import make_subplots
 
 import common
-from viewer_app import components, theme
+from viewer_app import components, data, theme
 from viewer_app.state import Point
 
 if TYPE_CHECKING:  # capas importa graficos (Encuadre): solo se usa para anotar
@@ -84,6 +85,76 @@ def _point(point: Point, size: int) -> list[go.Scatter]:
             unselected={"marker": {"opacity": 1}},
         ),
     ]  # fmt: skip
+
+
+# --- Catálogo completo de eventos ----------------------------------------------------------------
+CATALOG_REGION = common.Region("catalog", north=-20.0, south=-44.0, west=-76.0, east=-68.0)
+_PHENOMENA = (("Sound", "ruido"), ("Hail", "granizo"), ("Electric Storm", "tormenta eléctrica"), ("Damage", "daños"))
+
+
+def _clock(v: object) -> str:
+    """Hora ``HH:MM`` de una celda de hora del catálogo, o «s/d» si falta."""
+    if pd.isna(v):
+        return "s/d"
+    return re.sub(r"(\d{1,2}:\d{2}):00$", r"\1", str(v).strip())
+
+
+def _count(v: object) -> str:
+    """Número entero de una celda de víctimas, o «s/d» si falta."""
+    n = pd.to_numeric(v, errors="coerce")  # algunas celdas traen «-» u otro texto
+    return "s/d" if pd.isna(n) else str(int(n))
+
+
+def _hover(r: pd.Series) -> str:
+    """Texto del hover de un evento: lugar, fecha y horas, posición, tipo, intensidad, fenómenos y víctimas."""
+    d = r["date"]
+    phenomena = ", ".join(name for col, name in _PHENOMENA if r.get(col) == 1) or "sin datos"
+    return (
+        f"<b>{r['place']}</b><br>{d.day:02d}-{d.month:02d}-{d.year} · {_clock(r['Hour (UTC)'])} UTC · "
+        f"{_clock(r['Hour (local)'])} local<br>{components.coord(r['lat'], r['lon'])}<br>"
+        f"Tipo: {r['kind']} · EF {r['ef']}<br>Fenómenos: {phenomena}<br>"
+        f"Víctimas: {_count(r['Fatalities'])} fallecidos · {_count(r['Injured'])} heridos"
+    )
+
+
+def catalog_map(
+    cat: pd.DataFrame, coast: tuple[np.ndarray, np.ndarray], *, by_intensity: bool, by_type: bool, height: int = 700
+) -> go.Figure:
+    """Mapa de Chile con todos los eventos del catálogo.
+
+    ``by_intensity`` dimensiona los triángulos según la escala EF (los sin escala, al tamaño mínimo);
+    ``by_type`` los colorea por tipo de evento y agrega la leyenda.
+    """
+    p = theme.colors()
+    ev = cat.dropna(subset=["lat", "lon"]).copy()
+    ev["place"] = ev["Location"].astype(str).str.replace(r"\s+", " ", regex=True).str.strip()
+    ev["kind"] = data.kind_of(ev)
+    ev["ef"] = ev["Max. EF Rating"].fillna("?").astype(str).str.replace(r"\.0$", "", regex=True)
+    grade = pd.to_numeric(ev["ef"].str.extract(r"(\d)")[0], errors="coerce").fillna(0)
+    ev["size"] = 9 + 5 * grade if by_intensity else 11
+    ev["text"] = [_hover(r) for _, r in ev.iterrows()]
+    colors = {"tornado": p.SEVERE, "tromba": p.COLD, "tornado y tromba": p.WARM, "sin clasificación": p.MUTED}
+    groups = [(k, ev[ev["kind"] == k]) for k in colors] if by_type else [("eventos", ev)]
+    fig = go.Figure(
+        go.Scatter(x=coast[0], y=coast[1], mode="lines", line={"width": 1, "color": p.MUTED}, hoverinfo="skip", showlegend=False)
+    )
+    for name, g in groups:
+        if g.empty:
+            continue
+        fig.add_trace(go.Scatter(
+            x=g["lon"], y=g["lat"], mode="markers", name=name, text=g["text"], hoverinfo="text",
+            marker={"symbol": "triangle-up", "size": g["size"], "color": colors.get(name, p.SEVERE), "opacity": 0.9,
+                    "line": {"width": 1, "color": p.SURFACE}},
+        ))  # fmt: skip
+    reg = CATALOG_REGION
+    fig.update_xaxes(range=[reg.west, reg.east], ticksuffix="°", showgrid=False, zeroline=False)
+    fig.update_yaxes(range=[reg.south, reg.north], ticksuffix="°", showgrid=False, zeroline=False,
+                     scaleanchor="x", scaleratio=Extent(reg.north, reg.south, reg.west, reg.east).aspect)  # fmt: skip
+    fig.update_layout(
+        height=height, margin={"l": 40, "r": 10, "t": 10, "b": 10}, showlegend=by_type,
+        legend={"orientation": "h", "y": -0.02, "yanchor": "top"},
+    )
+    return _style(fig)
 
 
 # --- Grilla de Mapas -----------------------------------------------------------------------------

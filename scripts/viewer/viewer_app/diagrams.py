@@ -5,6 +5,8 @@ hay JavaScript ni variables CSS de la página, así que cada SVG lleva su propia
 paleta del modo activo de ``theme``; las animaciones CSS (el giro de los rodillos) sí funcionan.
 """
 
+import math
+
 from viewer_app import theme
 
 _TEXT = (
@@ -34,7 +36,8 @@ _CSS_MC = """
 #mcSvg[data-stage="2"] #updraftG, #mcSvg[data-stage="3"] #updraftG, #mcSvg[data-stage="4"] #updraftG,
 #mcSvg[data-stage="3"] #cloudG, #mcSvg[data-stage="4"] #cloudG,
 #mcSvg[data-stage="3"] #convG, #mcSvg[data-stage="4"] #convG,
-#mcSvg[data-stage="4"] #senseG{ opacity:1 }
+#mcSvg[data-stage="4"] #senseG,
+#mcSvg[data-stage="1"] #lab1, #mcSvg[data-stage="2"] #lab2, #mcSvg[data-stage="4"] #lab4{ opacity:1 }
 #mcSvg[data-stage="3"] #shearG, #mcSvg[data-stage="4"] #shearG{ opacity:0 }
 #mcSvg[data-stage="2"] #shearG{ opacity:.45 }
 """
@@ -90,6 +93,21 @@ _MC_BODY = """
         <g class="sp" style="--i:1"><g class="fs"><circle class="orbit" r="46"/><g class="spin"><circle cx="46" cy="0" r="6"/><circle cx="-23" cy="39.8" r="6"/><circle cx="-23" cy="-39.8" r="6"/></g></g></g>
         <g class="sp" style="--i:2"><g class="fs"><circle class="orbit" r="46"/><g class="spin"><circle cx="46" cy="0" r="6"/><circle cx="-23" cy="39.8" r="6"/><circle cx="-23" cy="-39.8" r="6"/></g></g></g>
         <g class="sp" style="--i:3"><g class="fs"><circle class="orbit" r="46"/><g class="spin"><circle cx="46" cy="0" r="6"/><circle cx="-23" cy="39.8" r="6"/><circle cx="-23" cy="-39.8" r="6"/></g></g></g>
+      </g>
+      <g class="lay off" id="lab1">
+        <line x1="462" y1="268" x2="478" y2="268" stroke="var(--severe)" stroke-width="1.2"/>
+        <text class="lbl" x="484" y="266" fill="var(--severe)">rodillos de rotación</text>
+        <text class="lbl" x="484" y="282" fill="var(--severe)">horizontal</text>
+      </g>
+      <g class="lay off" id="lab2">
+        <line x1="392" y1="284" x2="410" y2="296" stroke="var(--severe)" stroke-width="1.2"/>
+        <text class="lbl" x="414" y="304" fill="var(--severe)">rotación inclinada</text>
+        <text class="lbl" x="414" y="320" fill="var(--severe)">hacia la vertical</text>
+      </g>
+      <g class="lay off" id="lab4">
+        <path d="M318 224 L312 224 L312 354 L318 354" fill="none" stroke="var(--severe)" stroke-width="1.4"/>
+        <text class="lbl" x="304" y="254" text-anchor="end" fill="var(--severe)">mesociclón</text>
+        <text class="lbl" x="304" y="270" text-anchor="end" fill="var(--severe)">2–10 km</text>
       </g>
       <g class="lay off" id="senseG">
         <circle cx="646" cy="126" r="30" fill="none" stroke="var(--severe)" stroke-width="2" opacity=".5"/>
@@ -155,6 +173,71 @@ STAGES = (
 )
 
 
+# Vista desde arriba: el mismo mecanismo en los dos hemisferios (Chile, left-mover, horario; Grandes Llanuras, right-mover, antihorario).
+_RING = (
+    '<circle r="44" fill="none" stroke="var(--severe)" stroke-width="2" opacity=".5"/>'
+    '<path d="M0 -44 A44 44 0 1 1 -42.5 11.7" fill="none" stroke="var(--severe)" stroke-width="3.4" stroke-linecap="round"/>'
+    '<path d="M-49.5 -2.3 L-43.9 14.5 L-27.5 10.3" fill="none" stroke="var(--severe)" stroke-width="3.4" '
+    'stroke-linecap="round" stroke-linejoin="round"/>'
+)
+
+
+def _arrow(x1: float, y1: float, x2: float, y2: float, color: str) -> str:
+    """Flecha recta de ``(x1, y1)`` a ``(x2, y2)`` con punta abierta."""
+    ang = math.atan2(y2 - y1, x2 - x1)
+    wing = [
+        f"{x2 - 11 * math.cos(ang + d):.1f} {y2 - 11 * math.sin(ang + d):.1f}" for d in (0.5, -0.5)
+    ]
+    return (
+        f'<path d="M{x1} {y1} L{x2} {y2}" stroke="{color}" stroke-width="3.2" stroke-linecap="round"/>'
+        f'<path d="M{wing[0]} L{x2} {y2} L{wing[1]}" fill="none" stroke="{color}" stroke-width="3.2" '
+        'stroke-linecap="round" stroke-linejoin="round"/>'
+    )
+
+
+_PLAN_BODY = f"""
+     <text class="big" x="205" y="30" text-anchor="middle" fill="var(--ink)">Chile · hemisferio sur</text>
+     <text x="205" y="48" text-anchor="middle">left-mover: gira en sentido horario</text>
+     <g transform="translate(205 160)">{_RING}</g>
+     {_arrow(256, 160, 350, 160, "var(--muted)")}
+     <text x="303" y="182" text-anchor="middle">viento medio</text>
+     {_arrow(250, 136, 330, 88, "var(--severe)")}
+     <text class="lbl" x="336" y="86" fill="var(--severe)">se desvía a la izquierda</text>
+     <text class="big" x="615" y="30" text-anchor="middle" fill="var(--ink)">Grandes Llanuras · hemisferio norte</text>
+     <text x="615" y="48" text-anchor="middle">right-mover: gira en sentido antihorario</text>
+     <g transform="translate(615 160) scale(-1 1)">{_RING}</g>
+     {_arrow(666, 160, 760, 160, "var(--muted)")}
+     <text x="713" y="148" text-anchor="middle">viento medio</text>
+     {_arrow(660, 184, 740, 232, "var(--severe)")}
+     <text class="lbl" x="700" y="258" text-anchor="middle" fill="var(--severe)">se desvía a la derecha</text>
+     <text x="410" y="282" text-anchor="middle">Vista desde arriba (esquema): el norte queda hacia arriba y el viento medio sopla hacia el este.</text>
+"""
+
+# Escala 2D, 15 px por km: dentro de una celda de ERA5 (31 × 31 km) caben unos 240 píxeles de GOES (2 × 2 km)
+# y un mesociclón (círculo de 2 a 10 km de diámetro).
+_GRID = "".join(f'<line x1="{40 + 30 * k}" y1="30" x2="{40 + 30 * k}" y2="495"/>' for k in range(1, 15)) + "".join(
+    f'<line x1="40" y1="{30 + 30 * k}" x2="505" y2="{30 + 30 * k}"/>' for k in range(1, 15)
+)
+_SCALE_BODY = f"""
+     <rect x="40" y="30" width="465" height="465" fill="var(--cold)" opacity=".14"/>
+     <g stroke="var(--cold)" stroke-width="1" opacity=".35">{_GRID}</g>
+     <rect x="40" y="30" width="465" height="465" fill="none" stroke="var(--cold)" stroke-width="2.5"/>
+     <rect x="100" y="90" width="30" height="30" fill="var(--accent)" opacity=".75" stroke="var(--accent)" stroke-width="1.5"/>
+     <circle cx="300" cy="300" r="75" fill="var(--severe)" opacity=".16" stroke="var(--severe)" stroke-width="2" stroke-dasharray="6 4"/>
+     <circle cx="300" cy="300" r="15" fill="var(--severe)" opacity=".5" stroke="var(--severe)" stroke-width="2"/>
+     <path d="M130 105 L548 105" stroke="var(--accent)" stroke-width="1.2"/>
+     <text class="big" x="552" y="100" fill="var(--accent)">Un píxel de GOES</text>
+     <text x="552" y="118" fill="var(--accent)">2 × 2 km</text>
+     <path d="M375 300 L548 300" stroke="var(--severe)" stroke-width="1.2"/>
+     <text class="big" x="552" y="296" fill="var(--severe)">Un mesociclón</text>
+     <text x="552" y="314" fill="var(--severe)">2 a 10 km de diámetro</text>
+     <path d="M505 460 L548 460" stroke="var(--cold)" stroke-width="1.2"/>
+     <text class="big" x="552" y="456" fill="var(--cold)">Una celda de ERA5</text>
+     <text x="552" y="474" fill="var(--cold)">31 × 31 km: un solo valor</text>
+     <text x="272" y="520" text-anchor="middle">Dentro de la celda caben unos 240 píxeles de GOES.</text>
+"""
+
+
 def _svg(width: int, height: int, css: str, body: str, extra: str = "") -> str:
     """Envuelve ``body`` en un SVG autónomo con la paleta y los estilos de texto del visor.
 
@@ -174,3 +257,13 @@ def mesocyclone(stage: int) -> str:
 def cape_shear() -> str:
     """SVG de CAPE contra cizalladura 0–1 km."""
     return _svg(880, 470, "", _CAPE_BODY)
+
+
+def plan_view() -> str:
+    """SVG de la vista desde arriba: el sentido de giro y la rama de movimiento en cada hemisferio."""
+    return _svg(820, 300, "", _PLAN_BODY)
+
+
+def scale() -> str:
+    """SVG de la escala, en dos dimensiones: una celda de ERA5, un píxel de GOES y un mesociclón."""
+    return _svg(780, 530, "", _SCALE_BODY)

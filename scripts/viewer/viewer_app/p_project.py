@@ -5,13 +5,14 @@ Los dos diagramas viven en ``diagrams.py``. Esta página no usa datos: se muestr
 
 import html
 import re
+import time
 from pathlib import Path
 from typing import Literal
 
 import streamlit as st
 
 import common
-from viewer_app import diagrams, state
+from viewer_app import charts, data, diagrams, state, theme
 
 DOCUMENT = "https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md"
 REPOSITORY = "https://github.com/fforster/aws-mesocyclonic"
@@ -46,9 +47,9 @@ def _links(key: str) -> None:
         st.link_button("Repositorio", REPOSITORY, key=f"{key}_repo", icon=":material/code:")
 
 
-def _image(source: Path | str, description: str) -> None:
+def _image(source: Path | str, description: str, key: str | None = None) -> None:
     """Conserva el visor de imagen nativo y publica su descripción para el vigía del tema."""
-    key = (
+    key = key or (
         source.stem
         if isinstance(source, Path)
         else ("mesocyclone" if "mcSvg" in source else "cape")
@@ -145,6 +146,69 @@ def _importance() -> None:
     )
 
 
+_PLAY_SECONDS = 4  # segundos por etapa al reproducir
+_SCALE_ALT = (
+    "Una celda cuadrada de ERA5 de 31 km por lado, con una cuadrícula de píxeles de GOES de 2 km y, dentro, "
+    "un círculo de 2 a 10 km de diámetro que representa un mesociclón."
+)
+
+
+def _restart_play() -> None:
+    """Al activar la reproducción, empieza en la etapa 1."""
+    st.session_state["project_t0"] = time.monotonic()
+
+
+def _step_stage(delta: int) -> None:
+    """Mueve la etapa elegida ``delta`` pasos, sin salirse de 1–4."""
+    st.session_state["project_stage"] = min(4, max(1, (st.session_state.get("project_stage") or 1) + delta))
+
+
+def _stages() -> None:
+    """Selector de etapa, esquema y explicación. Con la reproducción activa, la etapa sigue al reloj."""
+    playing = bool(st.session_state.get("project_play"))
+    if playing:
+        elapsed = time.monotonic() - st.session_state.get("project_t0", time.monotonic())
+        st.session_state["project_stage"] = int(elapsed // _PLAY_SECONDS) % 4 + 1
+    st.session_state.setdefault("project_stage", 1)
+    with st.container(horizontal=True, vertical_alignment="center", key="stage_controls"):
+        stage = st.pills(
+            "Etapa", [1, 2, 3, 4], key="project_stage", label_visibility="collapsed", disabled=playing,
+            format_func=lambda k: ("Cizalladura", "Inclinación", "Estiramiento", "Mesociclón")[k - 1],
+        )  # fmt: skip
+        st.button("Anterior", key="stage_prev", icon=":material/chevron_left:", disabled=playing or stage == 1,
+                  on_click=_step_stage, args=(-1,))  # fmt: skip
+        st.button("Siguiente", key="stage_next", icon=":material/chevron_right:", disabled=playing or stage == 4,
+                  on_click=_step_stage, args=(1,))  # fmt: skip
+    stage = stage or 1
+    title, text = diagrams.STAGES[stage - 1]
+    # Con poco ancho las columnas se apilan: el esquema queda arriba y la descripción debajo.
+    picture, words = theme.columns([3, 2], "stages")
+    with picture:
+        _image(diagrams.mesocyclone(stage), f"Formación de un mesociclón. Etapa {title}. {text}")
+    with words:
+        st.markdown(f"**:primary[{title}]**")
+        st.markdown(text)
+    if stage == 4:
+        with st.container(key="hero_plan"):
+            _image(diagrams.plan_view(), _PLAN_ALT, key="plan")
+            st.markdown(
+                "<p class='note'>Visto desde arriba, el mesociclón ciclónico de Chile gira en sentido horario y se asocia "
+                "a una tormenta <em>left-mover</em>. En Estados Unidos ocurre al revés. Por eso los signos de los índices "
+                "cambian.</p>",
+                unsafe_allow_html=True,
+            )
+    st.markdown(
+        '<p class="note">El esquema muestra cómo la rotación horizontal del entorno puede contribuir a la rotación dentro de una tormenta. La formación de un tornado requiere procesos adicionales cerca de la superficie; un mesociclón puede persistir sin producirlo.</p>',
+        unsafe_allow_html=True,
+    )
+
+
+_PLAN_ALT = (
+    "Vista desde arriba: en Chile la tormenta left-mover se desvía a la izquierda del viento medio y gira en sentido "
+    "horario; en las Grandes Llanuras la right-mover se desvía a la derecha y gira en sentido antihorario."
+)
+
+
 def _animation() -> None:
     """Mesociclogénesis en cuatro etapas: el usuario elige la etapa; los rodillos giran solos."""
     st.header("Mesociclones, supercélulas y tornados", anchor="mesociclones")
@@ -154,19 +218,14 @@ def _animation() -> None:
     with st.container(border=True, key="sheet_animation"):
         st.subheader("Cómo se organiza la rotación dentro de una tormenta", anchor=False)
         st.caption("Formación de un mesociclón: esquema simplificado en cuatro etapas")
-        stage = st.segmented_control(
-            "Etapa", [1, 2, 3, 4], default=1, key="project_stage", label_visibility="collapsed",
-            format_func=lambda k: ("Cizalladura", "Inclinación", "Estiramiento", "Mesociclón")[k - 1],
-        )  # fmt: skip
-        stage = stage or 1
-        title, text = diagrams.STAGES[stage - 1]
-        _image(diagrams.mesocyclone(stage), f"Formación de un mesociclón. Etapa {title}. {text}")
-        st.markdown(f"**:primary[{title}]**")
-        st.markdown(text)
-        st.markdown(
-            '<p class="note">El esquema muestra cómo la rotación horizontal del entorno puede contribuir a la rotación dentro de una tormenta. La formación de un tornado requiere procesos adicionales cerca de la superficie; un mesociclón puede persistir sin producirlo.</p>',
-            unsafe_allow_html=True,
-        )
+        st.toggle("Reproducir en bucle", key="project_play", on_change=_restart_play)
+        # El fragmento se repite solo mientras se reproduce; cambiar de etapa no recarga la página.
+        st.fragment(run_every=_PLAY_SECONDS if st.session_state.get("project_play") else None)(_stages)()
+
+
+CASE_TEXT = (
+    '<p>El <strong>30 y 31 de mayo de 2019</strong>, siete tornados golpearon en menos de 24 horas la zona entre Ñuble y La Araucanía. Dos entraron en ciudades: <strong>Los Ángeles</strong> (EF2) y <strong>Talcahuano–Concepción</strong> (EF1–EF2, 17 km de trayecto, una persona fallecida, 50.000 clientes sin electricidad). La escala Fujita mejorada (EF) clasifica la intensidad según los daños observados. Este episodio es el caso de referencia del proyecto para estudiar las condiciones atmosféricas asociadas a los tornados del centro-sur de Chile.</p>\n<p>Existe un catálogo formal y publicado: la base <a href="https://doi.org/10.6084/m9.figshare.25119566">Tornadoes and Waterspouts in Chile</a> (Bastías-Curivil, Rondanelli, Vicencio et al., CC BY 4.0), con <strong>102 eventos entre 1554 y 2025</strong>. Incluye tornados, trombas marinas y eventos clasificados en ambas categorías. Según el resumen disponible, todos tienen coordenadas y el 89 % tiene hora UTC, un dato necesario para compararlos con imágenes satelitales. UTC significa tiempo universal coordinado y puede diferir de la hora local de Chile.</p>\n<p>En la copia del catálogo usada aquí, 70 registros están marcados como tornado, 45 como tromba marina y 19 en ambas categorías. Otros 6 no están marcados en ninguna de las dos; su clasificación debe revisarse. Los conteos de tornados y trombas se solapan y no deben sumarse para obtener el total.</p>\n<p>La cobertura del catálogo depende de que los eventos hayan sido observados, documentados e incorporados a la base. Esto puede favorecer los registros de zonas pobladas y dejar menos información sobre zonas rurales, el mar o eventos nocturnos. Es un sesgo de reporte que debe considerarse al analizar los datos. El catálogo no contiene registros al sur de los 42,4°S; esa ausencia no confirma que allí no hayan ocurrido eventos.</p>\n<p>Una línea de trabajo consiste en identificar días y lugares con condiciones similares a las de eventos documentados. Esos resultados serían candidatos para una revisión posterior; la similitud del entorno no confirma que haya ocurrido un tornado ni que se haya formado un mesociclón.</p>'
+)
 
 
 def _problem() -> None:
@@ -176,10 +235,27 @@ def _problem() -> None:
         "Un catálogo de eventos reportados, sin casos negativos confirmados",
         "Disponemos de registros de tornados y trombas marinas. La ausencia de un reporte no permite asegurar que no ocurrió un evento.",
     )
-    st.markdown(
-        '<p>El <strong>30 y 31 de mayo de 2019</strong>, siete tornados golpearon en menos de 24 horas la zona entre Ñuble y La Araucanía. Dos entraron en ciudades: <strong>Los Ángeles</strong> (EF2) y <strong>Talcahuano–Concepción</strong> (EF1–EF2, 17 km de trayecto, una persona fallecida, 50.000 clientes sin electricidad). La escala Fujita mejorada (EF) clasifica la intensidad según los daños observados. Este episodio es el caso de referencia del proyecto para estudiar las condiciones atmosféricas asociadas a los tornados del centro-sur de Chile.</p>\n<p>Existe un catálogo formal y publicado: la base <a href="https://doi.org/10.6084/m9.figshare.25119566">Tornadoes and Waterspouts in Chile</a> (Bastías-Curivil, Rondanelli, Vicencio et al., CC BY 4.0), con <strong>102 eventos entre 1554 y 2025</strong>. Incluye tornados, trombas marinas y eventos clasificados en ambas categorías. Según el resumen disponible, todos tienen coordenadas y el 89 % tiene hora UTC, un dato necesario para compararlos con imágenes satelitales. UTC significa tiempo universal coordinado y puede diferir de la hora local de Chile.</p>\n<p>En la copia del catálogo usada aquí, 70 registros están marcados como tornado, 45 como tromba marina y 19 en ambas categorías. Otros 6 no están marcados en ninguna de las dos; su clasificación debe revisarse. Los conteos de tornados y trombas se solapan y no deben sumarse para obtener el total.</p>\n<p>La cobertura del catálogo depende de que los eventos hayan sido observados, documentados e incorporados a la base. Esto puede favorecer los registros de zonas pobladas y dejar menos información sobre zonas rurales, el mar o eventos nocturnos. Es un sesgo de reporte que debe considerarse al analizar los datos. El catálogo no contiene registros al sur de los 42,4°S; esa ausencia no confirma que allí no hayan ocurrido eventos.</p>\n<p>Una línea de trabajo consiste en identificar días y lugares con condiciones similares a las de eventos documentados. Esos resultados serían candidatos para una revisión posterior; la similitud del entorno no confirma que haya ocurrido un tornado ni que se haya formado un mesociclón.</p>',
-        unsafe_allow_html=True,
-    )
+    cat = data.catalog()
+    if cat.empty:
+        # Sin el catálogo descargado queda la figura estática, que sí va en el repositorio.
+        st.image(str(FIGS / "fig1_catalog_map.png"), width="stretch")
+        st.markdown(CASE_TEXT, unsafe_allow_html=True)
+        return
+    picture, words = theme.columns([2, 3], "catalog")
+    with picture:
+        with st.container(horizontal=True, key="catalog_options"):
+            by_intensity = st.checkbox("Tamaño según intensidad (EF)", key="catalog_by_intensity")
+            by_type = st.checkbox("Color según tipo de evento", key="catalog_by_type")
+        fig = charts.catalog_map(cat, data.coast(charts.CATALOG_REGION), by_intensity=by_intensity, by_type=by_type)
+        st.plotly_chart(fig, width="stretch", theme=None, key="catalog_map")
+    with words:
+        st.markdown(CASE_TEXT, unsafe_allow_html=True)
+        st.markdown(
+            "<p class='note'>Cada triángulo es un evento del catálogo, con solo los casos positivos. Pasa el cursor "
+            "para ver su fecha, hora, posición, tipo, intensidad, fenómenos y víctimas. El tamaño y el color se "
+            "activan con las casillas de arriba.</p>",
+            unsafe_allow_html=True,
+        )
 
 
 def _difficulty() -> None:
@@ -234,39 +310,102 @@ def _difficulty() -> None:
     )
 
 
+_BANDS_TABLE = """| Banda | λ central (µm) | Tipo | Apodo | Resolución |
+|---|---|---|---|---|
+| 1 | 0,47 | Visible | Azul | 1 km |
+| 2 | 0,64 | Visible | Rojo | 0,5 km |
+| 3 | 0,86 | IR cercano | "Veggie" | 1 km |
+| 4 | 1,37 | IR cercano | Cirros | 2 km |
+| 5 | 1,6 | IR cercano | Nieve/hielo | 1 km |
+| 6 | 2,2 | IR cercano | Tamaño de partícula | 2 km |
+| 7 | 3,9 | IR | Ventana de onda corta | 2 km |
+| 8 | 6,2 | IR | Vapor de agua, nivel alto | 2 km |
+| 9 | 6,9 | IR | Vapor de agua, nivel medio | 2 km |
+| 10 | 7,3 | IR | Vapor de agua, nivel bajo | 2 km |
+| 11 | 8,4 | IR | Fase del tope nuboso | 2 km |
+| 12 | 9,6 | IR | Ozono | 2 km |
+| 13 | 10,3 | IR | Ventana larga "limpia" | 2 km |
+| 14 | 11,2 | IR | Ventana larga | 2 km |
+| 15 | 12,3 | IR | Ventana larga "sucia" | 2 km |
+| 16 | 13,3 | IR | CO₂ | 2 km |"""
+
+
+def _figure(file: str, caption: str) -> None:
+    """Figura del caso de 2019 en su ficha, con el pie en nota."""
+    with st.container(border=True, key=f"sheet_{file[:4]}"):
+        _image(FIGS / file, re.sub(r"<[^>]+>", "", caption))
+        st.markdown(f"<p class='note'>{caption}</p>", unsafe_allow_html=True)
+
+
 def _data_section() -> None:
-    """Describe los datos del visor y separa sus límites del acceso técnico."""
+    """Describe cada fuente de datos (ERA5, GOES, catálogo) y la escala de sus celdas."""
     _section(
         "datos",
         "Tres fuentes de datos para estudiar las tormentas",
-        "ERA5 es una reconstrucción histórica del estado de la atmósfera que combina observaciones y un modelo. GOES aporta imágenes satelitales para observar las nubes y su evolución. El catálogo aporta los eventos reportados con los que se comparan esos datos.",
+        "ERA5 reconstruye el estado de la atmósfera, GOES la observa desde el espacio y el catálogo reúne los eventos reportados con los que se comparan ambas.",
     )
-    st.subheader("Datos usados por el visor", anchor=False)
+    st.subheader("ERA5: la atmósfera reconstruida", anchor=False)
     st.markdown(
-        "| Fuente | Qué aporta | Resolución o cobertura |\n|---|---|---|\n| ERA5 | Viento, temperatura, humedad y altura de los niveles atmosféricos, además de CAPE y la inhibición convectiva (CIN), la barrera energética para iniciar el ascenso | 0,25° · registros horarios |\n| GOES-16 · caso de 2019 | Imágenes de 16 bandas del visible al infrarrojo. Los recortes utilizados por el visor se guardan a 2 km | 2 km · frecuencia nominal de 10 min |\n| Catálogo · figshare, CC BY 4.0 | 102 eventos con coordenadas, hora UTC cuando está disponible, tipo y clasificación EF basada en daños cuando está disponible. No proporciona una etiqueta directa de mesociclón | 1554–2025 · 102 eventos |"
+        "**Qué es.** ERA5 es el reanálisis atmosférico global del ECMWF, el Centro Europeo de Predicción Meteorológica a Plazo Medio. "
+        "No es una medición directa ni un pronóstico: es una reconstrucción de cómo estaba la atmósfera en cada hora desde 1940.\n\n"
+        "**Cómo se calcula.** Un reanálisis combina un modelo meteorológico con observaciones del pasado (radiosondas, satélites, aviones, boyas y estaciones). "
+        "Repite el análisis para cada período con el mismo método, así que sus valores son comparables entre años. Se publica en una grilla de 0,25° "
+        "(unos 31 km) con valores horarios, y su altura se describe con 37 niveles de presión.\n\n"
+        "**Qué aporta al proyecto.** Viento, temperatura, humedad y altura de los niveles atmosféricos, además de CAPE y la inhibición convectiva (CIN), "
+        "la barrera energética para iniciar el ascenso. Con ellas se calculan la cizalladura y los índices. ERA5 describe el entorno donde nace la tormenta, no la tormenta misma.\n\n"
+        "**Cuidado.** Sobre los Andes el nivel de 1000 hPa está bajo el terreno y sus valores son una extrapolación del modelo, "
+        "así que la cizalladura de niveles bajos allí no es viento real."
     )
+    _figure(
+        "fig4_era5_20190530.png",
+        "<b>ERA5, 30 de mayo de 2019, 21:00 UTC.</b> Los paneles muestran temperatura a 500 hPa (A), viento a 850 hPa (B), cizalladura entre la superficie y 1 km (C) y entre la superficie y 6 km (D). Los niveles en hPa son superficies de presión que permiten comparar distintas partes de la atmósfera. En C y D se puede observar la extensión de las zonas con cizalladura elevada.",
+    )
+    st.subheader("GOES: la tormenta vista desde el espacio", anchor=False)
     st.markdown(
-        "Cada fuente tiene límites que el visor no oculta: ERA5 no resuelve un mesociclón, GOES no está corregido por paralaje y el catálogo solo tiene casos positivos. La página Datos explica cada variable cruda y cada variable derivada, con su fórmula, el criterio chileno cuando existe y sus fuentes."
+        "**Qué es.** GOES-East es un satélite geoestacionario: se mantiene sobre un punto del ecuador, a 75,2° O, una longitud cercana a la de Chile, "
+        "y mira siempre el mismo disco terrestre. Su instrumento, el ABI (*Advanced Baseline Imager*), es un radiómetro: mide cuánta radiación llega desde cada punto. "
+        "El visor usa GOES-16 (diciembre de 2017 a abril de 2025, el caso de 2019) y GOES-19 desde abril de 2025.\n\n"
+        "**Qué son las bandas.** El ABI no toma una sola imagen: mide 16 «bandas», cada una en una longitud de onda distinta, del visible al infrarrojo térmico. "
+        "Cada banda es sensible a algo diferente: las visibles muestran la luz del Sol reflejada y las infrarrojas, la temperatura de lo que emite, nubes incluidas. "
+        "Para tormentas importan sobre todo la banda 2 (visible rojo: textura y sombras del tope, solo de día), las 8, 9 y 10 (vapor de agua en niveles alto, medio y bajo), "
+        "la 13 (infrarrojo de «ventana limpia»: la temperatura de brillo del tope, que indica qué tan alto llegó la tormenta) y las diferencias entre bandas, como 13−11 y 13−16.\n\n"
+        "**Cuándo observa.** Una imagen del disco completo cada 10 minutos, 144 al día. Los recortes del visor se guardan a 2 km.\n\n"
+        "**Cuidado.** El satélite ve el tope de la tormenta de lado y lo desplaza hacia el sur (paralaje): unos 10 km en Santiago y 21 km a 53°S para un tope de 12 km. "
+        "El visor aún no lo corrige."
     )
-    st.page_link(state.page("data"), label="Abrir el catálogo de datos", icon=":material/dataset:")
-    st.subheader("Datos del caso de mayo de 2019", anchor=False)
+    with st.expander("Las 16 bandas del ABI"):
+        st.markdown(
+            "La longitud de onda central (λ) indica qué parte del espectro observa cada banda, en micrómetros (µm); IR significa infrarrojo. "
+            "Las resoluciones son nominales y empeoran hacia los bordes de la imagen.\n\n"
+            + _BANDS_TABLE
+        )
+    _figure(
+        "fig3_goes_20190530.png",
+        "<b>GOES-16, banda 13.</b> Los paneles muestran la temperatura de brillo y su cambio entre imágenes; los triángulos marcan los tornados reportados ese día. La temperatura de brillo es una medida derivada de la radiación infrarroja recibida. Un descenso puede ser compatible con crecimiento vertical, pero también puede deberse al desplazamiento de nubes sobre el mismo píxel. El flujo óptico estima ese movimiento y puede ayudar a separar ambos efectos.",
+    )
+    st.subheader("El catálogo de eventos", anchor=False)
     st.markdown(
-        "Las figuras siguientes se generaron con datos de los archivos públicos para el 30 de mayo de 2019. Las páginas Mapas, Sondeo y Series exploran el mismo caso."
+        f"**Qué es.** La base [«Tornadoes and Waterspouts in Chile»]({CATALOG}), publicada en figshare con licencia CC BY 4.0 por doce autores "
+        "encabezados por Cristian Bastías-Curivil, entre ellos Roberto Rondanelli y José Vicencio. Se armó con crónicas coloniales, prensa, redes sociales, "
+        "literatura científica y libros, e incluye los casos en que los autores consideran más probable que haya ocurrido un tornado o una tromba que lo contrario.\n\n"
+        "**Qué trae.** 102 eventos entre 1554 y 2025, con posición, fecha, hora UTC y local, tipo (tornado, tromba o ambos), intensidad en la escala Fujita mejorada (EF), "
+        "fenómenos acompañantes (ruido, granizo, tormenta eléctrica, daños) y víctimas. No trae una etiqueta directa de mesociclón. "
+        "El mapa de «El problema» muestra dónde están.\n\n"
+        "**Límites.** Solo tiene casos positivos: que no haya un reporte no prueba que no ocurriera un evento. Entra al catálogo lo que alguien vio y contó, "
+        "así que hay más registros donde hay más gente. Varias horas vienen como rango o redondeadas, y la posición es la del daño observado, no la del mesociclón."
     )
-    figures = [
-        (
-            "fig4_era5_20190530.png",
-            "<b>ERA5, 30 de mayo de 2019, 21:00 UTC.</b> Los paneles muestran temperatura a 500 hPa (A), viento a 850 hPa (B), cizalladura entre la superficie y 1 km (C) y entre la superficie y 6 km (D). Los niveles en hPa son superficies de presión que permiten comparar distintas partes de la atmósfera. En C y D se puede observar la extensión de las zonas con cizalladura elevada.",
-        ),
-        (
-            "fig3_goes_20190530.png",
-            "<b>GOES-16, banda 13.</b> Los paneles muestran la temperatura de brillo y su cambio entre imágenes; los triángulos marcan los tornados reportados ese día. La temperatura de brillo es una medida derivada de la radiación infrarroja recibida. Un descenso puede ser compatible con crecimiento vertical, pero también puede deberse al desplazamiento de nubes sobre el mismo píxel. El flujo óptico estima ese movimiento y puede ayudar a separar ambos efectos.",
-        ),
-    ]
-    for file, caption in figures:
-        with st.container(border=True, key=f"sheet_{file[:4]}"):
-            _image(FIGS / file, re.sub(r"<[^>]+>", "", caption))
-            st.markdown(f"<p class='note'>{caption}</p>", unsafe_allow_html=True)
+    st.page_link(state.page("data"), label="Abrir el catálogo de datos de cada variable", icon=":material/dataset:")
+    st.subheader("El tamaño de las celdas", anchor=False)
+    st.markdown(
+        "Una celda de ERA5 mide unos 31 km por lado y guarda un solo valor por variable; un mesociclón mide de 2 a 10 km. "
+        "Por eso ERA5 describe el entorno de la tormenta y no su rotación. GOES, con píxeles de unos 2 km, ve la nube pero no el giro."
+    )
+    with st.container(key="hero_scale"):
+        _image(diagrams.scale(), _SCALE_ALT, key="scale")
+        st.markdown(
+            "<p class='note'>Escala lineal: una celda de ERA5 con una cuadrícula de píxeles de GOES y un mesociclón dibujados al mismo tamaño que tendrían sobre el terreno.</p>",
+            unsafe_allow_html=True,
+        )
 
 
 def _participate() -> None:
