@@ -76,7 +76,8 @@ def _cover() -> None:
     """Presenta el objetivo, las referencias del caso y los enlaces."""
     st.title("Predicción de tormentas mesociclónicas en el centro-sur de Chile", anchor="inicio")
     st.markdown(
-        '<p class="lede">Proyecto abierto para la hackathon AWS Breaking Barriers. Un desafío de análisis de datos meteorológicos para estudiar qué tormentas pueden desarrollar rotación organizada.</p>',
+        '<p class="lede">El 30 de mayo de 2019, en pleno otoño, tormentas del centro-sur de Chile produjeron tornados que nadie esperaba. No hubo una advertencia a tiempo, y los índices que usan los pronosticadores del hemisferio norte no los habrían marcado: fueron diseñados para otro clima. Sabemos que algunas tormentas, las que desarrollan un mesociclón, son las que preceden a esos tornados. Lo que no sabemos es cómo reconocerlas antes, con los datos que ya existen para Chile.</p>'
+        "<p>Este es un proyecto abierto para la hackathon AWS Breaking Barriers. Tenemos 102 eventos documentados, el reanálisis ERA5 y las imágenes del satélite GOES. Falta entender qué distingue a las tormentas que rotan de las que no, y esa pregunta puede responderla cualquier persona que sepa mirar datos, con o sin formación en meteorología.</p>",
         unsafe_allow_html=True,
     )
     st.page_link(
