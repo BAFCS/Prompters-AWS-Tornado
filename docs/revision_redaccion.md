@@ -1,6 +1,6 @@
 # Revisión de redacción del documento de contexto
 
-Documento revisado: `docs/mesociclones_chile.md`, completo, en el commit `cd5a7e1`. Público: participantes de AWS Breaking Barriers que saben programar, pero pueden no conocer meteorología ni aprendizaje automático. Las líneas corresponden a esa versión. Las 48 propuestas se aplicaron en este worktree. Se conservaron las referencias y las fórmulas, con aclaraciones de sus símbolos, unidades y alcance. También se sincronizaron los pasajes correspondientes de las fichas del visor. Las líneas y los textos actuales de esta tabla describen la versión previa a la edición.
+Documento revisado: `docs/mesociclones_chile.md`, completo. Público: participantes de AWS Breaking Barriers que saben programar, pero pueden no conocer meteorología ni aprendizaje automático. Las líneas corresponden a la versión previa a la revisión. Las 48 propuestas se aplicaron. Se conservaron las referencias y las fórmulas, con aclaraciones de sus símbolos, unidades y alcance. También se sincronizaron los pasajes correspondientes de las fichas del visor. Las líneas y los textos «actuales» de la tabla describen esa versión previa.
 
 Esta es una revisión editorial, no una validación exhaustiva de las fuentes, las fórmulas o el estado actual de los servicios. Cuando una frase mezcla una explicación con una afirmación técnica demasiado amplia, la propuesta acota su alcance o señala qué necesita revisión especializada. «AI slop» describe aquí patrones de escritura —énfasis repetitivo, grandilocuencia, promesas y contrastes artificiales—; no permite determinar quién escribió el texto.
 
@@ -63,7 +63,7 @@ La propuesta 20 utiliza el mapa existente de la figura 3 y sus paneles A–B par
 
 Verificación de la edición: índice y diez secciones, cuatro rutas de figuras, referencias enlazadas y bloques de código/fórmulas conservados; `git diff --check`, Ruff, formato y Pyright sin errores; 29 pruebas de regresión aprobadas. Se revisaron El proyecto, Datos, El caso, Mapas, Sondeo y Series en modo claro y oscuro, y las fichas a 1024 × 768 con la barra lateral abierta. El worktree no contiene recortes de datos: las páginas que los requieren mostraron el estado esperado sin datos. Las capturas quedan en `.playwright-mcp/`. Se utilizó un Chromium independiente porque el navegador del MCP estaba ocupado. Los sondeos de rutas internas de Streamlit produjeron 44 respuestas 404 bajo las rutas de página y después 48 respuestas válidas en la raíz; no hubo errores inesperados ni excepciones de la app. El PDF conserva la versión anterior porque su conversor no está en el repositorio.
 
-## Segunda pasada: cambios posteriores a `cd5a7e1`
+## Segunda pasada: cambios posteriores a la primera revisión
 
 Se auditaron los textos nuevos de `pagina-datos` (paralaje, nota del VGP, símbolo de Bunkers, ayudas de Mapas y Sondeo) y se aplicaron 12 cambios:
 

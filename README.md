@@ -146,7 +146,7 @@ Qué hace cada uno:
 2. `download_goes.py` baja las imágenes del satélite GOES de ese día, recortadas a la misma región.
 3. `process_goes.py` pasa las imágenes del satélite a una grilla de latitud y longitud, la misma
    forma que usa ERA5, para poder superponerlas.
-4. `process_era5.py` calcula los índices de tiempo severo (cizalle, helicidad, VGP, STP) con los
+4. `process_era5.py` calcula los índices de tiempo severo (cizalladura, helicidad, VGP, STP) con los
    signos del hemisferio sur.
 
 > [!WARNING]
@@ -289,11 +289,11 @@ su licencia.
 **1 · Los índices norteamericanos no funcionan aquí.**
 Los tornados chilenos ocurren en un régimen **HSLC** (*High Shear, Low CAPE*). El brote del
 30–31 de mayo de 2019 tuvo apenas **200–1.000 J/kg** de CAPE — la media climatológica de
-fines de mayo en el Biobío es de **15–45 J/kg** — con cizalle 0–1 km de **12–20 m/s**.
+fines de mayo en el Biobío es de **15–45 J/kg** — con cizalladura 0–1 km de **12–20 m/s**.
 Vicencio et al. (2021) señalan explícitamente que **el STP clásico no habría dado la alarma**.
 Los umbrales calibrados para Chile son otros:
 
-- `VGP₀₋₁ = √CAPE × cizalle₀₋₁ > 0,1 m/s²`
+- `VGP₀₋₁ = √CAPE × cizalladura₀₋₁ > 0,1 m/s²`
 - `SHERBE ≥ 1`
 - `STP` (rama *left-mover*) **≤ −0,3**, no `+1`
 
@@ -303,7 +303,7 @@ supercélulas favorecidas son las ***left-movers***. Usar MetPy o SHARPpy tal cu
 
 **3 · Los eventos faltantes ya están señalados en la literatura.**
 Caballero-Morán & Rondanelli (2025, *GRL*) encontraron, con ERA5 1959–2021, amplias zonas
-del sur austral con VGP, cizalle y helicidad suficientes y **ningún registro documentado**,
+del sur austral con VGP, cizalladura y helicidad suficientes y **ningún registro documentado**,
 atribuible a subregistro por baja densidad poblacional. La propia base de datos lo confirma:
 **no contiene ni un solo evento al sur de los 42,4°S**, pese a que más de mil kilómetros de
 territorio chileno se extienden más allá.
@@ -324,7 +324,7 @@ aws s3 ls --no-sign-request s3://noaa-goes16/   # dic 2017 – abr 2025
 
 Dos trampas documentadas en `docs/`: los archivos de nivel de presión de ERA5 pesan **≈1,36 GB
 cada uno** (una variable, un día, el globo entero) y no admiten recorte del lado del servidor;
-y el **paralaje** de GOES desplaza los topes nubosos unos **20 km a 53°S**, varias celdas de grilla.
+y el **paralaje** de GOES desplaza los topes nubosos unos **21 km a 53°S** (para un tope de 12 km), varias celdas de grilla.
 
 ## Por dónde empezar
 

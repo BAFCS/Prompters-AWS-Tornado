@@ -27,7 +27,7 @@
 
 En Chile ocurren tornados. El **30 y 31 de mayo de 2019**, dos de ellos afectaron las ciudades de Los Ángeles y Talcahuano–Concepción, en la Región del Biobío. Dejaron daños estructurales, personas heridas y una víctima fatal. El episodio puso de relieve un fenómeno que la comunidad meteorológica chilena venía estudiando: las tormentas del centro-sur pueden producir tiempo severo, como granizo, ráfagas destructivas y tornados, en condiciones distintas a las de las Grandes Llanuras de Estados Unidos.
 
-La base de datos «Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile» (Bastías-Curivil, Rondanelli, Vicencio et al., figshare, [doi:10.6084/m9.figshare.25119566](https://doi.org/10.6084/m9.figshare.25119566), CC BY 4.0) reúne **102 eventos entre 1554 y 2025**. Hay 70 registros marcados como tornado, 45 como tromba marina y 19 en ambas categorías; esos conteos se solapan. De los 102 eventos, 68 corresponden al período 2015–2025. Este catálogo permite comparar datos meteorológicos con eventos documentados, pero su cobertura depende de quién pudo observarlos y registrarlos.
+La base de datos «Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile» (Bastías-Curivil, Rondanelli, Vicencio et al., figshare, [doi:10.6084/m9.figshare.25119566](https://doi.org/10.6084/m9.figshare.25119566), CC BY 4.0) reúne **102 eventos entre 1554 y 2025**. Hay 70 registros marcados como tornado, 45 como tromba marina y 19 en ambas categorías; esos conteos se solapan (70 + 45 − 19 = 96); los 6 restantes no tienen tipo registrado. De los 102 eventos, 68 corresponden al período 2015–2025. Este catálogo permite comparar datos meteorológicos con eventos documentados, pero su cobertura depende de quién pudo observarlos y registrarlos.
 
 > La ausencia de un registro no permite asegurar que no ocurrió un evento.
 
@@ -53,7 +53,7 @@ Un **mesociclón** es una columna de aire en rotación, de entre 2 y 10 km de di
 
 Una tormenta con un mesociclón persistente recibe el nombre de **supercélula**. Se distingue de otros tipos de tormenta por la asociación sostenida entre la corriente ascendente y la rotación. Puede producir granizo grande, ráfagas destructivas y tornados intensos.
 
-Estas cifras ayudan a comparar el tamaño y la duración de los fenómenos. Son referencias generales; las tormentas chilenas pueden tener estructuras menos profundas, como veremos en la sección 3:
+Estas cifras ayudan a comparar el tamaño y la duración de los fenómenos. Son referencias generales; las tormentas chilenas pueden tener estructuras menos profundas, como veremos en las secciones 3.2 y 3.7:
 
 | Magnitud | Valor típico |
 |---|---|
@@ -61,7 +61,7 @@ Estas cifras ayudan a comparar el tamaño y la duración de los fenómenos. Son 
 | Duración de una supercélula | 2 – 4 horas (casos extremos > 7 h) |
 | Duración de un mesociclón individual | decenas de minutos a horas |
 | Altura del tope nuboso | 12 – 21 km |
-| Fracción de supercélulas que producen tornado | **≤ 30 %** |
+| Fracción de supercélulas que producen tornado | ≤ 30 % |
 
 La última fila recuerda que detectar un mesociclón no basta para anticipar un tornado. Si se usara esa detección como aviso de tornado, se generarían falsas alarmas. La utilidad de un aviso dependerá de cuántos eventos detecte, cuántas falsas alarmas genere y con cuánto tiempo de anticipación llegue.
 
@@ -100,9 +100,9 @@ Cuando la rotación y la corriente ascendente se mantienen asociadas, la torment
 
 En una supercélula se pueden distinguir zonas de ascenso, descenso y precipitación. Algunas se reconocen desde el suelo o con radar; el satélite muestra sobre todo la parte superior de la nube:
 
-- **Corriente ascendente principal (*updraft*)**: la columna rotatoria. Puede alcanzar **50 m/s** en latitudes medias.
+- **Corriente ascendente principal (*updraft*)**: la columna rotatoria. Puede alcanzar 50 m/s en latitudes medias.
 - **Base libre de precipitación**: la zona bajo la corriente ascendente donde entra el aire húmedo. Puede caer granizo grande desde un cielo que se ve despejado.
-- **Nube pared (*wall cloud*)**: nube baja y rotatoria que cuelga de la base, en la frontera entre el ascenso y el descenso. Si la tormenta va a producir un tornado, típicamente muestra una nube pared que **persiste más de diez minutos**.
+- **Nube pared (*wall cloud*)**: nube baja y rotatoria que cuelga de la base, en la frontera entre el ascenso y el descenso. Cuando una supercélula produce un tornado, suele haber una nube pared que persiste más de diez minutos.
 - **FFD (*forward flank downdraft*)**: la corriente descendente del flanco delantero, fría y húmeda, donde está la precipitación más intensa.
 - **RFD (*rear flank downdraft*)**: la corriente descendente del flanco trasero. Sus pulsos pueden intervenir en la formación del tornado al interactuar con la rotación y el ascenso cerca del suelo. La distribución de precipitación de una supercélula puede mostrar una forma de gancho en el radar.
 - **Yunque (*anvil*)**: la región de la nube que se extiende lateralmente en altura y suele contener cristales de hielo. Se forma cuando el ascenso llega a una capa estable cerca de la tropopausa, el límite entre la troposfera y la estratosfera.
@@ -113,9 +113,9 @@ En una supercélula se pueden distinguir zonas de ascenso, descenso y precipitac
 
 | Tipo | Característica | Riesgo dominante |
 |---|---|---|
-| **LP** (baja precipitación) | Núcleo de lluvia pequeño y separado del ascenso; aspecto de "sacacorchos" | Granizo grande; tornados raros y débiles; **puede no mostrar gancho en el radar** |
+| **LP** (baja precipitación) | Núcleo de lluvia pequeño y separado del ascenso; aspecto de "sacacorchos" | Granizo grande; tornados raros y débiles; puede no mostrar gancho en el radar |
 | **Clásica** | Precipitación "normal", estructura de libro de texto | Todo el espectro; el gancho es claro |
-| **HP** (alta precipitación) | La lluvia **envuelve completamente al mesociclón** | Especialmente peligrosa: **el tornado queda oculto tras la lluvia**; inundaciones y ráfagas |
+| **HP** (alta precipitación) | La lluvia **envuelve completamente al mesociclón** | Especialmente peligrosa: el tornado queda oculto tras la lluvia; inundaciones y ráfagas |
 
 En un entorno marítimo y húmedo, la precipitación puede dificultar la observación visual de un tornado. Las imágenes satelitales y los datos meteorológicos ayudan a estudiar esas tormentas, aunque tampoco permiten confirmar por sí solos lo que ocurre bajo la nube.
 
@@ -153,7 +153,7 @@ El 30 y 31 de mayo de 2019 se produjeron al menos siete tornados en 24 horas ent
 | | Los Ángeles, Biobío | Talcahuano – Concepción, Biobío |
 |---|---|---|
 | Fecha y hora | 30 de mayo, 21:57 UTC (≈17:57 local) | 31 de mayo, 18:00 UTC (≈14:00 local) |
-| Intensidad | EF2 | EF1–EF2 |
+| Intensidad (escala Fujita mejorada, de EF0 a EF5) | EF2 | EF1–EF2 |
 | Duración | ~8 min | ~15 min |
 | Trayecto | ~5,0 km | 17,1 km |
 | Viento estimado | 50–60 m/s (218 km/h, informe DMC) | 50–55 m/s (178 km/h, informe DMC) |
@@ -188,7 +188,7 @@ El CAPE de los días tornádicos puede ser bajo frente al de las Grandes Llanura
 
 El momento del día también importa. En el entorno analizado, la sensibilidad estimada del CAPE al calentamiento superficial fue de aproximadamente +500 J/kg por grado Celsius. Es una referencia del caso, no una regla para cualquier tormenta. Los siete tornados de 2019 ocurrieron entre las 18:00 y las 23:25 UTC, aproximadamente entre las 14:00 y las 19:25 hora local, durante la tarde.
 
-Qué implica para el modelo. Según Vicencio et al. (2021), el umbral clásico del Significant Tornado Parameter (STP), un índice que combina varias condiciones meteorológicas, no habría señalado el brote de mayo de 2019. Los criterios propuestos en los estudios chilenos son:
+**Qué implica para el modelo.** Según Vicencio et al. (2021), el umbral clásico del Significant Tornado Parameter (STP), un índice que combina varias condiciones meteorológicas, no habría señalado el brote de mayo de 2019. Los criterios propuestos en los estudios chilenos (VGP₀₋₁, SHERBE y STP, que se definen en la sección 5.3) son:
 
 - VGP₀₋₁ = √CAPE × cizalladura₀₋₁ > 0,1 m/s². Los cinco días tornádicos analizados entre 2008 y 2019 superan ese valor; Los Ángeles supera 0,2 (Vicencio et al. 2021). En esta fórmula, la cizalladura se expresa por unidad de altura, como se aclara en la sección 5.3.
 - SHERBE ≥ 1 y **STP de la rama *left-mover* ≤ −0,3**. Marín et al. (2024) los sitúan entre los valores extremos de la distribución chilena de 1959–2021. Hay que distinguir el criterio negativo del STP austral del umbral +1 usado en otros contextos.
@@ -206,7 +206,7 @@ Los estudios del brote de 2019 y la climatología de Marín et al. (2024) descri
 4. Un jet de bajo nivel del noroeste, reforzado por el bloqueo del flujo contra los Andes.
 5. El 31 de mayo se observó una nube con forma de coma, asociada a una zona de baja presión de menor escala (*mesobaja*). Acompañó una banda de tormentas sobre el océano, separadas unos 50 km, que entraron a tierra sucesivamente.
 
-La figura 3 permite localizar dos de estos elementos: el panel A muestra el aire frío en 500 hPa y el B, el viento del noroeste en 850 hPa. Los marcadores sitúan los eventos para compararlos con el entorno.
+La figura 3 (sección 4.1) permite localizar dos de estos elementos: el panel A muestra el aire frío en 500 hPa y el B, el viento del noroeste en 850 hPa. Los marcadores sitúan los eventos para compararlos con el entorno.
 
 **Para profundizar.** Los estudios describen perturbaciones de menor extensión, llamadas *ondas cortas*, tras el frente. También pueden intervenir una baja segregada (*cutoff low*, un centro de baja presión aislado de la circulación principal) y un bloqueo anticiclónico al sur de 45°S que divide el jet en dos ramas. En el brote de 2019 se estudió además la posición de la zona inestable respecto de la salida polar de un *jet streak*, un tramo de viento especialmente intenso dentro del jet. Son detalles para interpretar junto con los mapas y las fuentes, más que una lista de requisitos universales.
 
@@ -348,7 +348,7 @@ donde `128_060_pv` es tabla GRIB 128 / parámetro 60 / nombre corto `pv`, y `ll0
 
 > **Niveles bajo el terreno en el panel C.** En ERA5 el nivel de 1000 hPa está *bajo tierra* sobre los Andes, y sus valores son una extrapolación del modelo. Parte de la franja de cizalladura intensa que sigue el pie de monte es, por tanto, artificio numérico y no viento real. Cualquier cálculo de cizalladura de niveles bajos debe enmascarar los puntos donde la presión de superficie es menor que el nivel usado, o partir del viento a 10 m en lugar de 1000 hPa.
 
-> **Volumen de descarga.** Cada archivo de niveles de presión contiene una variable, un día completo (00–23 UTC), el globo y 37 niveles: aproximadamente 1,36 GB. Descargar 10 años de seis variables completas requiere decenas de terabytes. No hay recorte geográfico del lado del servidor. La lectura por rangos de bytes permite pedir bloques del archivo y recortar después la región de interés; los bytes transferidos dependen de cómo se almacena cada variable. Un bloque puede contener una hora del globo entero, de modo que leer solo el recuadro en el resultado no garantiza transferir solo sus píxeles. Se puede trabajar con `xarray`, `fsspec` y `h5netcdf`, o construir índices con `kerchunk`/`virtualizarr`. El recuadro de interés es aproximadamente 17°S–56°S, 80°W–66°W.
+> **Volumen de descarga.** Cada archivo de niveles de presión contiene una variable, un día completo (00–23 UTC), el globo y 37 niveles: aproximadamente 1,36 GB. Descargar 10 años de seis variables completas requiere decenas de terabytes. No hay recorte geográfico del lado del servidor. La lectura por rangos de bytes permite pedir bloques del archivo y recortar después la región de interés; los bytes transferidos dependen de cómo se almacena cada variable. Un bloque puede contener una hora del globo entero, de modo que recortar el recuadro después de leerlo no reduce los bytes transferidos. Se puede trabajar con `xarray`, `fsspec` y `h5netcdf`, o construir índices con `kerchunk`/`virtualizarr`. El recuadro de interés es aproximadamente 17°S–56°S, 80°W–66°W.
 >
 > El Climate Data Store (CDS) de Copernicus ofrece recorte geográfico del lado del servidor, con una cola de peticiones. Puede ser una alternativa para prototipos pequeños.
 
@@ -546,7 +546,7 @@ Estos índices combinan varias variables meteorológicas en un número. Su ámbi
 - **SCP** (*Supercell Composite Parameter*). Resume condiciones favorables para supercélulas mediante variables de energía y viento. Hay que especificar la formulación y la rama de movimiento utilizada.
 - **STP** (*Significant Tornado Parameter*). Combina MLCAPE, cizalladura 0–6 km, SRH 0–1 km, altura del LCL y CIN en una de sus formulaciones. Marín et al. (2024) proponen para el caso chileno la rama *left-mover* y el criterio ≤ −0,3. Ese criterio debe evaluarse antes de trasladarlo a variantes que usan otro CAPE u omiten CIN.
 - **BRN** (*Bulk Richardson Number*). Compara flotabilidad y cizalladura para estudiar el tipo de organización convectiva. Su interpretación depende del perfil utilizado.
-- **SHERBE** (*Severe Hazards in Environments with Reduced Buoyancy*). Combina condiciones de viento y temperatura para entornos HSLC. El criterio propuesto para Chile es ≥ 1; no debe trasladarse sin validación a variantes como SHERBS3.
+- **SHERBE** (*Severe Hazards in Environments with Reduced Buoyancy*). Combina condiciones de viento y temperatura para entornos HSLC. El criterio propuesto para Chile es ≥ 1; no debe trasladarse sin validación a variantes como SHERBS3, la que calcula el visor con la cizalladura de 0–3 km.
 - **VGP** (*Vorticity Generation Parameter*). Combina CAPE y cizalladura para resumir condiciones de generación de vorticidad. En la variante de bajo nivel, VGP₀₋₁ = √CAPE × cizalladura₀₋₁, la cizalladura es el cambio del viento por unidad de altura, en s⁻¹. Así el resultado se expresa en m/s². No se debe sustituir directamente por una diferencia de viento en m/s. Vicencio et al. (2021) describen valores > 0,1 m/s² en los cinco días tornádicos analizados.
 
 Para la hackathon conviene comparar VGP₀₋₁, SHERBE y STP con los casos documentados, comprobando qué variante se calcula. Recalibrar los coeficientes de un índice es una línea de investigación que requiere una evaluación más amplia que la de un prototipo.
@@ -632,7 +632,7 @@ Un modelo que prediga siempre «sin evento» podría tener una **exactitud** (*a
 | ¿Cómo cambia el resultado al exigir una puntuación mayor? | Curva de precisión y exhaustividad; área bajo ella, AUC-PR | Compara la proporción de avisos respaldados con la fracción de casos detectados a distintos umbrales |
 | ¿Las probabilidades se corresponden con las frecuencias observadas? | Curvas de fiabilidad y *Brier score*, error cuadrático de las probabilidades | Requieren etiquetas de evaluación adecuadas; el subregistro afecta su interpretación |
 
-**Para profundizar.** CSI (*critical success index*) combina aciertos, omisiones y falsas alarmas; ETS ajusta una medida de aciertos por lo esperable al azar. Son métricas operacionales adicionales. AUC-ROC también puede calcularse, pero con muchos ejemplos sin evento puede ocultar una cantidad de avisos sin respaldo poco útil en la práctica. Ninguna métrica elimina la incertidumbre de las etiquetas.
+**Para profundizar.** CSI (*critical success index*) combina aciertos, omisiones y falsas alarmas; ETS ajusta una medida de aciertos por lo esperable al azar. Son métricas operacionales adicionales. AUC-ROC también puede calcularse, pero con muchos ejemplos sin evento puede dar valores altos aun cuando la mayoría de los avisos carezca de respaldo. Ninguna métrica elimina la incertidumbre de las etiquetas.
 
 Para comparar tormentas entre sí, conviene buscar **controles difíciles**: días con convección profunda sin rotación documentada. Permiten investigar qué distingue los casos registrados de otras tormentas fuertes. Siguen siendo controles candidatos, no negativos confirmados, y necesitan revisión de evidencia.
 
@@ -722,22 +722,22 @@ Hay tareas para equipos con distinta experiencia. Cada una puede dar lugar a un 
 | **ERA5** | Reanálisis global del ECMWF, 0,25°, horario, desde 1940 |
 | **Etiqueta** | Información asignada a un ejemplo para entrenar o evaluar un modelo; aquí puede ser un registro de tornado o tromba |
 | **Feature** | Variable calculada o seleccionada como entrada de un modelo |
-| **Grilla** | Conjunto de celdas que organiza los datos sobre una región |
 | **GLM** | *Geostationary Lightning Mapper*. Detector óptico de rayos en GOES |
+| **Grilla** | Conjunto de celdas que organiza los datos sobre una región |
 | **Hodógrafo** | Curva que une los vectores de viento de distintas alturas para mostrar cómo cambia su rapidez y dirección |
-| **LCL** | Nivel de condensación por ascenso. La altura de la base de la nube |
 | **Jet** | Corriente de vientos intensos que puede encontrarse en niveles bajos o altos |
+| **LCL** | Nivel de condensación por ascenso. La altura de la base de la nube |
 | **Mesociclón** | Columna rotatoria de 2–10 km dentro de una tormenta profunda |
 | **Reanálisis** | Reconstrucción histórica de la atmósfera que combina observaciones y un modelo meteorológico |
-| **RFD** | Corriente descendente del flanco trasero; clave en la tornadogénesis |
-| **SRH** | Helicidad relativa a la tormenta: integra la vorticidad horizontal alineada con el aire que entra a la tormenta |
+| **RFD** | Corriente descendente del flanco trasero; puede intervenir en la tornadogénesis |
 | **Sobreajuste** | Cuando un modelo se ajusta a los ejemplos conocidos, pero pierde rendimiento en casos nuevos |
+| **SRH** | Helicidad relativa a la tormenta: integra la vorticidad horizontal alineada con el aire que entra a la tormenta |
 | **Supercélula** | Tormenta con un mesociclón persistente |
-| **Tope penetrante** | Cúpula que sobresale del yunque; señal de ascenso muy intenso |
+| **Tope penetrante** | Cúpula que sobresale del yunque cuando el ascenso sobrepasa la tropopausa |
 | **Tornadogénesis** | Proceso de formación de un tornado, con o sin un mesociclón previo |
-| **UTC** | Tiempo universal coordinado, usado para comparar observaciones sin depender del huso horario local |
-| **Troposfera** | Capa inferior de la atmósfera donde se desarrolla la mayor parte del tiempo meteorológico |
 | **Tropopausa** | Límite entre la troposfera y la estratosfera |
+| **Troposfera** | Capa inferior de la atmósfera donde se desarrolla la mayor parte del tiempo meteorológico |
+| **UTC** | Tiempo universal coordinado, usado para comparar observaciones sin depender del huso horario local |
 | **Vorticidad** | Medida local de la rotación de un fluido |
 | **Yunque (*anvil*)** | Región de la nube que se extiende lateralmente en altura y suele contener cristales de hielo |
 

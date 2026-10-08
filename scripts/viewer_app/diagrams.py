@@ -138,7 +138,7 @@ _CAPE_BODY = """
 STAGES = (
     (
         "1 · El cambio del viento con la altura genera rotación horizontal",
-        "La cizalladura, llamada también cizalladura, es el cambio de la velocidad o la dirección del viento con la altura. En el ejemplo del esquema, el viento aumenta su velocidad hacia arriba. Este cambio está asociado a una rotación del aire alrededor de un eje horizontal, paralelo al suelo.",
+        "La cizalladura, llamada también cizalle, es el cambio de la velocidad o la dirección del viento con la altura. En el ejemplo del esquema, el viento aumenta su velocidad hacia arriba. Este cambio está asociado a una rotación del aire alrededor de un eje horizontal, paralelo al suelo.",
     ),
     (
         "2 · La corriente ascendente inclina la rotación",
