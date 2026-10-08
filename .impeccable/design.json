@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-07T15:52:39+00:00",
+  "generatedAt": "2026-10-08T12:35:11+00:00",
   "title": "Design System: Mesociclones en Chile · visor",
   "extensions": {
     "colorMeta": {
@@ -492,6 +492,10 @@
       "datos": {
         "displayName": "Datos medidos",
         "purpose": "Valores, coordenadas y horas UTC con cifras tabulares, donde la plataforma lo permite."
+      },
+      "ficha": {
+        "displayName": "Ficha",
+        "purpose": "Nombre de cada variable en Datos; es también su ancla."
       }
     },
     "shadows": [],
@@ -657,6 +661,14 @@
       "description": "Glifos de mapa: el punto elegido en doble anillo (halo de hoja y anillo de selección) y el evento como triángulo rojo con borde de hoja, sobre un tope frío.",
       "html": "<svg class=\"ds-glifos\" width=\"160\" height=\"80\" viewBox=\"0 0 160 80\" role=\"img\" aria-label=\"Punto elegido y evento\"><rect width=\"160\" height=\"80\" fill=\"#2D708E\"/><circle cx=\"52\" cy=\"40\" r=\"11\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"5.5\"/><circle cx=\"52\" cy=\"40\" r=\"11\" fill=\"none\" stroke=\"#457B9D\" stroke-width=\"2.5\"/><path d=\"M108 32 L115 45 L101 45 Z\" fill=\"#E63946\" stroke=\"#FFFFFF\" stroke-width=\"1.2\"/></svg>",
       "css": ".ds-glifos{display:block;border-radius:6px}"
+    },
+    {
+      "name": "Ficha de variable",
+      "kind": "card",
+      "refersTo": "ficha-variable",
+      "description": "Una variable del catálogo de datos: qué es, por qué importa, fórmula, criterio chileno, fuentes.",
+      "html": "<article class=\"ds-var\"><h4 class=\"ds-var-name\">Parámetro de vorticidad generada</h4><p class=\"ds-var-meta\">VGP₀₋₁ · m/s²</p><p>Mide cuánta vorticidad horizontal del cizalle puede inclinar una corriente ascendente.</p><p class=\"ds-var-crit\"><b>Criterio en Chile.</b> VGP₀₋₁ &gt; 0,1 m/s².</p><p class=\"ds-var-refs\">Fuentes: <a href=\"#\">Vicencio et al. (2021)</a></p><button class=\"ds-btn-tertiary\">Ver en Mapas</button></article>",
+      "css": ".ds-var { background: #FFFFFF; border: 1px solid #BDD4D6; border-radius: 6px; padding: 16px; font-family: 'IBM Plex Sans', sans-serif; color: #0E1A2C; max-width: 44rem; } .ds-var p { margin: 0 0 8px; } .ds-var-name { font-size: 1.1rem; font-weight: 600; line-height: 1.3; margin: 0; } .ds-var-meta { font-family: 'IBM Plex Mono', monospace; font-size: 0.86rem; color: #465463; } .ds-var-crit::before { content: ''; display: inline-block; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 9px solid #E63946; margin-right: 8px; } .ds-var-refs { font-size: 0.86rem; color: #465463; } .ds-var-refs a { color: #376284; text-underline-offset: 2px; } .ds-btn-tertiary { background: none; border: 0; color: #376284; font: inherit; padding: 4px 0; cursor: pointer; } .ds-btn-tertiary:hover, .ds-btn-tertiary:focus-visible { text-decoration: underline; outline: none; }"
     }
   ],
   "narrative": {
@@ -714,12 +726,13 @@
     ],
     "dos": [
       "**Do** poner todo dato sobre una hoja con filete y radio 6 px encima del fondo, en los dos temas.",
-      "**Do** reservar el Strawberry Red #E63946 para glifos y líneas de eventos del catálogo y umbrales chilenos calibrados; las alertas en tinta con el triángulo rojo al lado.",
+      "**Do** reservar el Strawberry Red #E63946 (#E7434E en oscuro, con 5 % de Honeydew para llegar a 3:1 sobre la hoja) para glifos y líneas de eventos del catálogo y umbrales chilenos calibrados; las alertas en tinta con el triángulo rojo al lado.",
       "**Do** usar el color de acción (#376284 en claro, #A8DADC en oscuro) para lo accionable y el de selección (#457B9D en claro, #A8DADC en oscuro) para lo elegido dentro de un gráfico.",
       "**Do** colorear los mapas con la escala estándar de su tipo de dato (`colorscales.KINDS`) y dejar que la predeterminada sea apta para daltonismo.",
       "**Do** usar el azul y el naranja de Okabe-Ito para series categóricas que la paleta no cubre.",
       "**Do** escribir cifras con coma decimal y en IBM Plex Mono tabular cuando la plataforma lo permita.",
       "**Do** tomar los colores de `theme.colors()` y la plantilla de `theme.template()`, y fijar fondo y fuente en el layout de cada figura plotly (`charts._style`).",
+      "**Do** escribir cada ficha de Datos en `variables.py`: Mapas toma de ahí su ayuda, y un producto nuevo sin ficha rompe `tests/test_variables.py`.",
       "**Do** añadir a `tests/test_colorscales.py` todo color nuevo de texto, con su contraste AA en claro y oscuro."
     ],
     "donts": [
