@@ -13,10 +13,15 @@ MAX_ANIMATED = 3  # paneles GOES que se animan a la vez
 
 
 def _on_click() -> None:
-    """Callback de la grilla: el punto clicado en cualquier panel pasa a ser el punto elegido."""
+    """Callback de la grilla: el nodo ERA5 más cercano al clic pasa a ser el punto elegido.
+
+    Es el nodo que leen Sondeo y Series; sin ERA5 esas páginas no tienen qué mostrar y el clic se ignora.
+    """
     points = st.session_state["grid"].selection.points
-    if points:
-        la, lo = float(points[0]["y"]), float(points[0]["x"])
+    ref = data.era5_ref(state.context().day)
+    if points and ref is not None:
+        node = ref.sel(latitude=points[0]["y"], longitude=points[0]["x"], method="nearest")
+        la, lo = float(node["latitude"]), float(node["longitude"])
         state.select_point(state.Point(la, lo, components.coord(la, lo)))
 
 

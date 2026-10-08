@@ -96,12 +96,14 @@ def grid_shape(n: int) -> tuple[int, int]:
     return 2, 3
 
 
-HOVER_CELLS = (
-    120  # lado mayor de la grilla invisible que da el valor bajo el cursor y recibe el clic
+# Lado mayor de la grilla invisible que da el valor bajo el cursor y recibe el clic.
+HOVER_CELLS = 120
+ERA5_STEP = (
+    0.25  # la grilla de clic nunca es más gruesa que ERA5, que es lo que usan Sondeo y Series
 )
 
 
-@st.cache_data(max_entries=512, show_spinner=False)
+@st.cache_data(max_entries=64, show_spinner=False)
 def _png(z: np.ndarray, colorscale: str, lo: float, hi: float) -> str:
     """``z`` (de sur a norte) coloreada con ``colorscale`` entre ``lo`` y ``hi``, como PNG en data-URI.
 
@@ -115,7 +117,11 @@ def _png(z: np.ndarray, colorscale: str, lo: float, hi: float) -> str:
             pc.get_colorscale(colorscale), np.linspace(0, 1, 256), colortype="rgb"
         )
         lut = np.array([pc.unlabel_rgb(c) for c in colors]).round().astype(np.uint8)
-        i = np.nan_to_num(np.clip((z - lo) / (hi - lo), 0, 1) * 255, nan=0).round().astype(np.uint8)
+        i = (
+            np.nan_to_num(np.clip((z - lo) / ((hi - lo) or 1.0), 0, 1) * 255, nan=0)
+            .round()
+            .astype(np.uint8)
+        )
         rgba = np.dstack([lut[i], np.where(np.isnan(z), 0, 255).astype(np.uint8)])
     buf = io.BytesIO()  # la fila 0 queda al sur: con ``dy > 0`` plotly voltea la imagen
     Image.fromarray(np.ascontiguousarray(rgba)).save(buf, "PNG")
@@ -125,10 +131,11 @@ def _png(z: np.ndarray, colorscale: str, lo: float, hi: float) -> str:
 def background(
     c: "Layer", colorbar: dict | None = None
 ) -> list[go.Image | go.Scattergl | go.Scatter]:
-    """Trazas de fondo de un panel: la imagen ya coloreada, una grilla invisible y, salvo en RGB, la barra.
+    """Trazas de fondo de un panel: la imagen ya coloreada, la grilla invisible y, salvo en RGB, la barra.
 
     La grilla (un píxel de cada ``step``) da el valor bajo el cursor y el clic que elige el punto:
-    Streamlit solo recibe selecciones de trazas de puntos, no de imágenes ni heatmaps. La barra de color
+    Streamlit solo recibe selecciones de trazas de puntos, no de imágenes ni heatmaps. Los puntos sin
+    dato van en una segunda grilla que solo muestra las coordenadas. La barra de color
     va en un punto aparte que no se dibuja: colorear cada marcador de la grilla triplica el costo del
     zoom. Los cuadros de la animación usan estas mismas trazas sin ``colorbar``: plotly conserva la inicial.
     """
@@ -139,28 +146,36 @@ def background(
         source=_png(z, c.colorscale or "gray", lo, hi), x0=float(c.lon[0]),
         dx=float(c.lon[1] - c.lon[0]), y0=float(lat[0]), dy=float(lat[1] - lat[0]), hoverinfo="skip",
     )  # fmt: skip
+    # ponytail: el hover da el valor del punto de grilla más cercano, no el del píxel bajo el cursor;
+    # si hace falta el exacto, recalcular la grilla con el encuadre visible (requiere un evento de zoom).
     step = max(1, -(-max(z.shape[:2]) // HOVER_CELLS))
+    step = min(step, max(1, round(ERA5_STEP / abs(float(lat[1] - lat[0])))))
     LA, LO = np.meshgrid(
         lat[::step].astype(np.float32), c.lon[::step].astype(np.float32), indexing="ij"
     )
-    hover = "%{y:.2f}°, %{x:.2f}°"
-    values = None
-    if not c.is_rgb:
-        values = z[::step, ::step].ravel()
-        hover += "<br><b>%{customdata:.3g}</b> " + c.unit
+    coords = "%{y:.2f}°, %{x:.2f}°"
     # hoverinfo distinto de "skip": con "skip" plotly no emite el clic y Streamlit no se entera.
-    grid = go.Scattergl(
-        x=LO.ravel(), y=LA.ravel(), customdata=values, mode="markers", hovertemplate=hover + "<extra></extra>",
-        marker={"size": 9, "color": "rgba(0,0,0,0)"},
-    )  # fmt: skip
+    marker = {"size": 9, "color": "rgba(0,0,0,0)"}
     if c.is_rgb:
+        grid = go.Scattergl(x=LO.ravel(), y=LA.ravel(), mode="markers", marker=marker,
+                            hovertemplate=coords + "<extra></extra>")  # fmt: skip
         return [image, grid]
+    values = z[::step, ::step].ravel()
+    ok = np.isfinite(values)
+    grid = go.Scattergl(
+        x=LO.ravel()[ok], y=LA.ravel()[ok], customdata=values[ok], mode="markers", marker=marker,
+        hovertemplate=coords + "<br><b>%{customdata:.3g}</b> " + c.unit + "<extra></extra>",
+    )  # fmt: skip
+    empty = go.Scattergl(
+        x=LO.ravel()[~ok], y=LA.ravel()[~ok], mode="markers", marker=marker,
+        hovertemplate=coords + "<br>sin dato<extra></extra>",
+    )  # fmt: skip
     bar = go.Scatter(
         x=[None], y=[None], mode="markers", hoverinfo="skip",
         marker={"color": [lo], "colorscale": c.colorscale, "cmin": lo, "cmax": hi,
                 "showscale": c.kind is not None, "colorbar": colorbar},
     )  # fmt: skip
-    return [image, grid, bar]
+    return [image, grid, empty, bar]
 
 
 def _threshold(c: "Layer", width: float) -> go.Contour:
@@ -258,10 +273,11 @@ def grid(
     for i in range(1, rows * cols):
         _layout(fig, f"xaxis{i + 1}").matches = "x"
         _layout(fig, f"yaxis{i + 1}").matches = "y"
+    # hoverdistance=-1: con zoom los puntos de la grilla quedan separados y aun así responden.
     fig.update_layout(
         yaxis={"scaleanchor": "x", "scaleratio": enc.aspect},
         height=height or (640 if rows == 1 else 470 * rows), showlegend=False, dragmode="pan",
-        clickmode="event+select", uirevision="grid", margin={"t": 56, "r": 48},
+        clickmode="event+select", hoverdistance=-1, uirevision="grid", margin={"t": 56, "r": 48},
     )  # fmt: skip
     return _style(fig), backgrounds
 
