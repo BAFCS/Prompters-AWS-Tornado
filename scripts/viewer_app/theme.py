@@ -212,6 +212,7 @@ _WATCHER = """
   }, true);
   window.__watcherRequestedAt = 0;
   window.__watcherMismatches = 0;
+  // Verificado con Streamlit 1.64: depende de su DOM (botones de la barra lateral e imágenes).
   window.__themeWatcher = setInterval(() => {
     for (const [testid, label] of [
       ['stExpandSidebarButton', 'Abrir selección de región, fecha y evento'],

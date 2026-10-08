@@ -25,10 +25,13 @@ DERIVED = {  # clave → (etiqueta, bandas que necesita)
     "goes:dT": ("Cambio de temperatura de brillo entre imágenes (ΔC13)", {"C13"}),
     "goes:C08-C13": ("Diferencia de temperatura de brillo C08 − C13", {"C08", "C13"}),
 }
-FAVORITES = (
-    "rgb:airmass", "goes:C13", "goes:dT", "goes:C08-C13", "goes:C02",
-    "idx:vgp_01", "idx:srh_01", "idx:stp_lm", "idx:sherbs3", "idx:shear_01", "idx:lcl",
-)  # fmt: skip
+FAVORITE_GROUPS = (
+    ("Rotación del entorno", ("idx:vgp_01", "idx:srh_01", "idx:stp_lm")),
+    ("Viento y perfil", ("idx:shear_01", "idx:lcl", "idx:sherbs3")),
+    ("Enfriamiento de nubes", ("goes:C13", "goes:dT")),
+    ("Composición de nubes", ("rgb:airmass", "goes:C08-C13", "goes:C02")),
+)
+FAVORITES = tuple(k for _, keys in FAVORITE_GROUPS for k in keys)  # orden de la lista completa
 
 
 @dataclass(frozen=True)

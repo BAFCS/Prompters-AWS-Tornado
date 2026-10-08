@@ -10,7 +10,8 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from viewer_app import charts, layers, state  # noqa: E402
+import common  # noqa: E402
+from viewer_app import charts, layers, p_project, state  # noqa: E402
 
 
 class ExplorationTest(unittest.TestCase):
@@ -38,6 +39,36 @@ class ExplorationTest(unittest.TestCase):
                 self.assertEqual(state.point(), previous)
             state.select_point(state.Point(-36.5, -72.5, "Coordenadas"))
             self.assertEqual(state.point().lat, -36.5)
+
+    def test_point_must_fall_inside_the_region(self) -> None:
+        """Con región, un punto fuera de ella se rechaza y conserva el anterior."""
+        reg = common.REGIONS["south-central"]
+        previous = state.Point(-37, -73, "Anterior")
+        with patch.object(state.st, "session_state", {"point": previous}):
+            with self.assertRaises(ValueError):
+                state.select_point(state.Point(-50, -73, "Fuera"), reg)
+            self.assertEqual(state.point(), previous)
+            state.select_point(state.Point(-36, -72, "Dentro"), reg)
+            self.assertEqual(state.point().lat, -36)
+
+    def test_grid_shape(self) -> None:
+        """La grilla respeta columnas disponibles y máximos por cantidad de paneles."""
+        cases = {(0, 3): (1, 1), (1, 3): (1, 1), (4, 3): (2, 2), (5, 3): (2, 3),
+                 (6, 3): (2, 3), (6, 2): (3, 2), (6, 1): (6, 1)}  # fmt: skip
+        for (n, columns), expected in cases.items():
+            with self.subTest(n=n, columns=columns):
+                self.assertEqual(charts.grid_shape(n, columns), expected)
+
+    def test_every_image_publishes_a_description(self) -> None:
+        """Cada imagen emite el marcador que el vigía usa para su texto alternativo."""
+        with patch.object(p_project, "st") as st_mock:
+            p_project._image("<svg/>", 'Dice "algo" <b>')
+        html_arg = st_mock.html.call_args.args[0]
+        self.assertIn('class="project-image-alt"', html_arg)
+        self.assertIn("data-description=", html_arg)
+        self.assertIn(
+            st_mock.container.call_args.kwargs["key"], {"image_cape", "image_mesocyclone"}
+        )
 
     def test_leaving_tour_restores_free_exploration(self) -> None:
         """Salir devuelve paneles, punto y hora previos al recorrido."""

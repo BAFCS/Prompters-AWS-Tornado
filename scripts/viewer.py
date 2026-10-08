@@ -99,7 +99,7 @@ state.restore("region")
 name = sidebar.selectbox(
     "Región", names, key="region",
     index=names.index("south-central-austral") if "south-central-austral" in names else 0,
-    format_func=lambda n: {"south-central": "Centro-sur de Chile", "south-central-austral": "Centro-sur y zona austral"}.get(n, str(n)),
+    format_func=lambda n: (common.REGIONS[n].label if n in common.REGIONS else "") or str(n),
 )  # fmt: skip
 state.save("region")
 days = data.days(name)

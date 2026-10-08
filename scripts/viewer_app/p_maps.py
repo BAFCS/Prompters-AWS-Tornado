@@ -40,12 +40,7 @@ def _add_popover(cat: dict[str, products.Product], n: int) -> None:
     with st.popover("Agregar panel", icon=":material/add:", disabled=full, width="content",
                     help=f"Hasta {state.MAX_PANELS} paneles." if full else None):  # fmt: skip
         st.caption("Elige qué quieres comparar. La lista completa sigue disponible abajo.")
-        for label, keys in (
-            ("Rotación del entorno", ("idx:vgp_01", "idx:srh_01", "idx:stp_lm")),
-            ("Viento y perfil", ("idx:shear_01", "idx:lcl", "idx:sherbs3")),
-            ("Enfriamiento de nubes", ("goes:C13", "goes:dT")),
-            ("Composición de nubes", ("rgb:airmass", "goes:C08-C13", "goes:C02")),
-        ):
+        for label, keys in products.FAVORITE_GROUPS:
             options = [k for k in keys if k in cat]
             if options:
                 key = f"add_{keys[0]}"
@@ -246,12 +241,7 @@ def page() -> None:
                 )
                 if st.form_submit_button("Usar este punto", type="primary"):
                     try:
-                        if not (
-                            ctx.reg.south <= lat <= ctx.reg.north
-                            and ctx.reg.west <= lon <= ctx.reg.east
-                        ):
-                            raise ValueError("El punto debe estar dentro de la región elegida.")
-                        state.select_point(state.Point(lat, lon, "Punto por coordenadas"))
+                        state.select_point(state.Point(lat, lon, "Punto por coordenadas"), ctx.reg)
                     except ValueError as error:
                         st.error(str(error))
                     else:
@@ -295,12 +285,11 @@ def page() -> None:
         )
         return
     rows, cols = charts.grid_shape(len(visible), theme.map_columns())
-    with settings:
-        for f in range(rows):
-            columns = st.columns(cols, gap="medium")
-            for j, p in enumerate(visible[f * cols : (f + 1) * cols]):
-                with columns[j]:
-                    _controls(p, f * cols + j + 1, cat, ctx.day)
+    for f in range(rows):
+        columns = st.columns(cols, gap="medium")
+        for j, p in enumerate(visible[f * cols : (f + 1) * cols]):
+            with columns[j]:
+                _controls(p, f * cols + j + 1, cat, ctx.day)
 
     animate = bool(st.session_state.get("animate"))
     goes_idx = [i for i, p in enumerate(visible) if cat[p.key].is_goes]

@@ -58,17 +58,8 @@ def page() -> None:
     st.markdown(
         "**Para empezar:** en el Skew-T, compara temperatura, punto de rocío y parcela; "
         "en el hodógrafo, observa cuánto cambia el viento con la altura. "
-        "Abre «Cómo leerlo» para interpretar cada marca."
+        "La explicación de cada marca está en «Interpretación del perfil», al final."
     )
-    with st.expander("Cómo leerlo"):
-        st.markdown(
-            "**Skew-T:** temperatura frente a presión; las isotermas están inclinadas. "
-            "El punto de rocío describe la humedad y la parcela muestra el ascenso desde superficie. "
-            "La separación entre parcela y entorno permite estimar CAPE y CIN; el LCL señala "
-            "el inicio de condensación. **Hodógrafo:** une componentes este-oeste (u) y norte-sur (v) "
-            "del viento por altura. Los diamantes estiman movimientos Bunkers: left-mover y right-mover. "
-            "Los índices del visor usan la rama left-mover."
-        )
 
     # Perfil termodinámico: superficie + niveles por encima del suelo.
     sp = float(sfc["sp"]) / 100
