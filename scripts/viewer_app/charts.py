@@ -87,8 +87,14 @@ def _point(point: Point, size: int) -> list[go.Scatter]:
 
 
 # --- Grilla de Mapas -----------------------------------------------------------------------------
-def grid_shape(n: int, columns: int = 3) -> tuple[int, int]:
-    """Filas y columnas según los paneles y el espacio disponible."""
+def grid_shape(n: int, narrow: bool = False, columns: int = 3) -> tuple[int, int]:
+    """Filas y columnas para ``n`` paneles: 1×1, 1×2, 2×2 (3–4) o 2×3 (5–6), con a lo más ``columns``.
+
+    ``narrow`` (poco ancho: teléfono o tablet con la barra abierta) los apila en una columna: en 2×3
+    cada mapa quedaba de 60 px.
+    """
+    if narrow:
+        return max(n, 1), 1
     cols = max(1, min(columns, n, 2 if n <= 4 else 3))
     return max(1, (n + cols - 1) // cols), cols
 
@@ -193,18 +199,20 @@ def grid(
     layers: list["Layer"], contours: list["Layer | None"], enc: Extent, coast: tuple[np.ndarray, np.ndarray],
     *, events: pd.DataFrame | None = None, point: Point | None = None,
     wind: tuple[list, list] | None = None,
-    height: int | None = None, columns: int = 3,
+    height: int | None = None, narrow: bool = False, columns: int = 3,
 ) -> tuple[go.Figure, list[int]]:  # fmt: skip
     """Paneles en una figura con los ejes compartidos: el zoom y el desplazamiento van juntos.
 
     ``contornos[i]`` es un campo ERA5 que se dibuja como isolíneas sobre el panel ``i`` (o ``None``).
     Devuelve la figura y el índice de la primera traza de fondo de cada panel (``background``), para
     animarla con ``go.Frame``. ``height`` fija la altura en píxeles (si falta, depende del número de filas).
+    ``narrow`` apila los paneles en una columna (ver ``grid_shape``).
     """
-    rows, cols = grid_shape(len(layers), columns)
+    rows, cols = grid_shape(len(layers), narrow, columns)
+    height = height or (640 if rows == 1 else (400 if narrow else 470) * rows)
     fig = make_subplots(
         rows=rows, cols=cols, horizontal_spacing=0.09 if cols > 1 else 0.02,
-        vertical_spacing=0.12 / rows, subplot_titles=[c.title for c in layers],
+        vertical_spacing=72 / height if narrow else 0.08, subplot_titles=[c.title for c in layers],
     )  # fmt: skip
     backgrounds: list[int] = []
     for i, (c, cont) in enumerate(zip(layers, contours, strict=True)):
@@ -273,9 +281,9 @@ def grid(
     # hoverdistance=-1: con zoom los puntos de la grilla quedan separados y aun así responden.
     fig.update_layout(
         yaxis={"scaleanchor": "x", "scaleratio": enc.aspect},
-        height=height or (640 if rows == 1 else 470 * rows), showlegend=False, dragmode="pan",
+        height=height, showlegend=False, dragmode="pan",
         clickmode="event+select", hoverdistance=-1, uirevision="grid",
-        margin={"t": 110 if cols == 1 and rows > 1 else 56, "r": 48},
+        margin={"t": 110 if narrow and rows > 1 else 56, "r": 48},
     )  # fmt: skip
     return _style(fig), backgrounds
 

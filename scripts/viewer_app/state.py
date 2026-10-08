@@ -31,7 +31,7 @@ class Context:
 
 
 def page(name: str) -> Page:
-    """La página ``name`` ("case", "maps", "sounding" o "series"), para ``st.page_link``."""
+    """La página ``name`` ("data", "case", "maps", "sounding" o "series"), para ``st.page_link``."""
     return st.session_state["pages"][name]
 
 
@@ -164,6 +164,19 @@ def remove_panel(id_: int) -> None:
 def change_panel(id_: int, **changes: object) -> None:
     """Callback: cambia campos del panel ``id_`` (``key``, ``level``, ``contour`` o ``colorscale``)."""
     set_panels([dataclasses.replace(p, **changes) if p.id == id_ else p for p in panels() or []])
+
+
+def open_in_maps(key: str, level: float | None = None) -> None:
+    """Callback: pone el producto ``key`` en el primer panel de Mapas y pide ir a esa página."""
+    ps = [dataclasses.replace(new_panel(key), level=level), *(panels() or [])]
+    set_panels(ps[:MAX_PANELS])
+    st.session_state["go_to"] = "maps"
+
+
+def go_to_variable(key: str) -> None:
+    """Callback: abre la página Datos mostrando solo la ficha ``key`` de ``variables``."""
+    st.session_state["data_focus"] = key
+    st.session_state["go_to"] = "data"
 
 
 def go_to_event(ev: pd.Series) -> None:

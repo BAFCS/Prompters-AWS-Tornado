@@ -1,115 +1,12 @@
-"""Textos del visor: ayuda en contexto por variable, contexto de cada caso y el recorrido guiado.
+"""Textos del visor: notas australes, contexto de cada caso y el recorrido guiado.
+
+La ayuda por variable vive en ``variables.py``.
 
 Todo sale de ``docs/mesociclones_chile.md``; si se corrige allá, hay que corregirlo aquí.
 """
 
 import datetime as dt
 from dataclasses import dataclass
-
-# --- Ayuda en contexto: qué mide, y qué valor importa en Chile -----------------------------------
-HELP = {
-    "vgp_01": (
-        "**Parámetro de generación de vorticidad (VGP₀₋₁).** Combina la energía potencial "
-        "convectiva disponible (CAPE) con el cambio del viento por unidad de altura. En esta app: "
-        "**VGP₀₋₁ = √CAPE × (ΔV₀₋₁ / 1.000 m)**, donde ΔV es la magnitud de la diferencia "
-        "vectorial del viento usada para la capa. El resultado se expresa en m/s². El documento "
-        "cita valores superiores a **0,1 m/s²** en los cinco días tornádicos analizados entre "
-        "2008 y 2019 (Vicencio et al. 2021). El alcance de ese criterio fuera de los casos "
-        "estudiados requiere evaluación."
-    ),
-    "srh_01": (
-        "**Helicidad relativa a la tormenta (SRH) 0–1 km.** Describe la relación entre la "
-        "rotación del aire y el flujo que entra a la tormenta. Depende del perfil de viento y "
-        "del movimiento supuesto de la tormenta. Aquí se utiliza la rama *left-mover* de "
-        "Bunkers, una estimación de movimiento hacia la izquierda del viento medio. En los "
-        "casos australes descritos se observan valores negativos; el signo por sí solo no "
-        "confirma un entorno tornádico."
-    ),
-    "srh_03": (
-        "**Helicidad relativa a la tormenta (SRH) 0–3 km.** Se calcula para la rama "
-        "*left-mover*, estimada hacia la izquierda del viento medio. Describe la relación entre "
-        "el perfil de viento de esta capa y el movimiento supuesto de la tormenta. Los casos "
-        "de 2019 citados presentan valores entre −253 y −688 m²/s². El signo negativo por sí "
-        "solo no confirma la presencia de un mesociclón ni de un tornado."
-    ),
-    "shear_01": (
-        "**Cizalle 0–1 km**: magnitud de la diferencia vectorial del viento entre 10 m y 1 km. "
-        "Resume cuánto cambia la velocidad o la dirección del viento en esa capa. La línea "
-        "de 12 m/s es el valor de comparación citado para los días tornádicos estudiados. "
-        "Cumplir este criterio describe el entorno; no confirma un tornado."
-    ),
-    "shear_03": "**Cizalle 0–3 km**: diferencia vectorial del viento entre 10 m y 3 km.",
-    "shear_06": (
-        "**Cizalle 0–6 km**: magnitud de la diferencia vectorial del viento entre 10 m y 6 km. "
-        "Ayuda a describir el entorno de organización de las tormentas. En el caso mostrado "
-        "es elevado en gran parte del área y distingue poco entre lugares dentro de esa "
-        "situación; esto no demuestra que carezca de utilidad en otros casos."
-    ),
-    "stp_lm": (
-        "**Parámetro significativo de tornado (STP), rama left-mover.** El cálculo del visor "
-        "es una aproximación: utiliza CAPE de ERA5 y omite la inhibición convectiva (CIN), "
-        "la barrera energética para iniciar el ascenso. Combina energía, cizalle, helicidad "
-        "relativa a la tormenta (SRH) y altura estimada de la base nubosa. El documento cita "
-        "**≤ −0,3** como criterio austral (Marín et al. 2024); su aplicación a esta "
-        "aproximación debe validarse antes de usarlo como criterio operativo."
-    ),
-    "sherbs3": (
-        "**SHERBS3** (Sherburn y Parker 2014): índice para entornos de fuerte cizalle y baja "
-        "energía convectiva disponible, llamados HSLC por sus siglas en inglés. Combina "
-        "el cizalle 0–3 km con el cambio de temperatura con la altura en 0–3 km y entre los "
-        "niveles de presión de 700 y 500 hPa. El criterio **SHERBE ≥ 1** citado en el "
-        "documento corresponde a otra variante, calculada con la capa efectiva; no es un "
-        "umbral validado de SHERBS3."
-    ),
-    "lcl": (
-        "**Nivel de condensación por ascenso (LCL).** Estima la altura a la que una porción de "
-        "aire que asciende comienza a condensarse y puede formar la base de una nube. Se usa "
-        "la aproximación de Espy: 125 m por grado de diferencia entre temperatura y punto "
-        "de rocío. El punto de rocío es la temperatura a la que el aire alcanzaría la "
-        "saturación. Los valores inferiores a 650–713 m citados corresponden al caso de 2019."
-    ),
-    "gamma_03": "**Gradiente térmico 0–3 km**: cuánto se enfría el aire por km de ascenso.",
-    "gamma_75": (
-        "**Gradiente térmico 700–500 hPa**: cuánto cambia la temperatura por kilómetro "
-        "de altura entre esos niveles de presión, expresados en hectopascales (hPa). "
-        "Ayuda a describir la inestabilidad de niveles medios."
-    ),
-    "cape": (
-        "**Energía potencial convectiva disponible (CAPE)** de ERA5: energía disponible para "
-        "el ascenso del aire, expresada en J/kg. Ayuda a describir la inestabilidad, pero no "
-        "confirma por sí sola que se desarrolle una tormenta. El documento presenta distintos "
-        "rangos para 2019; falta aclarar su fuente, cálculo y ámbito antes de compararlos "
-        "como una misma referencia."
-    ),
-    "C13": (
-        "**GOES banda 13 (10,3 µm)**: muestra temperatura de brillo, una medida derivada de "
-        "la radiación infrarroja recibida. Los valores más bajos pueden asociarse a nubes "
-        "más altas, pero no miden directamente su altura ni la intensidad del ascenso. "
-        "Las imágenes no tienen corrección de paralaje: el ángulo de observación puede "
-        "desplazar la posición aparente de las nubes respecto de su posición real."
-    ),
-    "dT": (
-        "**Cambio de temperatura de brillo entre imágenes (ΔC13).** Se resta la temperatura "
-        "de la imagen anterior disponible a la actual. Los valores negativos indican "
-        "enfriamiento en el mismo píxel; pueden asociarse al crecimiento de la nube o a su "
-        "desplazamiento. Consulta el intervalo indicado en el título: no siempre es de "
-        "10 minutos."
-    ),
-    "C08-C13": (
-        "**C08 − C13**: diferencia de temperatura de brillo entre las bandas 8 y 13. Se "
-        "explora como señal de topes próximos a la tropopausa, el límite superior de la "
-        "troposfera. Su interpretación requiere contexto y verificación; un valor cercano "
-        "a cero o positivo no confirma por sí solo que una nube alcance o supere ese límite."
-    ),
-    "airmass": (
-        "**RGB Airmass** es una imagen compuesta que combina bandas infrarrojas para "
-        "distinguir estructuras de nubes y masas de aire. Puede utilizarse de día y de "
-        "noche. Los colores orientan la interpretación de humedad y temperatura, pero "
-        "deben leerse junto con otros datos. La «nube coma» es una estructura nubosa con "
-        "esa forma; una «intrusión seca» es una entrada de aire relativamente seco. "
-        "**Cálculo:** rojo = C08 − C10; verde = C12 − C13; azul = C08 invertido."
-    ),
-}
 
 STP_NOTE = (
     "El STP mostrado es una aproximación: usa CAPE de ERA5 y omite la inhibición convectiva "
@@ -201,7 +98,7 @@ class Step:
     hour: str  # "HH:MM" UTC; se usa la imagen o la hora ERA5 más cercana
     text: str
     event: str | None = None  # parte del nombre del lugar en el catálogo
-    panels: tuple[str, ...] = ()  # claves de productos.catalogo para la grilla de Mapas
+    panels: tuple[str, ...] = ()  # claves de products.catalog para la grilla de Mapas
 
 
 TOURS = {

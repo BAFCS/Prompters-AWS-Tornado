@@ -21,7 +21,12 @@ class ExplorationTest(unittest.TestCase):
         """Un ancho angosto conserva seis mapas, cada uno con todo el eje horizontal."""
         layer = layers.Layer(np.ones((2, 2)), np.array([-36, -37]), np.array([-73, -72]), "Prueba")
         fig, backgrounds = charts.grid(
-            [layer] * 6, [None] * 6, charts.Extent(-35, -39, -75, -70), ([], []), columns=1
+            [layer] * 6,
+            [None] * 6,
+            charts.Extent(-35, -39, -75, -70),
+            ([], []),
+            columns=1,
+            narrow=True,
         )
         self.assertEqual(len(backgrounds), 6)
         self.assertEqual(tuple(fig.layout.xaxis.domain), (0, 1))
@@ -57,7 +62,7 @@ class ExplorationTest(unittest.TestCase):
                  (6, 3): (2, 3), (6, 2): (3, 2), (6, 1): (6, 1)}  # fmt: skip
         for (n, columns), expected in cases.items():
             with self.subTest(n=n, columns=columns):
-                self.assertEqual(charts.grid_shape(n, columns), expected)
+                self.assertEqual(charts.grid_shape(n, columns=columns), expected)
 
     def test_every_image_publishes_a_description(self) -> None:
         """Cada imagen emite el marcador que el vigía usa para su texto alternativo."""
