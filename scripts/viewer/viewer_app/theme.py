@@ -361,6 +361,14 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 @container body (max-width: 520px) {{
   :is(.st-key-project, .st-key-data) [class*="st-key-cards2_"] {{ grid-template-columns: minmax(0, 1fr); }}
 }}
+/* Ficha de variable: riel con la identidad a la izquierda y el cuerpo a la derecha; se apila en cuerpo angosto. */
+[class*="st-key-sheet_v_"] {{ display: grid; grid-template-columns: 13rem minmax(0, 1fr); column-gap: 1.5rem; align-items: start; }}
+[class*="st-key-sheet_v_"] > * {{ width: auto; min-width: 0; }}
+[class*="st-key-rail_"] {{ position: sticky; top: var(--anchor-offset); }}
+@container body (max-width: 760px) {{
+  [class*="st-key-sheet_v_"] {{ grid-template-columns: minmax(0, 1fr); }}
+  [class*="st-key-rail_"] {{ position: static; }}
+}}
 /* Columnas flexibles (``columns``): se apilan cuando no caben dos de --column-min; el corte lo pone el contenido. */
 [class*="st-key-flex_"] [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {{ flex-wrap: wrap;
   row-gap: 1.5rem; }}

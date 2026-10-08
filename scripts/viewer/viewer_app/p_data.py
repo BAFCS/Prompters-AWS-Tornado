@@ -54,61 +54,55 @@ def _available() -> set[str]:
 def _variable(v: Variable, available: set[str], suffix: str = "", level: int = 4) -> None:
     """Dibuja la ficha de ``v``. ``suffix`` distingue las claves de widget si la ficha se repite.
 
-    ``level`` es el nivel del encabezado: sin fuente ni grupo encima (una ficha sola, una búsqueda)
-    sube para no saltarse niveles bajo el título.
+    ``level`` es el nivel del encabezado: sin fuente ni grupo encima (una ficha sola) sube para no
+    saltarse niveles bajo el título. La ficha es un riel (identidad y enlaces) junto al cuerpo.
     """
     k = f"{v.key}{suffix}"
+    in_maps = next((p for p in v.products if p in available), None)
     with st.container(border=True, key=f"sheet_v_{k}", gap="small"):
-        meta = " · ".join(html.escape(x) for x in (v.symbol, v.unit) if x)
-        st.markdown(
-            f"<h{level} class='var-name' id='{html.escape(v.key)}'>{html.escape(v.name)}</h{level}>"
-            f"<p class='var-meta mono'>{meta}</p>",
-            unsafe_allow_html=True,
-        )
-        st.markdown(v.what)
-        if v.why:
-            st.markdown(f"**Por qué importa.** {v.why}")
-        if v.formula:
-            st.latex(v.formula)
-        if v.method:
-            st.markdown(f"<div class='note'>\n\n{v.method}\n\n</div>", unsafe_allow_html=True)
-        if v.threshold:
-            with st.container(key=f"threshold_{k}"):
-                st.markdown(f"**Criterio en Chile.** {v.threshold}")
-        if v.caveat:
-            st.markdown(f"**Cuidado.** {v.caveat}")
-        if v.inputs:
-            st.pills(
-                "Se calcula con", list(v.inputs), key=f"inputs_{k}",
-                format_func=lambda c: variables.BY_KEY[c].symbol,
-                on_change=_on_input, args=(f"inputs_{k}",),
-            )  # fmt: skip
-        st.markdown(
-            f"<p class='note var-refs'>Fuentes: {_citations(variables.references_of(v))}</p>",
-            unsafe_allow_html=True,
-        )
-        in_maps = next((p for p in v.products if p in available), None)
-        if in_maps is not None:
-            st.button(
-                "Ver en Mapas", key=f"map_{k}", icon=":material/map:", type="tertiary",
-                on_click=state.open_in_maps, args=(in_maps, v.level),
-            )  # fmt: skip
+        with st.container(key=f"rail_{k}", gap="small"):
+            meta = " · ".join(html.escape(x) for x in (v.symbol, v.unit) if x)
+            st.markdown(
+                f"<h{level} class='var-name' id='{html.escape(v.key)}'>{html.escape(v.name)}</h{level}>"
+                f"<p class='var-meta mono'>{meta}</p>",
+                unsafe_allow_html=True,
+            )
+            if v.inputs:
+                st.pills(
+                    "Se calcula con", list(v.inputs), key=f"inputs_{k}",
+                    format_func=lambda c: variables.BY_KEY[c].symbol,
+                    on_change=_on_input, args=(f"inputs_{k}",),
+                )  # fmt: skip
+            if in_maps is not None:
+                st.button(
+                    "Ver en Mapas", key=f"map_{k}", icon=":material/map:", type="tertiary",
+                    on_click=state.open_in_maps, args=(in_maps, v.level),
+                )  # fmt: skip
+        with st.container(key=f"body_{k}", gap="small"):
+            st.markdown(v.what)
+            if v.why:
+                st.markdown(f"**Por qué importa.** {v.why}")
+            if v.formula:
+                st.latex(v.formula)
+            if v.method:
+                st.markdown(f"<div class='note'>\n\n{v.method}\n\n</div>", unsafe_allow_html=True)
+            if v.threshold:
+                with st.container(key=f"threshold_{k}"):
+                    st.markdown(f"**Criterio en Chile.** {v.threshold}")
+            if v.caveat:
+                st.markdown(f"**Cuidado.** {v.caveat}")
+            st.markdown(
+                f"<p class='note var-refs'>Fuentes: {_citations(variables.references_of(v))}</p>",
+                unsafe_allow_html=True,
+            )
 
 
-def _group(g: variables.Group, vs: list[Variable], available: set[str], flat: bool = False) -> None:
-    """Encabezado del grupo ``g`` y sus fichas, en dos columnas si el grupo es compacto.
-
-    ``flat`` (resultados de búsqueda, sin fuente encima) baja un nivel de encabezado: grupo en H2.
-    """
-    (st.header if flat else st.subheader)(g.title, anchor=g.key)
+def _group(g: variables.Group, vs: list[Variable], available: set[str]) -> None:
+    """Encabezado del grupo ``g`` y sus fichas."""
+    st.subheader(g.title, anchor=g.key)
     st.markdown(f"<p class='note'>{g.lede}</p>", unsafe_allow_html=True)
-    if g.compact:
-        with st.container(horizontal=True, key=f"cards2_{g.key}"):
-            for v in vs:
-                _variable(v, available, level=3 if flat else 4)
-    else:
-        for v in vs:
-            _variable(v, available, level=3 if flat else 4)
+    for v in vs:
+        _variable(v, available)
 
 
 def _source(s: variables.Source) -> None:
