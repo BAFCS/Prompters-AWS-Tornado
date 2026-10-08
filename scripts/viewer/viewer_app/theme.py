@@ -282,15 +282,15 @@ h1 {{ letter-spacing: -0.01em; }}
 .scorecard {{ width: 100%; max-width: var(--measure); border-collapse: collapse; font-size: 0.92rem; }}
 .scorecard th {{ text-align: left; font-weight: 600; color: {p.MUTED}; font-size: 0.78rem;
   border-bottom: 1px solid {p.LINE}; padding: 4px 6px; }}
-.scorecard td {{ padding: 6px; border-bottom: 1px solid {p.SURFACE_2}; vertical-align: baseline; }}
+.scorecard td {{ padding: 8px 6px; border-bottom: 1px solid {p.SURFACE_2}; vertical-align: middle; }}
 .scorecard td.num {{ font-family: {MONO}; font-variant-numeric: tabular-nums; text-align: right;
   white-space: nowrap; }}
 .scorecard .ref {{ font-family: {SANS}; white-space: normal; color: {p.MUTED}; font-size: 0.8rem;
-  display: inline-block; max-width: 11em; text-align: right; line-height: 1.35; }}
+  display: inline-block; max-width: 16em; text-align: right; line-height: 1.35; }}
 .scorecard tr.exceeds td.num.value {{ font-weight: 700; }}
 .scorecard tr.exceeds td.num.value::before {{ content: ""; display: inline-block; {_TRIANGLE}
   border-bottom: 9px solid {p.SEVERE}; margin-right: 6px; vertical-align: 0; }}
-.scorecard .verdict {{ display: inline-block; min-width: 4.6em; font-size: 0.8rem; font-weight: 600;
+.scorecard .verdict {{ display: inline-block; white-space: nowrap; font-size: 0.8rem; font-weight: 600;
   padding: 1px 6px; border-radius: 3px; text-align: center; }}
 .scorecard tr.exceeds .verdict {{ background: {p.SEVERE_SOFT}; color: {p.INK}; }}
 .scorecard tr.below .verdict {{ background: {p.SURFACE_2}; color: {p.MUTED}; }}
@@ -320,23 +320,23 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 .notice {{ border: 1px solid {p.LINE}; background: {p.SURFACE}; padding: 14px 18px; margin: 1rem 0;
   border-radius: var(--radius); line-height: 1.5; max-width: var(--measure); }}
 [class*="st-key-sheet_"] {{ background: {p.SURFACE}; max-width: var(--measure); }}
-:is(.st-key-project, .st-key-data) {{ padding-top: 1.6rem; max-width: 1400px; container: project / inline-size; }}
+:is(.st-key-project, .st-key-data, .st-key-case) {{ padding-top: 1.6rem; max-width: 1400px; container: project / inline-size; }}
 /* El cuerpo es su propio contenedor: tarjetas y cifras se acomodan al espacio que les deja el índice. */
-:is(.st-key-project_body, .st-key-data_body) {{ container: body / inline-size; }}
+:is(.st-key-project_body, .st-key-data_body, .st-key-case_body) {{ container: body / inline-size; }}
 /* Datos sin índice (búsqueda o una ficha): el mismo ancho de lectura que con el índice al lado. */
-.st-key-data_body {{ max-width: var(--measure); }}
-:is(.st-key-project, .st-key-data) h1, :is(.st-key-project, .st-key-data) h2, :is(.st-key-project, .st-key-data) h3 {{ scroll-margin-top: var(--anchor-offset); }}
-:is(.st-key-project, .st-key-data) [data-testid="stHeading"] {{ max-width: var(--measure); }}  /* en el contenedor, no en h1-h3: el ch depende del cuerpo de la fuente */
+:is(.st-key-data_body, .st-key-case_body) {{ max-width: var(--measure); }}
+:is(.st-key-project, .st-key-data, .st-key-case) h1, :is(.st-key-project, .st-key-data, .st-key-case) h2, :is(.st-key-project, .st-key-data, .st-key-case) h3 {{ scroll-margin-top: var(--anchor-offset); }}
+:is(.st-key-project, .st-key-data, .st-key-case) [data-testid="stHeading"] {{ max-width: var(--measure); }}  /* en el contenedor, no en h1-h3: el ch depende del cuerpo de la fuente */
 /* Imagen de portada: más chica, centrada, con su nota centrada debajo. */
 .st-key-project [class*="st-key-hero"] {{ max-width: 40rem; margin-inline: auto; }}
 .st-key-project [class*="st-key-hero"] .note {{ text-align: center; max-width: none; }}
 /* La prosa conserva una medida cómoda; las figuras y tablas usan todo el ancho. */
-[data-testid="stMain"] :is(.st-key-project, .st-key-data) [data-testid="stMarkdownContainer"] > p,
-[data-testid="stMain"] :is(.st-key-project, .st-key-data) [data-testid="stMarkdownContainer"] li,
-:is(.st-key-project, .st-key-data) .lede {{ max-width: var(--measure); }}
-[data-testid="stMain"] :is(.st-key-project, .st-key-data) [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] > p,
-[data-testid="stMain"] :is(.st-key-project, .st-key-data) [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] li,
-:is(.st-key-project, .st-key-data) .note {{ max-width: var(--measure); }}
+[data-testid="stMain"] :is(.st-key-project, .st-key-data, .st-key-case) [data-testid="stMarkdownContainer"] > p,
+[data-testid="stMain"] :is(.st-key-project, .st-key-data, .st-key-case) [data-testid="stMarkdownContainer"] li,
+:is(.st-key-project, .st-key-data, .st-key-case) .lede {{ max-width: var(--measure); }}
+[data-testid="stMain"] :is(.st-key-project, .st-key-data, .st-key-case) [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] > p,
+[data-testid="stMain"] :is(.st-key-project, .st-key-data, .st-key-case) [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] li,
+:is(.st-key-project, .st-key-data, .st-key-case) .note {{ max-width: var(--measure); }}
 /* Índice: columna fija a la derecha si la página mide 880 px o más; si no, desplegable arriba. */
 /* Streamlit 1.64 envuelve el contenedor de ancho fijo en un stLayoutWrapper: ese es el que se oculta y
    se fija (selectores internos; revisarlos al actualizar Streamlit). El contenedor también se oculta
@@ -351,15 +351,15 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
   .st-key-toc_compact {{ display: none; }}
 }}
 /* Tarjetas: grilla de n columnas que baja a una cuando el cuerpo es angosto. */
-:is(.st-key-project, .st-key-data) [class*="st-key-cards"] {{ display: grid; gap: 1rem; align-items: stretch; max-width: var(--measure); }}
-:is(.st-key-project, .st-key-data) [class*="st-key-cards3_"] {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
-:is(.st-key-project, .st-key-data) [class*="st-key-cards2_"] {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-:is(.st-key-project, .st-key-data) [class*="st-key-cards"] > * {{ width: auto; height: 100%; }}
+:is(.st-key-project, .st-key-data, .st-key-case) [class*="st-key-cards"] {{ display: grid; gap: 1rem; align-items: stretch; max-width: var(--measure); }}
+:is(.st-key-project, .st-key-data, .st-key-case) [class*="st-key-cards3_"] {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+:is(.st-key-project, .st-key-data, .st-key-case) [class*="st-key-cards2_"] {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+:is(.st-key-project, .st-key-data, .st-key-case) [class*="st-key-cards"] > * {{ width: auto; height: 100%; }}
 @container body (max-width: 760px) {{
-  :is(.st-key-project, .st-key-data) [class*="st-key-cards3_"] {{ grid-template-columns: minmax(0, 1fr); }}
+  :is(.st-key-project, .st-key-data, .st-key-case) [class*="st-key-cards3_"] {{ grid-template-columns: minmax(0, 1fr); }}
 }}
 @container body (max-width: 520px) {{
-  :is(.st-key-project, .st-key-data) [class*="st-key-cards2_"] {{ grid-template-columns: minmax(0, 1fr); }}
+  :is(.st-key-project, .st-key-data, .st-key-case) [class*="st-key-cards2_"] {{ grid-template-columns: minmax(0, 1fr); }}
 }}
 /* Ficha de variable: riel con la identidad a la izquierda y el cuerpo a la derecha; se apila en cuerpo angosto. */
 [class*="st-key-sheet_v_"] {{ display: grid; grid-template-columns: 13rem minmax(0, 1fr); column-gap: 1.5rem; align-items: start; }}
@@ -376,8 +376,8 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 /* La ficha no se encoge bajo ~400 px: en teléfono se desplaza dentro de su caja, no la página entera. */
 [data-testid="stHtml"]:has(> .scorecard), [data-testid="stHtml"]:has(> * > .scorecard) {{ overflow-x: auto; }}
 /* Cifras de la portada: cuatro en fila o dos por dos, nunca una fila a medias. */
-:is(.st-key-project, .st-key-data) .stats {{ grid-template-columns: repeat(4, 1fr); }}
-@container body (max-width: 760px) {{ :is(.st-key-project, .st-key-data) .stats {{ grid-template-columns: repeat(2, 1fr); }} }}
+:is(.st-key-project, .st-key-data, .st-key-case) .stats {{ grid-template-columns: repeat(4, 1fr); }}
+@container body (max-width: 760px) {{ :is(.st-key-project, .st-key-data, .st-key-case) .stats {{ grid-template-columns: repeat(2, 1fr); }} }}
 .var-table-wrap {{ max-width: var(--measure); overflow-x: auto; border: 1px solid {p.LINE}; border-radius: var(--radius); background: {p.SURFACE}; }}
 .var-table {{ width: 100%; border-collapse: collapse; font-size: 0.9rem; }}
 .var-table th {{ text-align: left; padding: 8px 12px; color: {p.INK_2}; border-bottom: 1px solid {p.LINE}; }}

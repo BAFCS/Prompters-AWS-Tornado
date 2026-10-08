@@ -5,7 +5,7 @@ import dataclasses
 import pandas as pd
 import streamlit as st
 
-from viewer_app import charts, colorscales, components, data, layers, products, state, texts, theme
+from viewer_app import charts, colorscales, components, data, layers, products, state, texts
 
 
 def _on_row_select() -> None:
@@ -61,14 +61,13 @@ def _map(ctx: state.Context, t: pd.Timestamp | None) -> None:
 
 def _event_log(ctx: state.Context) -> None:
     """Tabla de eventos del día, seleccionable."""
-    st.header("Eventos reportados del día")
+    st.header("Eventos reportados del día", anchor="eventos")
     if ctx.events.empty:
-        st.markdown(
-            "<p class='note'>El catálogo no contiene reportes de tornados o trombas marinas "
+        st.caption(
+            "El catálogo no contiene reportes de tornados o trombas marinas "
             "para este día. Esto no permite confirmar su ausencia. Puedes explorar las "
             "condiciones atmosféricas, pero el día no debe considerarse automáticamente "
-            "un caso negativo.</p>",
-            unsafe_allow_html=True,
+            "un caso negativo."
         )
         return
     table = pd.DataFrame(
@@ -92,12 +91,11 @@ def _event_log(ctx: state.Context) -> None:
 
 def _scorecard(ctx: state.Context, t: pd.Timestamp | None) -> None:
     """Compara índices con criterios y referencias para la hora ERA5 más cercana."""
-    st.header("Índices del entorno y referencias")
+    st.header("Índices del entorno y referencias", anchor="indices")
     if ctx.day.idx is None or t is None:
-        st.markdown(
-            "<p class='note'>No hay índices preparados para este día. Elige otra fecha "
-            "disponible o consulta cómo preparar los datos.</p>",
-            unsafe_allow_html=True,
+        st.caption(
+            "No hay índices preparados para este día. Elige otra fecha "
+            "disponible o consulta cómo preparar los datos."
         )
         return
     ds = data.open_nc(ctx.day.idx)
@@ -107,9 +105,7 @@ def _scorecard(ctx: state.Context, t: pd.Timestamp | None) -> None:
         ds, t, (p.lat, p.lon) if p else None, (enc.north, enc.south, enc.west, enc.east)
     )
     hour = data.to_timestamp(ds["time"].sel(time=t, method="nearest"))
-    st.html(
-        components.scorecard(rows, p.name if p else "punto", "extremo del área · columna evaluada")
-    )
+    st.html(components.scorecard(rows, p.name if p else "punto", "Extremo del área"))
     st.caption(
         f"ERA5 {hour:%H:%M} UTC. La columna del punto corresponde a la celda ERA5 más cercana "
         "al lugar elegido. «Extremo del área» es el máximo o mínimo de cada índice dentro "
@@ -121,35 +117,38 @@ def _scorecard(ctx: state.Context, t: pd.Timestamp | None) -> None:
     st.caption(texts.STP_NOTE)
 
 
-def page() -> None:
-    """Dibuja la página."""
-    ctx = state.context()
-    c = texts.case_for(ctx.day.date, len(ctx.events))
-    t = state.current_time()
+def _toc(has_context: bool) -> str:
+    """El índice de la página como lista de enlaces a sus secciones."""
+    items = [
+        ("mapa", "Mapa"),
+        ("eventos", "Eventos reportados"),
+        ("indices", "Índices del entorno"),
+    ]
+    if has_context:
+        items.append(("contexto", "Contexto"))
+    links = "".join(f"<li><a href='#{a}'>{t}</a></li>" for a, t in items)
+    return f"<nav class='toc' aria-label='En esta página'><ol>{links}</ol></nav>"
+
+
+def _body(ctx: state.Context, c: texts.Case, t: pd.Timestamp | None) -> None:
+    """Título, mapa con los eventos debajo, índices y contexto."""
     steps = texts.TOURS.get(ctx.day.date, ())
-    top, tour = theme.columns([3, 1], "case_top")
-    with top:
-        st.title(c.title)
-        st.html(f"<p class='lede'>{c.lede}</p>")
-        st.markdown(
-            "Esta página explora un caso histórico: compara eventos reportados con el entorno "
-            "estimado por ERA5 y las nubes observadas por GOES. La capacidad de predicción "
-            "del proyecto está pendiente de evaluación."
-        )
-    with tour:
-        if steps and state.current_step() is None:
-            st.button(
-                "Empezar recorrido guiado", icon=":material/play_arrow:", key="case_tour",
-                on_click=state.apply_step, args=(ctx.day.date, 0, ctx.events),
-            )  # fmt: skip
-
-    left, right = theme.columns([3, 2], "case_map_columns")
-    with left:
-        _map(ctx, None if t is None else pd.Timestamp(t))
-    with right:
-        _event_log(ctx)
-
-    _scorecard(ctx, None if t is None else pd.Timestamp(t))
+    st.title(c.title, anchor="inicio")
+    st.html(f"<p class='lede'>{c.lede}</p>")
+    st.markdown(
+        "Esta página explora un caso histórico: compara eventos reportados con el entorno "
+        "estimado por ERA5 y las nubes observadas por GOES. La capacidad de predicción "
+        "del proyecto está pendiente de evaluación."
+    )
+    if steps and state.current_step() is None:
+        st.button(
+            "Empezar recorrido guiado", icon=":material/play_arrow:", key="case_tour",
+            on_click=state.apply_step, args=(ctx.day.date, 0, ctx.events),
+        )  # fmt: skip
+    st.header("Mapa", anchor="mapa")
+    _map(ctx, t)
+    _event_log(ctx)
+    _scorecard(ctx, t)
 
     st.divider()
     with st.expander("Cómo leer esta página", icon=":material/info:"):
@@ -160,19 +159,32 @@ def page() -> None:
             "marinas reportados y no proporciona una etiqueta directa de mesociclón. "
             "En la tabla, EF es una clasificación de intensidad basada en los daños observados."
         )
-    left, right = theme.columns([3, 2], "case_context")
-    with left:
-        if c.context:
-            st.header("Contexto")
-            for paragraph in c.context:
+    if c.context:
+        st.header("Contexto", anchor="contexto")
+        for paragraph in c.context:
+            st.markdown(paragraph)
+    details = texts.CASE_DETAILS.get(ctx.day.date)
+    if details:
+        with st.expander("Detalles meteorológicos y referencias pendientes de aclaración"):
+            for paragraph in details:
                 st.markdown(paragraph)
-    with right:
-        details = texts.CASE_DETAILS.get(ctx.day.date)
-        if details:
-            with st.expander("Detalles meteorológicos y referencias pendientes de aclaración"):
-                for paragraph in details:
-                    st.markdown(paragraph)
     st.page_link(
         state.page("maps"), label="Para seguir: Mapas, entorno y tormenta lado a lado",
         icon=":material/map:",
     )  # fmt: skip
+
+
+def page() -> None:
+    """Dibuja la página con el índice al costado (o desplegable arriba en pantallas angostas)."""
+    ctx = state.context()
+    c = texts.case_for(ctx.day.date, len(ctx.events))
+    t = state.current_time()
+    toc = _toc(bool(c.context))
+    with st.container(key="case"), st.container(horizontal=True, wrap=False, gap="large"):
+        with st.container(key="case_body"):
+            with st.expander("En esta página", key="toc_compact", icon=":material/toc:"):
+                st.markdown(toc, unsafe_allow_html=True)
+            _body(ctx, c, None if t is None else pd.Timestamp(t))
+        with st.container(width=220, key="toc_side"):
+            st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
+            st.markdown(toc, unsafe_allow_html=True)
