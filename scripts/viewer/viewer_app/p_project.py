@@ -233,7 +233,7 @@ def _problem() -> None:
     _section(
         "problema",
         "Un catálogo de eventos reportados, sin casos negativos confirmados",
-        "Disponemos de registros de tornados y trombas marinas. La ausencia de un reporte no permite asegurar que no ocurrió un evento.",
+        "El catálogo reúne 102 tornados y trombas marinas entre 1554 y 2025, tomados de crónicas coloniales, prensa, redes sociales, literatura científica y libros. Cada evento está ahí porque alguien lo observó y alguien lo documentó. Un lugar o una fecha sin registro puede significar que no ocurrió nada, o que nadie estaba mirando.",
     )
     cat = data.catalog()
     if cat.empty:
