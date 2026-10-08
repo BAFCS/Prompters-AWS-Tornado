@@ -69,7 +69,7 @@ def page() -> None:
     else:
         st.info(
             "No hay índices ERA5 preparados para este día. Elige otro día disponible. Si ya descargaste ERA5, puedes calcularlos con "
-            f"`uv run python scripts/process_era5.py --start {ctx.day.date:%Y-%m-%d}`."
+            f"`uv run python scripts/pipeline/process_era5.py --start {ctx.day.date:%Y-%m-%d}`."
         )
     if ctx.day.goes:
         g = pd.concat([data.goes_series(r, p.lat, p.lon, radius) for r in ctx.day.goes])

@@ -1,13 +1,13 @@
 ---
 version: 1
-slug: "scripts-viewer-py"
-primary_target: "scripts/viewer.py"
+slug: "scripts-viewer-viewer-py"
+primary_target: "scripts/viewer/viewer.py"
 related_targets: []
 ---
 
 # Visor ERA5 + GOES
 
-Scope: app Streamlit `scripts/viewer.py` + `scripts/viewer_app/`. Visitor mode: **Operate** (exploración de datos), con una portada que también hace de **Read** breve.
+Scope: app Streamlit `scripts/viewer/viewer.py` + `scripts/viewer/viewer_app/`. Visitor mode: **Operate** (exploración de datos), con una portada que también hace de **Read** breve.
 
 Audiencia: participantes de la hackathon (entender el caso en minutos) e investigadores (explorar a fondo). Tarea: ver qué pasó, cuándo y dónde; comparar entorno ERA5 e índices australes con la tormenta en GOES; inspeccionar sondeo, hodógrafo y series alrededor de cada evento. Restricción: solo días descargados; todo en español.
 

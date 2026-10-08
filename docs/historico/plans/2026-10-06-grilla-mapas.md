@@ -17,7 +17,7 @@ y el desplazamiento quedan sincronizados). La lista de paneles vive en `st.sessi
 `go.Contour`), xarray, numpy. Sin dependencias nuevas.
 
 **Spec:** las decisiones tomadas con Pablo en la conversación del 2026-10-06, copiadas en
-«Decisiones» abajo. Contexto previo del visor: `docs/superpowers/specs/2026-10-02-visor-exploratorio-design.md`.
+«Decisiones» abajo. Contexto previo del visor: `docs/historico/specs/2026-10-02-visor-exploratorio-design.md`.
 
 ## Decisiones
 

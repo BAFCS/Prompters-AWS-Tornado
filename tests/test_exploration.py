@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "viewer"))
 import common  # noqa: E402
 from viewer_app import charts, layers, p_data, p_project, state, variables  # noqa: E402
 

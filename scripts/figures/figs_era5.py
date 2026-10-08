@@ -6,9 +6,10 @@ el recuadro chileno de una hora, leyendo el HDF5 por rangos de bytes con s3fs + 
 los archivos globales completos (~1,4 GB cada uno).
 
 Produce ``figs/fig4_era5_20190530.png`` (500 hPa, viento en 850 hPa, cizalladura 0-1 y 0-6 km) y guarda
-los campos recortados en ``data/era5_cache.npy``. Uso: ``uv run python scripts/figs_era5.py``.
+los campos recortados en ``data/era5_cache.npy``. Uso: ``uv run python scripts/figures/figs_era5.py``.
 """
 
+import sys
 import time
 import warnings
 from pathlib import Path
@@ -19,12 +20,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 
-import common
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import common  # noqa: E402
 
 warnings.filterwarnings("ignore")
 matplotlib.use("Agg")
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 OUT, DATA = ROOT / "figs", ROOT / "data"
 ACC, SEV, COLD, WARM, MUT = "#0E6A63", "#D2492A", "#4C7FB8", "#C98A3C", "#64757B"
 INK, LINE = "#0C1518", "#C9D3D6"

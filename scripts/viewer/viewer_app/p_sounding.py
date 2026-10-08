@@ -49,7 +49,7 @@ def page() -> None:
     if ctx.day.pl is None or ctx.day.sfc is None:
         st.info(
             "El perfil requiere ERA5 de niveles de presión y de superficie. Selecciona otro día disponible. Para preparar este día, ejecuta "
-            f"`uv run python scripts/download_era5.py --start {ctx.day.date:%Y-%m-%d}`."
+            f"`uv run python scripts/pipeline/download_era5.py --start {ctx.day.date:%Y-%m-%d}`."
         )
         return
     missing = {"u", "v", "t", "z", "r"} - set(data.open_nc(ctx.day.pl).data_vars)
@@ -57,7 +57,7 @@ def page() -> None:
     if missing:
         st.info(
             "Los archivos ERA5 de este día están incompletos para calcular el perfil. Selecciona otro día o vuelve a "
-            f"ejecutar `uv run python scripts/download_era5.py --start {ctx.day.date:%Y-%m-%d}` para completar las variables faltantes."
+            f"ejecutar `uv run python scripts/pipeline/download_era5.py --start {ctx.day.date:%Y-%m-%d}` para completar las variables faltantes."
         )
         return
     t = pd.Timestamp(t)

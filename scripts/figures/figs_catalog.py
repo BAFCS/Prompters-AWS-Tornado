@@ -7,7 +7,7 @@ Lee la base de Bastías-Curivil et al. (figshare, doi:10.6084/m9.figshare.251195
 - ``figs/fig2_catalog_panels.png``: estacionalidad, hora del día, sesgo de reporte e intensidad EF.
 
 Entradas: ``data/tornados_chile.xlsx`` (hoja ``Final_Table``) y ``data/coast.zip`` (shapefile de
-costa, p. ej. Natural Earth 10m). Uso: ``uv run python scripts/figs_catalog.py``.
+costa, p. ej. Natural Earth 10m). Uso: ``uv run python scripts/figures/figs_catalog.py``.
 """
 
 import datetime
@@ -26,7 +26,7 @@ from matplotlib.patches import Rectangle
 warnings.filterwarnings("ignore")
 matplotlib.use("Agg")
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 OUT, DATA = ROOT / "figs", ROOT / "data"
 ACC, SEV, COLD, WARM, MUT = "#0E6A63", "#D2492A", "#4C7FB8", "#C98A3C", "#64757B"
 INK, LINE, SURF = "#0C1518", "#C9D3D6", "#F1F4F5"

@@ -57,11 +57,13 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-# scripts/ no es un paquete: common.py se importa como módulo hermano.
+# scripts/ no es un paquete: los puntos de entrada añaden scripts/ a sys.path para importar common;
+# viewer_app se importa desde scripts/viewer/.
 known-first-party = ["common", "viewer_app"]
 
 [tool.pyright]
 include = ["scripts"]
+extraPaths = ["scripts", "scripts/viewer"]
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 venvPath = "."

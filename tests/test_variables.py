@@ -8,6 +8,8 @@ from pathlib import Path
 from streamlit.testing.v1 import AppTest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "viewer"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "pipeline"))
 
 import download_era5  # noqa: E402
 import process_era5  # noqa: E402
@@ -21,6 +23,7 @@ def _page() -> None:
     from pathlib import Path
 
     sys.path.insert(0, str(Path.cwd() / "scripts"))
+    sys.path.insert(0, str(Path.cwd() / "scripts" / "viewer"))
     from viewer_app import p_data
 
     p_data.page()
