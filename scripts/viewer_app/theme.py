@@ -233,6 +233,13 @@ _WATCHER = """
       const control = document.querySelector(`[data-testid="${testid}"]`);
       (control?.matches('button') ? control : control?.querySelector('button'))?.setAttribute('aria-label', label);
     }
+    document.documentElement.lang = 'es';
+    document.querySelectorAll('a[aria-label="Link to heading"]').forEach(a => a.setAttribute('aria-label', 'Enlace a este encabezado'));
+    document.querySelectorAll('.katex-display').forEach(f => {
+      if (f.scrollWidth > f.clientWidth && !f.hasAttribute('tabindex')) {
+        f.tabIndex = 0; f.setAttribute('role', 'region'); f.setAttribute('aria-label', 'Fórmula, desplazable');
+      }
+    });
     document.querySelectorAll('.project-image-alt').forEach(marker => {
       const image = marker.closest('[class*="st-key-image_"]')?.querySelector('img');
       if (image && image.alt !== marker.dataset.description) image.alt = marker.dataset.description;
@@ -374,7 +381,9 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 [data-testid="stBaseLinkButton-primary"], [data-testid="stBaseLinkButton-primary"] p {{ color: {p.ON_ACCENT}; }}
 .step b {{ font-family: {MONO}; font-weight: 600; color: {p.ACCENT}; font-size: 0.8rem; }}
 /* Controles propios: rótulos legibles, foco nativo y blancos táctiles amplios. */
-.stApp button:not([data-testid="stTooltipIcon"]) {{ min-height: 44px; }}
+.stApp button:not([data-testid="stTooltipIcon"]), .stApp [data-testid="stTextInput"] input {{ min-height: 44px; }}
+[data-testid="stHeadingWithActionElements"] a {{ min-width: 24px; min-height: 24px; display: inline-flex;
+  align-items: center; justify-content: center; }}
 [data-testid="stMain"] a[data-testid="stPageLink-NavLink"] {{ min-height: 44px; }}
 @media (max-width: 760px), (pointer: coarse) {{
   .js-plotly-plot .modebar-btn {{ min-width: 44px; min-height: 44px; display: inline-flex;

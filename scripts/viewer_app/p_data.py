@@ -62,13 +62,17 @@ def _available() -> set[str]:
     return set(products.catalog(ctx.day)) if ctx is not None else set()
 
 
-def _variable(v: Variable, available: set[str], suffix: str = "") -> None:
-    """Dibuja la ficha de ``v``. ``suffix`` distingue las claves de widget si la ficha se repite."""
+def _variable(v: Variable, available: set[str], suffix: str = "", level: int = 4) -> None:
+    """Dibuja la ficha de ``v``. ``suffix`` distingue las claves de widget si la ficha se repite.
+
+    ``level`` es el nivel del encabezado: sin fuente ni grupo encima (una ficha sola, una búsqueda)
+    sube para no saltarse niveles bajo el título.
+    """
     k = f"{v.key}{suffix}"
     with st.container(border=True, key=f"sheet_v_{k}", gap="small"):
         meta = " · ".join(html.escape(x) for x in (v.symbol, v.unit) if x)
         st.markdown(
-            f"<h4 class='var-name' id='{html.escape(v.key)}'>{html.escape(v.name)}</h4>"
+            f"<h{level} class='var-name' id='{html.escape(v.key)}'>{html.escape(v.name)}</h{level}>"
             f"<p class='var-meta mono'>{meta}</p>",
             unsafe_allow_html=True,
         )
@@ -102,17 +106,20 @@ def _variable(v: Variable, available: set[str], suffix: str = "") -> None:
             )  # fmt: skip
 
 
-def _group(g: variables.Group, vs: list[Variable], available: set[str]) -> None:
-    """Encabezado del grupo ``g`` y sus fichas, en dos columnas si el grupo es compacto."""
-    st.subheader(g.title, anchor=g.key)
+def _group(g: variables.Group, vs: list[Variable], available: set[str], flat: bool = False) -> None:
+    """Encabezado del grupo ``g`` y sus fichas, en dos columnas si el grupo es compacto.
+
+    ``flat`` (resultados de búsqueda, sin fuente encima) baja un nivel de encabezado: grupo en H2.
+    """
+    (st.header if flat else st.subheader)(g.title, anchor=g.key)
     st.markdown(f"<p class='note'>{g.lede}</p>", unsafe_allow_html=True)
     if g.compact:
         with st.container(horizontal=True, key=f"cards2_{g.key}"):
             for v in vs:
-                _variable(v, available)
+                _variable(v, available, level=3 if flat else 4)
     else:
         for v in vs:
-            _variable(v, available)
+            _variable(v, available, level=3 if flat else 4)
 
 
 def _source(s: variables.Source) -> None:
@@ -183,7 +190,7 @@ def _body() -> bool:
     if focus is not None:
         st.button("Ver todas las variables", icon=":material/arrow_back:", on_click=_set_focus,
                   args=(None,))  # fmt: skip
-        _variable(focus, available, suffix="_focus")
+        _variable(focus, available, suffix="_focus", level=2)
         _bibliography()
         return False
 
@@ -211,7 +218,7 @@ def _body() -> bool:
         for g in variables.GROUPS:
             in_group = [v for v in found if v.group == g.key]
             if in_group:
-                _group(g, in_group, available)
+                _group(g, in_group, available, flat=True)
         return False
 
     for s in variables.SOURCES:
