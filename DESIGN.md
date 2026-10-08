@@ -53,6 +53,11 @@ typography:
     fontSize: "0.86rem"
     fontWeight: 400
     lineHeight: 1.45
+  ficha:
+    fontFamily: "'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif"
+    fontSize: "1.1rem"
+    fontWeight: 600
+    lineHeight: 1.3
   label:
     fontFamily: "'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif"
     fontSize: "0.78rem"
@@ -112,6 +117,16 @@ components:
   ficha-valor-supera-oscuro:
     textColor: "{colors.tinta-oscuro}"
     typography: "{typography.datos}"
+  ficha-variable:
+    backgroundColor: "{colors.hoja}"
+    textColor: "{colors.tinta}"
+    rounded: "{rounded.base}"
+    typography: "{typography.body}"
+  ficha-variable-oscuro:
+    backgroundColor: "{colors.hoja-oscuro}"
+    textColor: "{colors.tinta-oscuro}"
+    rounded: "{rounded.base}"
+    typography: "{typography.body}"
   paso:
     backgroundColor: "{colors.hoja}"
     textColor: "{colors.tinta}"
@@ -134,7 +149,7 @@ El visor es la libreta de un caso meteorológico: un fondo sobre el que se apoya
 
 La paleta sale de cinco colores fijados por el usuario (Strawberry Red, Honeydew, Frosted Blue, Steel Blue y Deep Space Blue); los demás tonos son mezclas entre ellos. Hay dos temas que el visitante alterna desde el menú de Streamlit: claro (Honeydew de fondo, hojas blancas, Deep Space oscurecido de tinta) y oscuro (hojas Deep Space sobre un fondo más hondo, Honeydew de tinta, Frosted Blue de acción). Los mapas no usan la paleta: usan escalas estándar según el tipo de dato.
 
-Densidad media-alta, de herramienta de trabajo: dos columnas en escritorio, explicación siempre al lado del dato y nunca encima. La identidad la construye Streamlit con cuatro capas: `.streamlit/config.toml` (widgets y fuentes, tablas `[theme.light]` y `[theme.dark]`), las plantillas plotly `notebook` y `notebook_dark`, el CSS fino de `scripts/viewer_app/theme.py` (variables CSS de las dos paletas, conmutadas por `html[data-theme="dark"]`) y un vigía que detecta el cambio de tema y vuelve a ejecutar la página para redibujar los gráficos.
+Densidad media-alta, de herramienta de trabajo: dos columnas en escritorio, explicación siempre al lado del dato y nunca encima. Las dos páginas de lectura (El proyecto y Datos) bajan la densidad: una columna de texto con índice lateral, como un apéndice del cuaderno. La identidad la construye Streamlit con cuatro capas: `.streamlit/config.toml` (widgets y fuentes, tablas `[theme.light]` y `[theme.dark]`), las plantillas plotly `notebook` y `notebook_dark`, el CSS fino de `scripts/viewer_app/theme.py` (variables CSS de las dos paletas, conmutadas por `html[data-theme="dark"]`) y un vigía que detecta el cambio de tema y vuelve a ejecutar la página para redibujar los gráficos.
 
 **Key Characteristics:**
 - Fondo Honeydew (claro) o Deep Space hondo (oscuro); hojas con filete de 1 px y radio de 6 px.
@@ -199,6 +214,7 @@ Las escalas de color de los mapas no son colores de marca: son escalas estándar
 - **Lede** (400, 1,08rem, 1,5, máx. 68ch, tinta-2): una frase bajo el título de página o de sección.
 - **Body** (400, 1rem): texto de contexto y de expansores; en todas las páginas, párrafos y listas de máx. 68ch.
 - **Nota** (400, 0,86rem, 1,45, máx. 75ch, apagado): advertencias y ayuda al lado del dato.
+- **Ficha** (600, 1,1rem, 1,3): nombre de cada variable en Datos; es también su ancla. Debajo, símbolo y unidad en mono 0,86rem apagado.
 - **Label** (600, 0,78rem, apagado): encabezados de la ficha.
 - **Datos** (IBM Plex Mono, cifras tabulares): valores de la ficha, coordenadas, horas de la regla, etiquetas de hover en gráficos (12 px).
 
@@ -211,9 +227,9 @@ Las escalas de color de los mapas no son colores de marca: son escalas estándar
 
 ## Layout
 
-Página ancha de Streamlit (`layout="wide"`) con barra lateral que lleva el estado compartido: región, día, hora UTC con la regla de tiempo debajo, evento, punto elegido y recorrido guiado. Navegación superior entre cinco páginas: El proyecto (por defecto, visible aunque no haya datos), El caso, Mapas, Sondeo y Series.
+Página ancha de Streamlit (`layout="wide"`) con barra lateral que lleva el estado compartido: región, día, hora UTC con la regla de tiempo debajo, evento, punto elegido y recorrido guiado. Navegación superior entre seis páginas: El proyecto (por defecto) y Datos, las dos visibles aunque no haya datos, El caso, Mapas, Sondeo y Series.
 
-Cada página: título, lede, y luego pares de columnas. El caso y Sondeo ponen mapas y gráficos lado a lado en dos columnas iguales (`gap="large"`) y el texto o las tablas en proporción 3:2, con `theme.columns`: cada par se apila cuando una columna quedaría bajo 26rem (~416 px), lo que en tablet con la barra lateral abierta ocurre siempre; en teléfono la ficha se desplaza dentro de su caja. Mapas y Series ya son de una columna, y la fila de controles de Mapas no se apila porque va alineada con los paneles de la figura. Las páginas de datos conservan el tope de 68ch en párrafos: son notas al lado del dato, no lectura corrida. Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va sincronizado); sobre ella, una barra de controles por panel en contenedores horizontales (`st.container(horizontal=True)`) que se parten en pantallas angostas, con un menú de ajuste (escala de color, nivel, contornos). Nota bajo cada gráfico en apagado. Relleno superior del contenedor 2,2rem (1,6rem más en El proyecto). El proyecto ocupa el ancho disponible hasta 1400 px: si mide 880 px o más lleva un índice fijo de 220 px a la derecha; si no, el índice es un desplegable sobre el cuerpo (container query sobre `.st-key-project`, para que cuente la barra lateral abierta o cerrada; con la barra abierta, el índice lateral aparece desde unos 1340 px de ventana). Párrafos sueltos hasta 90ch; en tarjetas, figuras y notas el texto llega al borde de su caja. Tarjetas y cifras se miden contra el cuerpo (`.st-key-project_body`), no contra la página: las tarjetas van en una grilla de 3 o 2 columnas que baja a una cuando el cuerpo mide menos de 760 px (3) o 520 px (2), y las cuatro cifras pasan a 2×2 bajo 760 px. En móvil las columnas se apilan (comportamiento de `st.columns`).
+Cada página: título, lede, y luego pares de columnas. El caso y Sondeo ponen mapas y gráficos lado a lado en dos columnas iguales (`gap="large"`) y el texto o las tablas en proporción 3:2, con `theme.columns`: cada par se apila cuando una columna quedaría bajo 26rem (~416 px), lo que en tablet con la barra lateral abierta ocurre siempre; en teléfono la ficha se desplaza dentro de su caja. Mapas y Series ya son de una columna, y la fila de controles de Mapas no se apila porque va alineada con los paneles de la figura. Las páginas de datos conservan el tope de 68ch en párrafos: son notas al lado del dato, no lectura corrida. Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va sincronizado); sobre ella, una barra de controles por panel en contenedores horizontales (`st.container(horizontal=True)`) que se parten en pantallas angostas, con un menú de ajuste (escala de color, nivel, contornos). En el teléfono la grilla pasa a una columna (400 px por mapa, sin perder el zoom compartido) y los controles de los paneles se pliegan en un desplegable «Paneles», abierto por defecto solo con uno o dos paneles; el texto de ayuda cambia rueda y clic por arrastrar, + y − y tocar. Nota bajo cada gráfico en apagado. Relleno superior del contenedor 2,2rem (1,6rem más en El proyecto). El proyecto ocupa el ancho disponible hasta 1400 px: si mide 880 px o más lleva un índice fijo de 220 px a la derecha; si no, el índice es un desplegable sobre el cuerpo (container query sobre `.st-key-project`, para que cuente la barra lateral abierta o cerrada; con la barra abierta, el índice lateral aparece desde unos 1340 px de ventana). Párrafos sueltos hasta 90ch; en tarjetas, figuras y notas el texto llega al borde de su caja. Tarjetas y cifras se miden contra el cuerpo (`.st-key-project_body`), no contra la página: las tarjetas van en una grilla de 3 o 2 columnas que baja a una cuando el cuerpo mide menos de 760 px (3) o 520 px (2), y las cuatro cifras pasan a 2×2 bajo 760 px. Datos comparte ese andamiaje (mismo contenedor, índice lateral desde 880 px o desplegable, tarjetas medidas contra su cuerpo `.st-key-data_body`), pero el cuerpo se limita a 44rem: es lectura corrida de fichas, y con 44rem una fórmula y su explicación caben en una sola mirada. El índice solo existe con la lista completa; con una búsqueda o una ficha sola (`?v=`) desaparece y el cuerpo conserva su ancho. Los grupos compactos (bandas GOES, columnas del catálogo) van en dos columnas de fichas que pasan a una bajo 520 px de cuerpo. En móvil las columnas se apilan (comportamiento de `st.columns`).
 
 Los mapas conservan el aspecto real (escala y = 1/cos(latitud media)) y se encuadran por defecto en la zona de eventos con 2° de margen.
 
@@ -243,6 +259,15 @@ Esquinas apenas suavizadas: 6 px en widgets (`baseRadius`) y paneles, 3 px en la
 ### Ficha "entorno contra umbral chileno"
 La firma de los datos. Tabla HTML en hoja con filete y radio 6 px: índice (con unidad en nota), valor en el punto y extremo de la zona en mono alineado a la derecha, umbral ("> 0,1") en mono o referencia en sans apagada de 0,8rem, y una columna Resultado con píldora en todas las filas: "Cumple el criterio" (fresa lavada, texto tinta) solo cuando un umbral calibrado se cruza; "No cumple el criterio", "Sin criterio de decisión" o "Sin datos" en hoja lavada con texto apagado. El valor que supera pasa a tinta 700 con un triángulo rojo delante.
 
+### Ficha de variable
+La firma de la lectura, en Datos. Hoja con filete y radio 6 px, separación pequeña entre bloques, siempre en este orden: nombre (estilo Ficha) con símbolo y unidad en mono apagado; qué es (cuerpo); **Por qué importa.**; la fórmula en KaTeX (`st.latex`), que se desplaza dentro de la ficha si no cabe, nunca la página; el método en nota apagada; **Criterio en Chile.** con el triángulo rojo delante, solo cuando docs cita un umbral chileno; **Cuidado.**; las píldoras «Se calcula con» (símbolos de los insumos; elegir una abre su ficha); «Fuentes:» en nota con citas cortas enlazadas a la bibliografía; y, si el producto existe el día elegido, el botón terciario «Ver en Mapas». Los rótulos en negrita dentro del párrafo, no como encabezados: la ficha se lee de corrido.
+
+### Rasgos de una fuente
+Al abrir cada fuente (catálogo, ERA5, GOES) en Datos: entradilla y una hoja con una tabla de dos columnas sin bordes exteriores (rótulo 600 apagado, valor en cuerpo 0,92rem, separador de filas en hoja lavada) que se apila en rótulo-sobre-valor bajo 520 px de cuerpo; debajo, **Lo que no puede hacer.** y las fuentes.
+
+### Bibliografía
+Lista con sangría de 1,1rem, una referencia por ítem (máx. 90ch, 1,45), con su ancla para las citas y el DOI o URL como enlace que puede partirse en cualquier carácter. Va al final de Datos, también cuando se muestra una sola ficha.
+
 ### Bitácora
 `st.dataframe` en hoja con filete, filas seleccionables que llevan hora y punto a todas las páginas. Limitación: `st.dataframe` no permite fuente por columna, así que la hora UTC sale en sans.
 
@@ -269,6 +294,7 @@ Hoja con filete, radio 6 px, relleno 10px 12px, 0,92rem. Primera línea con el c
 - **Do** usar el azul y el naranja de Okabe-Ito para series categóricas que la paleta no cubre.
 - **Do** escribir cifras con coma decimal y en IBM Plex Mono tabular cuando la plataforma lo permita.
 - **Do** tomar los colores de `theme.colors()` y la plantilla de `theme.template()`, y fijar fondo y fuente en el layout de cada figura plotly (`charts._style`).
+- **Do** escribir cada ficha de Datos en `variables.py`: Mapas toma de ahí su ayuda, y un producto nuevo sin ficha rompe `tests/test_variables.py`.
 - **Do** añadir a `tests/test_colorscales.py` todo color nuevo de texto, con su contraste AA en claro y oscuro.
 
 ### Don't:

@@ -29,6 +29,7 @@ from viewer_app import (
     components,
     data,
     p_case,
+    p_data,
     p_maps,
     p_project,
     p_series,
@@ -45,6 +46,7 @@ theme.apply()
 
 PAGES = {
     "project": st.Page(p_project.page, title="El proyecto", icon=":material/info:", default=True),
+    "data": st.Page(p_data.page, title="Datos", icon=":material/dataset:", url_path="datos"),
     "case": st.Page(p_case.page, title="El caso", icon=":material/history_edu:", url_path="caso"),
     "maps": st.Page(p_maps.page, title="Mapas", icon=":material/map:", url_path="mapas"),
     "sounding": st.Page(p_sounding.page, title="Sondeo", icon=":material/stacked_line_chart:",
@@ -67,9 +69,11 @@ theme.mode_button()
 
 
 def no_data(message: str, prepare: bool = False) -> NoReturn:
-    """Detiene la app sin datos: El proyecto se muestra igual; las demás páginas avisan con ``message``."""
-    if navigation.url_path == PAGES["project"].url_path:
-        navigation.run()  # la descripción no usa datos
+    """Detiene la app sin datos: El proyecto y Datos se muestran igual; las demás avisan con ``message``."""
+    if navigation.url_path in {PAGES["project"].url_path, PAGES["data"].url_path}:
+        # Datos no debe ofrecer productos de un día ya no disponible.
+        st.session_state.pop("ctx", None)
+        navigation.run()  # no usan datos
         st.stop()
     st.error(message)
     if prepare:

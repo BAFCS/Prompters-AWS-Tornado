@@ -10,12 +10,26 @@ import xarray as xr
 from metpy.units import units
 
 import common
-from viewer_app import charts, components, data, state, texts, theme
+from viewer_app import charts, components, data, state, texts, theme, variables
 
 
 def _column(ds: xr.Dataset, t: pd.Timestamp, p: state.Point) -> xr.Dataset:
     """La columna de ``ds`` en la hora y el punto de grilla más cercanos."""
     return ds.sel(time=t, method="nearest").sel(latitude=p.lat, longitude=p.lon, method="nearest")
+
+
+# Fichas de Datos de lo que muestra la página: los dos gráficos, la CAPE y la CIN y los índices de la tabla.
+SHEETS = tuple(
+    dict.fromkeys(("hodografo", "bunkers", "cape", "cin", *components.SCORECARD_INDICES))
+)
+
+
+def _on_sheet() -> None:
+    """Callback de las píldoras de fichas: abre la ficha elegida en Datos."""
+    key = st.session_state["sounding_sheet"]
+    st.session_state["sounding_sheet"] = None
+    if key:
+        state.go_to_variable(key)
 
 
 def page() -> None:
@@ -139,3 +153,8 @@ def page() -> None:
             "right-mover hacia la derecha. La helicidad relativa a la tormenta (SRH) se calcula "
             "usando el perfil y una de esas estimaciones; los índices de esta app utilizan la rama left-mover."
         )
+        st.pills(
+            "Fichas en Datos", list(SHEETS), key="sounding_sheet", on_change=_on_sheet,
+            format_func=lambda k: variables.BY_KEY[k].symbol,
+            help="Qué es cada índice, su fórmula, el criterio chileno y sus fuentes.",
+        )  # fmt: skip
