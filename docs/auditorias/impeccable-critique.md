@@ -65,7 +65,7 @@ Región muestra una clave técnica inglesa; instrucciones de zoom hablan de rued
 1. Prioridad: accesibilidad de selección/control o comparación móvil.
 2. Alcance: resolver primero P1 o incluir también entrada y orientación P2.
 
-Los reportes A y B completos se conservan en `docs/auditorias/impeccable-critique-a.md` y `docs/auditorias/impeccable-critique-b.md`. La auditoría técnica y su evidencia se guardan aparte.
+Los reportes A y B completos no se versionaron en el repositorio.
 
 ## Cruce de evaluaciones
 
