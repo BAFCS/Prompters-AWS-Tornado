@@ -97,14 +97,14 @@ _PHENOMENA = (
 )
 
 
-def _clock(v: object) -> str:
+def _clock(v: Any) -> str:
     """Hora ``HH:MM`` de una celda de hora del catálogo, o «s/d» si falta."""
     if pd.isna(v):
         return "s/d"
     return re.sub(r"(\d{1,2}:\d{2}):00$", r"\1", str(v).strip())
 
 
-def _count(v: object) -> str:
+def _count(v: Any) -> str:
     """Número entero de una celda de víctimas, o «s/d» si falta."""
     n = pd.to_numeric(v, errors="coerce")  # algunas celdas traen «-» u otro texto
     return "s/d" if pd.isna(n) else str(int(n))
