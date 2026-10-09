@@ -11,8 +11,8 @@ web
 - **Participantes de la hackathon** (AWS Breaking Barriers): perfil técnico, no necesariamente
   meteorólogos. Llegan al proyecto y en pocos minutos tienen que entender el problema (predecir qué
   tormentas del centro-sur de Chile desarrollan un mesociclón), qué datos hay y qué se ve en ellos.
-- **Investigadores** (meteorología, ciencia de datos): exploran casos a fondo, comparan índices,
-  sondeos y la evolución en satélite alrededor de cada evento.
+- **Investigadores** (meteorología, ciencia de datos): exploran casos a fondo, comparan índices
+  y la evolución en satélite alrededor de cada evento.
 
 ## Product Purpose
 
@@ -20,7 +20,7 @@ Proyecto abierto para predecir tormentas mesociclónicas en Chile con el reanál
 y las imágenes GOES (la tormenta). El visor Streamlit es la puerta de entrada exploratoria: muestra
 un caso real con sus datos crudos y sus índices derivados, explica qué significa cada cosa y deja
 investigar libremente. Éxito: un participante sale sabiendo qué buscar y dónde aportar; un
-investigador encuentra en segundos el sondeo, el índice o la imagen que necesita.
+investigador encuentra en segundos la variable, el índice o la imagen que necesita.
 
 ## Positioning
 
@@ -35,7 +35,7 @@ Chile, las imágenes GOES cada 10 minutos y los eventos del catálogo de tornado
   descargados en `data/crops/<region>/` por los scripts de descarga y procesamiento. Se
   desplegará en AWS más adelante; el cómo (servicio, acceso, datos) está sin decidir.
 - Solo muestra días ya descargados. Caso de referencia: brote del 30–31 de mayo de 2019 (Biobío).
-- La página El proyecto es la entrada por defecto y funciona sin ningún dato descargado: es lo
+- La página Problema es la entrada por defecto y funciona sin ningún dato descargado: es lo
   primero que ve quien llega al repo.
 - Se usa en escritorio, tablet y móvil (sesiones de trabajo, presentaciones de la hackathon,
   consulta rápida); los tres son un compromiso, no un extra.

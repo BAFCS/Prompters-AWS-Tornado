@@ -12,7 +12,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "viewer"))
 import common  # noqa: E402
-from viewer_app import charts, layers, p_data, p_project, state, variables  # noqa: E402
+from viewer_app import charts, layers, p_project, state  # noqa: E402
 
 
 class ExplorationTest(unittest.TestCase):
@@ -74,13 +74,6 @@ class ExplorationTest(unittest.TestCase):
         self.assertIn(
             st_mock.container.call_args.kwargs["key"], {"image_cape", "image_mesocyclone"}
         )
-
-    def test_datos_heading_level_follows_context(self) -> None:
-        """Una ficha sola o un resultado de búsqueda no saltan niveles bajo el título H1."""
-        for level in (2, 3, 4):
-            with self.subTest(level=level), patch.object(p_data, "st") as st_mock:
-                p_data._variable(variables.VARIABLES[0], set(), level=level)
-            self.assertIn(f"<h{level} class='var-name'", st_mock.markdown.call_args_list[0].args[0])
 
     def test_leaving_tour_restores_free_exploration(self) -> None:
         """Salir devuelve paneles, punto y hora previos al recorrido."""

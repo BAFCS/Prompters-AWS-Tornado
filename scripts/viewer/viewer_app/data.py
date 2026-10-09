@@ -177,6 +177,16 @@ def _catalog(version: float) -> pd.DataFrame:
     return d
 
 
+def kind_of(d: pd.DataFrame) -> np.ndarray:
+    """Tipo de cada evento del catálogo: tornado, tromba, ambos o sin clasificación."""
+    tornado, waterspout = d["Tornado"] == 1, d["Waterspout"] == 1
+    return np.select(
+        [tornado & waterspout, tornado, waterspout],
+        ["tornado y tromba", "tornado", "tromba"],
+        "sin clasificación",
+    )
+
+
 def events(day: dt.date) -> pd.DataFrame:
     """Eventos del catálogo en ``day``, ordenados por hora, con columnas listas para mostrar."""
     return _events(day, _version(CATALOG))
@@ -192,12 +202,7 @@ def _events(day: dt.date, version: float) -> pd.DataFrame:
     d["place"] = d["Location"].astype(str).str.replace(r"\s+", " ", regex=True).str.strip()
     d["hour"] = [utc_hour(h, day) for h in d["Hour (UTC)"]]
     d["hour_txt"] = d["Hour (UTC)"].astype(str).str.strip().str.replace(":00$", "", regex=True)
-    tornado, waterspout = d["Tornado"] == 1, d["Waterspout"] == 1
-    d["kind"] = np.select(
-        [tornado & waterspout, tornado, waterspout],
-        ["tornado y tromba", "tornado", "tromba"],
-        "sin clasificación",
-    )
+    d["kind"] = kind_of(d)
     d["ef"] = d["Max. EF Rating"].fillna("?").astype(str).str.replace(r"\.0$", "", regex=True)
     d["confidence"] = np.where(d["Register"] == 1, "registro confirmado", "registro débil")
     d = d.sort_values("hour", na_position="last").reset_index(drop=True)
@@ -212,33 +217,6 @@ def _events(day: dt.date, version: float) -> pd.DataFrame:
 def to_timestamp(x: xr.DataArray) -> pd.Timestamp:
     """Convierte una coordenada de tiempo escalar de xarray en ``pd.Timestamp``."""
     return pd.Timestamp(str(x.values))
-
-
-def window(da: xr.DataArray, la: float, lo: float, radius: float) -> xr.DataArray:
-    """Recorte de ``da`` a un cuadrado de ±``radius`` grados alrededor de (la, lo)."""
-    lat = da["latitude"].values
-    sl = slice(la + radius, la - radius) if lat[0] > lat[-1] else slice(la - radius, la + radius)
-    return da.sel(latitude=sl, longitude=slice(lo - radius, lo + radius))
-
-
-@st.cache_data
-def goes_series(path: Path, la: float, lo: float, radius: float) -> pd.DataFrame:
-    """Para cada imagen de ``path``: Tb mínima de C13 y área de topes más fríos que −50 °C.
-
-    El área se mide en km² sobre el cuadrado de ±``radius`` grados alrededor de (la, lo), contando
-    píxeles de la grilla reproyectada (2 km × 2 km aproximados en la resolución por defecto).
-    """
-    ds = open_nc(path)
-    c13 = window(ds["C13"], la, lo, radius).load()
-    dlat = abs(float(np.diff(ds["latitude"].values[:2])[0]))
-    km2 = (dlat * 111.2) * (dlat * 111.2 * np.cos(np.deg2rad(la)))
-    return pd.DataFrame(
-        {
-            "time": pd.to_datetime(ds["time"].values),
-            "tb_min": c13.min(dim=["latitude", "longitude"]).values,
-            "area_50": (c13 < 223.15).sum(dim=["latitude", "longitude"]).values * km2,
-        }
-    )
 
 
 def image_at(d: Day, t: np.datetime64 | pd.Timestamp) -> tuple[Path, np.datetime64] | None:

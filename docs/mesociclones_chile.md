@@ -708,6 +708,11 @@ Hay tareas para equipos con distinta experiencia. Cada una puede dar lugar a un 
 10. **Explorar preentrenamiento autosupervisado con GOES:** comparar el resultado con el modelo inicial usando los mismos casos de evaluación.
 11. **Evaluar una recalibración del STP/SCP:** distinguir ajustes exploratorios de criterios que cuenten con validación en casos independientes.
 
+**Pendientes del caso del 30 de mayo de 2019.** Estos puntos del texto del caso quedan por aclarar con las fuentes:
+
+- El rango de CAPE de 200–1.000 J/kg que aparece en el contexto del caso y el de 200–500 J/kg de otra referencia del documento: falta precisar la fuente, el cálculo y el ámbito de cada uno.
+- La afirmación sobre la ausencia de radar meteorológico y la identificación de supercélulas en el estudio de WRF: requiere revisar la fuente.
+
 ---
 
 ## 9. Glosario

@@ -26,7 +26,7 @@ MAX_ANIMATED = 3  # paneles GOES que se animan a la vez
 def _on_click() -> None:
     """Callback de la grilla: el nodo ERA5 más cercano al clic pasa a ser el punto elegido.
 
-    Es el nodo que leen Sondeo y Series; sin ERA5 esas páginas no tienen qué mostrar y el clic se ignora.
+    Sin ERA5 no hay nodo al que ajustar y el clic se ignora.
     """
     points = st.session_state["grid"].selection.points
     ref = data.era5_ref(state.context().day)
@@ -227,9 +227,7 @@ def page() -> None:
         _add_popover(cat, len(ps))
         with st.popover("Elegir punto", icon=":material/location_on:"):
             p = state.point()
-            st.caption(
-                "Elige cualquier lugar de la región para Sondeo y Series, también con teclado."
-            )
+            st.caption("Elige cualquier lugar de la región, también con teclado.")
             with st.form("coordinates"):
                 lat = st.number_input(
                     "Latitud (°)",
@@ -349,16 +347,24 @@ def page() -> None:
     if ref is not None:
         st.caption(
             "«Elegir punto» acepta coordenadas con teclado. También puedes tocar el mapa: se usa el nodo de "
-            "ERA5 más cercano (la grilla es de 0,25°, unos 28 km), y ese punto alimenta Sondeo y Series."
+            "ERA5 más cercano (la grilla es de 0,25°, unos 28 km), y ese es el punto elegido."
         )
     st.plotly_chart(
         fig, width="stretch", theme=None, key="grid", on_select=_on_click,
         selection_mode="points", config={"scrollZoom": True},
     )  # fmt: skip
 
-    if any(c.threshold is not None for c in [*layer_list, *[c for c in contours if c]]):
+    for c in sorted(
+        {
+            (c.title, c.unit, c.threshold)
+            for c in [*layer_list, *[c for c in contours if c]]
+            if c.threshold is not None and not c.is_rgb
+        },
+        key=str,
+    ):
         st.caption(
-            "La línea roja marca el valor de comparación del índice; no confirma un tornado."
+            f"Línea roja: {c[0]} igual a {c[2]:g} {c[1]}, el valor de comparación citado para Chile. "
+            "Marca dónde se cruza ese valor; no confirma un tornado."
         )
     if goes_idx:
         st.caption(

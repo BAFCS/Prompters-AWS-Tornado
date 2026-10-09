@@ -1,4 +1,4 @@
-"""Gráficos plotly del visor: grilla de mapas con costa y eventos, Skew-T, hodógrafo y series de tiempo.
+"""Gráficos plotly del visor: grilla de mapas con costa y eventos.
 
 Todos salen por ``_style``, que les pone la plantilla ``notebook`` (o ``notebook_dark``) de
 ``theme.py`` según el modo activo. El rojo se reserva para los glifos de los eventos del catálogo y las
@@ -7,6 +7,7 @@ líneas de umbral chileno, nunca para texto; el color de selección marca el pun
 
 import base64
 import io
+import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -19,7 +20,7 @@ from PIL import Image
 from plotly.subplots import make_subplots
 
 import common
-from viewer_app import components, theme
+from viewer_app import components, data, theme
 from viewer_app.state import Point
 
 if TYPE_CHECKING:  # capas importa graficos (Encuadre): solo se usa para anotar
@@ -86,6 +87,102 @@ def _point(point: Point, size: int) -> list[go.Scatter]:
     ]  # fmt: skip
 
 
+# --- Catálogo completo de eventos ----------------------------------------------------------------
+CATALOG_REGION = common.Region("catalog", north=-20.0, south=-44.0, west=-76.0, east=-68.0)
+_PHENOMENA = (
+    ("Sound", "ruido"),
+    ("Hail", "granizo"),
+    ("Electric Storm", "tormenta eléctrica"),
+    ("Damage", "daños"),
+)
+
+
+def _clock(v: str | float | None) -> str:
+    """Hora ``HH:MM`` de una celda de hora del catálogo, o «s/d» si falta."""
+    if pd.isna(v):
+        return "s/d"
+    return re.sub(r"(\d{1,2}:\d{2}):00$", r"\1", str(v).strip())
+
+
+def _count(v: str | float | None) -> str:
+    """Número entero de una celda de víctimas, o «s/d» si falta."""
+    n = pd.to_numeric(pd.Series([v]), errors="coerce").iloc[
+        0
+    ]  # algunas celdas traen «-» u otro texto
+    return "s/d" if pd.isna(n) else str(int(n))
+
+
+def _hover(r: pd.Series) -> str:
+    """Texto del hover de un evento: lugar, fecha y horas, posición, tipo, intensidad, fenómenos y víctimas."""
+    d = r["date"]
+    phenomena = ", ".join(name for col, name in _PHENOMENA if r.get(col) == 1) or "sin datos"
+    return (
+        f"<b>{r['place']}</b><br>{d.day:02d}-{d.month:02d}-{d.year} · {_clock(r['Hour (UTC)'])} UTC · "
+        f"{_clock(r['Hour (local)'])} local<br>{components.coord(r['lat'], r['lon'])}<br>"
+        f"Tipo: {r['kind']} · EF {r['ef']}<br>Fenómenos: {phenomena}<br>"
+        f"Víctimas: {_count(r['Fatalities'])} fallecidos · {_count(r['Injured'])} heridos"
+    )
+
+
+def catalog_map(
+    cat: pd.DataFrame,
+    coast: tuple[np.ndarray, np.ndarray],
+    *,
+    by_intensity: bool,
+    by_type: bool,
+    height: int = 700,
+) -> go.Figure:
+    """Mapa de Chile con todos los eventos del catálogo.
+
+    ``by_intensity`` dimensiona los triángulos según la escala EF (los sin escala, al tamaño mínimo);
+    ``by_type`` los colorea por tipo de evento y agrega la leyenda.
+    """
+    p = theme.colors()
+    ev = cat.dropna(subset=["lat", "lon"]).copy()
+    ev["place"] = ev["Location"].astype(str).str.replace(r"\s+", " ", regex=True).str.strip()
+    ev["kind"] = data.kind_of(ev)
+    ev["ef"] = ev["Max. EF Rating"].fillna("?").astype(str).str.replace(r"\.0$", "", regex=True)
+    grade = pd.to_numeric(ev["ef"].str.extract(r"(\d)")[0], errors="coerce").fillna(0)
+    ev["size"] = 9 + 5 * grade if by_intensity else 11
+    ev["text"] = [_hover(r) for _, r in ev.iterrows()]
+    colors = {
+        "tornado": p.SEVERE,
+        "tromba": p.COLD,
+        "tornado y tromba": p.WARM,
+        "sin clasificación": p.MUTED,
+    }
+    groups = [(k, ev[ev["kind"] == k]) for k in colors] if by_type else [("eventos", ev)]
+    fig = go.Figure(
+        go.Scatter(
+            x=coast[0],
+            y=coast[1],
+            mode="lines",
+            line={"width": 1, "color": p.MUTED},
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
+    for name, g in groups:
+        if g.empty:
+            continue
+        fig.add_trace(go.Scatter(
+            x=g["lon"], y=g["lat"], mode="markers", name=name, text=g["text"], hoverinfo="text",
+            marker={"symbol": "triangle-up", "size": g["size"], "color": colors.get(name, p.SEVERE), "opacity": 0.9,
+                    "line": {"width": 1, "color": p.SURFACE}},
+        ))  # fmt: skip
+    reg = CATALOG_REGION
+    fig.update_xaxes(range=[reg.west, reg.east], ticksuffix="°", showgrid=False, zeroline=False)
+    fig.update_yaxes(range=[reg.south, reg.north], ticksuffix="°", showgrid=False, zeroline=False,
+                     scaleanchor="x", scaleratio=Extent(reg.north, reg.south, reg.west, reg.east).aspect)  # fmt: skip
+    fig.update_layout(
+        height=height,
+        margin={"l": 40, "r": 10, "t": 10, "b": 10},
+        showlegend=by_type,
+        legend={"orientation": "h", "y": -0.02, "yanchor": "top"},
+    )
+    return _style(fig)
+
+
 # --- Grilla de Mapas -----------------------------------------------------------------------------
 def grid_shape(n: int, columns: int = 3) -> tuple[int, int]:
     """Filas y columnas según los paneles y el espacio disponible."""
@@ -96,7 +193,7 @@ def grid_shape(n: int, columns: int = 3) -> tuple[int, int]:
 # Lado mayor de la grilla invisible que da el valor bajo el cursor y recibe el clic.
 HOVER_CELLS = 120
 ERA5_STEP = (
-    0.25  # la grilla de clic nunca es más gruesa que ERA5, que es lo que usan Sondeo y Series
+    0.25  # la grilla de clic nunca es más gruesa que ERA5, que es lo que usa el punto elegido
 )
 
 
@@ -281,203 +378,3 @@ def grid(
         margin={"t": 110 if stacked else 56, "r": 48},
     )  # fmt: skip
     return _style(fig), backgrounds
-
-
-# --- Sondeo --------------------------------------------------------------------------------------
-SKEW = 35.0  # °C por unidad de ln(p): inclinación de las isotermas del Skew-T
-
-
-def _x(t: np.ndarray, p: np.ndarray) -> np.ndarray:
-    """Coordenada x del Skew-T para la temperatura ``t`` (°C) a la presión ``p`` (hPa)."""
-    return t + SKEW * np.log(1000.0 / p)
-
-
-def skewt(
-    p: np.ndarray, t: np.ndarray, td: np.ndarray, parcel: np.ndarray | None, p_lcl: float | None,
-    title: str,
-) -> go.Figure:  # fmt: skip
-    """Diagrama Skew-T log-p con temperatura, punto de rocío y la parcela de superficie."""
-    fig = go.Figure()
-    pp = np.geomspace(1050, 100, 60)
-    for iso in range(-100, 50, 10):
-        fig.add_trace(
-            go.Scatter(
-                x=_x(np.full_like(pp, iso), pp), y=pp, mode="lines", hoverinfo="skip", showlegend=False,
-                line={"color": theme.colors().SURFACE_2 if iso else theme.colors().LINE, "width": 1},
-            )
-        )  # fmt: skip
-    for theta in range(250, 470, 10):  # adiabáticas secas
-        tt = theta * (pp / 1000.0) ** 0.2857 - 273.15
-        fig.add_trace(
-            go.Scatter(
-                x=_x(tt, pp), y=pp, mode="lines", hoverinfo="skip", showlegend=False,
-                line={"color": theme.colors().LINE, "width": 0.8, "dash": "dot"},
-            )
-        )  # fmt: skip
-    hover = "%{customdata:.1f} °C · %{y:.0f} hPa<extra>%{fullData.name}</extra>"
-    if parcel is not None:
-        fig.add_trace(
-            go.Scatter(
-                x=_x(parcel, p), y=p, customdata=parcel, name="parcela de superficie",
-                mode="lines", line={"color": theme.colors().MUTED, "width": 1.6, "dash": "dash"},
-                hovertemplate=hover,
-            )
-        )  # fmt: skip
-    fig.add_trace(
-        go.Scatter(
-            x=_x(td, p), y=p, customdata=td, name="punto de rocío", mode="lines",
-            line={"color": theme.colors().WARM, "width": 2.4}, hovertemplate=hover,
-        )
-    )  # fmt: skip
-    fig.add_trace(
-        go.Scatter(
-            x=_x(t, p), y=p, customdata=t, name="temperatura", mode="lines",
-            line={"color": theme.colors().INK, "width": 2.4}, hovertemplate=hover,
-        )
-    )  # fmt: skip
-    if p_lcl is not None and np.isfinite(p_lcl):
-        fig.add_trace(
-            go.Scatter(
-                x=[-40, 50], y=[p_lcl, p_lcl], mode="lines", hoverinfo="skip", showlegend=False,
-                line={"color": theme.colors().MUTED, "width": 1, "dash": "dot"},
-            )
-        )  # fmt: skip
-        fig.add_annotation(  # en ejes log, las anotaciones van en log10
-            x=48, y=np.log10(p_lcl), text=f"LCL {p_lcl:.0f} hPa", showarrow=False,
-            xanchor="right", yanchor="bottom", font={"size": 11, "color": theme.colors().MUTED},
-        )  # fmt: skip
-    ticks = [1000, 925, 850, 700, 500, 400, 300, 250, 200, 150, 100]
-    fig.update_yaxes(
-        type="log", range=[np.log10(1050), np.log10(100)], tickvals=ticks,
-        ticktext=[str(v) for v in ticks], title="hPa", showgrid=False,
-    )  # fmt: skip
-    fig.update_xaxes(
-        range=[-40, 50], title="°C (isotermas inclinadas)", showgrid=False, zeroline=False
-    )
-    fig.update_layout(
-        title={"text": title}, height=600, hovermode="y",
-        legend={"orientation": "h", "y": -0.24, "x": 0, "yanchor": "top"}, margin={"b": 140},
-    )  # fmt: skip
-    return _style(fig)
-
-
-def hodograph(
-    h: np.ndarray, u: np.ndarray, v: np.ndarray, lm: tuple[float, float],
-    rm: tuple[float, float], mean: tuple[float, float], title: str,
-) -> go.Figure:  # fmt: skip
-    """Hodógrafo coloreado por capas, con los movimientos de Bunkers y el viento medio 0–6 km."""
-    fig = go.Figure()
-    lim = max(10.0, float(np.nanmax(np.abs(np.r_[u, v, lm, rm]))) * 1.15)
-    for r in range(10, int(lim) + 10, 10):
-        a = np.linspace(0, 2 * np.pi, 120)
-        fig.add_trace(
-            go.Scatter(
-                x=r * np.cos(a), y=r * np.sin(a), mode="lines", hoverinfo="skip", showlegend=False,
-                line={"color": theme.colors().SURFACE_2 if r % 20 else theme.colors().LINE, "width": 1},
-            )
-        )  # fmt: skip
-    p = theme.colors()
-    layers = ((0, 1000, p.INK, "0–1 km"), (1000, 3000, p.COLD, "1–3 km"),
-             (3000, 6000, p.WARM, "3–6 km"), (6000, 10000, p.MUTED, "6–10 km"))  # fmt: skip
-    for h0, h1, color, name in layers:
-        k = (h >= h0) & (h <= h1)
-        if k.sum() < 2:
-            continue
-        fig.add_trace(
-            go.Scatter(
-                x=u[k], y=v[k], mode="lines+markers", name=name, customdata=h[k],
-                line={"color": color, "width": 3}, marker={"size": 4, "color": color},
-                hovertemplate="%{customdata:.0f} m · u %{x:.1f}, v %{y:.1f} m/s<extra></extra>",
-            )
-        )  # fmt: skip
-    for (x, y), name, symbol, color in (
-        (lm, "Movimiento estimado: rama left-mover", "diamond", theme.colors().SELECTION),
-        (rm, "Movimiento estimado: rama right-mover", "diamond-open", theme.colors().MUTED),
-        (mean, "viento medio 0–6 km", "x-thin", theme.colors().INK_2),
-    ):
-        fig.add_trace(
-            go.Scatter(
-                x=[x], y=[y], mode="markers", name=name,
-                marker={"symbol": symbol, "size": 13, "color": color,
-                        "line": {"color": color, "width": 2}},
-                hovertemplate=f"{name}<br>u %{{x:.1f}}, v %{{y:.1f}} m/s<extra></extra>",
-            )
-        )  # fmt: skip
-    fig.update_xaxes(
-        range=[-lim, lim], zeroline=True, showgrid=False, title="Viento este-oeste, u (m/s)"
-    )
-    fig.update_yaxes(
-        range=[-lim, lim], zeroline=True, showgrid=False, title="Viento norte-sur, v (m/s)",
-        scaleanchor="x", scaleratio=1,
-    )  # fmt: skip
-    fig.update_layout(
-        title={"text": title},
-        height=600,
-        margin={"b": 140},
-        legend={"orientation": "h", "y": -0.24, "x": 0, "yanchor": "top"},
-    )
-    return _style(fig)
-
-
-# --- Series --------------------------------------------------------------------------------------
-@dataclass(frozen=True)
-class SeriesRow:
-    """Una fila del gráfico de series: datos, nombre, unidad y umbral chileno opcional."""
-
-    title: str
-    unit: str
-    traces: tuple[tuple[pd.Series, str, str], ...]  # (serie con índice de tiempo, nombre, color)
-    threshold: float | None = None
-
-
-def series(rows: list[SeriesRow], events: pd.DataFrame, selected: str | None) -> go.Figure:
-    """Series de tiempo apiladas con eje x común, umbrales y la hora de cada evento marcada."""
-    fig = make_subplots(
-        rows=len(rows), cols=1, shared_xaxes=True, vertical_spacing=0.045,
-        subplot_titles=[f"{f.title} ({f.unit})" for f in rows],
-    )  # fmt: skip
-    in_legend: set[str] = set()  # cada nombre una sola vez, aunque se repita en varias filas
-    for i, f in enumerate(rows, start=1):
-        for s, name, color in f.traces:
-            fig.add_trace(
-                go.Scatter(
-                    x=s.index, y=s.values, name=name, mode="lines+markers",
-                    line={"color": color, "width": 2}, marker={"size": 4},
-                    hovertemplate=f"{name}: %{{y:.3g}} {f.unit}<extra></extra>",
-                    legendgroup=name, showlegend=name not in in_legend,
-                ),
-                row=i, col=1,
-            )  # fmt: skip
-            in_legend.add(name)
-        if f.threshold is not None:
-            fig.add_hline(  # row/col aceptan int aunque los stubs de plotly digan str
-                y=f.threshold, row=i, col=1,  # pyright: ignore[reportArgumentType]
-                line={"color": theme.colors().SEVERE, "width": 1, "dash": "dash"},
-                annotation_text="valor de comparación", annotation_position="top left",
-                annotation_font={"size": 12, "color": theme.colors().MUTED},
-            )  # fmt: skip
-    for _, ev in events.iterrows():
-        if ev["hour"] is None or pd.isna(ev["hour"]):
-            continue
-        own = ev["id"] == selected
-        fig.add_vline(
-            x=ev["hour"],
-            line={
-                "color": theme.colors().SEVERE,
-                "width": 2 if own else 1,
-                "dash": "solid" if own else "dot",
-            },
-            opacity=1 if own else 0.45,
-        )
-        if own:
-            fig.add_annotation(
-                x=ev["hour"], y=1.08, yref="paper", text=f"{ev['place']} {ev['hour']:%H:%M}",
-                showarrow=False, yanchor="bottom", font={"size": 12, "color": theme.colors().INK},
-            )  # fmt: skip
-    fig.update_layout(
-        height=190 * len(rows) + 80, hovermode="x unified",
-        legend={"orientation": "h", "y": 1.16, "x": 0, "yanchor": "bottom"},
-        margin={"t": 110},
-    )  # fmt: skip
-    fig.update_xaxes(tickformat="%H:%M")  # sin la fecha en inglés que plotly agrega por defecto
-    return _style(fig)

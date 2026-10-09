@@ -16,7 +16,7 @@ a partir del reanálisis **ERA5** y las imágenes multiespectrales del satélite
 |---|---|
 | `docs/mesociclones_chile.md` | **El documento principal.** El problema, la física, el caso chileno, los datos de entrada, las variables a calcular, cómo plantear el modelo, la arquitectura en AWS y las tareas abiertas. |
 | `docs/mesociclones_chile.pdf` | El mismo documento en A4 (33 páginas), con las figuras. |
-| `scripts/viewer/viewer.py` y `scripts/viewer/viewer_app/` | **El visor**: una aplicación web local para explorar un día de datos (mapas, sondeos y series). |
+| `scripts/viewer/viewer.py` y `scripts/viewer/viewer_app/` | **El visor**: una aplicación web local para explorar un día de datos (caso de estudio, mapas y fichas de variables). |
 | `scripts/pipeline/download_*.py`, `scripts/pipeline/process_*.py` | Descargan ERA5 y GOES recortados a Chile y calculan los índices que usa el visor. |
 | `scripts/figures/figs_*.py` | Generan las cuatro figuras de `figs/` desde los datos reales. |
 | `tests/` | Pruebas automáticas del visor. |
@@ -177,16 +177,22 @@ La terminal mostrará una dirección (`Local URL`). Ábrela en tu navegador. Cas
 El visor queda funcionando mientras la terminal siga abierta. Para cerrarlo, vuelve a la terminal y
 pulsa <kbd>Ctrl</kbd> + <kbd>C</kbd>.
 
+Si estás modificando el código del visor, agrega `--server.runOnSave true` para que se actualice solo
+al guardar un archivo, sin pulsar *Rerun*:
+
+```bash
+uv run streamlit run scripts/viewer/viewer.py --server.runOnSave true
+```
+
 > [!NOTE]
 > El visor corre en tu computador. La dirección `localhost` significa «este mismo equipo»: desde
 > otro computador no se puede abrir.
 
 ### Cómo se usa
 
-- Arriba están las páginas. **El proyecto** explica el problema y funciona aunque no hayas
-  descargado datos. **El caso** resume el día elegido, **Mapas** muestra hasta seis mapas con el zoom
-  sincronizado, **Sondeo** muestra el perfil vertical de la atmósfera en un punto y **Series** su
-  evolución durante el día.
+- Arriba están las páginas. **Problema** explica el problema y funciona aunque no hayas
+  descargado datos. **Caso de estudio** resume el día elegido, **Mapas** muestra hasta seis mapas con el zoom
+  sincronizado.
 - La barra de la izquierda elige la región, el día, la hora y el evento. Lo que elijas ahí se
   mantiene al cambiar de página.
 - Las horas están en tiempo universal coordinado (UTC). En mayo, la hora de Chile continental es
@@ -344,5 +350,5 @@ La lista completa está en `docs/mesociclones_chile.md`.
 
 ---
 
-*Los diagramas de la página El proyecto del visor son esquemas dibujados a mano en SVG; las cuatro figuras de `figs/` sí
+*Los diagramas de la página Problema del visor son esquemas dibujados a mano en SVG; las cuatro figuras de `figs/` sí
 se generan desde los datos reales con los scripts de `scripts/`.*

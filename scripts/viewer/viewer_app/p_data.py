@@ -2,15 +2,15 @@
 
 Los textos viven en ``variables.py``. Esta página no necesita datos: sin recortes muestra todas las
 fichas; con recortes, cada ficha cuyo producto existe el día elegido trae un botón «Ver en Mapas».
-Una ficha sola se pide con ``?v=<clave>`` en la URL o desde la ayuda de Mapas
-(``state.go_to_variable``).
+La página siempre muestra todas las fichas: ``?v=<clave>`` en la URL, o la ayuda de Mapas
+(``state.go_to_variable``), lleva a la ficha pedida desplazando la página hasta ella.
 """
 
 import html
 
 import streamlit as st
 
-from viewer_app import products, state, variables
+from viewer_app import products, state, theme, variables
 from viewer_app.variables import Variable
 
 
@@ -21,33 +21,22 @@ def _citations(keys: list[str] | tuple[str, ...]) -> str:
     )
 
 
-def _focus() -> Variable | None:
-    """La ficha pedida por la URL o por otra página; la URL queda al día para compartirla."""
+def _scroll_target() -> str | None:
+    """La clave de la ficha a la que ir: la pedida por la URL o por otra página, si existe."""
     requested = st.session_state.pop("data_focus", None) or st.query_params.get("v")
-    if requested in variables.BY_KEY:
-        st.query_params["v"] = requested
-        return variables.BY_KEY[requested]
     st.query_params.pop("v", None)
-    return None
+    return requested if requested in variables.BY_KEY else None
 
 
-def _set_focus(key: str | None) -> None:
-    """Callback: muestra solo la ficha ``key`` (``None``: todas)."""
-    if key is None:
-        st.query_params.pop("v", None)
-    else:
-        st.session_state["data_focus"] = key
-
-
-def _on_input(widget: str) -> None:
-    """Callback de las píldoras «Se calcula con»: abre la ficha del insumo elegido."""
-    _set_focus(st.session_state[widget])
-    st.session_state[widget] = None
-
-
-def _clear_search() -> None:
-    """Callback: borra el texto del buscador."""
-    st.session_state["data_search"] = ""
+def _scroll_to(key: str) -> None:
+    """Desplaza la página hasta la ficha ``key`` cuando ya está dibujada (Streamlit la va armando)."""
+    st.html(
+        "<script>(() => { let n = 0; const t = setInterval(() => {"
+        f"const el = document.getElementById('{key}');"
+        "if (el) { el.scrollIntoView(); clearInterval(t); } else if (++n > 50) clearInterval(t);"
+        "}, 100); })();</script>",
+        unsafe_allow_javascript=True,
+    )
 
 
 def _available() -> set[str]:
@@ -56,64 +45,60 @@ def _available() -> set[str]:
     return set(products.catalog(ctx.day)) if ctx is not None else set()
 
 
-def _variable(v: Variable, available: set[str], suffix: str = "", level: int = 4) -> None:
-    """Dibuja la ficha de ``v``. ``suffix`` distingue las claves de widget si la ficha se repite.
-
-    ``level`` es el nivel del encabezado: sin fuente ni grupo encima (una ficha sola, una búsqueda)
-    sube para no saltarse niveles bajo el título.
-    """
-    k = f"{v.key}{suffix}"
+def _variable(v: Variable, available: set[str]) -> None:
+    """Dibuja la ficha de ``v``: un riel (identidad y enlaces) junto al cuerpo."""
+    k = v.key
+    in_maps = next((p for p in v.products if p in available), None)
     with st.container(border=True, key=f"sheet_v_{k}", gap="small"):
-        meta = " · ".join(html.escape(x) for x in (v.symbol, v.unit) if x)
-        st.markdown(
-            f"<h{level} class='var-name' id='{html.escape(v.key)}'>{html.escape(v.name)}</h{level}>"
-            f"<p class='var-meta mono'>{meta}</p>",
-            unsafe_allow_html=True,
-        )
-        st.markdown(v.what)
-        if v.why:
-            st.markdown(f"**Por qué importa.** {v.why}")
-        if v.formula:
-            st.latex(v.formula)
-        if v.method:
-            st.markdown(f"<div class='note'>\n\n{v.method}\n\n</div>", unsafe_allow_html=True)
-        if v.threshold:
-            with st.container(key=f"threshold_{k}"):
-                st.markdown(f"**Criterio en Chile.** {v.threshold}")
-        if v.caveat:
-            st.markdown(f"**Cuidado.** {v.caveat}")
-        if v.inputs:
-            st.pills(
-                "Se calcula con", list(v.inputs), key=f"inputs_{k}",
-                format_func=lambda c: variables.BY_KEY[c].symbol,
-                on_change=_on_input, args=(f"inputs_{k}",),
-            )  # fmt: skip
-        st.markdown(
-            f"<p class='note var-refs'>Fuentes: {_citations(variables.references_of(v))}</p>",
-            unsafe_allow_html=True,
-        )
-        in_maps = next((p for p in v.products if p in available), None)
-        if in_maps is not None:
-            st.button(
-                "Ver en Mapas", key=f"map_{k}", icon=":material/map:", type="tertiary",
-                on_click=state.open_in_maps, args=(in_maps, v.level),
-            )  # fmt: skip
+        with st.container(key=f"rail_{k}", gap="small"):
+            meta = " · ".join(html.escape(x) for x in (v.symbol, v.unit) if x)
+            # Streamlit reescribe el id de los encabezados con su texto: el ancla va en un span aparte.
+            st.markdown(
+                f"<span class='var-anchor' id='{html.escape(v.key)}'></span>"
+                f"<h4 class='var-name'>{html.escape(v.name)}</h4>"
+                f"<p class='var-meta mono'>{meta}</p>",
+                unsafe_allow_html=True,
+            )
+            if v.inputs:
+                links = " ".join(
+                    f"<a class='go' href='#{c}' title='Ir a la ficha de {html.escape(variables.BY_KEY[c].name)}'>"
+                    f"{html.escape(variables.BY_KEY[c].symbol)}</a>"
+                    for c in v.inputs
+                )
+                st.markdown(
+                    f"<p class='var-inputs'><span class='note'>Se calcula con</span> {links}</p>",
+                    unsafe_allow_html=True,
+                )
+            if in_maps is not None:
+                st.button(
+                    "Ver en Mapas", key=f"map_{k}", icon=":material/map:", type="tertiary",
+                    on_click=state.open_in_maps, args=(in_maps, v.level),
+                )  # fmt: skip
+        with st.container(key=f"body_{k}", gap="small"):
+            st.markdown(v.what)
+            if v.why:
+                st.markdown(f"**Por qué importa.** {v.why}")
+            if v.formula:
+                st.latex(v.formula)
+            if v.method:
+                st.markdown(f"<div class='note'>\n\n{v.method}\n\n</div>", unsafe_allow_html=True)
+            if v.threshold:
+                with st.container(key=f"threshold_{k}"):
+                    st.markdown(f"**Criterio en Chile.** {v.threshold}")
+            if v.caveat:
+                st.markdown(f"**Cuidado.** {v.caveat}")
+            st.markdown(
+                f"<p class='note var-refs'>Fuentes: {_citations(variables.references_of(v))}</p>",
+                unsafe_allow_html=True,
+            )
 
 
-def _group(g: variables.Group, vs: list[Variable], available: set[str], flat: bool = False) -> None:
-    """Encabezado del grupo ``g`` y sus fichas, en dos columnas si el grupo es compacto.
-
-    ``flat`` (resultados de búsqueda, sin fuente encima) baja un nivel de encabezado: grupo en H2.
-    """
-    (st.header if flat else st.subheader)(g.title, anchor=g.key)
+def _group(g: variables.Group, vs: list[Variable], available: set[str]) -> None:
+    """Encabezado del grupo ``g`` y sus fichas."""
+    st.subheader(g.title, anchor=g.key)
     st.markdown(f"<p class='note'>{g.lede}</p>", unsafe_allow_html=True)
-    if g.compact:
-        with st.container(horizontal=True, key=f"cards2_{g.key}"):
-            for v in vs:
-                _variable(v, available, level=3 if flat else 4)
-    else:
-        for v in vs:
-            _variable(v, available, level=3 if flat else 4)
+    for v in vs:
+        _variable(v, available)
 
 
 def _source(s: variables.Source) -> None:
@@ -128,12 +113,111 @@ def _source(s: variables.Source) -> None:
         st.markdown(f"<p class='note'>Fuentes: {_citations(s.refs)}</p>", unsafe_allow_html=True)
 
 
+_FETCH = """\
+mkdir -p data/goes
+curl -L -o data/tornados_chile.xlsx https://ndownloader.figshare.com/files/56272544
+curl -L -o data/coast.zip https://naciscdn.org/naturalearth/10m/physical/ne_10m_coastline.zip
+
+# ERA5 y GOES se leen sin credenciales; --no-sign-request evita pedirlas
+aws s3 ls --no-sign-request s3://nsf-ncar-era5/
+aws s3 ls --no-sign-request s3://noaa-goes19/
+"""
+
+_PIPELINE = """\
+uv sync
+uv run python scripts/pipeline/download_era5.py --start 2019-05-30
+uv run python scripts/pipeline/download_goes.py --start 2019-05-30
+uv run python scripts/pipeline/process_goes.py  --start 2019-05-30
+uv run python scripts/pipeline/process_era5.py  --start 2019-05-30
+uv run streamlit run scripts/viewer/viewer.py
+"""
+
+
+def _obtain() -> None:
+    """Cómo conseguir los datos, qué hace cada script del repositorio y en qué región de AWS correrlos."""
+    st.divider()
+    st.header("Cómo obtener los datos", anchor="obtener")
+    st.markdown(
+        "<p class='lede'>ERA5 y GOES están en buckets públicos de Amazon S3 y se leen sin "
+        "credenciales. El catálogo y la línea de costa se bajan a mano. Los scripts del repositorio "
+        "recortan la región, reproyectan GOES y calculan los índices, y dejan todo en <code>data/</code>, "
+        "que no se versiona.</p>",
+        unsafe_allow_html=True,
+    )
+    st.subheader("De dónde sale cada conjunto", anchor=False)
+    st.markdown(
+        "| Conjunto | Dónde está | Región AWS | Cómo se baja |\n"
+        "|---|---|---|---|\n"
+        "| ERA5 | `s3://nsf-ncar-era5/` | us-west-2 | `download_era5.py` |\n"
+        "| GOES-16 (dic 2017 – abr 2025) | `s3://noaa-goes16/` | us-east-1 | `download_goes.py` |\n"
+        "| GOES-19 (desde abr 2025) | `s3://noaa-goes19/` | us-east-1 | `download_goes.py` |\n"
+        "| Catálogo de tornados | figshare, hoja `Final_Table` | no está en AWS | `curl` |\n"
+        "| Línea de costa | Natural Earth 10m | no está en AWS | `curl` |"
+    )
+    st.code(_FETCH, language="bash")
+    st.caption(
+        "El bucket `era5-pds` está deprecado: no tiene niveles de presión ni CAPE. "
+        "El script de GOES elige el satélite según la fecha."
+    )
+
+    st.subheader("Scripts del proyecto", anchor=False)
+    st.markdown(
+        "Los de descarga y proceso van en este orden: primero se baja, después se calcula. "
+        "Todos aceptan `--start` y `--end` (fechas UTC), `--region` o `--bbox`, y `--force`. "
+        "Saltan lo que ya existe, así que si una descarga se corta basta repetir el comando.\n\n"
+        "| Script | Qué hace | Deja en `data/crops/<región>/` |\n"
+        "|---|---|---|\n"
+        "| `download_era5.py` | Baja ERA5 (niveles de presión y superficie) y recorta la región. Cada "
+        "hora de un nivel de presión es un bloque global de 50–65 MB que se transfiere entero y se "
+        "recorta en memoria | `era5_pl/`, `era5_sfc/` (un archivo por día) |\n"
+        "| `download_goes.py` | Baja GOES `ABI-L2-MCMIPF`, las 16 bandas a 2 km. Lee el índice del "
+        "archivo y pide a S3 solo los bloques que tocan la región | `goes/` (un archivo por hora) |\n"
+        "| `process_goes.py` | Reproyecta GOES a una grilla regular de latitud y longitud, con vecino "
+        "más cercano para no alterar valores. No corrige paralaje | `goes_latlon/` |\n"
+        "| `process_era5.py` | Calcula cizalladura, movimiento de Bunkers *left-mover*, SRH, VGP, STP, "
+        "SHERBS3 y LCL con los signos del hemisferio sur | `era5_indices/` |\n"
+        "| `viewer.py` | El visor que estás usando | — |\n"
+        "| `figs_catalog.py`, `figs_era5.py`, `figs_goes.py` | Las figuras del documento: catálogo, "
+        "entorno ERA5 y una imagen de la banda 13. Se escriben en `figs/` | — |"
+    )
+    st.code(_PIPELINE, language="bash")
+    st.caption(
+        "Las regiones predefinidas son `south-central-austral` (la de uso por defecto), "
+        "`south-central` y `full`; `--bbox` define otra a medida."
+    )
+
+    st.subheader("En qué región de AWS trabajar", anchor=False)
+    st.markdown(
+        "Los dos conjuntos no están en la misma región: ERA5 vive en **us-west-2** (Oregón) y GOES "
+        "en **us-east-1** (Virginia del Norte). Un computador que corre en la misma región que el "
+        "bucket lee sin salir de la red de AWS. En la otra región, cada solicitud cruza el "
+        "continente y suma decenas de milisegundos, que se multiplican cuando el script hace miles "
+        "de lecturas pequeñas.\n\n"
+        "La recomendación es **us-west-2**, por el peso de cada descarga. `download_era5.py` "
+        "transfiere unos 11 GB por día para quedarse con unos 70 MB, y esa es la parte lenta del "
+        "proyecto: desde Chile el volumen es el mismo y viaja por internet; dentro de us-west-2 "
+        "queda en la red interna. GOES mueve mucho menos, porque el script pide solo los bloques de "
+        "la región, y puede leerse desde us-west-2 con algo más de latencia. Si más adelante la "
+        "descarga de GOES resulta ser el cuello de botella, se puede correr en us-east-1 y copiar los "
+        "recortes a un bucket de us-west-2.\n\n"
+        "Ni us-west-2 ni us-east-1 quedan cerca de Chile, y `sa-east-1` (São Paulo) no aloja ninguno de "
+        "los dos conjuntos, así que acercarse físicamente no ayuda. Una vez hechos los recortes, que "
+        "pesan poco, conviene guardarlos en S3 en la misma región donde se calcule o entrene, y el "
+        "visor puede correr donde sea. No medimos la latencia entre regiones; el criterio sale de la "
+        "ubicación de los buckets."
+    )
+
+
 def _bibliography() -> None:
     """Todas las referencias citadas, cada una con su ancla y su enlace."""
     st.divider()
     st.header("Referencias", anchor="referencias")
     items = []
+    cited = {k for v in variables.VARIABLES for k in variables.references_of(v)}
+    cited |= {k for s in variables.SOURCES for k in s.refs}
     for k, r in variables.REFERENCES.items():
+        if k not in cited:  # las notas de prensa solo se enlazan en Problema
+            continue
         text = r.url.removeprefix("https://").removeprefix("doi.org/")
         link = f" <a href='{html.escape(r.url)}'>{html.escape(text)}</a>" if r.url else ""
         items.append(f"<li id='ref-{k}'>{_md_html(r.full)}{link}</li>")
@@ -162,77 +246,117 @@ def _toc() -> str:
             if g.source == s.key
         )
         items.append(f"<li><a href='#{s.key}'>{s.title.split(' · ')[0]}</a><ol>{sub}</ol></li>")
+    items.append("<li><a href='#obtener'>Cómo obtener los datos</a></li>")
     items.append("<li><a href='#referencias'>Referencias</a></li>")
     return f"<nav class='toc' aria-label='En esta página'><ol>{''.join(items)}</ol></nav>"
 
 
-def _body() -> bool:
-    """Portada, buscador y fichas (todas, las que coinciden con la búsqueda, o una sola).
+_INTRO = (
+    (
+        "ERA5",
+        "El reanálisis global del ECMWF: una reconstrucción de la atmósfera hora a hora desde 1940, "
+        "que combina un modelo con observaciones de radiosondas, satélites, aviones y estaciones. "
+        "Entrega viento, temperatura, humedad y energía disponible en una grilla de ~31 km. Sus "
+        "celdas son demasiado grandes para ver una tormenta, pero muestran el ambiente en que se forma.",
+    ),
+    (
+        "GOES",
+        "Un satélite geoestacionario sobre 75,2° O. Su radiómetro ABI mide 16 bandas, del visible al "
+        "infrarrojo, cada 10 minutos y con píxeles de 2 km. De ahí salen la altura del tope de las "
+        "nubes y su evolución. Ve la nube, pero no el giro dentro de ella.",
+    ),
+    (
+        "Catálogo",
+        "102 tornados y trombas marinas en Chile entre 1554 y 2025, reunidos desde crónicas, prensa y "
+        "literatura científica (Bastías-Curivil et al.). Son los eventos con los que se comparan ERA5 "
+        "y GOES. Solo incluye eventos que ocurrieron: faltan ejemplos de días de tormenta sin tornado, "
+        "que un modelo necesita para aprender.",
+    ),
+)
 
-    Devuelve si se dibujó la lista completa: solo entonces existen todas las anclas del índice.
-    """
+
+def _intro() -> None:
+    """Qué es cada fuente, en pocas líneas, antes de entrar a las fichas."""
+    cols = theme.columns([1, 1, 1], "sources_intro")
+    for col, (title, text) in zip(cols, _INTRO, strict=True):
+        with (
+            col,
+            st.container(border=True, key=f"sheet_intro_{title.split()[0].lower()}", gap="small"),
+        ):
+            st.markdown(f"**{title}**")
+            st.markdown(text)
+
+
+def _index() -> None:
+    """Tabla origen | categoría | variables | ir a: una fila por variable, con su botón a la ficha."""
+    st.subheader("Ir a una variable", anchor=False)
+    rows = []
+    for s in variables.SOURCES:
+        first_in_source = True
+        n_source = sum(
+            v.group == g.key
+            for g in variables.GROUPS
+            if g.source == s.key
+            for v in variables.VARIABLES
+        )
+        for g in variables.GROUPS:
+            if g.source != s.key:
+                continue
+            vs = [v for v in variables.VARIABLES if v.group == g.key]
+            for i, v in enumerate(vs):
+                cells = ""
+                if first_in_source:
+                    cells += f"<td rowspan='{n_source}'>{html.escape(s.title.split(' · ')[0])}</td>"
+                    first_in_source = False
+                if i == 0:
+                    cells += f"<td rowspan='{len(vs)}'>{html.escape(g.title)}</td>"
+                cells += f"<td>{html.escape(v.name)}</td><td><a class='go' href='#{v.key}' title='Ir a la ficha de {html.escape(v.name)}'>{html.escape(v.symbol)}</a></td>"
+                rows.append(f"<tr>{cells}</tr>")
+    head = "<tr><th>Origen</th><th>Categoría</th><th>Variable</th><th>Ir a</th></tr>"
+    st.markdown(
+        f"<div class='var-table-wrap'><table class='var-table'>{head}{''.join(rows)}</table></div>",
+        unsafe_allow_html=True,
+    )
+
+
+def _body() -> None:
+    """Portada, índice y todas las fichas."""
     st.title("Datos", anchor="inicio")
     st.markdown(
-        f"<p class='lede'>Las {len(variables.VARIABLES)} variables del proyecto, ordenadas por linaje: "
-        "cada fuente cruda primero y, debajo, lo que se calcula con ella. Cada ficha dice qué es la "
+        f"<p class='lede'>El proyecto usa {len(variables.VARIABLES)} variables. Casi todas salen de "
+        "tres fuentes: ERA5, GOES y el catálogo de tornados. Cada fuente va primero, con sus datos tal "
+        "como llegan, y debajo lo que se calcula a partir de ellos. Cada ficha explica qué es la "
         "variable, por qué importa para un mesociclón, cómo se calcula y qué cuidar en el hemisferio "
         "sur.</p>",
         unsafe_allow_html=True,
     )
+    _intro()
     available = _available()
-    focus = _focus()
-    if focus is not None:
-        st.button("Ver todas las variables", icon=":material/arrow_back:", on_click=_set_focus,
-                  args=(None,))  # fmt: skip
-        _variable(focus, available, suffix="_focus", level=2)
-        _bibliography()
-        return False
-
-    state.restore("data_search")
-    query = st.text_input(
-        "Buscar una variable", key="data_search", icon=":material/search:",
-        placeholder="CAPE, helicidad, C13, cizalladura, Register…",
-    )  # fmt: skip
-    state.save("data_search")
+    target = _scroll_target()
+    _index()
     if not available:
         st.caption(
             "No hay datos preparados para el día elegido: las fichas se leen igual, pero sin el botón "
             "«Ver en Mapas»."
         )
-    if query.strip():
-        found = variables.search(query)
-        if not found:
-            st.info(
-                f"Ninguna variable coincide con «{query.strip()}». Prueba con un símbolo (CAPE, C13) "
-                "o una palabra (helicidad, tropopausa)."
-            )
-            st.button("Borrar la búsqueda", icon=":material/close:", on_click=_clear_search)
-            return False
-        st.caption(f"{len(found)} de {len(variables.VARIABLES)} variables.")
-        for g in variables.GROUPS:
-            in_group = [v for v in found if v.group == g.key]
-            if in_group:
-                _group(g, in_group, available, flat=True)
-        return False
-
     for s in variables.SOURCES:
         _source(s)
         for g in variables.GROUPS:
             if g.source == s.key:
                 _group(g, [v for v in variables.VARIABLES if v.group == g.key], available)
+    _obtain()
     _bibliography()
-    return True
+    if target:
+        _scroll_to(target)
 
 
 def page() -> None:
     """Dibuja la página con el índice al costado (o desplegable arriba en pantallas angostas)."""
     with st.container(key="data"), st.container(horizontal=True, wrap=False, gap="large"):
         with st.container(key="data_body"):
-            compact = st.empty()  # el índice va arriba, pero se decide después de dibujar el cuerpo
-            full = _body()
-        if full:
-            with compact.expander("En esta página", key="toc_compact", icon=":material/toc:"):
+            with st.expander("En esta página", key="toc_compact", icon=":material/toc:"):
                 st.markdown(_toc(), unsafe_allow_html=True)
-            with st.container(width=220, key="toc_side"):
-                st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
-                st.markdown(_toc(), unsafe_allow_html=True)
+            _body()
+        with st.container(width=220, key="toc_side"):
+            st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
+            st.markdown(_toc(), unsafe_allow_html=True)

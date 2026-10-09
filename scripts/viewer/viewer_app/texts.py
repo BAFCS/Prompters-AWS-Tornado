@@ -62,22 +62,6 @@ CASES = {
     ),
 }
 
-CASE_DETAILS = {
-    dt.date(2019, 5, 30): (
-        "El documento describe una baja ocluida de aproximadamente 995 hPa y viento de "
-        "20–25 m/s en el nivel de presión de 850 hPa. Las presiones en hPa permiten "
-        "referirse a distintos niveles atmosféricos. Una baja ocluida es un sistema de "
-        "baja presión cuyo frente frío ha alcanzado al cálido.",
-        "Se citan cizalladura 0–1 km de 12–20 m/s, SRH 0–1 km de −100 a −250 m²/s² y "
-        "una altura de condensación baja. El rango de CAPE de 200–1.000 J/kg aparece "
-        "en el contexto del caso, mientras que otra referencia del documento presenta "
-        "200–500 J/kg. Falta aclarar la fuente, el cálculo y el ámbito de ambos rangos.",
-        "El estudio utilizó simulaciones con el modelo atmosférico WRF. El alcance de "
-        "la afirmación sobre la ausencia de radar meteorológico y la identificación "
-        "de supercélulas requiere revisión de la fuente.",
-    ),
-}
-
 
 def case_for(day: dt.date, n_events: int) -> Case:
     """El contexto de ``day``; si no está escrito, uno genérico con el número de eventos."""
@@ -94,7 +78,7 @@ def case_for(day: dt.date, n_events: int) -> Case:
 class Step:
     """Un paso del recorrido: a qué página, hora, capa y punto lleva el visor, y qué contar."""
 
-    page: str  # "case", "maps", "sounding" o "series"
+    page: str  # "case" o "maps"
     hour: str  # "HH:MM" UTC; se usa la imagen o la hora ERA5 más cercana
     text: str
     event: str | None = None  # parte del nombre del lugar en el catálogo
@@ -124,26 +108,11 @@ TOURS = {
             event="Quilelto", panels=("idx:vgp_01", "goes:C13"),
         ),
         Step(
-            "sounding", "20:00",
-            "En el perfil de Coihueco, observa el CAPE, la altura estimada de la base de "
-            "nube y el cambio del viento con la altura. El cálculo de SRH utiliza la rama "
-            "left-mover, una estimación del movimiento de la tormenta.",
-            event="Coihueco",
-        ),
-        Step(
             "maps", "21:50",
             "La hora seleccionada es anterior al reporte de Los Ángeles. A la derecha, "
             "los azules indican enfriamiento entre imágenes; comprueba el intervalo del "
             "panel y considera también el desplazamiento de las nubes.",
             event="Ángeles", panels=("idx:srh_01", "goes:dT"),
-        ),
-        Step(
-            "series", "21:50",
-            "Compara VGP, cizalladura, SRH y temperatura de brillo antes y después de la hora "
-            "reportada para Los Ángeles. Distingue los cambios observados de las "
-            "inferencias sobre la tormenta. Las series resumen un área fija; no siguen "
-            "automáticamente una misma nube.",
-            event="Ángeles",
         ),
     ),
 }  # fmt: skip

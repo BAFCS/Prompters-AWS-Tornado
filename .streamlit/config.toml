@@ -1,4 +1,4 @@
-# Tema del visor (scripts/viewer/viewer.py): claro y oscuro, alternables desde el menú de Streamlit o el botón de la barra.
+# Tema del visor (scripts/viewer/viewer.py): claro y oscuro, alternables desde el menú de Streamlit o el botón de la barra. La primera visita de cada navegador arranca en oscuro (lo hace theme._WATCHER); después manda la elección de la persona.
 # Paleta de cinco colores (Strawberry Red, Honeydew, Frosted Blue, Steel Blue, Deep Space Blue) y
 # mezclas entre ellos; los valores coinciden con scripts/viewer/viewer_app/theme.py. El rojo solo marca.
 [theme]

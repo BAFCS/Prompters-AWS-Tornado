@@ -11,7 +11,7 @@ from streamlit.testing.v1 import AppTest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "viewer"))
 
-from viewer_app import charts, data, p_sounding, variables  # noqa: E402
+from viewer_app import charts, data  # noqa: E402
 
 
 class ViewerTest(unittest.TestCase):
@@ -32,7 +32,7 @@ class ViewerTest(unittest.TestCase):
         self.assertIn("Predicción de tormentas mesociclónicas", app.title[0].value)
 
     def test_project_without_regions_links_each_section(self) -> None:
-        """Sin regiones, la página por defecto es El proyecto y su índice enlaza anclas que existen."""
+        """Sin regiones, la página por defecto es Problema y su índice enlaza anclas que existen."""
         app = AppTest.from_file(
             Path(__file__).resolve().parents[1] / "scripts" / "viewer" / "viewer.py"
         )
@@ -46,15 +46,11 @@ class ViewerTest(unittest.TestCase):
         indices = [m.value for m in app.markdown if "class='toc'" in m.value]
         self.assertEqual(len(indices), 2)  # el lateral y el del desplegable
         links = re.findall(r"href='#([\w-]+)'", indices[0])
-        self.assertEqual(len(links), 6)
+        self.assertEqual(len(links), 10)
         self.assertEqual(links, re.findall(r"href='#([\w-]+)'", indices[1]))
         for anchor in links:
             with self.subTest(anchor=anchor):
                 self.assertIn(anchor, anchors)
-
-    def test_sounding_sheets_exist(self) -> None:
-        """Cada píldora «Fichas en Datos» de Sondeo apunta a una ficha que existe."""
-        self.assertLessEqual(set(p_sounding.SHEETS), set(variables.BY_KEY))
 
     def test_phone_grid_is_one_column(self) -> None:
         """En el teléfono la grilla es de una columna, y la de escritorio sigue alcanzando para todos los paneles."""
