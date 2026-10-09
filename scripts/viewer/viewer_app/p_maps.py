@@ -354,9 +354,17 @@ def page() -> None:
         selection_mode="points", config={"scrollZoom": True},
     )  # fmt: skip
 
-    if any(c.threshold is not None for c in [*layer_list, *[c for c in contours if c]]):
+    for c in sorted(
+        {
+            (c.title, c.unit, c.threshold)
+            for c in [*layer_list, *[c for c in contours if c]]
+            if c.threshold is not None and not c.is_rgb
+        },
+        key=str,
+    ):
         st.caption(
-            "La línea roja marca el valor de comparación del índice; no confirma un tornado."
+            f"Línea roja: {c[0]} igual a {c[2]:g} {c[1]}, el valor de comparación citado para Chile. "
+            "Marca dónde se cruza ese valor; no confirma un tornado."
         )
     if goes_idx:
         st.caption(
