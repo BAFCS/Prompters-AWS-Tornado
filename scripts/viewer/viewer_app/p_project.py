@@ -395,7 +395,7 @@ def _data_section() -> None:
         "literatura científica y libros, e incluye los casos en que los autores consideran más probable que haya ocurrido un tornado o una tromba que lo contrario.\n\n"
         "**Qué trae.** 102 eventos entre 1554 y 2025, con posición, fecha, hora UTC y local, tipo (tornado, tromba o ambos), intensidad en la escala Fujita mejorada (EF), "
         "fenómenos acompañantes (ruido, granizo, tormenta eléctrica, daños) y víctimas. No trae una etiqueta directa de mesociclón. "
-        "El mapa de «El problema» muestra dónde están.\n\n"
+        "El mapa de «Problema» muestra dónde están.\n\n"
         "**Límites.** Solo tiene casos positivos: que no haya un reporte no prueba que no ocurriera un evento. Entra al catálogo lo que alguien vio y contó, "
         "así que hay más registros donde hay más gente. Varias horas vienen como rango o redondeadas, y la posición es la del daño observado, no la del mesociclón."
     )
@@ -457,8 +457,8 @@ def _volume() -> None:
         "| Caso de estudio (30 y 31 de mayo de 2019) | 2 | 22 GB | 1,4 GB | 3 GB |\n"
         "| Días con tornado, era GOES (desde 2018) | 38 | 418 GB | 27 GB | 57 GB |\n"
         "| Días con tornado, era ERA5 (desde 1940) | 70 | 770 GB | 27 GB (solo los 38 con GOES) | 59 GB |\n"
-        "| Casos y controles, era GOES (supuesto: 10 controles por caso) | 418 | 4,6 TB | 301 GB | 627 GB |\n"
-        "| Un año completo | 365 | 4,0 TB | 263 GB | 548 GB |\n"
+        "| Casos y controles, era GOES (supuesto: 10 controles por caso) | 418 | 4,6 TB | 293 GB | 627 GB |\n"
+        "| Un año completo | 365 | 4,0 TB | 256 GB | 548 GB |\n"
         "| Diez años (GOES existe en unos 8) | 3 650 | 40 TB | 2,1 TB | 4,4 TB |"
     )
     st.subheader("Cuánto tarda traerlo", anchor=False)
