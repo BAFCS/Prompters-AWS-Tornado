@@ -34,7 +34,7 @@ SECTIONS = (
     ("datos", "Los datos"),
     ("volumen", "El volumen de los datos"),
     ("decisiones", "Decisiones abiertas"),
-    ("participar", "Participar"),
+    ("participar", "Cómo participar"),
     ("glosario", "Anexo: glosario"),
 )
 
@@ -133,10 +133,7 @@ def _objective() -> None:
     st.subheader("Criterio de éxito", anchor=False)
     st.markdown(
         "Predicción de candidatos a mesociclones en el período 2026. Los candidatos serán evaluados por expertos en el área "
-        "y contrastados contra una base de datos actualizada de tornados.\n\n"
-        "Esa base de 2026 no es pública: la mantiene internamente el CR2 (Centro de Ciencia del Clima y la Resiliencia). "
-        "No está en el visor ni en el catálogo de 102 eventos, que llega a 2025. Por eso conviene **no usarla para entrenar** y reservarla "
-        "para evaluar el algoritmo a futuro: un modelo ajustado con los eventos hasta 2025 y probado con 2026 se evalúa sobre datos que no vio."
+        "y contrastados contra una base de datos actualizada de tornados."
     )
     st.markdown(
         "«Estimar qué tormentas pueden desarrollar un mesociclón» se puede leer de varias formas. "
@@ -249,7 +246,9 @@ def _decisions() -> None:
     )
     _decision(
         "¿Qué entrega el modelo y cómo se mide?",
-        "La salida y la métrica determinan qué se considera un buen resultado.",
+        "La salida y la métrica determinan qué se considera un buen resultado. Los candidatos de 2026 se contrastarán con una base de tornados "
+        "que mantiene internamente el CR2 (Centro de Ciencia del Clima y la Resiliencia). Esa base no es pública ni está en el catálogo, que llega a 2025, "
+        "así que conviene **no entrenar con 2026** y reservarlo para evaluar: un modelo ajustado con los eventos hasta 2025 se evalúa sobre datos que no vio.",
         [
             (
                 "Un puntaje por tormenta o celda",
@@ -357,7 +356,7 @@ def _stages() -> None:
                 unsafe_allow_html=True,
             )
     st.markdown(
-        '<p class="note">El esquema muestra cómo la rotación horizontal del entorno puede contribuir a la rotación dentro de una tormenta. La formación de un tornado requiere procesos adicionales cerca de la superficie; un mesociclón puede persistir sin producirlo. Las líneas rojas del esquema son la rotación: los rodillos horizontales y el giro del mesociclón.</p>',
+        '<p class="note">Las líneas rojas del esquema son la rotación: los rodillos horizontales y el giro del mesociclón.</p>',
         unsafe_allow_html=True,
     )
 
@@ -373,7 +372,7 @@ def _animation() -> None:
     _section(
         "mesociclones",
         "Mesociclones, supercélulas y tornados",
-        "Los tornados más intensos suelen formarse dentro de tormentas que giran, llamadas supercélulas.",
+        "Qué es un mesociclón y cómo el cambio del viento con la altura lo pone a girar.",
     )
     st.markdown(
         "Un mesociclón es una región de aire en rotación organizada dentro de una tormenta, de unos 2 a 10 km de diámetro. Una tormenta con un mesociclón persistente se denomina supercélula. Un tornado es un fenómeno de menor escala cuya circulación alcanza la superficie. Una supercélula puede desarrollar un tornado, pero esa evolución no es inevitable.",
@@ -415,7 +414,11 @@ def _catalog() -> None:
     cat = data.catalog()
     if cat.empty:
         # Sin el catálogo descargado queda la figura estática, que sí va en el repositorio.
-        st.image(str(FIGS / "fig1_catalog_map.png"), width="stretch")
+        _image(
+            FIGS / "fig1_catalog_map.png",
+            "Mapa de los 102 tornados y trombas marinas catalogados en Chile entre 1554 y 2025, con un histograma de latitud al costado. "
+            "Los eventos se concentran entre los 34° y 42°S y no hay ningún registro al sur de los 42,4°S.",
+        )
         st.markdown(CATALOG_TEXT, unsafe_allow_html=True)
         return
     picture, words = theme.columns([2, 3], "catalog")
@@ -532,7 +535,7 @@ def _data_section() -> None:
         "Repite el análisis para cada período con el mismo método, así que sus valores son comparables entre años. Se publica en una grilla de 0,25° "
         "(unos 31 km) con valores horarios, y su altura se describe con 37 niveles de presión.\n\n"
         "**Qué aporta al proyecto.** Viento, temperatura, humedad y altura de los niveles atmosféricos, además de CAPE y la inhibición convectiva (CIN), "
-        "la barrera energética para iniciar el ascenso. Con ellas se calculan la cizalladura y los índices. ERA5 describe el entorno donde nace la tormenta, no la tormenta misma.\n\n"
+        "la barrera energética para iniciar el ascenso. Con ellas se calculan la cizalladura y los índices.\n\n"
         "**Cuidado.** Sobre los Andes el nivel de 1000 hPa está bajo el terreno y sus valores son una extrapolación del modelo, "
         "así que la cizalladura de niveles bajos allí no es viento real."
     )
@@ -672,7 +675,7 @@ def _participate() -> None:
     """Propone tareas para quien quiera participar."""
     _section(
         "participar",
-        "Por dónde empezar",
+        "Cómo participar",
         "El proyecto está abierto a cualquier persona interesada. Para aportar no hace falta formación en meteorología.",
     )
     _cards(
@@ -729,16 +732,17 @@ _GLOSSARY = (
     ("ERA5", "Reanálisis atmosférico del ECMWF: reconstruye cómo estaba la atmósfera cada hora desde 1940."),
     ("Flujo óptico", "Técnica que estima el movimiento entre dos imágenes consecutivas."),
     ("GOES", "Satélites geoestacionarios de la NOAA; GOES-East observa Chile cada 10 minutos."),
-    ("HSLC", "Régimen de poca energía (CAPE baja) y mucha cizalladura, frecuente en los tornados de Chile. Los umbrales norteamericanos no sirven aquí."),
     ("hPa y nivel de presión", "La atmósfera se describe por niveles de presión: 850 hPa está a unos 1,5 km de altura y 500 hPa, a unos 5,5 km."),
+    ("HSLC", "Régimen de poca energía (CAPE baja) y mucha cizalladura, frecuente en los tornados de Chile. Los umbrales norteamericanos no sirven aquí."),
     ("Left-mover", "Tormenta que se desvía a la izquierda del viento medio. En el hemisferio sur es la rama favorecida y gira en sentido horario."),
     ("Mesociclón", "Rotación organizada dentro de una tormenta, de 2 a 10 km de diámetro."),
     ("Paralaje", "Desplazamiento aparente de un tope nuboso por verlo de lado desde el satélite: unos 21 km a 53°S para un tope de 12 km."),
+    ("PU learning", "Aprendizaje con positivos y datos no etiquetados: sirve cuando solo hay casos confirmados y un resto sin etiqueta, como en el catálogo."),
     ("Reanálisis", "Reconstrucción del estado de la atmósfera que combina un modelo con observaciones, repetida con el mismo método para todo el período."),
-    ("SRH, VGP, SHERBE y STP", "Índices que combinan viento y energía para señalar entornos favorables a tormentas con rotación. Cada uno tiene su ficha en Datos."),
+    ("SRH, VGP, SHERBE y STP", "Índices que combinan viento y energía para señalar entornos favorables a tormentas con rotación."),
     ("Subregistro", "Eventos que ocurrieron y no quedaron en el catálogo porque nadie los vio o los reportó."),
     ("Supercélula", "Tormenta con un mesociclón persistente."),
-    ("Temperatura de brillo", "Temperatura equivalente a la radiación infrarroja que recibe el satélite. Cuanto más fría, más alto el tope de la nube."),
+    ("Temperatura de brillo", "Temperatura equivalente a la radiación infrarroja que recibe el satélite. En un tope nuboso opaco, más fría suele indicar más altura, aunque depende del perfil térmico y de la nube."),
     ("Tope penetrante", "Cúpula que sobresale del yunque cuando la corriente ascendente pasa la tropopausa."),
     ("Tornado y tromba marina", "Columna de aire en rotación en contacto con el suelo (tornado) o con el agua (tromba). La escala EF mide su intensidad."),
     ("Tropopausa", "Límite entre la troposfera, donde ocurre el tiempo, y la estratosfera."),

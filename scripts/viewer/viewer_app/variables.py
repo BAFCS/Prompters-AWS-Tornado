@@ -576,7 +576,7 @@ VARIABLES = (
         "acelerar tiene una cizalladura grande.",
         formula=r"\mathrm{BWD}_{0\text{–}1} = \left|\vec V(1\ \mathrm{km}) - \vec V(10\ \mathrm{m})\right|",
         method="El visor interpola el perfil cada 100 m sobre el terreno, partiendo del viento a 10 m.",
-        threshold="12 m/s es el valor de comparación citado para los días tornádicos estudiados en Chile. "
+        threshold="12 m/s es la menor cizalladura de 0–1 km observada en el brote tornádico de mayo de 2019 en Chile. "
         "Cumplirlo describe el entorno; no confirma un tornado.",
         inputs=('viento', 'viento10', 'z', 'sp'),
         products=('idx:shear_01',),
