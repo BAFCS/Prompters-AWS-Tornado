@@ -5,7 +5,7 @@ import dataclasses
 import pandas as pd
 import streamlit as st
 
-from viewer_app import charts, colorscales, components, data, layers, products, state, texts
+from viewer_app import charts, colorscales, components, data, layers, layout, products, state, texts
 
 
 def _on_row_select() -> None:
@@ -128,8 +128,7 @@ def _toc(has_context: bool) -> str:
         ("indices", "Índices del entorno"),
         ("limites", "Límites de este análisis"),
     ]
-    links = "".join(f"<li><a href='#{a}'>{t}</a></li>" for a, t in items)
-    return f"<nav class='toc' aria-label='En esta página'><ol>{links}</ol></nav>"
+    return layout.toc(items)
 
 
 def _summary(ctx: state.Context) -> None:
@@ -207,11 +206,4 @@ def page() -> None:
     c = texts.case_for(ctx.day.date, len(ctx.events))
     t = state.current_time()
     toc = _toc(bool(c.context))
-    with st.container(key="case"), st.container(horizontal=True, wrap=False, gap="large"):
-        with st.container(key="case_body"):
-            with st.expander("En esta página", key="toc_compact", icon=":material/toc:"):
-                st.markdown(toc, unsafe_allow_html=True)
-            _body(ctx, c, None if t is None else pd.Timestamp(t))
-        with st.container(width=220, key="toc_side"):
-            st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
-            st.markdown(toc, unsafe_allow_html=True)
+    layout.page("case", toc, lambda: _body(ctx, c, None if t is None else pd.Timestamp(t)))

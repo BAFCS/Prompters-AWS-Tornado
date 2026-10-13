@@ -10,7 +10,7 @@ import html
 
 import streamlit as st
 
-from viewer_app import products, state, theme, variables
+from viewer_app import layout, products, state, theme, variables
 from viewer_app.variables import Variable
 
 
@@ -255,11 +255,4 @@ def _body() -> None:
 
 def page() -> None:
     """Dibuja la página con el índice al costado (o desplegable arriba en pantallas angostas)."""
-    with st.container(key="data"), st.container(horizontal=True, wrap=False, gap="large"):
-        with st.container(key="data_body"):
-            with st.expander("En esta página", key="toc_compact", icon=":material/toc:"):
-                st.markdown(_toc(), unsafe_allow_html=True)
-            _body()
-        with st.container(width=220, key="toc_side"):
-            st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
-            st.markdown(_toc(), unsafe_allow_html=True)
+    layout.page("data", _toc(), _body)

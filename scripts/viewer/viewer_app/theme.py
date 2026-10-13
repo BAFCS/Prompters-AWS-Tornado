@@ -333,23 +333,23 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 .notice {{ border: 1px solid {p.LINE}; background: {p.SURFACE}; padding: 14px 18px; margin: 1rem 0;
   border-radius: var(--radius); line-height: 1.5; max-width: var(--measure); }}
 [class*="st-key-sheet_"] {{ background: {p.SURFACE}; max-width: var(--measure); }}
-:is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) {{ padding-top: 1.6rem; max-width: 1400px; container: project / inline-size; }}
+[class*="st-key-page_"] {{ padding-top: 1.6rem; max-width: 1400px; container: page / inline-size; }}
 /* El cuerpo es su propio contenedor: tarjetas y cifras se acomodan al espacio que les deja el índice. */
-:is(.st-key-project_body, .st-key-data_body, .st-key-case_body, .st-key-starter_body) {{ container: body / inline-size; }}
-/* Cuerpo de Datos y Caso de estudio: el mismo ancho de lectura aunque el índice quede arriba. */
-:is(.st-key-data_body, .st-key-case_body, .st-key-starter_body) {{ max-width: var(--measure); }}
-:is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) h1, :is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) h2, :is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) h3 {{ scroll-margin-top: var(--anchor-offset); }}
-:is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) [data-testid="stHeading"] {{ max-width: var(--measure); }}  /* en el contenedor, no en h1-h3: el ch depende del cuerpo de la fuente */
+[class*="st-key-pagebody_"] {{ container: body / inline-size; }}
+/* Cuerpo de las páginas de lectura salvo Problema: el mismo ancho de lectura aunque el índice quede arriba. */
+[class*="st-key-pagebody_"]:not(.st-key-pagebody_project) {{ max-width: var(--measure); }}
+[class*="st-key-page_"] h1, [class*="st-key-page_"] h2, [class*="st-key-page_"] h3 {{ scroll-margin-top: var(--anchor-offset); }}
+[class*="st-key-page_"] [data-testid="stHeading"] {{ max-width: var(--measure); }}  /* en el contenedor, no en h1-h3: el ch depende del cuerpo de la fuente */
 /* Imagen de portada: más chica, centrada, con su nota centrada debajo. */
-.st-key-project [class*="st-key-hero"] {{ max-width: 40rem; margin-inline: auto; }}
-.st-key-project [class*="st-key-hero"] .note {{ text-align: center; max-width: none; }}
+.st-key-page_project [class*="st-key-hero"] {{ max-width: 40rem; margin-inline: auto; }}
+.st-key-page_project [class*="st-key-hero"] .note {{ text-align: center; max-width: none; }}
 /* La prosa conserva una medida cómoda; las figuras y tablas usan todo el ancho. */
-[data-testid="stMain"] :is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) [data-testid="stMarkdownContainer"] > p,
-[data-testid="stMain"] :is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) [data-testid="stMarkdownContainer"] li,
-:is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) .lede {{ max-width: var(--measure); }}
-[data-testid="stMain"] :is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] > p,
-[data-testid="stMain"] :is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] li,
-:is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) .note {{ max-width: var(--measure); }}
+[data-testid="stMain"] [class*="st-key-page_"] [data-testid="stMarkdownContainer"] > p,
+[data-testid="stMain"] [class*="st-key-page_"] [data-testid="stMarkdownContainer"] li,
+[class*="st-key-page_"] .lede {{ max-width: var(--measure); }}
+[data-testid="stMain"] [class*="st-key-page_"] [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] > p,
+[data-testid="stMain"] [class*="st-key-page_"] [class*="st-key-sheet_"] [data-testid="stMarkdownContainer"] li,
+[class*="st-key-page_"] .note {{ max-width: var(--measure); }}
 /* Índice: columna fija a la derecha si la página mide 880 px o más; si no, desplegable arriba. */
 /* Streamlit 1.64 envuelve el contenedor de ancho fijo en un stLayoutWrapper: ese es el que se oculta y
    se fija (selectores internos; revisarlos al actualizar Streamlit). El contenedor también se oculta
@@ -359,20 +359,20 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 .st-key-toc_side {{ display: none; }}
 /* El bloque horizontal trae overflow: auto, que vuelve inútil el sticky de su hijo. */
 [data-testid="stHorizontalBlock"]:has(> [data-testid="stLayoutWrapper"] > .st-key-toc_side) {{ overflow: visible; }}
-@container project (min-width: 880px) {{
+@container page (min-width: 880px) {{
   [data-testid="stLayoutWrapper"]:has(> .st-key-toc_side), .st-key-toc_side {{ display: flex; }}
   .st-key-toc_compact {{ display: none; }}
 }}
 /* Tarjetas: grilla de n columnas que baja a una cuando el cuerpo es angosto. */
-:is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) [class*="st-key-cards"] {{ display: grid; gap: 1rem; align-items: stretch; max-width: var(--measure); }}
-:is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) [class*="st-key-cards3_"] {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
-:is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) [class*="st-key-cards2_"] {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-:is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) [class*="st-key-cards"] > * {{ width: auto; height: 100%; }}
+[class*="st-key-page_"] [class*="st-key-cards"] {{ display: grid; gap: 1rem; align-items: stretch; max-width: var(--measure); }}
+[class*="st-key-page_"] [class*="st-key-cards3_"] {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+[class*="st-key-page_"] [class*="st-key-cards2_"] {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+[class*="st-key-page_"] [class*="st-key-cards"] > * {{ width: auto; height: 100%; }}
 @container body (max-width: 760px) {{
-  :is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) [class*="st-key-cards3_"] {{ grid-template-columns: minmax(0, 1fr); }}
+  [class*="st-key-page_"] [class*="st-key-cards3_"] {{ grid-template-columns: minmax(0, 1fr); }}
 }}
 @container body (max-width: 520px) {{
-  :is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) [class*="st-key-cards2_"] {{ grid-template-columns: minmax(0, 1fr); }}
+  [class*="st-key-page_"] [class*="st-key-cards2_"] {{ grid-template-columns: minmax(0, 1fr); }}
 }}
 /* Ficha de variable: riel con la identidad a la izquierda y el cuerpo a la derecha; se apila en cuerpo angosto. */
 [class*="st-key-sheet_v_"] {{ display: grid; grid-template-columns: 13rem minmax(0, 1fr); column-gap: 1.5rem; align-items: start; }}
@@ -389,8 +389,8 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 /* La ficha no se encoge bajo ~400 px: en teléfono se desplaza dentro de su caja, no la página entera. */
 [data-testid="stHtml"]:has(> .scorecard), [data-testid="stHtml"]:has(> * > .scorecard) {{ overflow-x: auto; }}
 /* Cifras de la portada: cuatro en fila o dos por dos, nunca una fila a medias. */
-:is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) .stats {{ grid-template-columns: repeat(4, 1fr); }}
-@container body (max-width: 760px) {{ :is(.st-key-project, .st-key-data, .st-key-case, .st-key-starter) .stats {{ grid-template-columns: repeat(2, 1fr); }} }}
+[class*="st-key-page_"] .stats {{ grid-template-columns: repeat(4, 1fr); }}
+@container body (max-width: 760px) {{ [class*="st-key-page_"] .stats {{ grid-template-columns: repeat(2, 1fr); }} }}
 .var-table-wrap {{ max-width: var(--measure); overflow-x: auto; border: 1px solid {p.LINE}; border-radius: var(--radius); background: {p.SURFACE}; }}
 .var-table {{ width: 100%; border-collapse: collapse; font-size: 0.9rem; }}
 .var-table th {{ text-align: left; padding: 8px 12px; color: {p.INK_2}; border-bottom: 1px solid {p.LINE}; }}

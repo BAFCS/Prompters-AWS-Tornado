@@ -3,16 +3,14 @@
 Los dos diagramas viven en ``diagrams.py``. Esta página no usa datos: se muestra aunque no haya recortes.
 """
 
-import html
 import re
 import time
 from pathlib import Path
-from typing import Literal
 
 import streamlit as st
 
 import common
-from viewer_app import charts, data, diagrams, state, theme
+from viewer_app import charts, data, diagrams, layout, state, theme
 
 DOCUMENT = "https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md"
 REPOSITORY = "https://github.com/fforster/aws-mesocyclonic"
@@ -22,7 +20,6 @@ GOES = "https://www.goes-r.gov/"
 OPEN_DATA = "https://registry.opendata.aws/"
 FIGS = common.ROOT / "figs"
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
-Color = Literal["orange", "primary"]
 # Secciones del índice: (ancla del encabezado, texto del enlace).
 SECTIONS = (
     ("inicio", "Inicio"),
@@ -39,13 +36,6 @@ SECTIONS = (
 )
 
 
-def _section(anchor: str, title: str, subtitle: str) -> None:
-    """Encabezado de sección: título con ``anchor`` para el índice y una frase de contexto."""
-    st.divider()
-    st.header(title, anchor=anchor)
-    st.markdown(f"<p class='lede'>{subtitle}</p>", unsafe_allow_html=True)
-
-
 def _links(key: str) -> None:
     """Botones al documento completo y al repositorio."""
     with st.container(horizontal=True, gap="small"):  # cada botón a su ancho; se parten si no caben
@@ -54,39 +44,11 @@ def _links(key: str) -> None:
         st.link_button("Repositorio", REPOSITORY, key=f"{key}_repo", icon=":material/code:")
 
 
-def _image(source: Path | str, description: str, key: str | None = None) -> None:
-    """Conserva el visor de imagen nativo y publica su descripción para el vigía del tema."""
-    key = key or (
-        source.stem
-        if isinstance(source, Path)
-        else ("mesocyclone" if "mcSvg" in source else "cape")
-    )
-    with st.container(key=f"image_{key}"):
-        st.image(str(source) if isinstance(source, Path) else source, width="stretch")
-        st.html(
-            f'<span class="project-image-alt" data-description="{html.escape(description, quote=True)}" hidden></span>'
-        )
-
-
-def _cards(key: str, cards: list[tuple[str, Color, str, str]], n_columns: int = 2) -> None:
-    """Tarjetas en una grilla: (insignia, color de la insignia, título, texto).
-
-    La grilla la arma el CSS de ``theme.py`` (clave ``cards<n>_``): ``n_columns`` con ancho de sobra
-    y menos columnas cuando la página es angosta, en vez de columnas que solo se apilan en teléfono.
-    """
-    with st.container(horizontal=True, key=f"cards{n_columns}_{key}"):
-        for i, (badge, color, title, text) in enumerate(cards):
-            with st.container(border=True, key=f"sheet_{key}_{i}"):
-                st.badge(badge, color=color)
-                st.markdown(f"**{title}**")
-                st.markdown(text)
-
-
 def _cover() -> None:
     """Presenta el objetivo, las referencias del caso y los enlaces."""
     st.title("Predicción de tormentas mesociclónicas en el centro-sur de Chile", anchor="inicio")
     with st.container(key="hero"):
-        _image(
+        layout.image(
             ASSETS / "tornado_los_angeles.webp",
             "Tornado en Los Ángeles, Chile, el 30 de mayo de 2019: el embudo toca el suelo y hay escombros en el aire.",
         )
@@ -125,7 +87,7 @@ def _decision(title: str, question: str, options: list[tuple[str, str]], hint: s
 
 def _objective() -> None:
     """Objetivo y criterio de éxito; las decisiones abiertas van en ``_decisions``."""
-    _section(
+    layout.section(
         "objetivo",
         "Objetivo",
         "El objetivo del proyecto es estimar qué tormentas del centro-sur de Chile pueden desarrollar un mesociclón mediante datos de ERA5 y GOES.",
@@ -144,7 +106,7 @@ def _objective() -> None:
 
 def _decisions() -> None:
     """Las decisiones que el proyecto deja a quienes lo desarrollen, con opciones y una sugerencia."""
-    _section(
+    layout.section(
         "decisiones",
         "Decisiones abiertas",
         "Con los datos y su costo a la vista, quedan las decisiones de diseño: seis que cambian qué datos se preparan, qué modelo se entrena y cómo se evalúa.",
@@ -265,13 +227,13 @@ def _decisions() -> None:
 
 def _importance() -> None:
     """Por qué importa: sin radares ni alertas, muchos tornados pasan desapercibidos."""
-    _section(
+    layout.section(
         "importancia",
         "Por qué importa",
         "Un radar meteorológico mide dónde llueve y, con el efecto Doppler, hacia dónde se mueve la lluvia. Con eso se ve cómo gira una tormenta antes de que baje un tornado. Chile no tiene hoy una red de radares, así que esa información no existe ni para avisar ni para estudiar lo ocurrido.",
     )
     with st.container(key="hero_radar"):
-        _image(
+        layout.image(
             ASSETS / "weather_station.webp",
             "Radar meteorológico con su cúpula blanca sobre una ladera boscosa de montaña.",
         )
@@ -342,13 +304,15 @@ def _stages() -> None:
     # Con poco ancho las columnas se apilan: el esquema queda arriba y la descripción debajo.
     picture, words = theme.columns([3, 2], "stages")
     with picture:
-        _image(diagrams.mesocyclone(stage), f"Formación de un mesociclón. Etapa {title}. {text}")
+        layout.image(
+            diagrams.mesocyclone(stage), f"Formación de un mesociclón. Etapa {title}. {text}"
+        )
     with words:
         st.markdown(f"**:primary[{title}]**")
         st.markdown(text)
     if stage == 4:
         with st.container(key="hero_plan"):
-            _image(diagrams.plan_view(), _PLAN_ALT, key="plan")
+            layout.image(diagrams.plan_view(), _PLAN_ALT, key="plan")
             st.markdown(
                 "<p class='note'>Visto desde arriba, el mesociclón ciclónico de Chile gira en sentido horario y se asocia "
                 "a una tormenta <em>left-mover</em>. En Estados Unidos ocurre al revés. Por eso los signos de los índices "
@@ -369,7 +333,7 @@ _PLAN_ALT = (
 
 def _animation() -> None:
     """Mesociclogénesis en cuatro etapas: el usuario elige la etapa; los rodillos giran solos."""
-    _section(
+    layout.section(
         "mesociclones",
         "Mesociclones, supercélulas y tornados",
         "Qué es un mesociclón y cómo el cambio del viento con la altura lo pone a girar.",
@@ -406,7 +370,7 @@ CATALOG_TEXT = (
 
 def _catalog() -> None:
     """Muestra el catálogo en un mapa y explica sus limitaciones."""
-    _section(
+    layout.section(
         "catalogo",
         "Un catálogo de eventos reportados, sin casos negativos confirmados",
         "El catálogo reúne 102 tornados y trombas marinas entre 1554 y 2025, tomados de crónicas coloniales, prensa, redes sociales, literatura científica y libros. Cada evento está ahí porque alguien lo observó y alguien lo documentó. Un lugar o una fecha sin registro puede significar que no ocurrió nada, o que nadie estaba mirando.",
@@ -414,7 +378,7 @@ def _catalog() -> None:
     cat = data.catalog()
     if cat.empty:
         # Sin el catálogo descargado queda la figura estática, que sí va en el repositorio.
-        _image(
+        layout.image(
             FIGS / "fig1_catalog_map.png",
             "Mapa de los 102 tornados y trombas marinas catalogados en Chile entre 1554 y 2025, con un histograma de latitud al costado. "
             "Los eventos se concentran entre los 34° y 42°S y no hay ningún registro al sur de los 42,4°S.",
@@ -442,12 +406,12 @@ def _catalog() -> None:
 
 def _chile() -> None:
     """Explica el régimen HSLC, el signo austral y los criterios propuestos para Chile."""
-    _section(
+    layout.section(
         "chile",
         "Por qué Chile es distinto",
         "Según Vicencio et al. (2021), con el umbral clásico del STP, el índice de referencia en Estados Unidos, el brote de 2019 habría pasado inadvertido.",
     )
-    _cards(
+    layout.cards(
         "chile",
         [
             (
@@ -470,7 +434,7 @@ def _chile() -> None:
         ],
     )
     with st.container(border=True, key="sheet_cape"):
-        _image(
+        layout.image(
             diagrams.cape_shear(),
             "Esquema de CAPE frente a cizalladura: los casos chilenos de mayo de 2019 combinan poca energía convectiva con mucho cambio del viento en el primer kilómetro.",
         )
@@ -516,13 +480,13 @@ _BANDS_TABLE = """| Banda | λ central (µm) | Tipo | Apodo | Resolución |
 def _figure(file: str, caption: str) -> None:
     """Figura del caso de 2019 en su ficha, con el pie en nota."""
     with st.container(border=True, key=f"sheet_{file[:4]}"):
-        _image(FIGS / file, re.sub(r"<[^>]+>", "", caption))
+        layout.image(FIGS / file, re.sub(r"<[^>]+>", "", caption))
         st.markdown(f"<p class='note'>{caption}</p>", unsafe_allow_html=True)
 
 
 def _data_section() -> None:
     """Describe cada fuente de datos (ERA5, GOES, catálogo) y la escala de sus celdas."""
-    _section(
+    layout.section(
         "datos",
         "Tres fuentes de datos para estudiar las tormentas",
         "ERA5 reconstruye el estado de la atmósfera, GOES la observa desde el espacio y el catálogo reúne los eventos reportados con los que se comparan ambas.",
@@ -582,7 +546,7 @@ def _data_section() -> None:
         "Por eso ERA5 describe el entorno de la tormenta y no su rotación. GOES, con píxeles de unos 2 km, ve la nube pero no el giro."
     )
     with st.container(key="hero_scale"):
-        _image(diagrams.scale(), _SCALE_ALT, key="scale")
+        layout.image(diagrams.scale(), _SCALE_ALT, key="scale")
         st.markdown(
             "<p class='note'>Escala lineal: una celda de ERA5 con una cuadrícula de píxeles de GOES y un mesociclón dibujados al mismo tamaño que tendrían sobre el terreno.</p>",
             unsafe_allow_html=True,
@@ -591,7 +555,7 @@ def _data_section() -> None:
 
 def _volume() -> None:
     """Cuánto pesan los datos por día y por subconjunto, y por qué hay que trabajarlos dentro de AWS."""
-    _section(
+    layout.section(
         "volumen",
         "El volumen de los datos",
         "Un día de ERA5 y GOES pesa decenas de gigabytes en origen y deja poco más de uno en disco. "
@@ -673,12 +637,12 @@ def _volume() -> None:
 
 def _participate() -> None:
     """Propone tareas para quien quiera participar."""
-    _section(
+    layout.section(
         "participar",
         "Cómo participar",
         "El proyecto está abierto a cualquier persona interesada. Para aportar no hace falta formación en meteorología.",
     )
-    _cards(
+    layout.cards(
         "tasks",
         [
             (
@@ -752,7 +716,7 @@ _GLOSSARY = (
 
 def _glossary() -> None:
     """Anexo con los términos que el texto usa sin definir en cada mención."""
-    _section(
+    layout.section(
         "glosario",
         "Anexo: glosario",
         "Los términos técnicos de esta página, en orden alfabético. Cada variable tiene además su ficha en Datos.",
@@ -760,34 +724,21 @@ def _glossary() -> None:
     st.markdown("\n".join(f"- **{term}.** {text}" for term, text in _GLOSSARY))
 
 
-def _toc() -> str:
-    """El índice de la página como lista de enlaces a las anclas de ``SECTIONS``."""
-    links = "".join(f"<li><a href='#{anchor}'>{text}</a></li>" for anchor, text in SECTIONS)
-    return f"<nav class='toc' aria-label='En esta página'><ol>{links}</ol></nav>"
-
-
 def page() -> None:
-    """Dibuja el cuerpo de la página y su índice.
+    """Dibuja la página con su índice."""
+    layout.page("project", layout.toc(SECTIONS), _body)
 
-    Con ancho de sobra el índice va en una columna fija a la derecha; en pantallas más angostas
-    (tablet, teléfono) se ve un desplegable sobre el cuerpo. El CSS de ``theme.py`` elige cuál mostrar
-    según el ancho de ``.st-key-project`` (880 px).
-    """
-    with st.container(key="project"), st.container(horizontal=True, wrap=False, gap="large"):
-        with st.container(key="project_body"):
-            with st.expander("En esta página", key="toc_compact", icon=":material/toc:"):
-                st.markdown(_toc(), unsafe_allow_html=True)
-            _cover()
-            _objective()
-            _importance()
-            _animation()
-            _chile()
-            _catalog()
-            _data_section()
-            _volume()
-            _decisions()
-            _participate()
-            _glossary()
-        with st.container(width=220, key="toc_side"):
-            st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
-            st.markdown(_toc(), unsafe_allow_html=True)
+
+def _body() -> None:
+    """Todas las secciones, en orden."""
+    _cover()
+    _objective()
+    _importance()
+    _animation()
+    _chile()
+    _catalog()
+    _data_section()
+    _volume()
+    _decisions()
+    _participate()
+    _glossary()

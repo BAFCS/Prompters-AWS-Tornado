@@ -6,8 +6,8 @@ No usa datos: se muestra aunque no haya recortes.
 
 import streamlit as st
 
-from viewer_app import diagrams, state, variables
-from viewer_app.p_project import REPOSITORY, _cards, _image, _section
+from viewer_app import diagrams, layout, state, variables
+from viewer_app.p_project import REPOSITORY
 
 # Secciones del índice: (ancla del encabezado, texto del enlace).
 SECTIONS = (
@@ -117,7 +117,7 @@ def _cover() -> None:
 
 def _buckets() -> None:
     """Los buckets públicos de ERA5 y GOES, con su región, y las fuentes que no están en AWS."""
-    _section(
+    layout.section(
         "buckets",
         "Dónde están los datos",
         "ERA5 y GOES están en buckets públicos de Amazon S3 y se leen sin credenciales. ERA5 está en la "
@@ -146,7 +146,7 @@ def _buckets() -> None:
 
 def _scripts() -> None:
     """Qué hace cada script del repositorio y qué deja."""
-    _section(
+    layout.section(
         "scripts",
         "Los scripts",
         "Estos scripts bajan, recortan y procesan los datos que usa el visor.",
@@ -174,13 +174,13 @@ def _scripts() -> None:
 
 def _architecture() -> None:
     """El diagrama de la arquitectura, qué servicio va en cada etapa, permisos y costos."""
-    _section(
+    layout.section(
         "arquitectura",
         "Arquitectura",
         "Lo del equipo vive en us-west-2, junto a ERA5.",
     )
     with st.container(border=True, key="sheet_architecture"):
-        _image(diagrams.architecture(), _ARCH_ALT, key="architecture")
+        layout.image(diagrams.architecture(), _ARCH_ALT, key="architecture")
         st.markdown(
             "<p class='note'>Las cifras son por día de datos de la región por defecto. Las cajas y flechas "
             "resaltadas son lo que maneja el equipo; las flechas grises, la lectura de los buckets "
@@ -217,7 +217,7 @@ def _architecture() -> None:
 
 def _cloud() -> None:
     """Cómo correr todo dentro de AWS: la máquina, la descarga y cómo abrir el visor."""
-    _section(
+    layout.section(
         "nube",
         "Trabajar en AWS",
         "Tres pasos: preparar una máquina EC2, bajar los datos y abrir el visor desde tu navegador.",
@@ -259,7 +259,7 @@ def _cloud() -> None:
 
 def _training_data() -> None:
     """Formatos para pasar de los recortes a un modelo, y dónde entrenar."""
-    _section(
+    layout.section(
         "entrenar",
         "Datos para entrenar",
         "Los recortes en NetCDF sirven para explorar día a día. Para entrenar conviene reorganizarlos según "
@@ -293,7 +293,7 @@ def _training_data() -> None:
 
 def _next_steps() -> None:
     """La definición del problema que falta cerrar y las primeras tareas."""
-    _section(
+    layout.section(
         "pasos",
         "Próximos pasos",
         "Antes de entrenar hay que decidir qué se predice. Problema detalla cada decisión con sus opciones.",
@@ -330,12 +330,12 @@ def _next_steps() -> None:
 
 def _explore() -> None:
     """Líneas de trabajo abiertas, del documento (sección 8) y de lo que el repositorio no hace todavía."""
-    _section(
+    layout.section(
         "explorar",
         "Ideas para explorar",
         "Líneas abiertas que el repositorio todavía no cubre, ordenadas de menor a mayor dificultad.",
     )
-    _cards(
+    layout.cards(
         "explore",
         [
             ("Intermedia", "primary", "Corregir el paralaje",
@@ -378,7 +378,7 @@ def _link(url: str) -> str:
 
 def _related() -> None:
     """Referencias agrupadas por tema, desde la bibliografía compartida de ``variables``."""
-    _section(
+    layout.section(
         "relacionados",
         "Trabajos relacionados",
         "Dónde buscar cómo se ha abordado el mismo problema, en Chile y en otros lugares.",
@@ -393,27 +393,19 @@ def _related() -> None:
     )
 
 
-def _toc() -> str:
-    """El índice de la página como lista de enlaces a las anclas de ``SECTIONS``."""
-    links = "".join(f"<li><a href='#{anchor}'>{text}</a></li>" for anchor, text in SECTIONS)
-    return f"<nav class='toc' aria-label='En esta página'><ol>{links}</ol></nav>"
-
-
 def page() -> None:
-    """Dibuja la página con el índice al costado (o desplegable arriba en pantallas angostas)."""
-    with st.container(key="starter"), st.container(horizontal=True, wrap=False, gap="large"):
-        with st.container(key="starter_body"):
-            with st.expander("En esta página", key="toc_compact", icon=":material/toc:"):
-                st.markdown(_toc(), unsafe_allow_html=True)
-            _cover()
-            _buckets()
-            _scripts()
-            _architecture()
-            _cloud()
-            _training_data()
-            _next_steps()
-            _explore()
-            _related()
-        with st.container(width=220, key="toc_side"):
-            st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
-            st.markdown(_toc(), unsafe_allow_html=True)
+    """Dibuja la página con su índice."""
+    layout.page("starter", layout.toc(SECTIONS), _body)
+
+
+def _body() -> None:
+    """Todas las secciones, en orden."""
+    _cover()
+    _buckets()
+    _scripts()
+    _architecture()
+    _cloud()
+    _training_data()
+    _next_steps()
+    _explore()
+    _related()
