@@ -137,10 +137,17 @@ deja el visor en el puerto 8501, abierto solo a `allowed_cidr` porque Streamlit 
 Sin SSH: se entra con `aws ssm start-session`. Los recortes se generan en la misma máquina y quedan en
 `/opt/mesocyclonic/data`.
 
+Para entrar hace falta el plugin Session Manager de la AWS CLI. `repo` solo cuenta al crear la máquina;
+después el código se actualiza con `deploy/up.sh`. Si el primer arranque falla, el registro está en
+`/var/log/cloud-init-output.log`.
+
 ```bash
-cd deploy && terraform init && terraform apply -var allowed_cidr=$(curl -s ifconfig.me)/32
+cd deploy && terraform init && terraform apply -var allowed_cidr=$(curl -4 -s ifconfig.me)/32
 aws ssm start-session --region us-west-2 --target $(terraform output -raw instance_id)
-# dentro: cd /opt/mesocyclonic && sudo docker exec viewer python scripts/pipeline/download_era5.py --start 2019-05-30
+# dentro de la máquina:
+sudo /opt/mesocyclonic/deploy/up.sh    # trae el código nuevo y reinicia el visor
+# en segundo plano, para que no se corte con la sesión:
+sudo docker exec -d viewer sh -c 'python scripts/pipeline/download_era5.py --start 2019-05-30 > data/download_era5.log 2>&1'
 ```
 
 ## Datos

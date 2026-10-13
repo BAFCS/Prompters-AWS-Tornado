@@ -79,14 +79,22 @@ resource "aws_instance" "viewer" {
     repo_url = var.repo.url, branch = var.repo.branch
   })
 
-  # Los recortes viven en el disco raíz (/opt/mesocyclonic/data); crecer el volumen no rehace la máquina.
+  # Los recortes viven en el disco raíz (/opt/mesocyclonic/data), ~1,5 GB por día: 60 GB alcanzan
+  # para unos 30 días. Crecer el volumen no rehace la máquina.
   root_block_device {
     volume_size = 60
     volume_type = "gp3"
   }
 
   metadata_options {
-    http_tokens = "required"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1 # los contenedores no ven las credenciales de la máquina
+  }
+
+  # Una AMI nueva o un cambio de repo reemplazarían la máquina y con ella los recortes. El código se
+  # actualiza dentro con deploy/up.sh.
+  lifecycle {
+    ignore_changes = [ami, user_data]
   }
 
   tags = { Name = "mesocyclonic-viewer" }
