@@ -200,7 +200,7 @@ def _decisions() -> None:
             ),
             (
                 "Con GOES desde 2017",
-                "Ve la nube, pero solo cubre desde fines de 2017.",
+                "Ve la nube y no solo su entorno, pero abarca menos años: 50 eventos desde 2018.",
             ),
             ("No hacerlo", "Concentra el trabajo en un solo objetivo."),
         ],
@@ -305,7 +305,9 @@ def _stages() -> None:
     picture, words = theme.columns([3, 2], "stages")
     with picture:
         layout.image(
-            diagrams.mesocyclone(stage), f"Formación de un mesociclón. Etapa {title}. {text}"
+            diagrams.mesocyclone(stage),
+            f"Formación de un mesociclón. Etapa {title}. {text}",
+            key="mesocyclone",
         )
     with words:
         st.markdown(f"**:primary[{title}]**")
@@ -437,6 +439,7 @@ def _chile() -> None:
         layout.image(
             diagrams.cape_shear(),
             "Esquema de CAPE frente a cizalladura: los casos chilenos de mayo de 2019 combinan poca energía convectiva con mucho cambio del viento en el primer kilómetro.",
+            key="cape",
         )
         st.markdown(
             "<p class='note'>Esquema de CAPE frente a cizalladura de 0–1 km. Los casos de mayo de 2019 quedan en la zona de poca energía y mucho viento. "

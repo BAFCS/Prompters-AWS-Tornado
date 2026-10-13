@@ -10,8 +10,10 @@ import math
 from viewer_app import theme
 
 _TEXT = (
-    f"text{{font-family:{theme.MONO}; font-size:12px; fill:var(--muted)}}"
-    " text.lbl{font-size:12.5px; fill:var(--ink-2)}"
+    f"text{{font-family:{theme.MONO}; font-size:12px}}"
+    # Sin ``:not([fill])`` la regla taparía el atributo ``fill`` de cada texto (el CSS gana).
+    " text:not([fill]){fill:var(--muted)} text.lbl:not([fill]){fill:var(--ink-2)}"
+    " text.lbl{font-size:12.5px}"
     f" text.big{{font-family:{theme.SANS}; font-size:14px; font-weight:600}}"
 )
 

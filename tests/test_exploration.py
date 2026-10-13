@@ -67,13 +67,13 @@ class ExplorationTest(unittest.TestCase):
     def test_every_image_publishes_a_description(self) -> None:
         """Cada imagen emite el marcador que el vigía usa para su texto alternativo."""
         with patch.object(layout, "st") as st_mock:
-            layout.image("<svg/>", 'Dice "algo" <b>')
+            layout.image("<svg/>", 'Dice "algo" <b>', key="cape")
         html_arg = st_mock.html.call_args.args[0]
         self.assertIn('class="project-image-alt"', html_arg)
         self.assertIn("data-description=", html_arg)
-        self.assertIn(
-            st_mock.container.call_args.kwargs["key"], {"image_cape", "image_mesocyclone"}
-        )
+        self.assertEqual(st_mock.container.call_args.kwargs["key"], "image_cape")
+        with self.assertRaises(ValueError):
+            layout.image("<svg/>", "Sin clave")
 
     def test_leaving_tour_restores_free_exploration(self) -> None:
         """Salir devuelve paneles, punto y hora previos al recorrido."""

@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "pipeli
 import download_era5  # noqa: E402
 import process_era5  # noqa: E402
 
-from viewer_app import products, variables  # noqa: E402
+from viewer_app import p_starter, products, variables  # noqa: E402
 
 
 def _page() -> None:
@@ -45,6 +45,12 @@ class VariablesTest(unittest.TestCase):
                 refs = variables.references_of(v)
                 self.assertTrue(refs)
                 self.assertTrue(set(refs) <= set(variables.REFERENCES))
+
+    def test_starter_related_references_exist(self) -> None:
+        """Los trabajos relacionados de Starter kit salen de la bibliografía compartida."""
+        for title, keys in p_starter.RELATED:
+            with self.subTest(group=title):
+                self.assertTrue(set(keys) <= set(variables.REFERENCES))
 
     def test_every_viewer_product_has_a_variable(self) -> None:
         """Cada índice, banda y derivado que puede mostrar Mapas tiene su ficha (la ayuda sale de ahí)."""

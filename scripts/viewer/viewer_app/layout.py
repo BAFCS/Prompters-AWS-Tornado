@@ -23,12 +23,14 @@ def section(anchor: str, title: str, subtitle: str) -> None:
 
 
 def image(source: Path | str, description: str, key: str | None = None) -> None:
-    """Conserva el visor de imagen nativo y publica su descripción para el vigía del tema."""
-    key = key or (
-        source.stem
-        if isinstance(source, Path)
-        else ("mesocyclone" if "mcSvg" in source else "cape")
-    )
+    """Conserva el visor de imagen nativo y publica su descripción para el vigía del tema.
+
+    Un archivo usa su nombre como clave; un SVG en texto necesita ``key``.
+    """
+    if key is None:
+        if not isinstance(source, Path):
+            raise ValueError("Un SVG en texto necesita key.")
+        key = source.stem
     with st.container(key=f"image_{key}"):
         st.image(str(source) if isinstance(source, Path) else source, width="stretch")
         st.html(

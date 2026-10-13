@@ -30,8 +30,9 @@ aws s3 ls --no-sign-request s3://noaa-goes19/ABI-L2-MCMIPF/
 """
 
 _SETUP = f"""\
-# En la máquina de AWS (us-west-2, Amazon Linux 2023)
-sudo dnf install -y git
+# Abrir una terminal en la máquina: EC2 → la instancia → Connect → Session Manager
+# (o, desde tu computador, aws ssm start-session --target <id-de-la-instancia>)
+sudo dnf install -y git tmux
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.local/bin/env   # deja uv en el PATH de esta terminal
 git clone {REPOSITORY}.git
@@ -53,10 +54,11 @@ aws s3 sync data/crops/ s3://<bucket-del-equipo>/crops/
 """
 
 _VIEWER = """\
-# En la máquina de AWS
+# En la máquina de AWS, dentro de tmux para que el visor siga corriendo al cerrar la sesión
+tmux new -s visor
 uv run streamlit run scripts/viewer/viewer.py --server.port 8501
 
-# En tu computador
+# En otra terminal de tu computador (aws configure sso, la primera vez)
 aws sso login
 aws ssm start-session --target <id-de-la-instancia> \\
   --document-name AWS-StartPortForwardingSession \\
@@ -78,6 +80,7 @@ s3://<bucket-del-equipo>/          # us-west-2, acceso público bloqueado
   features/year=2019/*.parquet     # tabla de ejemplos, una carpeta por año
   cubes/                           # cubos para modelos de imágenes, si se usan
   models/                          # modelos entrenados y sus métricas
+  athena-results/                  # resultados de las consultas de Athena
 """
 
 _FORMATS = """\
@@ -96,7 +99,7 @@ _ATHENA = """\
 -- Con CREATE EXTERNAL TABLE, cargar las carpetas year=... antes de consultar:
 MSCK REPAIR TABLE features;
 
-SELECT year, count(*) AS ejemplos, sum(label) AS positivos
+SELECT year, count(*) AS ejemplos, sum(CAST(label AS integer)) AS positivos
 FROM features
 GROUP BY year
 ORDER BY year;
@@ -183,9 +186,10 @@ def _architecture() -> None:
     with st.container(border=True, key="sheet_architecture"):
         layout.image(diagrams.architecture(), _ARCH_ALT, key="architecture")
         st.markdown(
-            "<p class='note'>Las cifras son por día de datos de la región por defecto. Las cajas y flechas "
-            "resaltadas son lo que maneja el equipo; las flechas grises, la lectura de los buckets "
-            "públicos.</p>",
+            "<p class='note'>Las cifras son por día de datos de la región por defecto. La máquina y el "
+            "bucket, con borde de acento, son lo que crea el equipo, y las flechas de acento muestran por "
+            "dónde pasan sus datos; las otras dos son la lectura anónima de los buckets públicos. La caja "
+            "punteada es el permiso que limita a la máquina.</p>",
             unsafe_allow_html=True,
         )
     st.markdown(
@@ -207,9 +211,16 @@ def _architecture() -> None:
         "seguridad puede quedar sin reglas de entrada.\n"
         "- **Personas.** Cada una entra con credenciales temporales de la cuenta (por ejemplo, con "
         "`aws sso login`), sin claves permanentes. Athena y SageMaker se usan con esos permisos o con el "
-        "rol de SageMaker Studio, no con el de la máquina.\n"
+        "rol de SageMaker Studio, no con el de la máquina. Ese rol también necesita leer y escribir el "
+        "bucket del equipo: el que SageMaker crea por defecto solo alcanza buckets con «sagemaker» en el "
+        "nombre. Athena, además, pide una carpeta para sus resultados (`athena-results/`).\n"
+        "- **Red.** La máquina va en una subred pública con IP pública, sin reglas de entrada. En una subred "
+        "privada, las lecturas de S3 pasarían por un NAT Gateway, que cobra cada gigabyte (unos 0,5 USD "
+        "por día de datos); un *gateway endpoint* de S3 es gratis, pero solo cubre us-west-2 y GOES "
+        "seguiría yendo por el NAT.\n"
         "- **Costos.** Se cobran las horas de instancia, el disco (también con la instancia detenida), lo "
-        "guardado en S3, las transferencias entre regiones y lo que sale de AWS a internet. Se recomienda "
+        "guardado en S3, lo que sale de AWS a internet y las transferencias entre regiones de los datos del "
+        "equipo; leer GOES desde us-west-2 lo paga el dueño del bucket. Se recomienda "
         "crear una alerta en AWS Budgets, etiquetar cada recurso con el equipo (por ejemplo, "
         "`team=<nombre>`) y detener la máquina cuando nadie la usa."
     )
@@ -235,7 +246,7 @@ def _cloud() -> None:
         "instancias más grandes tienen más ancho de banda. Cada hora de un nivel de presión de ERA5 es un "
         "bloque global de 50–65 MB que se transfiere entero, se recorta en memoria y no pasa por el disco. "
         "Por eso 50 a 100 GB de disco bastan para decenas de días (≈ 1,5 GB por día) antes de copiarlos al "
-        "bucket."
+        "bucket. El disco se fija al crear la instancia: Amazon Linux 2023 trae 8 GB por defecto."
     )
     st.code(_SETUP, language="bash")
     st.subheader("2. Bajar, recortar y guardar en S3", anchor=False)
@@ -308,15 +319,8 @@ def _next_steps() -> None:
     st.markdown(
         "El criterio de éxito es entregar candidatos a mesociclón para 2026. Los revisarán expertos y se "
         "contrastarán con una base de tornados del CR2, que no es pública. Lo demás queda en manos de "
-        "cada equipo:\n\n"
-        "- **Unidad de análisis.** Una tormenta seguida en GOES, una celda de ERA5 por hora o una región por día.\n"
-        "- **Qué es un positivo.** Un tornado reportado, un mesociclón inferido o ambos, por niveles.\n"
-        "- **Días de comparación.** Días al azar en la época de tornados, días elegidos a mano o una mezcla. "
-        "Un día sin reporte no prueba que no haya habido tornado.\n"
-        "- **Diagnóstico o pronóstico.** Estimar con los datos de la hora del evento o con datos de horas antes.\n"
-        "- **Alcance.** Solo los casos del catálogo o también buscar en el archivo situaciones no registradas.\n"
-        "- **Salida y métrica.** Un puntaje o una lista corta de candidatos, medidos con la tasa de acierto, "
-        "las falsas alarmas y cuántos candidatos revisa un experto por cada tornado encontrado."
+        "cada equipo: la unidad de análisis, qué cuenta como positivo, los días de comparación, si se "
+        "diagnostica o se pronostica, el alcance y la métrica."
     )
     st.page_link(
         state.page("project"),

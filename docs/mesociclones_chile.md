@@ -423,9 +423,9 @@ OR_ABI-L1b-RadF-M3C02_G16_s20171671145342_e20171671156109_c20171671156144.nc
 - `ABI-L2-DSIF` — índices de estabilidad derivados (CAPE, índice de levantamiento, agua precipitable) estimados desde el satélite, solo donde el cielo está despejado. Un contraste independiente de ERA5. En AWS desde el 5 de diciembre de 2019.
 - `ABI-L2-DMWF` — vientos derivados del movimiento de las nubes. Es una observación real de viento en altura, con resolución mucho mayor que ERA5. En AWS desde el 2 de diciembre de 2019.
 - `GLM-L2-LCFA` — rayos. Archivos cada 20 segundos (180 por hora). En AWS desde el 13 de febrero de 2018.
+- `ABI-L1b-RadF` — radiancias crudas, si se quiere control total de la calibración.
 
 Los tres productos que empiezan en diciembre de 2019 no cubren el brote de mayo de 2019. Para fechas anteriores, la altura del tope puede estimarse comparando la temperatura de brillo de la banda 13 con el perfil de temperatura de ERA5.
-- `ABI-L1b-RadF` — radiancias crudas, si se quiere control total de la calibración.
 
 **Geometría de observación y paralaje.**
 
