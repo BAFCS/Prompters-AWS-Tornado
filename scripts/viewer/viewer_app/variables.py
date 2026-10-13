@@ -65,9 +65,9 @@ class Reference:
     url: str = ""
 
 
-# Todas salen de la sección 10 de docs/, salvo Bunkers (2000), citado en ``process_era5.py``, Thompson
-# et al. (2012), de quien es el STP de capa fija que calcula el visor, y la formulación del BRN, que el
-# documento nombra sin citar. Los DOI se verificaron contra doi.org (octubre de 2026).
+# Las académicas y las fuentes de datos están en la sección 10 de docs/, con los mismos datos; las notas de
+# prensa (Jerez, Meteored, El Mostrador, Universidad de Valparaíso) solo se citan en Problema. Los DOI y
+# sus datos se verificaron contra Crossref (octubre de 2026).
 REFERENCES = {
     "era5-ncar": Reference(
         "NSF NCAR (ERA5 en AWS)",
@@ -203,20 +203,20 @@ REFERENCES = {
         "Schultz et al. (2009)",
         "Schultz, C. J., Petersen, W. A. & Carey, L. D. (2009). Preliminary development and evaluation of "
         "lightning jump algorithms for the real-time detection of severe weather. *Journal of Applied "
-        "Meteorology and Climatology*, 48(12).",
+        "Meteorology and Climatology*, 48(12), 2543–2563.",
         "https://doi.org/10.1175/2009JAMC2237.1",
     ),
     "bedka2018": Reference(
         "Bedka et al. (2018)",
         "Bedka, K., Murillo, E. M., Homeyer, C. R., Scarino, B. & Mersiovsky, H. (2018). The above-anvil "
         "cirrus plume: an important severe weather indicator in visible and infrared satellite imagery. "
-        "*Weather and Forecasting*, 33(5).",
+        "*Weather and Forecasting*, 33(5), 1159–1181.",
         "https://doi.org/10.1175/WAF-D-18-0040.1",
     ),
-    # Solo las cita Starter kit (trabajos relacionados); DOI y datos verificados en Crossref.
+    # Las que solo cita Starter kit (trabajos relacionados).
     "marin2026": Reference(
         "Marín et al. (2026)",
-        "Marín, J. C., Barrett, B. S., Gutiérrez Cotapos, F. & Pozo, D. (2026). Mesoscale environments of "
+        "Marín, J. C., Barrett, B. S., Gutiérrez, F. & Pozo, D. (2026). Mesoscale environments of "
         "tornadoes in Chile and along the U.S. west coast. *Atmospheric Research*, 344, 109331.",
         "https://doi.org/10.1016/j.atmosres.2026.109331",
     ),
