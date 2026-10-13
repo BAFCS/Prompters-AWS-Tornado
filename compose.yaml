@@ -1,0 +1,9 @@
+# Visor en el puerto 8501 con data/ montado. Los scripts de datos corren en la misma imagen:
+#   docker compose run --rm viewer python scripts/pipeline/download_era5.py --start 2019-05-30
+services:
+  viewer:
+    build: .
+    image: mesocyclonic-viewer
+    ports: ["8501:8501"]
+    volumes: ["./data:/app/data"]
+    restart: unless-stopped

@@ -1,0 +1,8 @@
+*
+!pyproject.toml
+!uv.lock
+!.python-version
+!.streamlit
+!scripts
+!figs
+**/__pycache__

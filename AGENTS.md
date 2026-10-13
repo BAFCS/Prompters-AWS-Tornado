@@ -37,6 +37,10 @@ uv run python -m unittest discover -s tests -v  # regresiones de fichas, catálo
 uv add <pkg> / uv add --dev <pkg>    # añadir dependencias
 ```
 
+El `Makefile` junta los más usados: `make check` (ruff, formato, pyright y pruebas), `make fix`,
+`make viewer`, `make data` (catálogo, costa y GOES de `figs_goes.py`), `make deploy` y `make ssh`.
+`make` a secas los lista.
+
 Claude Code (`.claude/settings.json`) y Codex (`.codex/hooks.json`) corren `.agents/hooks/ruff.sh` tras
 cada edición: aplica `ruff check --fix` y `ruff format` al `.py` editado y devuelve al agente lo que
 ruff no corrige solo. En Codex, el hook se aprueba una vez con `/hooks`. La skill `viewer`
@@ -125,10 +129,37 @@ fila de controles de Mapas, que va alineada con los paneles de la figura. `PRODU
 GOES se guarda con su codificación original (`int16` con `scale_factor`/`add_offset`), así que no
 pierde precisión. Ninguno corrige paralaje todavía.
 
+## Despliegue
+
+`Dockerfile` arma una imagen con el visor y los scripts de datos (sin el grupo dev); `data/` va
+montado como volumen en `/app/data`. En local: `docker compose up` (`compose.yaml`), y los scripts de
+datos corren en el mismo contenedor con `docker compose run --rm viewer python scripts/pipeline/...`.
+
+`deploy/` (Terraform) levanta **una** EC2 en **us-west-2**, la región de ERA5, que es la fuente más
+pesada; GOES queda en us-east-1. La máquina clona el repo, baja catálogo y costa, construye la imagen y
+deja el visor en el puerto 8501, abierto solo a `allowed_cidr` porque Streamlit no tiene autenticación.
+Sin SSH: se entra con `aws ssm start-session`. Los recortes se generan en la misma máquina y quedan en
+`/opt/mesocyclonic/data`.
+
+Para entrar hace falta el plugin Session Manager de la AWS CLI. `repo` solo cuenta al crear la máquina;
+después el código se actualiza con `deploy/up.sh`. Si el primer arranque falla, el registro está en
+`/var/log/cloud-init-output.log`. Sin terraform instalado, `TF` cambia el comando, por ejemplo
+`make deploy TF='podman run --rm -i -v $$PWD/deploy:/w:Z -v ~/.aws:/root/.aws:ro -w /w docker.io/hashicorp/terraform:1.13'`.
+
+```bash
+make deploy    # terraform init + apply, abierto solo a la IP actual
+make ssh       # aws ssm start-session a la máquina
+# dentro de la máquina:
+sudo /opt/mesocyclonic/deploy/up.sh    # trae el código nuevo y reinicia el visor
+# en segundo plano, para que no se corte con la sesión:
+sudo docker exec -d viewer sh -c 'python scripts/pipeline/download_era5.py --start 2019-05-30 > data/download_era5.log 2>&1'
+```
+
 ## Datos
 
 `data/` y los formatos de datos (`*.nc`, `*.xlsx`, `*.zarr`, ...) están en `.gitignore`: los datos se
-descargan, nunca se versionan. El catálogo, la costa y las imágenes de `figs_goes.py` se bajan a mano:
+descargan, nunca se versionan. El catálogo, la costa y las imágenes de `figs_goes.py` se bajan a mano
+(`make data` hace lo mismo y salta lo que ya existe):
 
 ```bash
 mkdir -p data/goes
