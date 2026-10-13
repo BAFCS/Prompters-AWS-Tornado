@@ -143,7 +143,8 @@ Sin SSH: se entra con `aws ssm start-session`. Los recortes se generan en la mis
 
 Para entrar hace falta el plugin Session Manager de la AWS CLI. `repo` solo cuenta al crear la máquina;
 después el código se actualiza con `deploy/up.sh`. Si el primer arranque falla, el registro está en
-`/var/log/cloud-init-output.log`.
+`/var/log/cloud-init-output.log`. Sin terraform instalado, `TF` cambia el comando, por ejemplo
+`make deploy TF='podman run --rm -i -v $$PWD/deploy:/w:Z -v ~/.aws:/root/.aws:ro -w /w docker.io/hashicorp/terraform:1.13'`.
 
 ```bash
 make deploy    # terraform init + apply, abierto solo a la IP actual

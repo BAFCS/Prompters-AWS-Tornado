@@ -2,7 +2,10 @@
 
 TF := terraform -chdir=deploy
 
-.PHONY: help check fix viewer data deploy ssh
+# Una descarga cortada no debe quedar como hecha.
+.DELETE_ON_ERROR:
+
+.PHONY: help check fix viewer data data/goes deploy ssh
 
 help:
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/'
@@ -29,12 +32,12 @@ data/coast.zip:
 	curl -fL --create-dirs -o $@ https://naciscdn.org/naturalearth/10m/physical/ne_10m_coastline.zip
 
 data/goes:
-	aws s3 cp --no-sign-request --recursive s3://noaa-goes16/ABI-L2-CMIPF/2019/150/21/ $@/ \
+	aws s3 sync --no-sign-request s3://noaa-goes16/ABI-L2-CMIPF/2019/150/21/ $@/ \
 	  --exclude '*' --include '*M6C13*s201915021[345]*'
 
 deploy: ## crea o actualiza la máquina en AWS, abierta solo a la IP actual
 	$(TF) init -input=false
-	$(TF) apply -var allowed_cidr=$$(curl -4 -s ifconfig.me)/32
+	$(TF) apply -var allowed_cidr=$$(curl -4 -fsS ifconfig.me)/32
 
 ssh: ## sesión en la máquina por SSM (necesita el plugin Session Manager)
 	aws ssm start-session --region us-west-2 --target $$($(TF) output -raw instance_id)
