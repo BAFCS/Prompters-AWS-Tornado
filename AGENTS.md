@@ -37,6 +37,10 @@ uv run python -m unittest discover -s tests -v  # regresiones de fichas, catálo
 uv add <pkg> / uv add --dev <pkg>    # añadir dependencias
 ```
 
+El `Makefile` junta los más usados: `make check` (ruff, formato, pyright y pruebas), `make fix`,
+`make viewer`, `make data` (catálogo, costa y GOES de `figs_goes.py`), `make deploy` y `make ssh`.
+`make` a secas los lista.
+
 Claude Code (`.claude/settings.json`) y Codex (`.codex/hooks.json`) corren `.agents/hooks/ruff.sh` tras
 cada edición: aplica `ruff check --fix` y `ruff format` al `.py` editado y devuelve al agente lo que
 ruff no corrige solo. En Codex, el hook se aprueba una vez con `/hooks`. La skill `viewer`
@@ -139,11 +143,12 @@ Sin SSH: se entra con `aws ssm start-session`. Los recortes se generan en la mis
 
 Para entrar hace falta el plugin Session Manager de la AWS CLI. `repo` solo cuenta al crear la máquina;
 después el código se actualiza con `deploy/up.sh`. Si el primer arranque falla, el registro está en
-`/var/log/cloud-init-output.log`.
+`/var/log/cloud-init-output.log`. Sin terraform instalado, `TF` cambia el comando, por ejemplo
+`make deploy TF='podman run --rm -i -v $$PWD/deploy:/w:Z -v ~/.aws:/root/.aws:ro -w /w docker.io/hashicorp/terraform:1.13'`.
 
 ```bash
-cd deploy && terraform init && terraform apply -var allowed_cidr=$(curl -4 -s ifconfig.me)/32
-aws ssm start-session --region us-west-2 --target $(terraform output -raw instance_id)
+make deploy    # terraform init + apply, abierto solo a la IP actual
+make ssh       # aws ssm start-session a la máquina
 # dentro de la máquina:
 sudo /opt/mesocyclonic/deploy/up.sh    # trae el código nuevo y reinicia el visor
 # en segundo plano, para que no se corte con la sesión:
@@ -153,7 +158,8 @@ sudo docker exec -d viewer sh -c 'python scripts/pipeline/download_era5.py --sta
 ## Datos
 
 `data/` y los formatos de datos (`*.nc`, `*.xlsx`, `*.zarr`, ...) están en `.gitignore`: los datos se
-descargan, nunca se versionan. El catálogo, la costa y las imágenes de `figs_goes.py` se bajan a mano:
+descargan, nunca se versionan. El catálogo, la costa y las imágenes de `figs_goes.py` se bajan a mano
+(`make data` hace lo mismo y salta lo que ya existe):
 
 ```bash
 mkdir -p data/goes
