@@ -4,31 +4,28 @@
 
 ## Cambios
 
-<!-- Lista breve por área: scripts de datos, visor, figuras, documentación... -->
+<!-- Lista breve por área: datos, modelos, visor, figuras, documentación... -->
 
 -
 
 ## Cómo probarlo
 
-<!-- Comandos y datos necesarios (qué región/día descargar, qué página abrir). -->
+<!-- Comandos y datos necesarios (qué región y días descargar, qué script correr). -->
 
 ```bash
 uv sync
-uv run ruff check scripts && uv run ruff format --check scripts && uv run pyright
-uv run python -m unittest discover -s tests -v
+make check
 ```
 
 ## Lista de verificación
 
-- [ ] `ruff check`, `ruff format --check` y `pyright` pasan limpios
-- [ ] Las pruebas de `tests/` pasan
-- [ ] Si cambia una figura, se regeneró y se comparó con la anterior
-- [ ] Si cambia `docs/mesociclones_chile.md`, se actualizó `scripts/viewer/viewer_app/texts.py`
-- [ ] Si cambia un color del tema, se cambió en `.streamlit/config.toml` y en `viewer_app/theme.py`
+- [ ] `make check` pasa (ruff, formato, pyright y pruebas)
+- [ ] La lógica nueva (un índice, una etiqueta, un recorte) tiene su prueba en `tests/`
 - [ ] Los signos y umbrales respetan el hemisferio sur (SRH negativa, *left-mover*, umbrales chilenos)
-- [ ] `AGENTS.md` y `README.md` siguen al día
-- [ ] No se versionan datos (`data/`, `*.nc`, `*.xlsx`, ...)
+- [ ] No se versionan datos ni credenciales (`data/`, `*.nc`, `*.xlsx`, `.env`, ...)
+- [ ] `AGENTS.md`, `README.md` y `docs/` siguen al día
+- [ ] Si toca el visor: textos alineados con `docs/` y colores cambiados en `.streamlit/config.toml` y `viewer_app/theme.py`
 
 ## Notas
 
-<!-- Decisiones abiertas, dependencias con otras PR, capturas del visor si cambia la interfaz. -->
+<!-- Decisiones tomadas, dependencias con otras PR, capturas si cambia una figura o el visor. -->
