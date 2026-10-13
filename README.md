@@ -264,3 +264,13 @@ muestran la misma lista de tareas, y Starter kit agrega las primeras tareas para
 - **El catálogo de eventos**: Bastías-Curivil et al., *Tornadoes and Waterspouts in Chile*, figshare,
   [doi:10.6084/m9.figshare.25119566](https://doi.org/10.6084/m9.figshare.25119566), CC BY 4.0. No se
   versiona en el repositorio: se descarga en el paso 4 y se cita como indica su licencia.
+
+## Acerca de y contacto
+
+Proyecto preparado para la hackathon [Breaking Barriers](https://www.taurusmkt.com/breakingbarrierschile) por:
+
+- [Francisco Forster](https://idia.uchile.cl/quienes-somos/francisco-forster/), IDIA, Universidad de Chile.
+- [Pablo Badilla](https://idia.uchile.cl/quienes-somos/pablo-badilla/), IDIA, Universidad de Chile.
+- [Roberto Rondanelli](https://www.cr2.cl/roberto-rondanelli/), CR2.
+
+Las dudas sobre el proyecto o el código se pueden plantear como un *issue* en este repositorio.
