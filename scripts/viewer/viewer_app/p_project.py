@@ -12,8 +12,8 @@ import streamlit as st
 import common
 from viewer_app import charts, data, diagrams, layout, state, theme
 
-DOCUMENT = "https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md"
-REPOSITORY = "https://github.com/fforster/aws-mesocyclonic"
+DOCUMENT = "https://github.com/idia-tt/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md"
+REPOSITORY = "https://github.com/idia-tt/aws-mesocyclonic"
 CATALOG = "https://doi.org/10.6084/m9.figshare.25119566"
 ERA5 = "https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5"
 GOES = "https://www.goes-r.gov/"

@@ -249,7 +249,7 @@ REFERENCES = {
     "documento": Reference(
         "Documento del proyecto",
         "*Predicción de tormentas mesociclónicas en Chile*, `docs/mesociclones_chile.md`, secciones 4 y 5.",
-        "https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md",
+        "https://github.com/idia-tt/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md",
     ),
 }  # fmt: skip
 

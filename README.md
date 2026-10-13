@@ -16,7 +16,7 @@ a partir del reanálisis **ERA5** y las imágenes multiespectrales del satélite
 |---|---|
 | `docs/mesociclones_chile.md` | **El documento principal.** El problema, la física, el caso chileno, los datos de entrada, las variables a calcular, cómo plantear el modelo, la arquitectura en AWS y las tareas abiertas. |
 | `docs/mesociclones_chile.pdf` | El mismo documento en A4 (33 páginas), con las figuras. |
-| `scripts/viewer/viewer.py` y `scripts/viewer/viewer_app/` | **El visor**: una aplicación web local para explorar un día de datos (caso de estudio, mapas y fichas de variables). |
+| `scripts/viewer/viewer.py` y `scripts/viewer/viewer_app/` | **El visor**: una aplicación web local con el problema, las fichas de variables, el starter kit para AWS, el caso de estudio y los mapas. |
 | `scripts/pipeline/download_*.py`, `scripts/pipeline/process_*.py` | Descargan ERA5 y GOES recortados a Chile y calculan los índices que usa el visor. |
 | `scripts/figures/figs_*.py` | Generan las cuatro figuras de `figs/` desde los datos reales. |
 | `tests/` | Pruebas automáticas del visor. |
@@ -81,7 +81,7 @@ Debe responder con un número de versión, por ejemplo `uv 0.12.20`. Si dice que
 Si tienes [git](https://git-scm.com/downloads) instalado:
 
 ```bash
-git clone https://github.com/fforster/aws-mesocyclonic.git
+git clone https://github.com/idia-tt/aws-mesocyclonic.git
 cd aws-mesocyclonic
 ```
 
@@ -302,7 +302,7 @@ su licencia.
 **1 · Los índices norteamericanos no funcionan aquí.**
 Los tornados chilenos ocurren en un régimen **HSLC** (*High Shear, Low CAPE*). El brote del
 30–31 de mayo de 2019 tuvo apenas **200–1.000 J/kg** de CAPE — la media climatológica de
-fines de mayo en el Biobío es de **15–45 J/kg** — con cizalladura 0–1 km de **12–20 m/s**.
+fines de mayo en el Biobío es de **15–45 J/kg** — con cizalladura 0–1 km de **12–20 m/s** (12 m/s fue la menor del brote).
 Vicencio et al. (2021) señalan explícitamente que **el STP clásico no habría dado la alarma**.
 Los umbrales calibrados para Chile son otros:
 
@@ -335,16 +335,22 @@ aws s3 ls --no-sign-request s3://noaa-goes19/   # abr 2025 – presente
 aws s3 ls --no-sign-request s3://noaa-goes16/   # dic 2017 – abr 2025
 ```
 
+`noaa-goes18` es GOES-West y no cubre Chile. La página **Starter kit** del visor tiene la tabla
+completa de buckets, el tamaño de cada producto y los productos GOES para explorar.
+
 Dos trampas documentadas en `docs/`: los archivos de nivel de presión de ERA5 pesan **≈1,36 GB
 cada uno** (una variable, un día, el globo entero) y no admiten recorte del lado del servidor;
 y el **paralaje** de GOES desplaza los topes nubosos unos **21 km a 53°S** (para un tope de 12 km), varias celdas de grilla.
 
-## Por dónde empezar
+## Cómo participar
 
-La sección 8 del documento lista diez tareas ordenadas por dificultad. Las de mayor impacto
-por unidad de esfuerzo son curar el catálogo de eventos y construir *loops* GOES de los casos
-conocidos; la de mayor potencial es **detectar la rotación del yunque por flujo óptico**, un
-detector de mesociclones que no depende del catálogo de tornados.
+La sección 8 del documento lista once tareas ordenadas por dificultad. Las más accesibles son
+ordenar el catálogo de eventos y construir animaciones GOES de los casos conocidos. Entre las
+avanzadas está **buscar rotación en el yunque con flujo óptico**, que no depende del catálogo de
+tornados; antes hay que decidir cómo comprobar que esa señal corresponde a un mesociclón.
+
+En el visor, la página **Problema** resume estas tareas en «Cómo participar», y **Starter kit**
+propone las primeras tareas y más ideas para explorar.
 
 ## Referencias principales
 
