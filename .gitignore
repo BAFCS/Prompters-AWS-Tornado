@@ -31,6 +31,3 @@ Thumbs.db
 .codex/config.toml
 .claude/settings.local.json
 
-# Terraform (deploy/): estado y caché locales
-.terraform/
-*.tfstate*

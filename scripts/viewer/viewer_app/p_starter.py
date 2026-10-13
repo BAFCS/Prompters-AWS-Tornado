@@ -246,7 +246,9 @@ def _cloud() -> None:
         "instancias más grandes tienen más ancho de banda. Cada hora de un nivel de presión de ERA5 es un "
         "bloque global de 50–65 MB que se transfiere entero, se recorta en memoria y no pasa por el disco. "
         "Por eso 50 a 100 GB de disco bastan para decenas de días (≈ 1,5 GB por día) antes de copiarlos al "
-        "bucket. El disco se fija al crear la instancia: Amazon Linux 2023 trae 8 GB por defecto."
+        "bucket. El disco se fija al crear la instancia: Amazon Linux 2023 trae 8 GB por defecto.\n\n"
+        "La máquina se crea a mano desde la consola de EC2. Más adelante se podría automatizar con "
+        "Terraform, que dejaría la máquina, el rol y el bucket descritos en un archivo."
     )
     st.code(_SETUP, language="bash")
     st.subheader("2. Bajar, recortar y guardar en S3", anchor=False)
