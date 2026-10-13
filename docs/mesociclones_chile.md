@@ -418,12 +418,14 @@ OR_ABI-L1b-RadF-M3C02_G16_s20171671145342_e20171671156109_c20171671156144.nc
 **Productos para explorar:**
 
 - `ABI-L2-MCMIPF` — *Multiband Cloud and Moisture Imagery, Full Disk*: las 16 bandas calibradas en un solo archivo. Evita descargar un archivo `CMIPF` separado para cada banda y es un punto de partida para explorar varias bandas juntas.
-- `ABI-L2-ACHAF` — altura del tope nuboso. Se utiliza para estimar la corrección de paralaje, explicada más abajo.
+- `ABI-L2-ACHAF` — altura del tope nuboso. Se utiliza para estimar la corrección de paralaje, explicada más abajo. En AWS desde el 2 de diciembre de 2019.
 - `ABI-L2-ACTPF` — fase del tope nuboso (hielo/agua).
-- `ABI-L2-DSIF` — índices de estabilidad derivados (CAPE, índice de levantamiento, agua precipitable) estimados desde el satélite. Un contraste independiente de ERA5.
-- `ABI-L2-DMWF` — vientos derivados del movimiento de las nubes. Es una observación real de viento en altura, con resolución mucho mayor que ERA5.
-- `GLM-L2-LCFA` — rayos. Archivos cada 20 segundos (180 por hora).
+- `ABI-L2-DSIF` — índices de estabilidad derivados (CAPE, índice de levantamiento, agua precipitable) estimados desde el satélite, solo donde el cielo está despejado. Un contraste independiente de ERA5. En AWS desde el 5 de diciembre de 2019.
+- `ABI-L2-DMWF` — vientos derivados del movimiento de las nubes. Es una observación real de viento en altura, con resolución mucho mayor que ERA5. En AWS desde el 2 de diciembre de 2019.
+- `GLM-L2-LCFA` — rayos. Archivos cada 20 segundos (180 por hora). En AWS desde el 13 de febrero de 2018.
 - `ABI-L1b-RadF` — radiancias crudas, si se quiere control total de la calibración.
+
+Los tres productos que empiezan en diciembre de 2019 no cubren el brote de mayo de 2019. Para fechas anteriores, la altura del tope puede estimarse comparando la temperatura de brillo de la banda 13 con el perfil de temperatura de ERA5.
 
 **Geometría de observación y paralaje.**
 
@@ -777,14 +779,18 @@ Hay tareas para equipos con distinta experiencia. Cada una puede dar lugar a un 
   — Experimentos con WRF que evalúan cómo la topografía modifica la cizalladura en el caso de 2019.
 - **Aránguiz, R. et al. (2020).** *Damage assessment of the May 31st, 2019, Talcahuano tornado, Chile.* **International Journal of Disaster Risk Reduction**, 50, 101853. [doi:10.1016/j.ijdrr.2020.101853](https://doi.org/10.1016/j.ijdrr.2020.101853)
 - **Vicencio, J. et al. (2019).** *Informe Especial: Tornados en la Región del Biobío.* Dirección Meteorológica de Chile. [Blog DMC](https://blog.meteochile.gob.cl/2019/06/14/en-busqueda-de-las-huellas-del-tornado-los-angeles-y-talcahuano-concepcion/)
-- **Marín, J. C., Barrett, B. S., Gutiérrez, F. & Pozo, D. (2026).** *Mesoscale environments of tornadoes in Chile and along the U.S. west coast.* **Atmospheric Research**, 334, 109331.
+- **Marín, J. C., Barrett, B. S., Gutiérrez, F. & Pozo, D. (2026).** *Mesoscale environments of tornadoes in Chile and along the U.S. west coast.* **Atmospheric Research**, 344, 109331. [doi:10.1016/j.atmosres.2026.109331](https://doi.org/10.1016/j.atmosres.2026.109331)
 
 **Contexto HSLC internacional**
 
-- Sherburn, K. D. & Parker, M. D. (2014). *Climatology and ingredients of significant severe convection in high-shear, low-CAPE environments.* **Weather and Forecasting**, 29, 854–877. — El origen del índice SHERB.
-- Coffer, B. E. et al. (2019). Sobre SRH 0–500 m como discriminante tornádico.
-- Thompson, R. L. et al. (2003). — La formulación original del STP.
-- Rasmussen, E. N. & Blanchard, D. O. (1998). — La formulación original del VGP.
+- Sherburn, K. D. & Parker, M. D. (2014). *Climatology and ingredients of significant severe convection in high-shear, low-CAPE environments.* **Weather and Forecasting**, 29, 854–877. [doi:10.1175/WAF-D-13-00041.1](https://doi.org/10.1175/WAF-D-13-00041.1) — El origen del índice SHERB.
+- Coffer, B. E., Parker, M. D., Thompson, R. L., Smith, B. T. & Jewell, R. E. (2019). *Using near-ground storm relative helicity in supercell tornado forecasting.* **Weather and Forecasting**, 34, 1417–1435. [doi:10.1175/WAF-D-19-0115.1](https://doi.org/10.1175/WAF-D-19-0115.1) — La SRH 0–500 m como discriminante tornádico.
+- Thompson, R. L. et al. (2003). *Close proximity soundings within supercell environments obtained from the Rapid Update Cycle.* **Weather and Forecasting**, 18, 1243–1261. [doi:10.1175/1520-0434(2003)018<1243:CPSWSE>2.0.CO;2](https://doi.org/10.1175/1520-0434(2003)018<1243:CPSWSE>2.0.CO;2) — La formulación original del STP.
+- Rasmussen, E. N. & Blanchard, D. O. (1998). *A baseline climatology of sounding-derived supercell and tornado forecast parameters.* **Weather and Forecasting**, 13, 1148–1164. [doi:10.1175/1520-0434(1998)013<1148:ABCOSD>2.0.CO;2](https://doi.org/10.1175/1520-0434(1998)013<1148:ABCOSD>2.0.CO;2) — La formulación original del VGP.
+- Thompson, R. L., Smith, B. T., Grams, J. S., Dean, A. R. & Broyles, C. (2012). *Convective modes for significant severe thunderstorms in the contiguous United States. Part II: Supercell and QLCS tornado environments.* **Weather and Forecasting**, 27, 1136–1154. [doi:10.1175/WAF-D-11-00116.1](https://doi.org/10.1175/WAF-D-11-00116.1) — El STP de capa fija que calcula el visor.
+- Bunkers, M. J. et al. (2000). *Predicting supercell motion using a new hodograph technique.* **Weather and Forecasting**, 15, 61–79. [doi:10.1175/1520-0434(2000)015<0061:PSMUAN>2.0.CO;2](https://doi.org/10.1175/1520-0434(2000)015<0061:PSMUAN>2.0.CO;2) — El movimiento de supercélulas que usa `process_era5.py`.
+- Weisman, M. L. & Klemp, J. B. (1982). *The dependence of numerically simulated convective storms on vertical wind shear and buoyancy.* **Monthly Weather Review**, 110, 504–520. [doi:10.1175/1520-0493(1982)110<0504:TDONSC>2.0.CO;2](https://doi.org/10.1175/1520-0493(1982)110<0504:TDONSC>2.0.CO;2) — La formulación del BRN.
+- Brooks, H. E., Lee, J. W. & Craven, J. P. (2003). *The spatial distribution of severe thunderstorm and tornado environments from global reanalysis data.* **Atmospheric Research**, 67–68, 73–94. [doi:10.1016/S0169-8095(03)00045-0](https://doi.org/10.1016/S0169-8095(03)00045-0) — Entornos de convección severa en todo el globo a partir de un reanálisis.
 - Hanstrum, B. N. et al. (2002, Australia); Monteverdi, J. P. et al. (2003, California); Clark, M. R. (2009, Inglaterra). — Los análogos de costa occidental.
 
 **Física y fundamentos**
@@ -795,7 +801,15 @@ Hay tareas para equipos con distinta experiencia. Cada una puede dar lugar a un 
 - Browning, K. A. & Ludlam, F. H. (1962). *Airflow in convective storms*. **Quarterly Journal of the RMS**, 88, 117–135. — La primera supercélula descrita (Wokingham, 1959).
 - Markowski, P. & Richardson, Y. (2010). *Mesoscale Meteorology in Midlatitudes*. Wiley. — El texto de referencia moderno.
 - Bluestein, H. B. (2013). *Severe Convective Storms and Tornadoes*. Springer.
-- Hersbach, H. et al. (2020). *The ERA5 global reanalysis*. **QJRMS**, 146, 1999–2049.
+- Hersbach, H. et al. (2020). *The ERA5 global reanalysis*. **QJRMS**, 146, 1999–2049. [doi:10.1002/qj.3803](https://doi.org/10.1002/qj.3803)
+
+**Satélite y aprendizaje automático**
+
+- Cintineo, J. L., Pavolonis, M. J., Sieglaff, J. M. & Lindsey, D. T. (2014). *An empirical model for assessing the severe weather potential of developing convection.* **Weather and Forecasting**, 29, 639–653. [doi:10.1175/WAF-D-13-00113.1](https://doi.org/10.1175/WAF-D-13-00113.1) — Probabilidad de tiempo severo a partir del crecimiento de la nube en GOES.
+- Schultz, C. J., Petersen, W. A. & Carey, L. D. (2009). *Preliminary development and evaluation of lightning jump algorithms for the real-time detection of severe weather.* **Journal of Applied Meteorology and Climatology**, 48(12), 2543–2563. [doi:10.1175/2009JAMC2237.1](https://doi.org/10.1175/2009JAMC2237.1) — Saltos en la tasa de rayos como señal de tiempo severo.
+- Bedka, K., Murillo, E. M., Homeyer, C. R., Scarino, B. & Mersiovsky, H. (2018). *The above-anvil cirrus plume: an important severe weather indicator in visible and infrared satellite imagery.* **Weather and Forecasting**, 33(5), 1159–1181. [doi:10.1175/WAF-D-18-0040.1](https://doi.org/10.1175/WAF-D-18-0040.1)
+- Lagerquist, R., McGovern, A., Homeyer, C. R., Gagne II, D. J. & Smith, T. (2020). *Deep learning on three-dimensional multiscale data for next-hour tornado prediction.* **Monthly Weather Review**, 148, 2837–2861. [doi:10.1175/MWR-D-19-0372.1](https://doi.org/10.1175/MWR-D-19-0372.1)
+- Elkan, C. & Noto, K. (2008). *Learning classifiers from only positive and unlabeled data.* **Proceedings of the 14th ACM SIGKDD**, 213–220. [doi:10.1145/1401890.1401920](https://doi.org/10.1145/1401890.1401920) — La estimación de propensión de etiquetado que menciona la sección 6.1.
 
 **Herramientas**
 

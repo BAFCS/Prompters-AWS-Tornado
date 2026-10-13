@@ -1,11 +1,9 @@
 # Atajos del proyecto. Cada objetivo es un comando de AGENTS.md; `make` solo lista los objetivos.
 
-TF := terraform -chdir=deploy
-
 # Una descarga cortada no debe quedar como hecha.
 .DELETE_ON_ERROR:
 
-.PHONY: help check fix viewer data data/goes deploy ssh
+.PHONY: help check fix viewer data data/goes
 
 help:
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/'
@@ -34,10 +32,3 @@ data/coast.zip:
 data/goes:
 	aws s3 sync --no-sign-request s3://noaa-goes16/ABI-L2-CMIPF/2019/150/21/ $@/ \
 	  --exclude '*' --include '*M6C13*s201915021[345]*'
-
-deploy: ## crea o actualiza la máquina en AWS, abierta solo a la IP actual
-	$(TF) init -input=false
-	$(TF) apply -var allowed_cidr=$$(curl -4 -fsS ifconfig.me)/32
-
-ssh: ## sesión en la máquina por SSM (necesita el plugin Session Manager)
-	aws ssm start-session --region us-west-2 --target $$($(TF) output -raw instance_id)

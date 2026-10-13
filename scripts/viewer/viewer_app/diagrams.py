@@ -1,4 +1,4 @@
-"""Los dos diagramas de la página «Problema», dibujados a mano en SVG.
+"""Los diagramas de «Problema» y la arquitectura de «Starter kit», dibujados a mano en SVG.
 
 Se dibujan con ``st.image`` (un SVG como imagen): ``st.html`` sanea el SVG. Dentro de una imagen no
 hay JavaScript ni variables CSS de la página, así que cada SVG lleva su propia hoja de estilo con la
@@ -10,8 +10,10 @@ import math
 from viewer_app import theme
 
 _TEXT = (
-    f"text{{font-family:{theme.MONO}; font-size:12px; fill:var(--muted)}}"
-    " text.lbl{font-size:12.5px; fill:var(--ink-2)}"
+    f"text{{font-family:{theme.MONO}; font-size:12px}}"
+    # Sin ``:not([fill])`` la regla taparía el atributo ``fill`` de cada texto (el CSS gana).
+    " text:not([fill]){fill:var(--muted)} text.lbl:not([fill]){fill:var(--ink-2)}"
+    " text.lbl{font-size:12.5px}"
     f" text.big{{font-family:{theme.SANS}; font-size:14px; font-weight:600}}"
 )
 
@@ -238,6 +240,45 @@ _SCALE_BODY = f"""
 """
 
 
+def _box(
+    x: int, y: int, title: str, lines: tuple[str, str], stroke: str = "var(--line)", dash: str = ""
+) -> str:
+    """Caja de 150 × 80 con un título y dos líneas de detalle."""
+    return (
+        f'<rect x="{x}" y="{y}" width="150" height="80" rx="6" fill="var(--surface)" stroke="{stroke}" '
+        f'stroke-width="1.8" {dash}/>'
+        f'<text class="big" x="{x + 75}" y="{y + 28}" text-anchor="middle" fill="var(--ink)">{title}</text>'
+        f'<text x="{x + 75}" y="{y + 48}" text-anchor="middle">{lines[0]}</text>'
+        f'<text x="{x + 75}" y="{y + 66}" text-anchor="middle">{lines[1]}</text>'
+    )
+
+
+# Arquitectura: los buckets públicos a la izquierda (cada uno en su región), lo del equipo en
+# us-west-2 y el computador personal abajo, unido solo por el túnel de Session Manager.
+_DASH = 'stroke-dasharray="6 4"'
+_ARCH_BODY = f"""
+     <rect x="20" y="40" width="180" height="320" rx="10" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5" {_DASH}/>
+     <text class="lbl" x="34" y="64">us-east-1</text>
+     <rect x="220" y="40" width="620" height="320" rx="10" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5" {_DASH}/>
+     <text class="lbl" x="234" y="64">us-west-2 · aquí trabaja el equipo</text>
+     {_box(35, 240, "GOES-16 / 19", ("noaa-goes16, 19", "≈ 0,7 GB al día"))}
+     {_box(240, 100, "ERA5", ("nsf-ncar-era5", "≈ 11 GB al día"))}
+     {_box(240, 240, "Máquina EC2", ("scripts y", "visor"), "var(--accent)")}
+     {_box(465, 240, "Bucket del equipo", ("recortes, tablas", "≈ 1,5 GB al día"), "var(--accent)")}
+     {_box(465, 100, "Athena", ("consultas SQL", "sobre Parquet"))}
+     {_box(675, 240, "SageMaker", ("entrenar y", "evaluar modelos"))}
+     {_box(675, 100, "Rol IAM en S3", ("solo el bucket", "del equipo"), "var(--muted)", _DASH)}
+     {_arrow(185, 280, 232, 280, "var(--muted)")}
+     {_arrow(315, 180, 315, 232, "var(--muted)")}
+     {_arrow(390, 280, 457, 280, "var(--accent)")}
+     {_arrow(615, 280, 667, 280, "var(--accent)")}
+     {_arrow(540, 240, 540, 188, "var(--accent)")}
+     {_box(240, 400, "Tu computador", ("terminal y", "navegador"))}
+     <path d="M315 400 L315 328" stroke="var(--severe)" stroke-width="2.4" {_DASH}/>
+     <text class="lbl" x="327" y="386" fill="var(--severe)">Túnel de Session Manager</text>
+"""
+
+
 def _svg(width: int, height: int, css: str, body: str, extra: str = "") -> str:
     """Envuelve ``body`` en un SVG autónomo con la paleta y los estilos de texto del visor.
 
@@ -267,3 +308,13 @@ def plan_view() -> str:
 def scale() -> str:
     """SVG de la escala, en dos dimensiones: una celda de ERA5, un píxel de GOES y un mesociclón."""
     return _svg(780, 530, "", _SCALE_BODY)
+
+
+def architecture() -> str:
+    """SVG de la arquitectura sugerida en AWS: buckets, máquina, bucket del equipo y entrenamiento."""
+    return _svg(
+        860,
+        500,
+        "text{font-size:14px} text.lbl{font-size:14px} text.big{font-size:16px}",
+        _ARCH_BODY,
+    )

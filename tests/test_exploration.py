@@ -12,7 +12,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "viewer"))
 import common  # noqa: E402
-from viewer_app import charts, layers, p_project, state  # noqa: E402
+from viewer_app import charts, layers, layout, state  # noqa: E402
 
 
 class ExplorationTest(unittest.TestCase):
@@ -66,14 +66,14 @@ class ExplorationTest(unittest.TestCase):
 
     def test_every_image_publishes_a_description(self) -> None:
         """Cada imagen emite el marcador que el vigía usa para su texto alternativo."""
-        with patch.object(p_project, "st") as st_mock:
-            p_project._image("<svg/>", 'Dice "algo" <b>')
+        with patch.object(layout, "st") as st_mock:
+            layout.image("<svg/>", 'Dice "algo" <b>', key="cape")
         html_arg = st_mock.html.call_args.args[0]
         self.assertIn('class="project-image-alt"', html_arg)
         self.assertIn("data-description=", html_arg)
-        self.assertIn(
-            st_mock.container.call_args.kwargs["key"], {"image_cape", "image_mesocyclone"}
-        )
+        self.assertEqual(st_mock.container.call_args.kwargs["key"], "image_cape")
+        with self.assertRaises(ValueError):
+            layout.image("<svg/>", "Sin clave")
 
     def test_leaving_tour_restores_free_exploration(self) -> None:
         """Salir devuelve paneles, punto y hora previos al recorrido."""

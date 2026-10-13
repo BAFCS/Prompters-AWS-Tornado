@@ -22,8 +22,8 @@ Lánzalo en segundo plano con un puerto libre (otra sesión o worktree puede ten
 
 ## 2. Recorrer
 
-Páginas (barra de navegación superior): `/` Problema y `/datos` (se ven aunque no haya datos), `/caso`
-(Caso de estudio) y `/mapas`. Las demás necesitan datos en `data/crops/<region>/`; si no hay,
+Páginas (barra de navegación superior): `/` Problema, `/datos` y `/starter-kit` (se ven aunque no haya
+datos), `/caso` (Caso de estudio) y `/mapas`. Las demás necesitan datos en `data/crops/<region>/`; si no hay,
 muestran un aviso de "sin datos", que es el comportamiento esperado.
 
 Con Playwright MCP (Chromium):

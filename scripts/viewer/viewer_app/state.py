@@ -31,7 +31,7 @@ class Context:
 
 
 def page(name: str) -> Page:
-    """La página ``name`` ("data", "case" o "maps"), para ``st.page_link``."""
+    """La página ``name`` (una clave de ``PAGES`` en ``viewer.py``), para ``st.page_link``."""
     return st.session_state["pages"][name]
 
 

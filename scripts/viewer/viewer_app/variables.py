@@ -65,9 +65,9 @@ class Reference:
     url: str = ""
 
 
-# Todas salen de la sección 10 de docs/, salvo Bunkers (2000), citado en ``process_era5.py``, Thompson
-# et al. (2012), de quien es el STP de capa fija que calcula el visor, y la formulación del BRN, que el
-# documento nombra sin citar. Los DOI se verificaron contra doi.org (octubre de 2026).
+# Las académicas y las fuentes de datos están en la sección 10 de docs/, con los mismos datos; las notas de
+# prensa (Jerez, Meteored, El Mostrador, Universidad de Valparaíso) solo se citan en Problema. Los DOI y
+# sus datos se verificaron contra Crossref (octubre de 2026).
 REFERENCES = {
     "era5-ncar": Reference(
         "NSF NCAR (ERA5 en AWS)",
@@ -203,20 +203,53 @@ REFERENCES = {
         "Schultz et al. (2009)",
         "Schultz, C. J., Petersen, W. A. & Carey, L. D. (2009). Preliminary development and evaluation of "
         "lightning jump algorithms for the real-time detection of severe weather. *Journal of Applied "
-        "Meteorology and Climatology*, 48(12).",
+        "Meteorology and Climatology*, 48(12), 2543–2563.",
         "https://doi.org/10.1175/2009JAMC2237.1",
     ),
     "bedka2018": Reference(
         "Bedka et al. (2018)",
         "Bedka, K., Murillo, E. M., Homeyer, C. R., Scarino, B. & Mersiovsky, H. (2018). The above-anvil "
         "cirrus plume: an important severe weather indicator in visible and infrared satellite imagery. "
-        "*Weather and Forecasting*, 33(5).",
+        "*Weather and Forecasting*, 33(5), 1159–1181.",
         "https://doi.org/10.1175/WAF-D-18-0040.1",
+    ),
+    # Las que solo cita Starter kit (trabajos relacionados).
+    "marin2026": Reference(
+        "Marín et al. (2026)",
+        "Marín, J. C., Barrett, B. S., Gutiérrez, F. & Pozo, D. (2026). Mesoscale environments of "
+        "tornadoes in Chile and along the U.S. west coast. *Atmospheric Research*, 344, 109331.",
+        "https://doi.org/10.1016/j.atmosres.2026.109331",
+    ),
+    "brooks2003": Reference(
+        "Brooks et al. (2003)",
+        "Brooks, H. E., Lee, J. W. & Craven, J. P. (2003). The spatial distribution of severe thunderstorm "
+        "and tornado environments from global reanalysis data. *Atmospheric Research*, 67–68, 73–94.",
+        "https://doi.org/10.1016/S0169-8095(03)00045-0",
+    ),
+    "cintineo2014": Reference(
+        "Cintineo et al. (2014)",
+        "Cintineo, J. L., Pavolonis, M. J., Sieglaff, J. M. & Lindsey, D. T. (2014). An empirical model for "
+        "assessing the severe weather potential of developing convection. *Weather and Forecasting*, 29, "
+        "639–653.",
+        "https://doi.org/10.1175/WAF-D-13-00113.1",
+    ),
+    "lagerquist2020": Reference(
+        "Lagerquist et al. (2020)",
+        "Lagerquist, R., McGovern, A., Homeyer, C. R., Gagne II, D. J. & Smith, T. (2020). Deep learning on "
+        "three-dimensional multiscale data for next-hour tornado prediction. *Monthly Weather Review*, "
+        "148, 2837–2861.",
+        "https://doi.org/10.1175/MWR-D-19-0372.1",
+    ),
+    "elkan2008": Reference(
+        "Elkan y Noto (2008)",
+        "Elkan, C. & Noto, K. (2008). Learning classifiers from only positive and unlabeled data. "
+        "*Proceedings of the 14th ACM SIGKDD*, 213–220.",
+        "https://doi.org/10.1145/1401890.1401920",
     ),
     "documento": Reference(
         "Documento del proyecto",
         "*Predicción de tormentas mesociclónicas en Chile*, `docs/mesociclones_chile.md`, secciones 4 y 5.",
-        "https://github.com/fforster/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md",
+        "https://github.com/idia-tt/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md",
     ),
 }  # fmt: skip
 
@@ -543,7 +576,7 @@ VARIABLES = (
         "acelerar tiene una cizalladura grande.",
         formula=r"\mathrm{BWD}_{0\text{–}1} = \left|\vec V(1\ \mathrm{km}) - \vec V(10\ \mathrm{m})\right|",
         method="El visor interpola el perfil cada 100 m sobre el terreno, partiendo del viento a 10 m.",
-        threshold="12 m/s es el valor de comparación citado para los días tornádicos estudiados en Chile. "
+        threshold="12 m/s es la menor cizalladura de 0–1 km observada en el brote tornádico de mayo de 2019 en Chile. "
         "Cumplirlo describe el entorno; no confirma un tornado.",
         inputs=('viento', 'viento10', 'z', 'sp'),
         products=('idx:shear_01',),

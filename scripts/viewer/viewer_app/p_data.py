@@ -10,7 +10,7 @@ import html
 
 import streamlit as st
 
-from viewer_app import products, state, theme, variables
+from viewer_app import layout, products, state, theme, variables
 from viewer_app.variables import Variable
 
 
@@ -113,101 +113,6 @@ def _source(s: variables.Source) -> None:
         st.markdown(f"<p class='note'>Fuentes: {_citations(s.refs)}</p>", unsafe_allow_html=True)
 
 
-_FETCH = """\
-mkdir -p data/goes
-curl -L -o data/tornados_chile.xlsx https://ndownloader.figshare.com/files/56272544
-curl -L -o data/coast.zip https://naciscdn.org/naturalearth/10m/physical/ne_10m_coastline.zip
-
-# ERA5 y GOES se leen sin credenciales; --no-sign-request evita pedirlas
-aws s3 ls --no-sign-request s3://nsf-ncar-era5/
-aws s3 ls --no-sign-request s3://noaa-goes19/
-"""
-
-_PIPELINE = """\
-uv sync
-uv run python scripts/pipeline/download_era5.py --start 2019-05-30
-uv run python scripts/pipeline/download_goes.py --start 2019-05-30
-uv run python scripts/pipeline/process_goes.py  --start 2019-05-30
-uv run python scripts/pipeline/process_era5.py  --start 2019-05-30
-uv run streamlit run scripts/viewer/viewer.py
-"""
-
-
-def _obtain() -> None:
-    """Cómo conseguir los datos, qué hace cada script del repositorio y en qué región de AWS correrlos."""
-    st.divider()
-    st.header("Cómo obtener los datos", anchor="obtener")
-    st.markdown(
-        "<p class='lede'>ERA5 y GOES están en buckets públicos de Amazon S3 y se leen sin "
-        "credenciales. El catálogo y la línea de costa se bajan a mano. Los scripts del repositorio "
-        "recortan la región, reproyectan GOES y calculan los índices, y dejan todo en <code>data/</code>, "
-        "que no se versiona.</p>",
-        unsafe_allow_html=True,
-    )
-    st.subheader("De dónde sale cada conjunto", anchor=False)
-    st.markdown(
-        "| Conjunto | Dónde está | Región AWS | Cómo se baja |\n"
-        "|---|---|---|---|\n"
-        "| ERA5 | `s3://nsf-ncar-era5/` | us-west-2 | `download_era5.py` |\n"
-        "| GOES-16 (dic 2017 – abr 2025) | `s3://noaa-goes16/` | us-east-1 | `download_goes.py` |\n"
-        "| GOES-19 (desde abr 2025) | `s3://noaa-goes19/` | us-east-1 | `download_goes.py` |\n"
-        "| Catálogo de tornados | figshare, hoja `Final_Table` | no está en AWS | `curl` |\n"
-        "| Línea de costa | Natural Earth 10m | no está en AWS | `curl` |"
-    )
-    st.code(_FETCH, language="bash")
-    st.caption(
-        "El bucket `era5-pds` está deprecado: no tiene niveles de presión ni CAPE. "
-        "El script de GOES elige el satélite según la fecha."
-    )
-
-    st.subheader("Scripts del proyecto", anchor=False)
-    st.markdown(
-        "Los de descarga y proceso van en este orden: primero se baja, después se calcula. "
-        "Todos aceptan `--start` y `--end` (fechas UTC), `--region` o `--bbox`, y `--force`. "
-        "Saltan lo que ya existe, así que si una descarga se corta basta repetir el comando.\n\n"
-        "| Script | Qué hace | Deja en `data/crops/<región>/` |\n"
-        "|---|---|---|\n"
-        "| `download_era5.py` | Baja ERA5 (niveles de presión y superficie) y recorta la región. Cada "
-        "hora de un nivel de presión es un bloque global de 50–65 MB que se transfiere entero y se "
-        "recorta en memoria | `era5_pl/`, `era5_sfc/` (un archivo por día) |\n"
-        "| `download_goes.py` | Baja GOES `ABI-L2-MCMIPF`, las 16 bandas a 2 km. Lee el índice del "
-        "archivo y pide a S3 solo los bloques que tocan la región | `goes/` (un archivo por hora) |\n"
-        "| `process_goes.py` | Reproyecta GOES a una grilla regular de latitud y longitud, con vecino "
-        "más cercano para no alterar valores. No corrige paralaje | `goes_latlon/` |\n"
-        "| `process_era5.py` | Calcula cizalladura, movimiento de Bunkers *left-mover*, SRH, VGP, STP, "
-        "SHERBS3 y LCL con los signos del hemisferio sur | `era5_indices/` |\n"
-        "| `viewer.py` | El visor que estás usando | — |\n"
-        "| `figs_catalog.py`, `figs_era5.py`, `figs_goes.py` | Las figuras del documento: catálogo, "
-        "entorno ERA5 y una imagen de la banda 13. Se escriben en `figs/` | — |"
-    )
-    st.code(_PIPELINE, language="bash")
-    st.caption(
-        "Las regiones predefinidas son `south-central-austral` (la de uso por defecto), "
-        "`south-central` y `full`; `--bbox` define otra a medida."
-    )
-
-    st.subheader("En qué región de AWS trabajar", anchor=False)
-    st.markdown(
-        "Los dos conjuntos no están en la misma región: ERA5 vive en **us-west-2** (Oregón) y GOES "
-        "en **us-east-1** (Virginia del Norte). Un computador que corre en la misma región que el "
-        "bucket lee sin salir de la red de AWS. En la otra región, cada solicitud cruza el "
-        "continente y suma decenas de milisegundos, que se multiplican cuando el script hace miles "
-        "de lecturas pequeñas.\n\n"
-        "La recomendación es **us-west-2**, por el peso de cada descarga. `download_era5.py` "
-        "transfiere unos 11 GB por día para quedarse con unos 70 MB, y esa es la parte lenta del "
-        "proyecto: desde Chile el volumen es el mismo y viaja por internet; dentro de us-west-2 "
-        "queda en la red interna. GOES mueve mucho menos, porque el script pide solo los bloques de "
-        "la región, y puede leerse desde us-west-2 con algo más de latencia. Si más adelante la "
-        "descarga de GOES resulta ser el cuello de botella, se puede correr en us-east-1 y copiar los "
-        "recortes a un bucket de us-west-2.\n\n"
-        "Ni us-west-2 ni us-east-1 quedan cerca de Chile, y `sa-east-1` (São Paulo) no aloja ninguno de "
-        "los dos conjuntos, así que acercarse físicamente no ayuda. Una vez hechos los recortes, que "
-        "pesan poco, conviene guardarlos en S3 en la misma región donde se calcule o entrene, y el "
-        "visor puede correr donde sea. No medimos la latencia entre regiones; el criterio sale de la "
-        "ubicación de los buckets."
-    )
-
-
 def _bibliography() -> None:
     """Todas las referencias citadas, cada una con su ancla y su enlace."""
     st.divider()
@@ -246,7 +151,6 @@ def _toc() -> str:
             if g.source == s.key
         )
         items.append(f"<li><a href='#{s.key}'>{s.title.split(' · ')[0]}</a><ol>{sub}</ol></li>")
-    items.append("<li><a href='#obtener'>Cómo obtener los datos</a></li>")
     items.append("<li><a href='#referencias'>Referencias</a></li>")
     return f"<nav class='toc' aria-label='En esta página'><ol>{''.join(items)}</ol></nav>"
 
@@ -344,7 +248,6 @@ def _body() -> None:
         for g in variables.GROUPS:
             if g.source == s.key:
                 _group(g, [v for v in variables.VARIABLES if v.group == g.key], available)
-    _obtain()
     _bibliography()
     if target:
         _scroll_to(target)
@@ -352,11 +255,4 @@ def _body() -> None:
 
 def page() -> None:
     """Dibuja la página con el índice al costado (o desplegable arriba en pantallas angostas)."""
-    with st.container(key="data"), st.container(horizontal=True, wrap=False, gap="large"):
-        with st.container(key="data_body"):
-            with st.expander("En esta página", key="toc_compact", icon=":material/toc:"):
-                st.markdown(_toc(), unsafe_allow_html=True)
-            _body()
-        with st.container(width=220, key="toc_side"):
-            st.markdown("<p class='toc-title'>En esta página</p>", unsafe_allow_html=True)
-            st.markdown(_toc(), unsafe_allow_html=True)
+    layout.page("data", _toc(), _body)

@@ -38,7 +38,7 @@ uv add <pkg> / uv add --dev <pkg>    # añadir dependencias
 ```
 
 El `Makefile` junta los más usados: `make check` (ruff, formato, pyright y pruebas), `make fix`,
-`make viewer`, `make data` (catálogo, costa y GOES de `figs_goes.py`), `make deploy` y `make ssh`.
+`make viewer` y `make data` (catálogo, costa y GOES de `figs_goes.py`).
 `make` a secas los lista.
 
 Claude Code (`.claude/settings.json`) y Codex (`.codex/hooks.json`) corren `.agents/hooks/ruff.sh` tras
@@ -98,14 +98,14 @@ uv run streamlit run scripts/viewer/viewer.py
 ```
 
 **Visor** (`scripts/viewer/viewer.py` + paquete `scripts/viewer/viewer_app/`, importado como *first-party* igual que
-`common`): páginas Problema, Datos, Caso de estudio y Mapas. Problema (`viewer_app/p_project.py`,
+`common`): páginas Problema, Datos, Caso de estudio, Mapas y Starter kit. Problema (`viewer_app/p_project.py`,
 diagramas en `viewer_app/diagrams.py`) presenta el proyecto con elementos de Streamlit: es la
 página por defecto y se muestra aunque no haya datos. Datos (`viewer_app/p_data.py`) es el catálogo
 de datos: una ficha por variable de docs §4–5 (qué es, por qué importa, fórmula, criterio chileno,
 cuidado, insumos y fuentes), también sin datos; `?v=<clave>` desplaza la página a esa ficha. Las fichas y la
 bibliografía viven en `viewer_app/variables.py`, que es además la fuente de la ayuda
 «Qué estás viendo» de Mapas: todo producto nuevo de `products.py` necesita su ficha
-(`tests/test_variables.py` lo comprueba). La barra lateral (región, día, regla de tiempo,
+(`tests/test_variables.py` lo comprueba). Starter kit (`viewer_app/p_starter.py`) reúne los buckets, los scripts, la arquitectura sugerida (diagrama en `diagrams.architecture`), cómo correrlos dentro de AWS (en el computador, solo uno o dos días), los formatos para entrenar, los próximos pasos y los trabajos relacionados; también se muestra sin datos. Las páginas de lectura (Problema, Datos, Caso de estudio y Starter kit) comparten `viewer_app/layout.py`: `layout.page(nombre, índice, cuerpo)` arma el cuerpo con su índice lateral o desplegable, y `section`, `cards`, `image` y `toc` son las piezas comunes. El CSS de `theme.py` se engancha a las claves `page_<nombre>` y `pagebody_<nombre>`, así que una página nueva no necesita selectores propios. Las páginas que se ven sin datos están en `NO_DATA_PAGES` de `viewer.py`. La barra lateral (región, día, regla de tiempo,
 evento, recorrido guiado) vive en `viewer.py` para que sus widgets sobrevivan al cambio de página; el
 estado compartido está en `viewer_app/state.py` (`restore`/`save` copian los widgets de cada
 página bajo `_<key>`). La página Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va
@@ -135,25 +135,9 @@ pierde precisión. Ninguno corrige paralaje todavía.
 montado como volumen en `/app/data`. En local: `docker compose up` (`compose.yaml`), y los scripts de
 datos corren en el mismo contenedor con `docker compose run --rm viewer python scripts/pipeline/...`.
 
-`deploy/` (Terraform) levanta **una** EC2 en **us-west-2**, la región de ERA5, que es la fuente más
-pesada; GOES queda en us-east-1. La máquina clona el repo, baja catálogo y costa, construye la imagen y
-deja el visor en el puerto 8501, abierto solo a `allowed_cidr` porque Streamlit no tiene autenticación.
-Sin SSH: se entra con `aws ssm start-session`. Los recortes se generan en la misma máquina y quedan en
-`/opt/mesocyclonic/data`.
-
-Para entrar hace falta el plugin Session Manager de la AWS CLI. `repo` solo cuenta al crear la máquina;
-después el código se actualiza con `deploy/up.sh`. Si el primer arranque falla, el registro está en
-`/var/log/cloud-init-output.log`. Sin terraform instalado, `TF` cambia el comando, por ejemplo
-`make deploy TF='podman run --rm -i -v $$PWD/deploy:/w:Z -v ~/.aws:/root/.aws:ro -w /w docker.io/hashicorp/terraform:1.13'`.
-
-```bash
-make deploy    # terraform init + apply, abierto solo a la IP actual
-make ssh       # aws ssm start-session a la máquina
-# dentro de la máquina:
-sudo /opt/mesocyclonic/deploy/up.sh    # trae el código nuevo y reinicia el visor
-# en segundo plano, para que no se corte con la sesión:
-sudo docker exec -d viewer sh -c 'python scripts/pipeline/download_era5.py --start 2019-05-30 > data/download_era5.log 2>&1'
-```
+En AWS el despliegue es a mano: la página Starter kit del visor explica cómo preparar una EC2 en
+us-west-2, correr los scripts con `uv` y abrir el visor por un túnel de Session Manager, sin puertos
+abiertos. Más adelante podría automatizarse con Terraform u otra herramienta de infraestructura.
 
 ## Datos
 

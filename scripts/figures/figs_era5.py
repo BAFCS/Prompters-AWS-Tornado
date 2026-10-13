@@ -162,7 +162,7 @@ cbar(c, b)
 c3 = axs[2]
 cc = c3.contourf(X, Y, sh01, levels=np.arange(0, 26, 2), cmap="PuRd", extend="max")
 c3.contour(X, Y, sh01, levels=[12], colors=[SEV], linewidths=1.6)
-base(c3, "C · Cizalladura 0–1 km", "m/s · línea roja = umbral chileno de 12 m/s")
+base(c3, "C · Cizalladura 0–1 km", "m/s · línea roja = 12 m/s, mínimo observado en 2019")
 cbar(cc, c3)
 
 # D · cizalladura 0-6 km
