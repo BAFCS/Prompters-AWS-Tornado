@@ -125,6 +125,24 @@ fila de controles de Mapas, que va alineada con los paneles de la figura. `PRODU
 GOES se guarda con su codificación original (`int16` con `scale_factor`/`add_offset`), así que no
 pierde precisión. Ninguno corrige paralaje todavía.
 
+## Despliegue
+
+`Dockerfile` arma una imagen con el visor y los scripts de datos (sin el grupo dev); `data/` va
+montado como volumen en `/app/data`. En local: `docker compose up` (`compose.yaml`), y los scripts de
+datos corren en el mismo contenedor con `docker compose run --rm viewer python scripts/pipeline/...`.
+
+`deploy/` (Terraform) levanta **una** EC2 en **us-west-2**, la región de ERA5, que es la fuente más
+pesada; GOES queda en us-east-1. La máquina clona el repo, baja catálogo y costa, construye la imagen y
+deja el visor en el puerto 8501, abierto solo a `allowed_cidr` porque Streamlit no tiene autenticación.
+Sin SSH: se entra con `aws ssm start-session`. Los recortes se generan en la misma máquina y quedan en
+`/opt/mesocyclonic/data`.
+
+```bash
+cd deploy && terraform init && terraform apply -var allowed_cidr=$(curl -s ifconfig.me)/32
+aws ssm start-session --region us-west-2 --target $(terraform output -raw instance_id)
+# dentro: cd /opt/mesocyclonic && sudo docker exec viewer python scripts/pipeline/download_era5.py --start 2019-05-30
+```
+
 ## Datos
 
 `data/` y los formatos de datos (`*.nc`, `*.xlsx`, `*.zarr`, ...) están en `.gitignore`: los datos se
