@@ -269,8 +269,6 @@ muestran la misma lista de tareas, y Starter kit agrega las primeras tareas para
 
 Proyecto preparado para la hackathon [Breaking Barriers](https://www.taurusmkt.com/breakingbarrierschile) por:
 
+- [Roberto Rondanelli](https://www.cr2.cl/roberto-rondanelli/), CR2.
 - [Francisco Forster](https://idia.uchile.cl/quienes-somos/francisco-forster/), IDIA, Universidad de Chile.
 - [Pablo Badilla](https://idia.uchile.cl/quienes-somos/pablo-badilla/), IDIA, Universidad de Chile.
-- [Roberto Rondanelli](https://www.cr2.cl/roberto-rondanelli/), CR2.
-
-Las dudas sobre el proyecto o el código se pueden plantear como un *issue* en este repositorio.
