@@ -246,7 +246,7 @@ uv add <paquete>                                # agrega una dependencia (nunca 
 ```
 
 `make check` corre las cuatro revisiones de una vez y `make fix` corrige el estilo; `make` a secas
-lista los demás atajos.
+lista los demás atajos. El Makefile es opcional: en Windows, usa los comandos de arriba o WSL.
 
 `AGENTS.md` describe la estructura del código, las convenciones del proyecto y de dónde sale cada
 dato.
