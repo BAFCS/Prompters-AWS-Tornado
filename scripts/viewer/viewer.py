@@ -35,6 +35,7 @@ from viewer_app import (  # noqa: E402
     p_data,
     p_maps,
     p_project,
+    p_starter,
     state,
     texts,
     theme,
@@ -50,6 +51,7 @@ PAGES = {
     "data": st.Page(p_data.page, title="Datos", icon=":material/dataset:", url_path="datos"),
     "case": st.Page(p_case.page, title="Caso de estudio", icon=":material/history_edu:", url_path="caso"),
     "maps": st.Page(p_maps.page, title="Mapas", icon=":material/map:", url_path="mapas"),
+    "starter": st.Page(p_starter.page, title="Starter kit", icon=":material/rocket_launch:", url_path="starter-kit"),
 }  # fmt: skip
 st.session_state["pages"] = PAGES
 navigation = st.navigation(list(PAGES.values()), position="top")
@@ -66,8 +68,8 @@ theme.mode_button()
 
 
 def no_data(message: str, prepare: bool = False) -> NoReturn:
-    """Detiene la app sin datos: Problema y Datos se muestran igual; las demás avisan con ``message``."""
-    if navigation.url_path in {PAGES["project"].url_path, PAGES["data"].url_path}:
+    """Detiene la app sin datos: Problema, Datos y Starter kit se muestran igual; las demás avisan con ``message``."""
+    if navigation.url_path in {PAGES[k].url_path for k in ("project", "data", "starter")}:
         # Datos no debe ofrecer productos de un día ya no disponible.
         st.session_state.pop("ctx", None)
         navigation.run()  # no usan datos
@@ -75,18 +77,9 @@ def no_data(message: str, prepare: bool = False) -> NoReturn:
     st.error(message)
     if prepare:
         st.page_link(PAGES["project"], label="Leer Problema")
-        with st.expander("Preparar datos en la instalación local"):
-            st.markdown(
-                "Desde la raíz del repositorio, descarga y procesa un día. Los archivos se guardan "
-                "en `data/crops/`. Después, recarga esta página."
-            )
-            st.code(
-                "uv run python scripts/pipeline/download_era5.py --start 2019-05-30\n"
-                "uv run python scripts/pipeline/download_goes.py --start 2019-05-30\n"
-                "uv run python scripts/pipeline/process_goes.py --start 2019-05-30\n"
-                "uv run python scripts/pipeline/process_era5.py --start 2019-05-30",
-                language="bash",
-            )
+        st.page_link(
+            PAGES["starter"], label="Preparar los datos en AWS", icon=":material/rocket_launch:"
+        )
     st.stop()
 
 

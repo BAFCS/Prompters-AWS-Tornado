@@ -94,14 +94,14 @@ uv run streamlit run scripts/viewer/viewer.py
 ```
 
 **Visor** (`scripts/viewer/viewer.py` + paquete `scripts/viewer/viewer_app/`, importado como *first-party* igual que
-`common`): páginas Problema, Datos, Caso de estudio y Mapas. Problema (`viewer_app/p_project.py`,
+`common`): páginas Problema, Datos, Caso de estudio, Mapas y Starter kit. Problema (`viewer_app/p_project.py`,
 diagramas en `viewer_app/diagrams.py`) presenta el proyecto con elementos de Streamlit: es la
 página por defecto y se muestra aunque no haya datos. Datos (`viewer_app/p_data.py`) es el catálogo
 de datos: una ficha por variable de docs §4–5 (qué es, por qué importa, fórmula, criterio chileno,
 cuidado, insumos y fuentes), también sin datos; `?v=<clave>` desplaza la página a esa ficha. Las fichas y la
 bibliografía viven en `viewer_app/variables.py`, que es además la fuente de la ayuda
 «Qué estás viendo» de Mapas: todo producto nuevo de `products.py` necesita su ficha
-(`tests/test_variables.py` lo comprueba). La barra lateral (región, día, regla de tiempo,
+(`tests/test_variables.py` lo comprueba). Starter kit (`viewer_app/p_starter.py`) reúne los buckets, los scripts, la arquitectura sugerida (diagrama en `diagrams.architecture`), cómo correrlos dentro de AWS (nunca bajando datos al computador), los formatos para entrenar, los próximos pasos y los trabajos relacionados; también se muestra sin datos. La barra lateral (región, día, regla de tiempo,
 evento, recorrido guiado) vive en `viewer.py` para que sus widgets sobrevivan al cambio de página; el
 estado compartido está en `viewer_app/state.py` (`restore`/`save` copian los widgets de cada
 página bajo `_<key>`). La página Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va

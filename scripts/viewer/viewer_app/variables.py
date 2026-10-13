@@ -213,6 +213,39 @@ REFERENCES = {
         "*Weather and Forecasting*, 33(5).",
         "https://doi.org/10.1175/WAF-D-18-0040.1",
     ),
+    # Solo las cita Starter kit (trabajos relacionados); DOI y datos verificados en Crossref.
+    "marin2026": Reference(
+        "Marín et al. (2026)",
+        "Marín, J. C., Barrett, B. S., Gutiérrez Cotapos, F. & Pozo, D. (2026). Mesoscale environments of "
+        "tornadoes in Chile and along the U.S. west coast. *Atmospheric Research*, 344, 109331.",
+        "https://doi.org/10.1016/j.atmosres.2026.109331",
+    ),
+    "brooks2003": Reference(
+        "Brooks et al. (2003)",
+        "Brooks, H. E., Lee, J. W. & Craven, J. P. (2003). The spatial distribution of severe thunderstorm "
+        "and tornado environments from global reanalysis data. *Atmospheric Research*, 67–68, 73–94.",
+        "https://doi.org/10.1016/S0169-8095(03)00045-0",
+    ),
+    "cintineo2014": Reference(
+        "Cintineo et al. (2014)",
+        "Cintineo, J. L., Pavolonis, M. J., Sieglaff, J. M. & Lindsey, D. T. (2014). An empirical model for "
+        "assessing the severe weather potential of developing convection. *Weather and Forecasting*, 29, "
+        "639–653.",
+        "https://doi.org/10.1175/WAF-D-13-00113.1",
+    ),
+    "lagerquist2020": Reference(
+        "Lagerquist et al. (2020)",
+        "Lagerquist, R., McGovern, A., Homeyer, C. R., Gagne II, D. J. & Smith, T. (2020). Deep learning on "
+        "three-dimensional multiscale data for next-hour tornado prediction. *Monthly Weather Review*, "
+        "148, 2837–2861.",
+        "https://doi.org/10.1175/MWR-D-19-0372.1",
+    ),
+    "elkan2008": Reference(
+        "Elkan y Noto (2008)",
+        "Elkan, C. & Noto, K. (2008). Learning classifiers from only positive and unlabeled data. "
+        "*Proceedings of the 14th ACM SIGKDD*, 213–220.",
+        "https://doi.org/10.1145/1401890.1401920",
+    ),
     "documento": Reference(
         "Documento del proyecto",
         "*Predicción de tormentas mesociclónicas en Chile*, `docs/mesociclones_chile.md`, secciones 4 y 5.",

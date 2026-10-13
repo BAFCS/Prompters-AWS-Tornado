@@ -29,10 +29,11 @@ SECTIONS = (
     ("objetivo", "Objetivo"),
     ("importancia", "Por qué importa"),
     ("mesociclones", "Mesociclones"),
-    ("problema", "El problema"),
-    ("dificultad", "Por qué es difícil"),
+    ("chile", "Por qué Chile es distinto"),
+    ("catalogo", "El catálogo"),
     ("datos", "Los datos"),
     ("volumen", "El volumen de los datos"),
+    ("decisiones", "Decisiones abiertas"),
     ("participar", "Participar"),
     ("glosario", "Anexo: glosario"),
 )
@@ -95,24 +96,15 @@ def _cover() -> None:
             unsafe_allow_html=True,
         )
     st.markdown(
-        '<p class="lede">El 30 y 31 de mayo de 2019, en pleno otoño, el centro-sur de Chile vivió un brote histórico de tornados: al menos siete en 24 horas, con cientos de viviendas destruidas y miles de personas afectadas (<a href="https://www.biobiochile.cl/noticias/ciencia-y-tecnologia/ciencia/2026/07/11/se-cumplen-7-anos-del-historico-brote-de-tornados-en-chile-y-advierten-que-puede-volver-a-ocurrir.shtml">BioBioChile, 2026</a>). Los índices que usan los pronosticadores del hemisferio norte no fueron diseñados para este clima, y los especialistas advierten que puede volver a ocurrir. Sabemos que las tormentas que desarrollan un mesociclón son las que preceden a esos tornados. Lo que no sabemos es cómo reconocerlas antes, con los datos que ya existen para Chile.</p>'
-        "<p>Este es un proyecto abierto para la hackathon AWS Breaking Barriers. Tenemos 102 eventos documentados, el reanálisis ERA5 y las imágenes del satélite GOES. Falta entender qué distingue a las tormentas que rotan de las que no, y esa pregunta puede responderla cualquier persona que sepa mirar datos, con o sin formación en meteorología.</p>"
-        f"<p><strong>Los dos conjuntos de datos.</strong> <a href='{ERA5}'>ERA5</a> es un reanálisis: el Centro Europeo de "
-        "Predicción Meteorológica a Plazo Medio (ECMWF) combina un modelo de la atmósfera con décadas de observaciones para reconstruir, "
-        "hora a hora y desde 1940, cómo estaban el viento, la temperatura y la humedad, en una grilla de unos 31 km. "
-        f"<a href='{GOES}'>GOES</a> es la serie de satélites geoestacionarios de la NOAA; GOES-East mira a Chile de forma continua y mide, "
-        "cada 10 minutos y en 16 bandas, la radiación que llega desde las nubes, con píxeles de unos 2 km. "
-        "ERA5 describe el entorno donde nace una tormenta y GOES muestra la nube. Ambos son públicos y están en el "
-        f"<a href='{OPEN_DATA}'>AWS Open Data Program</a>. El detalle está en <a href='#datos'>Los datos</a>.</p>",
+        '<p class="lede">El 30 y 31 de mayo de 2019, en pleno otoño, el centro-sur de Chile vivió un brote histórico de tornados: al menos siete en 24 horas, con cientos de viviendas dañadas y miles de personas afectadas (<a href="https://www.biobiochile.cl/noticias/ciencia-y-tecnologia/ciencia/2026/07/11/se-cumplen-7-anos-del-historico-brote-de-tornados-en-chile-y-advierten-que-puede-volver-a-ocurrir.shtml">BioBioChile, 2026</a>). Dos de ellos entraron en Los Ángeles y Talcahuano, y en Talcahuano murió una persona. Los especialistas advierten que puede repetirse. Los tornados más fuertes suelen nacer en tormentas con un mesociclón, una rotación organizada dentro de la nube, aunque no todo mesociclón produce un tornado. Lo que no sabemos es cómo reconocer esas tormentas a tiempo con los datos que ya existen para Chile.</p>'
+        "<p>Este es un proyecto abierto para la hackathon AWS Breaking Barriers. Tenemos 102 eventos documentados, "
+        f"el reanálisis <a href='{ERA5}'>ERA5</a> y las imágenes del satélite <a href='{GOES}'>GOES</a>, ambos públicos en el "
+        f"<a href='{OPEN_DATA}'>AWS Open Data Program</a> y descritos en <a href='#datos'>Los datos</a>. Falta entender qué distingue "
+        "a las tormentas que rotan de las que no.</p>",
         unsafe_allow_html=True,
     )
     st.page_link(
         state.page("case"), label="Explorar el caso de mayo de 2019", icon=":material/map:"
-    )
-    st.markdown(
-        "<p>El catálogo utilizado por el proyecto reúne 102 eventos de tornados y trombas marinas entre 1554 y 2025. Los registros dependen de las observaciones y los reportes disponibles, por lo que pueden faltar eventos. "
-        "El <a href='#objetivo'>objetivo del proyecto</a> y su criterio de éxito están más abajo.</p>",
-        unsafe_allow_html=True,
     )
     stats = (("102", "eventos catalogados, 1554–2025", ""), ("7", "tornados en 24 h, mayo 2019", " sev"),
               ("10 min", "frecuencia nominal de GOES", ""), ("0", "registros al sur de 42,4°S", ""))  # fmt: skip
@@ -124,7 +116,7 @@ def _cover() -> None:
 def _decision(title: str, question: str, options: list[tuple[str, str]], hint: str) -> None:
     """Una decisión abierta: la pregunta, cada opción con sus implicancias y una sugerencia."""
     with st.container(border=True, key=f"decision_{re.sub(r'\W+', '_', title.lower())}"):
-        st.badge("Decisión abierta", color="orange")
+        st.badge("Decisión abierta", color="primary")
         st.markdown(f"**{title}**")
         st.markdown(question)
         st.markdown("\n".join(f"- **{name}.** {text}" for name, text in options))
@@ -132,7 +124,7 @@ def _decision(title: str, question: str, options: list[tuple[str, str]], hint: s
 
 
 def _objective() -> None:
-    """Objetivo, criterio de éxito y las decisiones que el proyecto deja a quienes lo desarrollen."""
+    """Objetivo y criterio de éxito; las decisiones abiertas van en ``_decisions``."""
     _section(
         "objetivo",
         "Objetivo",
@@ -146,9 +138,21 @@ def _objective() -> None:
         "No está en el visor ni en el catálogo de 102 eventos, que llega a 2025. Por eso conviene **no usarla para entrenar** y reservarla "
         "para evaluar el algoritmo a futuro: un modelo ajustado con los eventos hasta 2025 y probado con 2026 se evalúa sobre datos que no vio."
     )
-    st.subheader("Lo que el proyecto deja abierto", anchor=False)
     st.markdown(
-        "«Estimar qué tormentas pueden desarrollar un mesociclón» admite varias lecturas, y cada una cambia los datos, el modelo y cómo se mide. "
+        "«Estimar qué tormentas pueden desarrollar un mesociclón» se puede leer de varias formas. "
+        "Las opciones están en <a href='#decisiones'>Decisiones abiertas</a>, después de presentar los datos.",
+        unsafe_allow_html=True,
+    )
+
+
+def _decisions() -> None:
+    """Las decisiones que el proyecto deja a quienes lo desarrollen, con opciones y una sugerencia."""
+    _section(
+        "decisiones",
+        "Decisiones abiertas",
+        "Con los datos y su costo a la vista, quedan las decisiones de diseño: seis que cambian qué datos se preparan, qué modelo se entrena y cómo se evalúa.",
+    )
+    st.markdown(
         "El proyecto **no fija estas decisiones: les corresponde a quienes lo desarrollen**, que además pueden proponer otras. "
         "Para cada una van las opciones, lo que implica elegirlas y una sugerencia de partida, que se puede rechazar con argumentos."
     )
@@ -167,7 +171,7 @@ def _objective() -> None:
             ),
             (
                 "Una región por día",
-                "Se predice si ese día hubo condiciones para un mesociclón en la zona. Hay menos muestras (38 días con tornado desde 2018) y no se sabe cuál tormenta fue.",
+                "Se predice si ese día hubo condiciones para un mesociclón en la zona. Hay menos muestras (38 días con algún tornado o tromba desde 2018) y no se sabe cuál tormenta fue.",
             ),
         ],
         "Partir con la celda de ERA5 por hora, que se puede hacer ya, y avanzar a la tormenta seguida en GOES si el tiempo lo permite.",
@@ -178,11 +182,11 @@ def _objective() -> None:
         [
             (
                 "Un tornado reportado",
-                "Hay etiquetas, aunque pocas (102 eventos, 38 desde 2018, cuando GOES-16 ya operaba). Un tornado no siempre viene de un mesociclón, y hay mesociclones sin tornado.",
+                "Hay etiquetas, aunque pocas (102 eventos, 50 desde 2018, cuando GOES-16 ya operaba). Un tornado no siempre viene de un mesociclón, y hay mesociclones sin tornado.",
             ),
             (
                 "Un mesociclón inferido",
-                "Se define con un indicador de rotación, como la rotación observada en el yunque con flujo óptico o un índice como VGP₀₋₁ sobre su umbral. "
+                "Se define con un indicador de rotación, como la rotación estimada en el yunque con flujo óptico o un índice como VGP₀₋₁ sobre su umbral. "
                 "Hay más muestras, pero el modelo aprendería a repetir ese indicador y no habría un hecho observado con qué verificarlo.",
             ),
             (
@@ -198,8 +202,8 @@ def _objective() -> None:
         [
             (
                 "Días al azar, en la época de los tornados",
-                "Sortear días del otoño (y de los meses donde el catálogo concentra eventos) que no estén en el catálogo, sin repetir fechas. "
-                "Es honesto: el modelo ve un día cualquiera de esa estación. Pero un día sorteado casi nunca tiene una tormenta, así que el modelo puede aprender a decir «hay nubes y viento», que es más fácil que reconocer una supercélula.",
+                "Sortear días de otoño e invierno, cuando se concentran los eventos del catálogo, que no estén en él, sin repetir fechas. "
+                "Así el modelo ve días típicos de esa estación. Pero un día sorteado casi nunca tiene una tormenta, así que el modelo puede aprender a decir «hay nubes y viento», que es más fácil que reconocer una supercélula.",
             ),
             (
                 "Días elegidos a mano para contrastar",
@@ -221,7 +225,7 @@ def _objective() -> None:
             ),
             (
                 "Anticipación de unas horas",
-                "Se usan datos previos a la tormenta, de una a seis horas antes. Es lo que serviría para alertar. Es más difícil, ERA5 llega con retraso y no es un pronóstico, y solo se evalúa con eventos cuya hora se conoce bien.",
+                "Se usan datos previos a la tormenta, de una a seis horas antes. Es lo que serviría para alertar. Es más difícil. Además, ERA5 se publica con días de retraso y no es un pronóstico, y esta opción solo se puede evaluar con eventos de hora conocida.",
             ),
         ],
         "Resolver primero el diagnóstico, como paso para el segundo.",
@@ -237,7 +241,7 @@ def _objective() -> None:
             ),
             (
                 "Con GOES desde 2017",
-                "Ve la nube, pero cubre menos años y ninguno anterior a los datos de GOES-16.",
+                "Ve la nube, pero solo cubre desde fines de 2017.",
             ),
             ("No hacerlo", "Concentra el trabajo en un solo objetivo."),
         ],
@@ -287,11 +291,11 @@ def _importance() -> None:
         "puede no quedar registro: el subregistro por baja densidad de población es la explicación que plantean "
         "Caballero-Morán y Rondanelli (2025) para zonas del sur con condiciones favorables "
         "y sin eventos documentados. Y aun con radar, algunos tornados serían difíciles de ver "
-        "(lo explicamos más abajo, en «Por qué es difícil»).</p>"
+        "(lo explicamos más abajo, en «Por qué Chile es distinto»).</p>"
         "<p>Además, los tornados "
         "<a href='https://www.cr2.cl/tornados-no-estarian-catalogados-como-una-amenaza-climatica-en-chile-el-mostrador/'>no figuran como una amenaza climática en el país</a>, "
         "así que no hay un marco que obligue a medirlos (Rondanelli, 2025).</p>"
-        "<p>Por eso el catálogo de 102 eventos es una muestra de lo que se vio, no de lo que ocurrió. Un modelo que "
+        "<p>Un modelo que "
         "reconozca desde datos públicos (ERA5 y GOES) qué tormentas desarrollan rotación no reemplaza a un radar ni "
         "emite alertas, pero sirve para estudiar los entornos favorables, revisar casos históricos que nadie "
         "reportó y decidir mejor dónde observar.</p>",
@@ -366,7 +370,11 @@ _PLAN_ALT = (
 
 def _animation() -> None:
     """Mesociclogénesis en cuatro etapas: el usuario elige la etapa; los rodillos giran solos."""
-    st.header("Mesociclones, supercélulas y tornados", anchor="mesociclones")
+    _section(
+        "mesociclones",
+        "Mesociclones, supercélulas y tornados",
+        "Los tornados más intensos suelen formarse dentro de tormentas que giran, llamadas supercélulas.",
+    )
     st.markdown(
         "Un mesociclón es una región de aire en rotación organizada dentro de una tormenta, de unos 2 a 10 km de diámetro. Una tormenta con un mesociclón persistente se denomina supercélula. Un tornado es un fenómeno de menor escala cuya circulación alcanza la superficie. Una supercélula puede desarrollar un tornado, pero esa evolución no es inevitable.",
     )
@@ -380,13 +388,27 @@ def _animation() -> None:
         )()
 
 
-CASE_TEXT = '<p>El <strong>30 y 31 de mayo de 2019</strong>, siete tornados golpearon en menos de 24 horas la zona entre Ñuble y La Araucanía. Dos entraron en ciudades: <strong>Los Ángeles</strong> (EF2) y <strong>Talcahuano–Concepción</strong> (EF1–EF2, 17 km de trayecto, una persona fallecida, 50.000 clientes sin electricidad). La escala Fujita mejorada (EF) clasifica la intensidad según los daños observados. Este episodio es el caso de referencia del proyecto para estudiar las condiciones atmosféricas asociadas a los tornados del centro-sur de Chile.</p>\n<p>Existe un catálogo formal y publicado: la base <a href="https://doi.org/10.6084/m9.figshare.25119566">Tornadoes and Waterspouts in Chile</a> (Bastías-Curivil, Rondanelli, Vicencio et al., CC BY 4.0), con <strong>102 eventos entre 1554 y 2025</strong>. Incluye tornados, trombas marinas y eventos clasificados en ambas categorías. Según el resumen disponible, todos tienen coordenadas y el 89 % tiene hora UTC, un dato necesario para compararlos con imágenes satelitales. UTC significa tiempo universal coordinado y puede diferir de la hora local de Chile.</p>\n<p>En la copia del catálogo usada aquí, 70 registros están marcados como tornado, 45 como tromba marina y 19 en ambas categorías. Otros 6 no están marcados en ninguna de las dos; su clasificación debe revisarse. Los conteos de tornados y trombas se solapan y no deben sumarse para obtener el total.</p>\n<p>La cobertura del catálogo depende de que los eventos hayan sido observados, documentados e incorporados a la base. Esto puede favorecer los registros de zonas pobladas y dejar menos información sobre zonas rurales, el mar o eventos nocturnos. Es un sesgo de reporte que debe considerarse al analizar los datos. El catálogo no contiene registros al sur de los 42,4°S; esa ausencia no confirma que allí no hayan ocurrido eventos.</p>\n<p>Una línea de trabajo consiste en identificar días y lugares con condiciones similares a las de eventos documentados. Esos resultados serían candidatos para una revisión posterior; la similitud del entorno no confirma que haya ocurrido un tornado ni que se haya formado un mesociclón.</p>'
+CATALOG_TEXT = (
+    f'<p>La base <a href="{CATALOG}">Tornadoes and Waterspouts in Chile</a> está publicada en figshare con licencia CC BY 4.0 por doce autores '
+    "encabezados por Cristian Bastías-Curivil, entre ellos Roberto Rondanelli y José Vicencio. Incluye los casos en que los autores consideran más probable "
+    "que haya ocurrido un tornado o una tromba que lo contrario. Reúne <strong>102 eventos entre 1554 y 2025</strong>: 70 marcados como tornado, 45 como tromba marina "
+    "y 19 en ambas categorías, así que esos números no se suman; otros 6 no tienen tipo y su clasificación debe revisarse.</p>"
+    "<p>Cada evento trae posición, fecha, hora local y UTC, tipo, intensidad en la escala Fujita mejorada (EF), fenómenos acompañantes (ruido, granizo, "
+    "tormenta eléctrica, daños) y víctimas. Todos tienen coordenadas y el 89 % tiene hora UTC, que es lo que permite buscarlos en las imágenes satelitales; "
+    "UTC es el tiempo universal coordinado y no coincide con la hora local de Chile. Varias horas vienen como rango o redondeadas, y la posición es la del daño "
+    "observado, no la del mesociclón.</p>"
+    "<p>Hay más registros en zonas pobladas y menos en el campo, en el mar o de noche. "
+    "La fecha también pesa: 68 de los 102 eventos son de 2015 en adelante, y parte de ese aumento puede deberse a que hoy se observa y documenta más. "
+    "No hay ningún registro al sur de los 42,4°S, y esa ausencia no prueba que allí no ocurran.</p>"
+    "<p>El catálogo no trae una etiqueta de mesociclón ni casos negativos: un modelo cuenta con eventos reportados y con un resto sin etiqueta. "
+    "El aprendizaje con positivos y datos no etiquetados (<em>PU learning</em>) está pensado para ese caso.</p>"
+)
 
 
-def _problem() -> None:
-    """Explica el caso de referencia y las limitaciones del catálogo."""
+def _catalog() -> None:
+    """Muestra el catálogo en un mapa y explica sus limitaciones."""
     _section(
-        "problema",
+        "catalogo",
         "Un catálogo de eventos reportados, sin casos negativos confirmados",
         "El catálogo reúne 102 tornados y trombas marinas entre 1554 y 2025, tomados de crónicas coloniales, prensa, redes sociales, literatura científica y libros. Cada evento está ahí porque alguien lo observó y alguien lo documentó. Un lugar o una fecha sin registro puede significar que no ocurrió nada, o que nadie estaba mirando.",
     )
@@ -394,7 +416,7 @@ def _problem() -> None:
     if cat.empty:
         # Sin el catálogo descargado queda la figura estática, que sí va en el repositorio.
         st.image(str(FIGS / "fig1_catalog_map.png"), width="stretch")
-        st.markdown(CASE_TEXT, unsafe_allow_html=True)
+        st.markdown(CATALOG_TEXT, unsafe_allow_html=True)
         return
     picture, words = theme.columns([2, 3], "catalog")
     with picture:
@@ -406,7 +428,7 @@ def _problem() -> None:
         )
         st.plotly_chart(fig, width="stretch", theme=None, key="catalog_map")
     with words:
-        st.markdown(CASE_TEXT, unsafe_allow_html=True)
+        st.markdown(CATALOG_TEXT, unsafe_allow_html=True)
         st.markdown(
             "<p class='note'>Cada triángulo es un evento del catálogo, con solo los casos positivos. Pasa el cursor "
             "para ver su fecha, hora, posición, tipo, intensidad, fenómenos y víctimas. El tamaño y el color se "
@@ -415,55 +437,56 @@ def _problem() -> None:
         )
 
 
-def _difficulty() -> None:
-    """Presenta las decisiones de cálculo y las referencias que deben validarse."""
+def _chile() -> None:
+    """Explica el régimen HSLC, el signo austral y los criterios propuestos para Chile."""
     _section(
-        "dificultad",
-        "Tres aspectos que deben adaptarse al contexto chileno",
-        "El régimen atmosférico, el sentido de rotación y la cobertura del catálogo condicionan el cálculo de índices y el entrenamiento de modelos.",
+        "chile",
+        "Por qué Chile es distinto",
+        "Según Vicencio et al. (2021), con el umbral clásico del STP, el índice de referencia en Estados Unidos, el brote de 2019 habría pasado inadvertido.",
     )
     _cards(
-        "difficulty",
+        "chile",
         [
             (
-                "1",
-                "orange",
-                "Los umbrales deben evaluarse con datos chilenos",
-                "Los casos descritos presentan fuerte cambio del viento con la altura y energía convectiva relativamente baja. Este régimen se denomina HSLC, por sus siglas en inglés (high shear, low CAPE: fuerte cizalladura y bajo CAPE). La energía potencial convectiva disponible (CAPE) mide la energía disponible para el ascenso del aire. Los índices combinan estas y otras variables para resumir el entorno. En este régimen la rotación puede ser poco profunda y breve, lo que dificulta detectarla incluso con radar.",
+                "HSLC",
+                "primary",
+                "Poca energía, mucho viento",
+                "En las Grandes Llanuras de Estados Unidos los tornados suelen formarse con varios miles de J/kg de CAPE, la energía disponible para que el aire suba. "
+                "En mayo de 2019 el CAPE en Biobío estuvo entre 200 y 500 J/kg, pero el viento cambiaba mucho con la altura: entre 12 y 20 m/s de diferencia en el primer kilómetro. "
+                "A esta combinación se le llama HSLC (*high shear, low CAPE*), y los índices de Estados Unidos no están calibrados para ella. "
+                "En este régimen la rotación puede ser poco profunda y breve, lo que la hace difícil de detectar incluso con radar.",
             ),
             (
-                "2",
-                "orange",
-                "Elegir la rama de movimiento y comprobar los signos",
-                "El proyecto trabaja con la rama left-mover: una estimación del movimiento de la tormenta hacia la izquierda del viento medio. Para los casos australes descritos, la helicidad relativa a la tormenta (SRH) de esta rama es negativa. Al calcular los índices, hay que comprobar la rama elegida y la convención de signos; no basta con cambiar el signo de todos los resultados.",
-            ),
-            (
-                "3",
-                "orange",
-                "La falta de reporte no confirma la ausencia de un evento",
-                "La mayor cantidad de registros recientes puede estar influida por cambios en la observación y documentación. Para el aprendizaje automático, contamos con eventos reportados y situaciones sin etiqueta confirmada. El aprendizaje con positivos y datos no etiquetados, conocido como PU learning, es una opción para trabajar con esta limitación.",
+                "Hemisferio sur",
+                "primary",
+                "La rotación va al revés",
+                "Aquí las supercélulas tornádicas suelen desviarse a la izquierda del viento medio (rama *left-mover*), y su helicidad relativa a la tormenta (SRH) es negativa. "
+                "Las herramientas pensadas para el hemisferio norte, usadas tal cual, entregan índices con el signo cambiado. "
+                "Multiplicar todo por −1 tampoco sirve: hay que elegir la rama y revisar la convención de cada índice.",
             ),
         ],
-        n_columns=3,
-    )
-    st.subheader("Referencias de los índices", anchor=False)
-    st.markdown(
-        "| Índice | Qué resume | Referencia citada en el documento |\n|---|---|---|\n| VGP₀₋₁ · parámetro de generación de vorticidad | Combina CAPE y cambio del viento por unidad de altura en el primer kilómetro | > 0,1 m/s² en los cinco días tornádicos analizados por Vicencio et al. (2021) |\n| SHERBE · índice de entornos con baja energía convectiva | Combina características del viento y del perfil térmico | ≥ 1; referencia de Marín et al. (2024) |\n| STP · parámetro significativo de tornado | Combina energía convectiva, viento y otras condiciones del entorno | Rama left-mover ≤ −0,3; referencia de Marín et al. (2024) |"
-    )
-    st.markdown(
-        "Estos valores orientan la comparación con los estudios citados. Requiere verificación: confirmar las variantes y el alcance de cada criterio antes de usarlo como umbral operativo. El visor calcula SHERBS3, una variante distinta de SHERBE, y una aproximación del STP; no deben trasladarse los criterios entre variantes sin validación.",
     )
     with st.container(border=True, key="sheet_cape"):
         _image(
             diagrams.cape_shear(),
-            "Comparación esquemática de CAPE y cizalladura: los casos chilenos de mayo de 2019 combinan baja energía convectiva con fuerte cambio del viento en el primer kilómetro. No es una frontera de detección.",
+            "Esquema de CAPE frente a cizalladura: los casos chilenos de mayo de 2019 combinan poca energía convectiva con mucho cambio del viento en el primer kilómetro.",
         )
         st.markdown(
-            "Comparación esquemática de CAPE y cizalladura; no representa una frontera de detección del STP. Los casos chilenos de mayo de 2019 combinan CAPE relativamente bajo con fuerte cizalladura en el primer kilómetro. La referencia de 15–45 J/kg corresponde al CAPE medio a fines de mayo en Biobío descrito en el documento. Requiere verificación: confirmar las fuentes y el ámbito de las referencias del esquema antes de utilizarlas en una decisión."
+            "<p class='note'>Esquema de CAPE frente a cizalladura de 0–1 km. Los casos de mayo de 2019 quedan en la zona de poca energía y mucho viento. "
+            "A fines de mayo el CAPE medio en Biobío es de 15–45 J/kg, así que 500 J/kg es mucho para la zona aunque sea poco al lado de Estados Unidos. "
+            "El esquema es ilustrativo y no marca un umbral de detección.</p>",
+            unsafe_allow_html=True,
         )
+    st.subheader("Criterios propuestos para Chile", anchor=False)
     st.markdown(
-        '<div class="notice">Caballero-Morán y Rondanelli (2025) analizaron índices derivados de ERA5 entre 1959 y 2021. El documento del proyecto les atribuye la identificación de zonas del sur austral con condiciones favorables y sin eventos documentados. Este resultado motiva la búsqueda de posibles situaciones subregistradas. <strong>Requiere verificación:</strong> comprobar que esta formulación refleje el alcance del estudio; unas condiciones favorables no confirman un evento ocurrido.</div>',
-        unsafe_allow_html=True,
+        "| Índice | Qué resume | Criterio |\n|---|---|---|\n"
+        "| VGP₀₋₁ · parámetro de generación de vorticidad | CAPE y cambio del viento por unidad de altura en el primer kilómetro | > 0,1 m/s² en los cinco días tornádicos que analizaron Vicencio et al. (2021) |\n"
+        "| SHERBE · índice para entornos de baja energía convectiva | Viento y perfil térmico | ≥ 1 (Marín et al. 2024) |\n"
+        "| STP · parámetro significativo de tornado | Energía convectiva, viento y otras condiciones del entorno | ≤ −0,3 en la rama *left-mover* (Marín et al. 2024) |"
+    )
+    st.markdown(
+        "Salen de estudios con pocos casos y sirven para comparar, no como umbrales operativos. El visor calcula SHERBS3, una variante de SHERBE con la cizalladura de 0–3 km, "
+        "y una aproximación del STP, así que estos criterios no se aplican directamente a sus mapas."
     )
 
 
@@ -504,7 +527,7 @@ def _data_section() -> None:
     st.subheader("ERA5: la atmósfera reconstruida", anchor=False)
     st.markdown(
         "**Qué es.** ERA5 es el reanálisis atmosférico global del ECMWF, el Centro Europeo de Predicción Meteorológica a Plazo Medio. "
-        "No es una medición directa ni un pronóstico: es una reconstrucción de cómo estaba la atmósfera en cada hora desde 1940.\n\n"
+        "Es una reconstrucción de cómo estaba la atmósfera cada hora desde 1940.\n\n"
         "**Cómo se calcula.** Un reanálisis combina un modelo meteorológico con observaciones del pasado (radiosondas, satélites, aviones, boyas y estaciones). "
         "Repite el análisis para cada período con el mismo método, así que sus valores son comparables entre años. Se publica en una grilla de 0,25° "
         "(unos 31 km) con valores horarios, y su altura se describe con 37 niveles de presión.\n\n"
@@ -515,7 +538,7 @@ def _data_section() -> None:
     )
     _figure(
         "fig4_era5_20190530.png",
-        "<b>ERA5, 30 de mayo de 2019, 21:00 UTC.</b> Los paneles muestran temperatura a 500 hPa (A), viento a 850 hPa (B), cizalladura entre la superficie y 1 km (C) y entre la superficie y 6 km (D). Los niveles en hPa son superficies de presión que permiten comparar distintas partes de la atmósfera. En C y D se puede observar la extensión de las zonas con cizalladura elevada. La línea roja del panel C marca 12 m/s, el valor de comparación citado para Chile; la verde del panel D, 18 m/s. Los triángulos rojos son los tornados reportados.",
+        "<b>ERA5, 30 de mayo de 2019, 21:00 UTC.</b> Los paneles muestran temperatura a 500 hPa (A), viento a 850 hPa (B), cizalladura entre la superficie y 1 km (C) y entre la superficie y 6 km (D). Los niveles en hPa son superficies de presión que permiten comparar distintas partes de la atmósfera. En C y D se puede observar la extensión de las zonas con cizalladura elevada. La línea roja del panel C marca 12 m/s, la menor cizalladura de 0–1 km observada en el brote de 2019; la verde del panel D, 18 m/s. Los triángulos rojos son los tornados reportados.",
     )
     st.subheader("GOES: la tormenta vista desde el espacio", anchor=False)
     st.markdown(
@@ -538,18 +561,12 @@ def _data_section() -> None:
         )
     _figure(
         "fig3_goes_20190530.png",
-        "<b>GOES-16, banda 13.</b> Los paneles muestran la temperatura de brillo y su cambio entre imágenes; los triángulos marcan los tornados reportados ese día. La temperatura de brillo es una medida derivada de la radiación infrarroja recibida. Un descenso puede ser compatible con crecimiento vertical, pero también puede deberse al desplazamiento de nubes sobre el mismo píxel. El flujo óptico estima ese movimiento y puede ayudar a separar ambos efectos.",
+        "<b>GOES-16, banda 13, 30 de mayo de 2019, entre las 21:30 y las 21:50 UTC.</b> Los paneles muestran la temperatura de brillo y su cambio entre imágenes; los triángulos marcan los tornados reportados ese día. La temperatura de brillo es una medida derivada de la radiación infrarroja recibida. Un descenso puede ser compatible con crecimiento vertical, pero también puede deberse al desplazamiento de nubes sobre el mismo píxel. El flujo óptico estima ese movimiento y puede ayudar a separar ambos efectos.",
     )
     st.subheader("El catálogo de eventos", anchor=False)
     st.markdown(
-        f"**Qué es.** La base [«Tornadoes and Waterspouts in Chile»]({CATALOG}), publicada en figshare con licencia CC BY 4.0 por doce autores "
-        "encabezados por Cristian Bastías-Curivil, entre ellos Roberto Rondanelli y José Vicencio. Se armó con crónicas coloniales, prensa, redes sociales, "
-        "literatura científica y libros, e incluye los casos en que los autores consideran más probable que haya ocurrido un tornado o una tromba que lo contrario.\n\n"
-        "**Qué trae.** 102 eventos entre 1554 y 2025, con posición, fecha, hora UTC y local, tipo (tornado, tromba o ambos), intensidad en la escala Fujita mejorada (EF), "
-        "fenómenos acompañantes (ruido, granizo, tormenta eléctrica, daños) y víctimas. No trae una etiqueta directa de mesociclón. "
-        "El mapa de «Problema» muestra dónde están.\n\n"
-        "**Límites.** Solo tiene casos positivos: que no haya un reporte no prueba que no ocurriera un evento. Entra al catálogo lo que alguien vio y contó, "
-        "así que hay más registros donde hay más gente. Varias horas vienen como rango o redondeadas, y la posición es la del daño observado, no la del mesociclón."
+        "Los 102 tornados y trombas del catálogo son los casos con que se comparan ERA5 y GOES. "
+        "Qué trae cada registro y cuáles son sus límites está en la sección [El catálogo](#catalogo)."
     )
     st.page_link(
         state.page("data"),
@@ -575,7 +592,7 @@ def _volume() -> None:
         "volumen",
         "El volumen de los datos",
         "Un día de ERA5 y GOES pesa decenas de gigabytes en origen y deja poco más de uno en disco. "
-        "Esa diferencia decide dónde conviene trabajar.",
+        "Por eso conviene recortar dentro de AWS.",
     )
     st.subheader("Un día de datos", anchor=False)
     st.markdown(
@@ -600,17 +617,17 @@ def _volume() -> None:
     st.subheader("Los subconjuntos que importan", anchor=False)
     st.markdown(
         "Cuánto hay que leer depende de qué días se necesiten. El catálogo tiene 70 días distintos con "
-        "tornado desde 1940, el inicio de ERA5, y 38 desde 2018, cuando GOES-16 ya operaba. Un modelo "
+        "algún tornado o tromba desde 1940, el inicio de ERA5, y 38 desde 2018, cuando GOES-16 ya operaba. Un modelo "
         "también necesita días sin tornado, que el catálogo no trae; la fila de controles supone, como "
-        "ejemplo, diez días de control por cada día con tornado. Cómo elegirlos es una decisión abierta "
-        "(véase «Objetivo»): días al azar en la época de los tornados, y unos pocos elegidos a mano "
+        "ejemplo, diez días de control por cada día con evento. Cómo elegirlos es una decisión abierta "
+        "(véase «Decisiones abiertas»): días al azar en la época de los tornados, y unos pocos elegidos a mano "
         "(lluvia, cielo despejado, tormenta sin tornado) como puntos de comparación.\n\n"
         "| Subconjunto | Días | ERA5 a transferir | GOES a transferir | Queda guardado |\n"
         "|---|---|---|---|---|\n"
         "| Un día | 1 | 11 GB | 0,7 GB | 1,5 GB |\n"
         "| Caso de estudio (30 y 31 de mayo de 2019) | 2 | 22 GB | 1,4 GB | 3 GB |\n"
-        "| Días con tornado, era GOES (desde 2018) | 38 | 418 GB | 27 GB | 57 GB |\n"
-        "| Días con tornado, era ERA5 (desde 1940) | 70 | 770 GB | 27 GB (solo los 38 con GOES) | 59 GB |\n"
+        "| Días con evento, era GOES (desde 2018) | 38 | 418 GB | 27 GB | 57 GB |\n"
+        "| Días con evento, era ERA5 (desde 1940) | 70 | 770 GB | 27 GB (solo los 38 con GOES) | 59 GB |\n"
         "| Casos y controles, era GOES (supuesto: 10 controles por caso) | 418 | 4,6 TB | 293 GB | 627 GB |\n"
         "| Un año completo | 365 | 4,0 TB | 256 GB | 548 GB |\n"
         "| Diez años (GOES existe en unos 8) | 3 650 | 40 TB | 2,1 TB | 4,4 TB |"
@@ -618,14 +635,14 @@ def _volume() -> None:
     st.subheader("Cuánto tarda traerlo", anchor=False)
     st.markdown(
         "ERA5 domina el tiempo: es casi todo lo que se transfiere. La tabla cuenta solo su transferencia, "
-        "con el enlace lleno todo el rato, así que son tiempos mínimos. El supuesto de AWS es 1 Gbps "
-        "sostenido, lo que da una instancia pequeña en la misma región que los datos; instancias más "
+        "con el enlace lleno todo el rato, así que son tiempos mínimos. Para AWS se supone 1 Gbps "
+        "sostenido, lo que alcanza una instancia pequeña en la misma región que los datos; instancias más "
         "grandes y varias en paralelo lo reducen.\n\n"
         "| Subconjunto | Desde un computador con 100 Mbps | Dentro de AWS (1 Gbps) |\n"
         "|---|---|---|\n"
         "| Un día | 15 min | 1,5 min |\n"
         "| Caso de estudio | 29 min | 3 min |\n"
-        "| 38 días con tornado | 9 h | 56 min |\n"
+        "| 38 días con evento | 9 h | 56 min |\n"
         "| Casos y controles | 4,3 días | 10 h |\n"
         "| Un año completo | 3,7 días | 9 h |\n"
         "| Diez años | 37 días | 3,7 días |"
@@ -642,12 +659,12 @@ def _volume() -> None:
         "| Calcular índices y armar los ejemplos | AWS, junto a los recortes | Los recortes de un año pesan ≈ 0,5 TB |\n"
         "| Entrenar y evaluar el modelo | AWS | Lee los recortes completos varias veces |\n"
         "| Explorar un caso en el visor | En cualquier computador | Un caso son unos 3 GB de recortes |\n\n"
-        "La sección «Cómo obtener los datos», en Datos, dice en qué región conviene trabajar."
+        "Starter kit dice en qué región conviene trabajar y cómo correr los scripts ahí."
     )
     st.page_link(
-        state.page("data"),
-        label="Ver cómo obtener los datos y los scripts del proyecto",
-        icon=":material/dataset:",
+        state.page("starter"),
+        label="Ver los buckets y los scripts en Starter kit",
+        icon=":material/rocket_launch:",
     )
 
 
@@ -656,7 +673,7 @@ def _participate() -> None:
     _section(
         "participar",
         "Por dónde empezar",
-        "El proyecto está abierto a cualquier persona interesada, con o sin formación en meteorología.",
+        "El proyecto está abierto a cualquier persona interesada. Para aportar no hace falta formación en meteorología.",
     )
     _cards(
         "tasks",
@@ -760,10 +777,11 @@ def page() -> None:
             _objective()
             _importance()
             _animation()
-            _problem()
-            _difficulty()
+            _chile()
+            _catalog()
             _data_section()
             _volume()
+            _decisions()
             _participate()
             _glossary()
         with st.container(width=220, key="toc_side"):

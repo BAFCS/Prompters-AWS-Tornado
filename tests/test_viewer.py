@@ -46,9 +46,29 @@ class ViewerTest(unittest.TestCase):
         indices = [m.value for m in app.markdown if "class='toc'" in m.value]
         self.assertEqual(len(indices), 2)  # el lateral y el del desplegable
         links = re.findall(r"href='#([\w-]+)'", indices[0])
-        self.assertEqual(len(links), 10)
+        self.assertEqual(len(links), 11)
         self.assertEqual(links, re.findall(r"href='#([\w-]+)'", indices[1]))
         for anchor in links:
+            with self.subTest(anchor=anchor):
+                self.assertIn(anchor, anchors)
+
+    def test_starter_without_regions_links_each_section(self) -> None:
+        """Starter kit se muestra sin datos y su índice enlaza anclas que existen."""
+        # Una navegación mínima con Starter kit por defecto: AppTest no cambia a páginas que son funciones.
+        app = AppTest.from_string(
+            "import streamlit as st\n"
+            "from viewer_app import p_project, p_starter\n"
+            "pages = {'project': st.Page(p_project.page, title='Problema'),\n"
+            "         'starter': st.Page(p_starter.page, title='Starter kit', url_path='starter-kit')}\n"
+            "st.session_state['pages'] = pages\n"
+            "st.navigation([pages['starter'], pages['project']]).run()\n"
+        )
+        app.run(timeout=30)
+        self.assertEqual(len(app.exception), 0)
+        self.assertEqual(app.title[0].value, "Starter kit")
+        anchors = {h.proto.anchor for h in [*app.title, *app.header]} - {""}
+        toc = next(m.value for m in app.markdown if "class='toc'" in m.value)
+        for anchor in re.findall(r"href='#([\w-]+)'", toc):
             with self.subTest(anchor=anchor):
                 self.assertIn(anchor, anchors)
 
