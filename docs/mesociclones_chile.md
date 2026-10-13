@@ -2,7 +2,7 @@
 
 ### Un desafío abierto de datos, física atmosférica y aprendizaje automático
 
-**Proyecto para la hackathon AWS Breaking Barriers** · Documento de contexto, versión 1.0
+**Proyecto para la hackathon [Breaking Barriers](https://www.taurusmkt.com/breakingbarrierschile)** · Documento de contexto, versión 1.0
 
 ---
 

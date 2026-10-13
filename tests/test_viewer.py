@@ -70,11 +70,12 @@ class ViewerTest(unittest.TestCase):
         # Una navegación mínima con Starter kit por defecto: AppTest no cambia a páginas que son funciones.
         app = AppTest.from_string(
             "import streamlit as st\n"
-            "from viewer_app import p_case, p_data, p_project, p_starter\n"
+            "from viewer_app import p_case, p_data, p_project, p_references, p_starter\n"
             "pages = {'project': st.Page(p_project.page, title='Problema'),\n"
             "         'data': st.Page(p_data.page, title='Datos', url_path='datos'),\n"
             "         'case': st.Page(p_case.page, title='Caso', url_path='caso'),\n"
-            "         'starter': st.Page(p_starter.page, title='Starter kit', url_path='starter-kit')}\n"
+            "         'starter': st.Page(p_starter.page, title='Starter kit', url_path='starter-kit'),\n"
+            "         'references': st.Page(p_references.page, title='Referencias', url_path='referencias')}\n"
             "st.session_state['pages'] = pages\n"
             "st.navigation([pages['starter'], pages['project'], pages['data'], pages['case']]).run()\n"
         )

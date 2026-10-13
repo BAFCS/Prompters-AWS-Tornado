@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "pipeli
 import download_era5  # noqa: E402
 import process_era5  # noqa: E402
 
-from viewer_app import p_starter, products, variables  # noqa: E402
+from viewer_app import p_references, products, variables  # noqa: E402
 
 
 def _page() -> None:
@@ -46,11 +46,10 @@ class VariablesTest(unittest.TestCase):
                 self.assertTrue(refs)
                 self.assertTrue(set(refs) <= set(variables.REFERENCES))
 
-    def test_starter_related_references_exist(self) -> None:
-        """Los trabajos relacionados de Starter kit salen de la bibliografía compartida."""
-        for title, keys in p_starter.RELATED:
-            with self.subTest(group=title):
-                self.assertTrue(set(keys) <= set(variables.REFERENCES))
+    def test_references_page_lists_each_reference_once(self) -> None:
+        """La página Referencias muestra cada referencia de la bibliografía compartida en un solo grupo."""
+        keys = [k for _, _, group in p_references.GROUPS for k in group]
+        self.assertEqual(sorted(keys), sorted(variables.REFERENCES))
 
     def test_every_viewer_product_has_a_variable(self) -> None:
         """Cada índice, banda y derivado que puede mostrar Mapas tiene su ficha (la ayuda sale de ahí)."""
@@ -62,7 +61,7 @@ class VariablesTest(unittest.TestCase):
         self.assertEqual(expected - set(variables.BY_PRODUCT), set())
 
     def test_html_text_has_no_bold(self) -> None:
-        """``p_data._md_html`` solo entiende cursivas: rasgos y referencias no llevan ``**``."""
+        """``layout.md_html`` solo entiende cursivas: rasgos y referencias no llevan ``**``."""
         texts = [v for s in variables.SOURCES for _, v in s.facts]
         texts += [r.full for r in variables.REFERENCES.values()]
         for t in texts:
@@ -71,18 +70,45 @@ class VariablesTest(unittest.TestCase):
                 self.assertEqual(t.count("*") % 2, 0)
 
 
+def _references_page() -> None:
+    """La página Referencias sola, sin barra lateral ni datos."""
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path.cwd() / "scripts"))
+    sys.path.insert(0, str(Path.cwd() / "scripts" / "viewer"))
+    from viewer_app import p_references
+
+    p_references.page()
+
+
+class ReferencesPageTest(unittest.TestCase):
+    """La página Referencias da un ancla a cada referencia, que es adonde llevan las citas de Datos."""
+
+    def test_every_reference_has_its_anchor(self) -> None:
+        """Cada clave de la bibliografía tiene su ``ref-<clave>`` y ``?ref=`` no rompe la página."""
+        app = AppTest.from_function(_references_page)
+        app.query_params["ref"] = "vicencio2021"
+        app.run(timeout=30)
+        self.assertEqual(len(app.exception), 0)
+        html = "".join(m.value for m in app.markdown)
+        for k in variables.REFERENCES:
+            with self.subTest(referencia=k):
+                self.assertIn(f"id='ref-{k}'", html)
+
+
 class PageTest(unittest.TestCase):
     """La página Datos se dibuja sin datos y con ``?v=`` apuntando a una ficha."""
 
     def test_without_data_shows_every_variable(self) -> None:
-        """Sin datos se ven las fichas y la bibliografía, sin botones «Ver en Mapas»."""
+        """Sin datos se ven las fichas, con sus citas a Referencias y sin botones «Ver en Mapas»."""
         app = AppTest.from_function(_page)
         app.run(timeout=30)
         self.assertEqual(len(app.exception), 0)
         names = [m for m in app.markdown if "class='var-name'" in m.value]
         self.assertEqual(len(names), len(variables.VARIABLES))
         self.assertFalse([b for b in app.button if b.label == "Ver en Mapas"])
-        self.assertIn("referencias", {h.proto.anchor for h in app.header})
+        self.assertTrue([m for m in app.markdown if "href='referencias?ref=" in m.value])
 
     def test_toc_links_existing_anchors(self) -> None:
         """Con la lista completa, cada enlace del índice lleva a un encabezado o una ficha que existe."""

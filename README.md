@@ -1,6 +1,6 @@
 # Predicción de tormentas mesociclónicas en Chile
 
-Proyecto abierto para el **AWS Hackathon**: estimar qué tormentas del centro-sur de Chile
+Proyecto abierto para la hackathon [**Breaking Barriers**](https://www.taurusmkt.com/breakingbarrierschile): estimar qué tormentas del centro-sur de Chile
 desarrollan **rotación organizada de mesoescala** (un mesociclón), potencialmente tornádica,
 a partir del reanálisis **ERA5** y las imágenes multiespectrales del satélite **GOES**.
 
@@ -197,8 +197,8 @@ uv run streamlit run scripts/viewer/viewer.py --server.runOnSave true
 ### Cómo se usa
 
 - Arriba están las páginas. **Problema** explica el problema, **Datos** describe cada variable y
-  **Starter kit** reúne los buckets, los scripts y cómo trabajar en AWS; las tres funcionan aunque no
-  hayas descargado datos. **Caso de estudio** resume el día elegido y **Mapas** muestra hasta seis
+  **Starter kit** reúne los buckets, los scripts y cómo trabajar en AWS, y **Referencias** agrupa la
+  bibliografía; las cuatro funcionan aunque no hayas descargado datos. **Caso de estudio** resume el día elegido y **Mapas** muestra hasta seis
   mapas con el zoom sincronizado.
 - La barra de la izquierda elige la región, el día, la hora y el evento. Lo que elijas ahí se
   mantiene al cambiar de página.
@@ -352,8 +352,8 @@ ordenar el catálogo de eventos y construir animaciones GOES de los casos conoci
 avanzadas está **buscar rotación en el yunque con flujo óptico**, que no depende del catálogo de
 tornados; antes hay que decidir cómo comprobar que esa señal corresponde a un mesociclón.
 
-En el visor, la página **Problema** resume estas tareas en «Cómo participar», y **Starter kit**
-propone las primeras tareas y más ideas para explorar.
+En el visor, las páginas **Problema** («Cómo participar») y **Starter kit** («Ideas para explorar»)
+muestran la misma lista de tareas, y Starter kit agrega las primeras tareas para empezar.
 
 ## Referencias principales
 

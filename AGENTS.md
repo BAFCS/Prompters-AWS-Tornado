@@ -4,7 +4,7 @@ Guía para agentes de código (Claude Code, Codex, etc.) que trabajan en este re
 
 ## Qué es este repositorio
 
-Proyecto abierto (AWS Hackathon) para predecir qué tormentas del centro-sur de Chile desarrollan
+Proyecto abierto (hackathon [Breaking Barriers](https://www.taurusmkt.com/breakingbarrierschile)) para predecir qué tormentas del centro-sur de Chile desarrollan
 un mesociclón, usando el reanálisis ERA5 y las imágenes GOES. Hoy el repo es sobre todo
 **documentación, tres scripts de figuras, scripts de descarga y procesamiento de datos y un visor
 interactivo**. La documentación, los docstrings, los comentarios, los textos de la interfaz y los mensajes de commit
@@ -98,14 +98,16 @@ uv run streamlit run scripts/viewer/viewer.py
 ```
 
 **Visor** (`scripts/viewer/viewer.py` + paquete `scripts/viewer/viewer_app/`, importado como *first-party* igual que
-`common`): páginas Problema, Datos, Caso de estudio, Mapas y Starter kit. Problema (`viewer_app/p_project.py`,
+`common`): páginas Problema, Datos, Caso de estudio, Mapas, Starter kit y Referencias. Problema (`viewer_app/p_project.py`,
 diagramas en `viewer_app/diagrams.py`) presenta el proyecto con elementos de Streamlit: es la
 página por defecto y se muestra aunque no haya datos. Datos (`viewer_app/p_data.py`) es el catálogo
 de datos: una ficha por variable de docs §4–5 (qué es, por qué importa, fórmula, criterio chileno,
-cuidado, insumos y fuentes), también sin datos; `?v=<clave>` desplaza la página a esa ficha. Las fichas y la
+cuidado, insumos y fuentes), también sin datos; `?v=<clave>` desplaza la página a esa ficha. Sus citas abren
+Referencias (`viewer_app/p_references.py`) en otra pestaña con `?ref=<clave>`; esa página agrupa por tema
+toda la bibliografía (`p_references.GROUPS` debe cubrir cada referencia una vez). Las fichas y la
 bibliografía viven en `viewer_app/variables.py`, que es además la fuente de la ayuda
 «Qué estás viendo» de Mapas: todo producto nuevo de `products.py` necesita su ficha
-(`tests/test_variables.py` lo comprueba). Starter kit (`viewer_app/p_starter.py`) reúne los buckets, los scripts, la arquitectura sugerida (diagrama en `diagrams.architecture`), cómo correrlos dentro de AWS (en el computador, solo uno o dos días), los formatos para entrenar, los próximos pasos y los trabajos relacionados; también se muestra sin datos. Las páginas de lectura (Problema, Datos, Caso de estudio y Starter kit) comparten `viewer_app/layout.py`: `layout.page(nombre, índice, cuerpo)` arma el cuerpo con su índice lateral o desplegable, y `section`, `cards`, `image` y `toc` son las piezas comunes. El CSS de `theme.py` se engancha a las claves `page_<nombre>` y `pagebody_<nombre>`, así que una página nueva no necesita selectores propios. Las páginas que se ven sin datos están en `NO_DATA_PAGES` de `viewer.py`. La barra lateral (región, día, regla de tiempo,
+(`tests/test_variables.py` lo comprueba). Starter kit (`viewer_app/p_starter.py`) reúne los buckets, los scripts, la arquitectura sugerida (diagrama en `diagrams.architecture`), cómo correrlos dentro de AWS (en el computador, solo uno o dos días), las herramientas para entrenar, los próximos pasos y las ideas para explorar; también se muestra sin datos. El criterio de éxito, las decisiones abiertas y las tareas son los mismos de Problema (`p_project.SUCCESS`, `p_project.decisions()` y `p_project.tasks()`): se editan en un solo lugar. Las páginas de lectura (Problema, Datos, Caso de estudio, Starter kit y Referencias) comparten `viewer_app/layout.py`: `layout.page(nombre, índice, cuerpo)` arma el cuerpo con su índice lateral o desplegable, y `section`, `cards`, `image`, `toc`, `md_html` y `scroll_to` son las piezas comunes. El CSS de `theme.py` se engancha a las claves `page_<nombre>` y `pagebody_<nombre>`, así que una página nueva no necesita selectores propios. Las páginas que se ven sin datos están en `NO_DATA_PAGES` de `viewer.py`. La barra lateral (región, día, regla de tiempo,
 evento, recorrido guiado) vive en `viewer.py` para que sus widgets sobrevivan al cambio de página; el
 estado compartido está en `viewer_app/state.py` (`restore`/`save` copian los widgets de cada
 página bajo `_<key>`). La página Mapas es una grilla de 1 a 6 paneles en una sola figura plotly con ejes compartidos (el zoom va

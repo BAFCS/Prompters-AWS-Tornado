@@ -8,7 +8,7 @@ web
 
 ## Users
 
-- **Participantes de la hackathon** (AWS Breaking Barriers): perfil técnico, no necesariamente
+- **Participantes de la hackathon** (Breaking Barriers): perfil técnico, no necesariamente
   meteorólogos. Llegan al proyecto y en pocos minutos tienen que entender el problema (predecir qué
   tormentas del centro-sur de Chile desarrollan un mesociclón), qué datos hay y qué se ve en ellos.
 - **Investigadores** (meteorología, ciencia de datos): exploran casos a fondo, comparan índices
