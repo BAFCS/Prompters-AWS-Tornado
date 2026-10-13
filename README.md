@@ -27,6 +27,11 @@ Esta guía parte de cero: no hace falta saber Python ni tener nada instalado. Al
 visor abierto en tu navegador con el caso del 30 de mayo de 2019, el día con cinco tornados en el
 Biobío.
 
+> [!IMPORTANT]
+> Esta guía sirve para probar el visor con uno o dos días en tu computador. Para trabajar con más
+> días, las descargas se hacen en una máquina de AWS en us-west-2, donde está ERA5: cada día obliga a
+> leer unos 12 GB. La página **Starter kit** del visor explica cómo, paso a paso.
+
 Lo que necesitas:
 
 - Un computador con Linux, macOS o Windows.
@@ -153,8 +158,9 @@ Qué hace cada uno:
 > El paso más lento es `download_era5.py`. Los archivos de ERA5 en AWS cubren el planeta entero y
 > no se pueden pedir recortados, así que por cada hora del día se transfiere el bloque global y se
 > recorta en tu computador. Eso suma unos **11 GB de tráfico por día**, aunque en disco solo quedan
-> unos 70 MB. El volumen es el mismo desde cualquier lugar; solo se evita corriendo el script dentro
-> de AWS, en la región us-west-2, donde están los datos. Según tu conexión puede tardar de varios minutos a más de una hora.
+> unos 70 MB. El volumen es el mismo desde cualquier lugar. Según tu conexión puede tardar de varios
+> minutos a más de una hora, así que en tu computador conviene bajar solo uno o dos días; para más,
+> corre los scripts dentro de AWS, en us-west-2, como explica la página **Starter kit**.
 
 > [!TIP]
 > Si una descarga se corta, vuelve a ejecutar el mismo comando. Los scripts saltan los archivos que
@@ -190,9 +196,10 @@ uv run streamlit run scripts/viewer/viewer.py --server.runOnSave true
 
 ### Cómo se usa
 
-- Arriba están las páginas. **Problema** explica el problema y funciona aunque no hayas
-  descargado datos. **Caso de estudio** resume el día elegido, **Mapas** muestra hasta seis mapas con el zoom
-  sincronizado.
+- Arriba están las páginas. **Problema** explica el problema, **Datos** describe cada variable y
+  **Starter kit** reúne los buckets, los scripts y cómo trabajar en AWS; las tres funcionan aunque no
+  hayas descargado datos. **Caso de estudio** resume el día elegido y **Mapas** muestra hasta seis
+  mapas con el zoom sincronizado.
 - La barra de la izquierda elige la región, el día, la hora y el evento. Lo que elijas ahí se
   mantiene al cambiar de página.
 - Las horas están en tiempo universal coordinado (UTC). En mayo, la hora de Chile continental es

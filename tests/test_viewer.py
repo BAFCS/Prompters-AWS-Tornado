@@ -1,5 +1,6 @@
 """Comprueba que la página descriptiva funciona sin recortes preparados."""
 
+import ast
 import re
 import sys
 import unittest
@@ -11,7 +12,7 @@ from streamlit.testing.v1 import AppTest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "viewer"))
 
-from viewer_app import charts, data  # noqa: E402
+from viewer_app import charts, data, p_starter  # noqa: E402
 
 
 class ViewerTest(unittest.TestCase):
@@ -52,8 +53,20 @@ class ViewerTest(unittest.TestCase):
             with self.subTest(anchor=anchor):
                 self.assertIn(anchor, anchors)
 
-    def test_starter_without_regions_links_each_section(self) -> None:
-        """Starter kit se muestra sin datos y su índice enlaza anclas que existen."""
+    def test_starter_shows_without_data(self) -> None:
+        """Starter kit está entre las páginas que ``viewer.py`` muestra aunque no haya recortes."""
+        source = (
+            Path(__file__).resolve().parents[1] / "scripts" / "viewer" / "viewer.py"
+        ).read_text()
+        assignment = next(
+            n
+            for n in ast.walk(ast.parse(source))
+            if isinstance(n, ast.Assign) and getattr(n.targets[0], "id", "") == "NO_DATA_PAGES"
+        )
+        self.assertIn("starter", ast.literal_eval(assignment.value))
+
+    def test_starter_toc_links_each_section(self) -> None:
+        """Starter kit se dibuja y su índice enlaza todas sus secciones, con anclas que existen."""
         # Una navegación mínima con Starter kit por defecto: AppTest no cambia a páginas que son funciones.
         app = AppTest.from_string(
             "import streamlit as st\n"
@@ -68,7 +81,9 @@ class ViewerTest(unittest.TestCase):
         self.assertEqual(app.title[0].value, "Starter kit")
         anchors = {h.proto.anchor for h in [*app.title, *app.header]} - {""}
         toc = next(m.value for m in app.markdown if "class='toc'" in m.value)
-        for anchor in re.findall(r"href='#([\w-]+)'", toc):
+        links = re.findall(r"href='#([\w-]+)'", toc)
+        self.assertEqual(links, [anchor for anchor, _ in p_starter.SECTIONS])
+        for anchor in links:
             with self.subTest(anchor=anchor):
                 self.assertIn(anchor, anchors)
 

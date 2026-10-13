@@ -261,11 +261,11 @@ _ARCH_BODY = f"""
      <text class="lbl" x="234" y="64">us-west-2 · aquí trabaja el equipo</text>
      {_box(35, 240, "GOES-16 / 19", ("noaa-goes16, 19", "≈ 0,7 GB al día"))}
      {_box(240, 100, "ERA5", ("nsf-ncar-era5", "≈ 11 GB al día"))}
-     {_box(240, 240, "Máquina", ("EC2 o SageMaker", "scripts y visor"), "var(--accent)")}
+     {_box(240, 240, "Máquina EC2", ("scripts y", "visor"), "var(--accent)")}
      {_box(465, 240, "Bucket del equipo", ("recortes, tablas", "≈ 1,5 GB al día"), "var(--accent)")}
      {_box(465, 100, "Athena", ("consultas SQL", "sobre Parquet"))}
      {_box(675, 240, "SageMaker", ("entrenar y", "evaluar modelos"))}
-     {_box(675, 100, "Rol IAM", ("solo el bucket", "del equipo"), "var(--muted)", _DASH)}
+     {_box(675, 100, "Rol IAM en S3", ("solo el bucket", "del equipo"), "var(--muted)", _DASH)}
      {_arrow(185, 280, 232, 280, "var(--muted)")}
      {_arrow(315, 180, 315, 232, "var(--muted)")}
      {_arrow(390, 280, 457, 280, "var(--accent)")}
@@ -273,7 +273,7 @@ _ARCH_BODY = f"""
      {_arrow(540, 240, 540, 188, "var(--accent)")}
      {_box(240, 400, "Tu computador", ("terminal y", "navegador"))}
      <path d="M315 400 L315 328" stroke="var(--severe)" stroke-width="2.4" {_DASH}/>
-     <text class="lbl" x="327" y="386" fill="var(--severe)">Session Manager: solo viaja la página, no los datos</text>
+     <text class="lbl" x="327" y="386" fill="var(--severe)">Túnel de Session Manager</text>
 """
 
 

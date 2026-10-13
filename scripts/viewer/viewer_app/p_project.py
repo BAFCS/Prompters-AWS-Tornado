@@ -652,16 +652,16 @@ def _volume() -> None:
     )
     st.subheader("Qué se hace dónde", anchor=False)
     st.markdown(
-        "Traer a un computador personal lo que hay que leer no tiene sentido: el tiempo se va en la red y "
-        "no en el análisis. Leer ERA5 y GOES y recortarlos es el trabajo que tiene que ocurrir dentro de AWS, "
-        "porque no hay forma de pedirle menos al servidor. Una vez hechos los recortes, el volumen cae "
-        "unas 40 veces y ya es manejable.\n\n"
+        "Para probar con uno o dos días, un computador personal alcanza. Con más días el tiempo se va en la "
+        "red y no en el análisis, así que leer ERA5 y GOES y recortarlos tiene que ocurrir dentro de AWS: "
+        "no hay forma de pedirle menos al servidor. Una vez hechos los recortes, el volumen cae unas 40 "
+        "veces y ya es manejable.\n\n"
         "| Etapa | Dónde | Por qué |\n"
         "|---|---|---|\n"
-        "| Leer ERA5 y GOES y recortar la región | AWS, en la región de cada bucket | ≈ 12 GB por día que no se pueden reducir antes de leerlos |\n"
+        "| Leer ERA5 y GOES y recortar la región | AWS, en us-west-2, junto a ERA5 | ≈ 12 GB por día que no se pueden reducir antes de leerlos |\n"
         "| Calcular índices y armar los ejemplos | AWS, junto a los recortes | Los recortes de un año pesan ≈ 0,5 TB |\n"
         "| Entrenar y evaluar el modelo | AWS | Lee los recortes completos varias veces |\n"
-        "| Explorar un caso en el visor | En cualquier computador | Un caso son unos 3 GB de recortes |\n\n"
+        "| Explorar un caso en el visor | En AWS, o en tu computador para uno o dos días | Un caso son unos 3 GB de recortes |\n\n"
         "Starter kit dice en qué región conviene trabajar y cómo correr los scripts ahí."
     )
     st.page_link(

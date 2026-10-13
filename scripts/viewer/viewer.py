@@ -54,6 +54,7 @@ PAGES = {
     "starter": st.Page(p_starter.page, title="Starter kit", icon=":material/rocket_launch:", url_path="starter-kit"),
 }  # fmt: skip
 st.session_state["pages"] = PAGES
+NO_DATA_PAGES = ("project", "data", "starter")  # se muestran aunque no haya recortes
 navigation = st.navigation(list(PAGES.values()), position="top")
 
 # --- Región y día --------------------------------------------------------------------------------
@@ -69,7 +70,7 @@ theme.mode_button()
 
 def no_data(message: str, prepare: bool = False) -> NoReturn:
     """Detiene la app sin datos: Problema, Datos y Starter kit se muestran igual; las demás avisan con ``message``."""
-    if navigation.url_path in {PAGES[k].url_path for k in ("project", "data", "starter")}:
+    if navigation.url_path in {PAGES[k].url_path for k in NO_DATA_PAGES}:
         # Datos no debe ofrecer productos de un día ya no disponible.
         st.session_state.pop("ctx", None)
         navigation.run()  # no usan datos
@@ -80,6 +81,19 @@ def no_data(message: str, prepare: bool = False) -> NoReturn:
         st.page_link(
             PAGES["starter"], label="Preparar los datos en AWS", icon=":material/rocket_launch:"
         )
+        with st.expander("Probar con uno o dos días en este computador"):
+            st.markdown(
+                "Desde la raíz del repositorio, descarga y procesa un día (unos 12 GB de lectura, "
+                "15 minutos con 100 Mbps). Los archivos se guardan en `data/crops/`. Después, recarga "
+                "esta página. Para más días, conviene trabajar en AWS."
+            )
+            st.code(
+                "uv run python scripts/pipeline/download_era5.py --start 2019-05-30\n"
+                "uv run python scripts/pipeline/download_goes.py --start 2019-05-30\n"
+                "uv run python scripts/pipeline/process_goes.py --start 2019-05-30\n"
+                "uv run python scripts/pipeline/process_era5.py --start 2019-05-30",
+                language="bash",
+            )
     st.stop()
 
 
