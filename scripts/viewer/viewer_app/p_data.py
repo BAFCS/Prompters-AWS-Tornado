@@ -10,15 +10,13 @@ import html
 
 import streamlit as st
 
-from viewer_app import layout, products, state, theme, variables
+from viewer_app import layout, p_references, products, state, theme, variables
 from viewer_app.variables import Variable
 
 
 def _citations(keys: list[str] | tuple[str, ...]) -> str:
-    """Las citas cortas de ``keys``, enlazadas a la bibliografía del final de la página."""
-    return " · ".join(
-        f"<a href='#ref-{k}'>{html.escape(variables.REFERENCES[k].short)}</a>" for k in keys
-    )
+    """Las citas cortas de ``keys``, enlazadas a la página Referencias (en otra pestaña)."""
+    return " · ".join(p_references.link(k) for k in keys)
 
 
 def _scroll_target() -> str | None:
@@ -26,17 +24,6 @@ def _scroll_target() -> str | None:
     requested = st.session_state.pop("data_focus", None) or st.query_params.get("v")
     st.query_params.pop("v", None)
     return requested if requested in variables.BY_KEY else None
-
-
-def _scroll_to(key: str) -> None:
-    """Desplaza la página hasta la ficha ``key`` cuando ya está dibujada (Streamlit la va armando)."""
-    st.html(
-        "<script>(() => { let n = 0; const t = setInterval(() => {"
-        f"const el = document.getElementById('{key}');"
-        "if (el) { el.scrollIntoView(); clearInterval(t); } else if (++n > 50) clearInterval(t);"
-        "}, 100); })();</script>",
-        unsafe_allow_javascript=True,
-    )
 
 
 def _available() -> set[str]:
@@ -106,43 +93,15 @@ def _source(s: variables.Source) -> None:
     st.divider()
     st.header(s.title, anchor=s.key)
     st.markdown(f"<p class='lede'>{s.lede}</p>", unsafe_allow_html=True)
-    rows = "".join(f"<tr><th>{f}</th><td>{_md_html(v)}</td></tr>" for f, v in s.facts)
+    rows = "".join(f"<tr><th>{f}</th><td>{layout.md_html(v)}</td></tr>" for f, v in s.facts)
     with st.container(border=True, key=f"sheet_source_{s.key}"):
         st.markdown(f"<table class='facts'>{rows}</table>", unsafe_allow_html=True)
         st.markdown(f"**Lo que no puede hacer.** {s.limits}")
         st.markdown(f"<p class='note'>Fuentes: {_citations(s.refs)}</p>", unsafe_allow_html=True)
 
 
-def _bibliography() -> None:
-    """Todas las referencias citadas, cada una con su ancla y su enlace."""
-    st.divider()
-    st.header("Referencias", anchor="referencias")
-    items = []
-    cited = {k for v in variables.VARIABLES for k in variables.references_of(v)}
-    cited |= {k for s in variables.SOURCES for k in s.refs}
-    for k, r in variables.REFERENCES.items():
-        if k not in cited:  # las notas de prensa solo se enlazan en Problema
-            continue
-        text = r.url.removeprefix("https://").removeprefix("doi.org/")
-        link = f" <a href='{html.escape(r.url)}'>{html.escape(text)}</a>" if r.url else ""
-        items.append(f"<li id='ref-{k}'>{_md_html(r.full)}{link}</li>")
-    st.markdown(f"<ul class='bibliography'>{''.join(items)}</ul>", unsafe_allow_html=True)
-
-
-def _md_html(text: str) -> str:
-    """Las cursivas y el código de ``text`` (markdown) en HTML, para usarlo dentro de HTML propio.
-
-    Solo entiende ``*cursiva*`` y ```código```: no usar negritas ni asteriscos sueltos en ``facts`` ni
-    en ``Reference.full`` (la prueba de ``variables`` lo comprueba).
-    """
-    parts = html.escape(text).split("`")
-    text = "".join(f"<code>{p}</code>" if i % 2 else p for i, p in enumerate(parts))
-    parts = text.split("*")
-    return "".join(f"<em>{p}</em>" if i % 2 else p for i, p in enumerate(parts))
-
-
 def _toc() -> str:
-    """El índice: cada fuente con sus grupos, y la bibliografía."""
+    """El índice: cada fuente con sus grupos."""
     items = []
     for s in variables.SOURCES:
         sub = "".join(
@@ -151,7 +110,6 @@ def _toc() -> str:
             if g.source == s.key
         )
         items.append(f"<li><a href='#{s.key}'>{s.title.split(' · ')[0]}</a><ol>{sub}</ol></li>")
-    items.append("<li><a href='#referencias'>Referencias</a></li>")
     return f"<nav class='toc' aria-label='En esta página'><ol>{''.join(items)}</ol></nav>"
 
 
@@ -248,9 +206,8 @@ def _body() -> None:
         for g in variables.GROUPS:
             if g.source == s.key:
                 _group(g, [v for v in variables.VARIABLES if v.group == g.key], available)
-    _bibliography()
     if target:
-        _scroll_to(target)
+        layout.scroll_to(target)
 
 
 def page() -> None:

@@ -447,6 +447,7 @@ h2, h3, [data-testid="stSidebar"] h2 {{ font-family: {SANS} !important; font-wei
 [data-testid="stMain"] .katex-display {{ overflow-x: auto; overflow-y: hidden; margin: 0.3rem 0; padding: 2px 0; }}
 .var-refs a, .bibliography a {{ text-underline-offset: 2px; }}
 .bibliography {{ padding-left: 1.1rem; }}
+.bibliography li {{ scroll-margin-top: var(--anchor-offset); }}
 [data-testid="stMain"] .bibliography li {{ margin: 0.4rem 0; max-width: var(--measure); line-height: 1.45; }}
 .bibliography a {{ overflow-wrap: anywhere; }}
 .toc ol ol {{ margin: 0 0 0.35rem; border-left: none; }}

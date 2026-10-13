@@ -35,6 +35,7 @@ from viewer_app import (  # noqa: E402
     p_data,
     p_maps,
     p_project,
+    p_references,
     p_starter,
     state,
     texts,
@@ -52,9 +53,10 @@ PAGES = {
     "case": st.Page(p_case.page, title="Caso de estudio", icon=":material/history_edu:", url_path="caso"),
     "maps": st.Page(p_maps.page, title="Mapas", icon=":material/map:", url_path="mapas"),
     "starter": st.Page(p_starter.page, title="Starter kit", icon=":material/rocket_launch:", url_path="starter-kit"),
+    "references": st.Page(p_references.page, title="Referencias", icon=":material/menu_book:", url_path="referencias"),
 }  # fmt: skip
 st.session_state["pages"] = PAGES
-NO_DATA_PAGES = ("project", "data", "starter")  # se muestran aunque no haya recortes
+NO_DATA_PAGES = ("project", "data", "starter", "references")  # se muestran aunque no haya recortes
 navigation = st.navigation(list(PAGES.values()), position="top")
 
 # --- Región y día --------------------------------------------------------------------------------
@@ -69,7 +71,7 @@ theme.mode_button()
 
 
 def no_data(message: str, prepare: bool = False) -> NoReturn:
-    """Detiene la app sin datos: Problema, Datos y Starter kit se muestran igual; las demás avisan con ``message``."""
+    """Detiene la app sin datos: Problema, Datos, Starter kit y Referencias se muestran igual; las demás avisan con ``message``."""
     if navigation.url_path in {PAGES[k].url_path for k in NO_DATA_PAGES}:
         # Datos no debe ofrecer productos de un día ya no disponible.
         st.session_state.pop("ctx", None)

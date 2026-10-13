@@ -14,6 +14,7 @@ from viewer_app import charts, data, diagrams, layout, state, theme
 
 DOCUMENT = "https://github.com/idia-tt/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md"
 REPOSITORY = "https://github.com/idia-tt/aws-mesocyclonic"
+HACKATHON = "https://www.taurusmkt.com/breakingbarrierschile"
 CATALOG = "https://doi.org/10.6084/m9.figshare.25119566"
 ERA5 = "https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5"
 GOES = "https://www.goes-r.gov/"
@@ -59,7 +60,7 @@ def _cover() -> None:
         )
     st.markdown(
         '<p class="lede">El 30 y 31 de mayo de 2019, en pleno otoño, el centro-sur de Chile vivió un brote histórico de tornados: al menos siete en 24 horas, con cientos de viviendas dañadas y miles de personas afectadas (<a href="https://www.biobiochile.cl/noticias/ciencia-y-tecnologia/ciencia/2026/07/11/se-cumplen-7-anos-del-historico-brote-de-tornados-en-chile-y-advierten-que-puede-volver-a-ocurrir.shtml">BioBioChile, 2026</a>). Dos de ellos entraron en Los Ángeles y Talcahuano, y en Talcahuano murió una persona. Los especialistas advierten que puede repetirse. Los tornados más fuertes suelen nacer en tormentas con un mesociclón, una rotación organizada dentro de la nube, aunque no todo mesociclón produce un tornado. Lo que no sabemos es cómo reconocer esas tormentas a tiempo con los datos que ya existen para Chile.</p>'
-        "<p>Este es un proyecto abierto para la hackathon AWS Breaking Barriers. Tenemos 102 eventos documentados, "
+        f"<p>Este es un proyecto abierto para la hackathon <a href='{HACKATHON}'>Breaking Barriers</a>. Tenemos 102 eventos documentados, "
         f"el reanálisis <a href='{ERA5}'>ERA5</a> y las imágenes del satélite <a href='{GOES}'>GOES</a>, ambos públicos en el "
         f"<a href='{OPEN_DATA}'>AWS Open Data Program</a> y descritos en <a href='#datos'>Los datos</a>. Falta entender qué distingue "
         "a las tormentas que rotan de las que no.</p>",
@@ -85,6 +86,13 @@ def _decision(title: str, question: str, options: list[tuple[str, str]], hint: s
         st.markdown(f"**Sugerencia.** {hint}")
 
 
+# Lo comparten Problema y Starter kit.
+SUCCESS = (
+    "Predicción de candidatos a mesociclones en el período 2026. Los candidatos serán evaluados por expertos en el área "
+    "y contrastados contra una base de datos actualizada de tornados."
+)
+
+
 def _objective() -> None:
     """Objetivo y criterio de éxito; las decisiones abiertas van en ``_decisions``."""
     layout.section(
@@ -93,10 +101,7 @@ def _objective() -> None:
         "El objetivo del proyecto es estimar qué tormentas del centro-sur de Chile pueden desarrollar un mesociclón mediante datos de ERA5 y GOES.",
     )
     st.subheader("Criterio de éxito", anchor=False)
-    st.markdown(
-        "Predicción de candidatos a mesociclones en el período 2026. Los candidatos serán evaluados por expertos en el área "
-        "y contrastados contra una base de datos actualizada de tornados."
-    )
+    st.markdown(SUCCESS)
     st.markdown(
         "«Estimar qué tormentas pueden desarrollar un mesociclón» se puede leer de varias formas. "
         "Las opciones están en <a href='#decisiones'>Decisiones abiertas</a>, después de presentar los datos.",
@@ -111,6 +116,11 @@ def _decisions() -> None:
         "Decisiones abiertas",
         "Con los datos y su costo a la vista, quedan las decisiones de diseño: seis que cambian qué datos se preparan, qué modelo se entrena y cómo se evalúa.",
     )
+    decisions()
+
+
+def decisions() -> None:
+    """Las decisiones abiertas, cada una con opciones y una sugerencia; Starter kit las muestra igual."""
     st.markdown(
         "El proyecto **no fija estas decisiones: les corresponde a quienes lo desarrollen**, que además pueden proponer otras. "
         "Para cada una van las opciones, lo que implica elegirlas y una sugerencia de partida, que se puede rechazar con argumentos."
@@ -638,6 +648,38 @@ def _volume() -> None:
     )
 
 
+# Tareas abiertas, de menor a mayor dificultad: (insignia, color, título, texto). Las comparten Problema y Starter kit.
+TASKS: list[tuple[str, layout.Color, str, str]] = [
+    ("Accesible", "primary", "Revisar el catálogo",
+     "Revisar y homogeneizar fechas, horas UTC, coordenadas y tipos de evento, conservando la fuente y la información de confianza."),
+    ("Accesible", "primary", "Animaciones GOES",
+     "Construir secuencias animadas de imágenes GOES de los eventos conocidos para observar la evolución y el desplazamiento de las nubes."),
+    ("Intermedia", "primary", "Cálculo y validación de índices",
+     "Completar los índices pendientes y contrastar los cálculos existentes con los casos documentados, comprobando ramas y signos."),
+    ("Intermedia", "primary", "Corregir el paralaje",
+     "GOES ve los topes de lado: a 40°S un tope de 12 km aparece corrido unos 13 km hacia el sur. Desde diciembre de 2019, `ABI-L2-ACHAF` da la altura del tope para corregirlo. Para fechas anteriores, como el caso de 2019, la altura se puede estimar comparando la temperatura de brillo de la banda 13 con el perfil de temperatura de ERA5."),
+    ("Intermedia", "primary", "Rayos y saltos de actividad",
+     "El GLM detecta rayos de forma continua y publica un archivo cada 20 segundos. Un aumento brusco de la tasa de rayos se ha usado como señal de tormenta severa (Schultz et al. 2009). Cerca de 52°S el detector pierde cobertura, así que el extremo de la región por defecto (hasta 56°S) queda sin rayos."),
+    ("Intermedia", "primary", "Firmas del tope nuboso",
+     "Topes penetrantes y penachos de cirros sobre el yunque son indicadores de tormentas severas en el visible y el infrarrojo (Bedka et al. 2018). Falta ver si aparecen en las tormentas chilenas, con mucha cizalladura y poca energía (régimen HSLC)."),
+    ("Intermedia", "primary", "Vientos y estabilidad desde el satélite",
+     "Desde diciembre de 2019, `ABI-L2-DMWF` da viento en altura y `ABI-L2-DSIF`, índices de estabilidad (solo con cielo despejado). Sirven para contrastar con ERA5 el entorno de las tormentas."),
+    ("Avanzada", "orange", "Explorar la rotación del yunque",
+     "El yunque es la parte superior de la nube, que se extiende horizontalmente. Usar flujo óptico para estimar su movimiento en secuencias GOES y buscar patrones de rotación. Antes hay que decidir cómo comprobar que esa señal corresponde a un mesociclón."),
+    ("Avanzada", "orange", "Positivos y no etiquetados (PU)",
+     "Tratar los días sin registro como no etiquetados en vez de negativos (documento, §6.1). El método de Elkan y Noto (2008) supone que la probabilidad de registrar un evento es la misma en todas partes; modelarla según población, hora y año queda como extensión."),
+    ("Avanzada", "orange", "Preentrenar con otros datos",
+     "Aprendizaje autosupervisado con imágenes GOES sin etiquetas, o un modelo entrenado con tornados de Estados Unidos y ajustado con casos chilenos, cuidando el signo de la rotación en el hemisferio sur (documento, §2.6 y §6.4)."),
+    ("Avanzada", "orange", "Recalibrar los índices",
+     "Ajustar el umbral de STP (o de un SCP, que el repositorio no calcula todavía) a los casos chilenos y evaluarlo en casos distintos de los usados para ajustarlo."),
+]  # fmt: skip
+
+
+def tasks() -> None:
+    """Las tareas abiertas en tarjetas; Problema y Starter kit las muestran igual."""
+    layout.cards("tasks", TASKS)
+
+
 def _participate() -> None:
     """Propone tareas para quien quiera participar."""
     layout.section(
@@ -645,35 +687,7 @@ def _participate() -> None:
         "Cómo participar",
         "El proyecto está abierto a cualquier persona interesada. Para aportar no hace falta formación en meteorología.",
     )
-    layout.cards(
-        "tasks",
-        [
-            (
-                "Accesible",
-                "primary",
-                "Revisar el catálogo",
-                "Revisar y homogeneizar fechas, horas UTC, coordenadas y tipos de evento, conservando la fuente y la información de confianza.",
-            ),
-            (
-                "Accesible",
-                "primary",
-                "Animaciones GOES",
-                "Construir secuencias animadas de imágenes GOES de los eventos conocidos para observar la evolución y el desplazamiento de las nubes.",
-            ),
-            (
-                "Intermedia",
-                "primary",
-                "Cálculo y validación de índices",
-                "Completar los índices pendientes y contrastar los cálculos existentes con los casos documentados, comprobando ramas y signos.",
-            ),
-            (
-                "Avanzada",
-                "orange",
-                "Explorar la rotación del yunque",
-                "Explorar señales de rotación en el yunque, la parte superior de la nube que se extiende horizontalmente. Usar flujo óptico para estimar el movimiento en secuencias GOES y evaluar si esas señales ayudan a identificar tormentas mesociclónicas. Debe definirse cómo validar la relación entre la señal observada y la presencia de un mesociclón.",
-            ),
-        ],
-    )
+    tasks()
     st.markdown(
         "El documento completo desarrolla la física, las fuentes de datos, las variables derivadas, el planteamiento del modelo, una arquitectura sugerida en AWS y las líneas de trabajo.",
     )
@@ -683,10 +697,12 @@ def _participate() -> None:
         f"<p class='note'>Catálogo de eventos: Bastías-Curivil et al. (2024–2025), <a href='{CATALOG}'>"
         "<em>Tornadoes and Waterspouts in Chile</em></a>, figshare, CC BY 4.0. Fuentes principales: "
         "Vicencio et al. (2021, <em>BAMS</em>) · Marín et al. (2024, <em>MWR</em>) · Barrett et al. "
-        "(2020, <em>Atmos. Res.</em>) · Caballero-Morán &amp; Rondanelli (2025, <em>GRL</em>). La lista "
-        "completa está en el documento. Datos: ERA5 (ECMWF / Copernicus) y GOES-R (NOAA / NASA), ambos en "
-        "el AWS Open Data Program.</p>",
+        "(2020, <em>Atmos. Res.</em>) · Caballero-Morán &amp; Rondanelli (2025, <em>GRL</em>). Datos: "
+        "ERA5 (ECMWF / Copernicus) y GOES-R (NOAA / NASA), ambos en el AWS Open Data Program.</p>",
         unsafe_allow_html=True,
+    )
+    st.page_link(
+        state.page("references"), label="Ver todas las referencias", icon=":material/menu_book:"
     )
 
 

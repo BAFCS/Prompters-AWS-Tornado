@@ -213,7 +213,7 @@ REFERENCES = {
         "*Weather and Forecasting*, 33(5), 1159–1181.",
         "https://doi.org/10.1175/WAF-D-18-0040.1",
     ),
-    # Las que solo cita Starter kit (trabajos relacionados).
+    # Las que solo aparecen en la página Referencias.
     "marin2026": Reference(
         "Marín et al. (2026)",
         "Marín, J. C., Barrett, B. S., Gutiérrez, F. & Pozo, D. (2026). Mesoscale environments of "

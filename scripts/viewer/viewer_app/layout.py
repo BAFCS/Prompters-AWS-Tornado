@@ -1,4 +1,5 @@
-"""Piezas compartidas por las páginas de lectura (Problema, Datos, Caso de estudio y Starter kit).
+"""Piezas compartidas por las páginas de lectura (Problema, Datos, Caso de estudio, Starter kit y
+Referencias).
 
 ``page`` arma el armazón común: el cuerpo y el índice, que va en una columna fija a la derecha con
 ancho de sobra y en un desplegable arriba en pantallas angostas. El CSS de ``theme.py`` se engancha a
@@ -50,6 +51,29 @@ def cards(key: str, items: list[tuple[str, Color, str, str]], n_columns: int = 2
                 st.badge(badge, color=color)
                 st.markdown(f"**{title}**")
                 st.markdown(text)
+
+
+def md_html(text: str) -> str:
+    """Las cursivas y el código de ``text`` (markdown) en HTML, para usarlo dentro de HTML propio.
+
+    Solo entiende ``*cursiva*`` y ```código```: no usar negritas ni asteriscos sueltos en los rasgos de
+    las fuentes ni en ``Reference.full`` (la prueba de ``variables`` lo comprueba).
+    """
+    parts = html.escape(text).split("`")
+    text = "".join(f"<code>{p}</code>" if i % 2 else p for i, p in enumerate(parts))
+    parts = text.split("*")
+    return "".join(f"<em>{p}</em>" if i % 2 else p for i, p in enumerate(parts))
+
+
+def scroll_to(element_id: str) -> None:
+    """Desplaza la página hasta ``element_id`` cuando ya está dibujado (Streamlit lo va armando)."""
+    st.html(
+        "<script>(() => { let n = 0; const t = setInterval(() => {"
+        f"const el = document.getElementById('{element_id}');"
+        "if (el) { el.scrollIntoView(); clearInterval(t); } else if (++n > 50) clearInterval(t);"
+        "}, 100); })();</script>",
+        unsafe_allow_javascript=True,
+    )
 
 
 def toc(sections: Iterable[tuple[str, str]]) -> str:
