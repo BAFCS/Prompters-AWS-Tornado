@@ -47,11 +47,11 @@ resource "aws_cloudfront_distribution" "viewer" {
   }
 
   # Segundo origen: el bucket S3 con los resultados del entrenamiento (model.json, reporte.html...).
+  # Sin origin_path: la ruta /resultados/estado.html mapea directo a la clave S3 resultados/estado.html.
   origin {
     origin_id                = "results-s3"
     domain_name              = aws_s3_bucket.data.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.results.id
-    origin_path              = "/resultados"
   }
 
   default_cache_behavior {
@@ -62,6 +62,17 @@ resource "aws_cloudfront_distribution" "viewer" {
     compress                 = true
     cache_policy_id          = data.aws_cloudfront_cache_policy.disabled.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer.id
+  }
+
+  # /resultados/estado.html -> SIN caché: la página de avance tiene que mostrar siempre lo último.
+  ordered_cache_behavior {
+    path_pattern           = "/resultados/estado.html"
+    target_origin_id       = "results-s3"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    compress               = true
+    cache_policy_id        = data.aws_cloudfront_cache_policy.disabled.id
   }
 
   # /resultados/* -> reporte y modelo del entrenamiento, servidos desde S3.

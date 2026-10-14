@@ -52,25 +52,43 @@ def _run(cmd: list[str], timeout: int | None = None) -> None:
 
 
 def _status_html(steps: list[str], done: bool = False) -> str:
-    """HTML de progreso con la lista de pasos ya ejecutados."""
+    """HTML de progreso: fase actual destacada + historial de pasos con marca de tiempo."""
     now = dt.datetime.now(dt.UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
     state = "✅ Entrenamiento terminado" if done else "⏳ Entrenamiento en curso…"
-    items = "".join(f"<li>{s}</li>" for s in steps)
-    refresh = "" if done else '<meta http-equiv="refresh" content="15">'
-    link = (
-        '<p><a href="reporte.html">Ver el reporte de métricas →</a></p>' if done else ""
+    current = steps[-1] if steps else "Arrancando…"
+    # Historial en orden inverso (lo más reciente arriba).
+    items = "".join(f"<li>{s}</li>" for s in reversed(steps))
+    refresh = "" if done else '<meta http-equiv="refresh" content="10">'
+    link = '<p class="link"><a href="reporte.html">📊 Ver el reporte de métricas →</a></p>' if done else ""
+    phase = "" if done else (
+        '<div class="phase"><div class="phase-label">Paso actual</div>'
+        f'<div class="phase-now">{current}</div></div>'
+    )
+    legend = (
+        '<p class="muted">Fases: <b>⬇️ TOMANDO DATOS</b> baja ERA5 (lo más lento, ~GB por día entre '
+        "regiones) · <b>⚙️ CALCULANDO ÍNDICES</b> deriva cizalladura, SRH, VGP, STP · "
+        "<b>🧠 ENTRENANDO</b> ajusta XGBoost (segundos).</p>"
     )
     return f"""<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">{refresh}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Estado del entrenamiento</title>
 <style>body{{font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 max-width:760px;margin:0 auto;padding:32px 24px;color:#182230;background:#f4f6fa}}
-h1{{font-size:20px}} .muted{{color:#5a6675;font-size:13px}}
-ol,ul{{background:#fff;border:1px solid #ccd4e0;border-radius:12px;padding:16px 16px 16px 36px}}
-li{{margin:3px 0}} a{{color:#1769ff}}</style></head><body>
+h1{{font-size:20px;margin-bottom:4px}} .muted{{color:#5a6675;font-size:13px}}
+.phase{{background:#fff;border:1px solid #1769ff;border-left:5px solid #1769ff;border-radius:12px;
+padding:14px 18px;margin:18px 0}} .phase-label{{color:#5a6675;font-size:12px;text-transform:uppercase;
+letter-spacing:.5px}} .phase-now{{font-size:17px;font-weight:600;margin-top:2px}}
+.link a{{display:inline-block;background:#1769ff;color:#fff;padding:10px 18px;border-radius:8px;
+text-decoration:none;font-weight:600}}
+ol,ul{{background:#fff;border:1px solid #ccd4e0;border-radius:12px;padding:12px 12px 12px 32px}}
+li{{margin:3px 0;font-size:13px}} a{{color:#1769ff}} h2{{font-size:14px;color:#5a6675;margin-top:24px}}</style>
+</head><body>
 <h1>{state}</h1>
-<p class="muted">Actualizado {now}. {"" if done else "La página se refresca sola cada 15 s."}</p>
+<p class="muted">Actualizado {now}. {"" if done else "La página se refresca sola cada 10 s."}</p>
+{phase}
 {link}
+{legend}
+<h2>Historial (lo más reciente arriba)</h2>
 <ul>{items}</ul>
 </body></html>"""
 
