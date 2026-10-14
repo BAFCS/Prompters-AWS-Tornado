@@ -213,12 +213,22 @@ def main() -> None:
         raise SystemExit("Sin índices ERA5.")
 
     step(f"🧠 ENTRENANDO XGBoost con {ok} días de índices (esto es rápido, segundos)…")
-    _run([
-        "uv", "run", "python", "scripts/model/train_xgboost.py",
-        "--indices", str(indices_dir),
-        "--catalog", a.catalog,
-        "--out", out,
-    ])
+    try:
+        proc = subprocess.run(
+            ["uv", "run", "python", "scripts/model/train_xgboost.py",
+             "--indices", str(indices_dir), "--catalog", a.catalog, "--out", out],
+            capture_output=True, text=True, timeout=600, check=True,
+        )
+        print(proc.stdout, flush=True)
+    except subprocess.CalledProcessError as e:
+        # Muestra el error en la web en vez de dejar el estado colgado en "ENTRENANDO".
+        detail = (e.stderr or e.stdout or str(e)).strip().splitlines()[-1:] or [str(e)]
+        step(f"❌ El entrenamiento falló: {detail[0]}", done=True)
+        print(f"STDERR:\n{e.stderr}", flush=True)
+        raise SystemExit(1) from e
+    except subprocess.TimeoutExpired:
+        step("❌ El entrenamiento excedió el tiempo", done=True)
+        raise SystemExit(1) from None
     step("Entrenamiento en la nube completo. Reporte disponible en reporte.html", done=True)
 
 
