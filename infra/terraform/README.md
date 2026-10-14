@@ -153,6 +153,31 @@ terraform apply -var="max_event_days=0"
 > EC2 de entrenamiento va en `us-east-1` (variable `training_region`) y lee ERA5 entre regiones:
 > funciona porque `nsf-ncar-era5` es un bucket público de acceso anónimo.
 
+### El cuello de botella: descargar ERA5 (y cómo se optimiza)
+
+Entrenar XGBoost toma **segundos**; lo lento es **bajar ERA5**. El bucket `nsf-ncar-era5` guarda
+cada variable como un archivo que cubre el globo entero (una variable, un día, ~1,4 GB) y no admite
+recorte en el servidor: hay que transferir el bloque global y recortarlo en memoria. Lo que se hace
+para que no sea un muro:
+
+1. **Bajar solo las variables que el modelo usa.** `process_era5` solo necesita `u, v, t, z` en
+   niveles de presión (el default traía 8, con `w, q, r, vo` que no entran en ninguna feature) y
+   `10u, 10v, 2t, 2d, sp, cape` en superficie. El orquestador ya pide solo esas: **~la mitad** del
+   tráfico, sin cambiar ningún índice.
+2. **Cachear los índices en S3 y reutilizarlos** (`--indices-s3 s3://bucket/era5_indices`). ERA5 →
+   índice es determinista. Una vez calculado, cada día pesa ~2 MB en vez de ~11 GB. La primera
+   corrida del equipo paga el costo una vez; las siguientes entrenan en segundos leyendo los
+   índices. Volver a entrenar con otras features ya no vuelve a bajar ERA5.
+3. **Timeout por día**: si un día se cuelga bajando (sockets entre regiones), se omite y el job
+   sigue, en vez de bloquearse.
+
+Mejoras mayores si tu cuenta lo permite:
+
+- **EC2 en us-west-2** (misma región que ERA5): transferencia intra-región, mucho más rápida y sin
+  cuelgues. Hoy lo bloquea el *deny* de la cuenta de la hackathon.
+- **Climate Data Store (CDS) de Copernicus**: permite pedir solo la región y niveles (`area:`),
+  bajando kilobytes en vez de gigabytes. Requiere cuenta/API key y a veces hay cola.
+
 ### Ver los resultados del modelo
 
 El reporte HTML con las métricas queda servido por CloudFront:
@@ -160,6 +185,12 @@ El reporte HTML con las métricas queda servido por CloudFront:
 ```bash
 terraform output results_url
 # https://<dominio>.cloudfront.net/resultados/reporte.html
+```
+
+Para seguir el avance **en vivo** mientras entrena (se refresca solo):
+
+```
+https://<dominio>.cloudfront.net/resultados/estado.html
 ```
 
 También puedes descargar los archivos crudos desde S3:

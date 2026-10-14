@@ -158,9 +158,13 @@ def main() -> None:
         try:
             iso = day.isoformat()
             step(f"[{i}/{total}] {day} · ⬇️ TOMANDO DATOS ERA5 (lo más lento, ~GB entre regiones)…")
+            # Solo las 4 variables de presión que usa process_era5 (u, v, t, z). El default baja 8
+            # (añade w, q, r, vo) que no entran en ninguna feature: pedir solo 4 corta a la mitad
+            # el tráfico de ERA5, que es el cuello de botella. --sfc solo lo que leen los índices.
             _run(
                 ["uv", "run", "python", "scripts/pipeline/download_era5.py", "--start", iso,
-                 "--region", a.region],
+                 "--region", a.region, "--pl", "u", "v", "t", "z",
+                 "--sfc", "10u", "10v", "2t", "2d", "sp", "cape"],
                 timeout=DAY_TIMEOUT_S,
             )
             step(f"[{i}/{total}] {day} · ⚙️ CALCULANDO ÍNDICES (cizalladura, SRH, VGP, STP)…")
