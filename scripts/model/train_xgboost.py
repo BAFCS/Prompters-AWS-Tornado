@@ -304,9 +304,25 @@ def report_html(metrics: dict, importance: dict[str, float], table: pd.DataFrame
 
 
 def _write(path: str, data: bytes) -> None:
-    """Escribe ``data`` en una ruta local o ``s3://``."""
-    with fsspec.open(path, "wb") as f:  # type: ignore[union-attr]
-        f.write(data)
+    """Escribe ``data`` en una ruta local o ``s3://`` con el Content-Type correcto por extensión.
+
+    Sin Content-Type, S3 guarda los objetos como ``binary/octet-stream`` y el navegador descarga el
+    HTML en vez de mostrarlo. Se fija ``text/html`` para ``.html`` y ``application/json`` para JSON.
+    """
+    content_type = (
+        "text/html; charset=utf-8"
+        if path.endswith(".html")
+        else "application/json"
+        if path.endswith(".json")
+        else "application/octet-stream"
+    )
+    if path.startswith("s3://"):
+        fs = fsspec.filesystem("s3")
+        with fs.open(path, "wb", content_type=content_type) as f:
+            f.write(data)
+    else:
+        with fsspec.open(path, "wb") as f:  # type: ignore[union-attr]
+            f.write(data)
 
 
 def _list_indices(indices_arg: str) -> list[str]:

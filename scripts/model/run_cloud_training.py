@@ -93,11 +93,22 @@ li{{margin:3px 0;font-size:13px}} a{{color:#1769ff}} h2{{font-size:14px;color:#5
 </body></html>"""
 
 
+def _write_html(path: str, html: str) -> None:
+    """Escribe un HTML local o en S3 con Content-Type text/html (si no, el navegador lo descarga)."""
+    data = html.encode()
+    if path.startswith("s3://"):
+        fs = fsspec.filesystem("s3")
+        with fs.open(path, "wb", content_type="text/html; charset=utf-8") as f:
+            f.write(data)
+    else:
+        with fsspec.open(path, "wb") as f:  # type: ignore[union-attr]
+            f.write(data)
+
+
 def _publish(out: str, steps: list[str], done: bool = False) -> None:
     """Sube el estado.html al prefijo de resultados (ignora fallos de red para no romper el job)."""
     try:
-        with fsspec.open(f"{out}/estado.html", "wb") as f:  # type: ignore[union-attr]
-            f.write(_status_html(steps, done).encode())
+        _write_html(f"{out}/estado.html", _status_html(steps, done))
     except Exception as e:  # noqa: BLE001
         print(f"  aviso: no se pudo subir estado.html ({e})", flush=True)
 
@@ -125,8 +136,7 @@ def main() -> None:
             '<p>El entrenamiento aún no termina. <a href="estado.html">Ver el avance →</a></p>'
             "</body></html>"
         )
-        with fsspec.open(f"{out}/reporte.html", "wb") as f:  # type: ignore[union-attr]
-            f.write(placeholder.encode())
+        _write_html(f"{out}/reporte.html", placeholder)
     except Exception as e:  # noqa: BLE001
         print(f"  aviso: no se pudo subir el reporte provisional ({e})", flush=True)
 
