@@ -29,3 +29,6 @@ Thumbs.db
 .superpowers/
 .impeccable/
 
+
+# AWS CDK
+cdk.out/

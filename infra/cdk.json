@@ -1,0 +1,6 @@
+{
+  "app": "uv run --no-project --python 3.13 --with-requirements requirements.txt python app.py",
+  "context": {
+    "@aws-cdk/core:target-partitions": ["aws"]
+  }
+}
