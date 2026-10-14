@@ -51,19 +51,6 @@ def _run(cmd: list[str], timeout: int | None = None) -> None:
     subprocess.run(cmd, check=True, timeout=timeout)
 
 
-def _generate_indices(day: dt.date, region: str) -> None:
-    """Descarga ERA5 y calcula los índices de un día (salta lo ya hecho), con timeout."""
-    iso = day.isoformat()
-    _run(
-        ["uv", "run", "python", "scripts/pipeline/download_era5.py", "--start", iso, "--region", region],
-        timeout=DAY_TIMEOUT_S,
-    )
-    _run(
-        ["uv", "run", "python", "scripts/pipeline/process_era5.py", "--start", iso, "--region", region],
-        timeout=120,
-    )
-
-
 def _status_html(steps: list[str], done: bool = False) -> str:
     """HTML de progreso con la lista de pasos ya ejecutados."""
     now = dt.datetime.now(dt.UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -111,6 +98,20 @@ def main() -> None:
     out = a.out.rstrip("/")
     steps: list[str] = []
 
+    # reporte.html provisional: si alguien entra antes de tiempo, ve el avance en vez de un error.
+    try:
+        placeholder = (
+            '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">'
+            '<meta http-equiv="refresh" content="0; url=estado.html">'
+            "<title>Entrenamiento en curso</title></head><body>"
+            '<p>El entrenamiento aún no termina. <a href="estado.html">Ver el avance →</a></p>'
+            "</body></html>"
+        )
+        with fsspec.open(f"{out}/reporte.html", "wb") as f:  # type: ignore[union-attr]
+            f.write(placeholder.encode())
+    except Exception as e:  # noqa: BLE001
+        print(f"  aviso: no se pudo subir el reporte provisional ({e})", flush=True)
+
     def step(msg: str, done: bool = False) -> None:
         print(f"[estado] {msg}", flush=True)
         steps.append(msg)
@@ -148,15 +149,28 @@ def main() -> None:
             print(f"  aviso: no se pudieron reutilizar índices de S3 ({e})", flush=True)
 
     ok = 0
-    for day in [*event_days, *extra]:
+    total = len(event_days) + len(extra)
+    for i, day in enumerate([*event_days, *extra], start=1):
         if (indices_dir / f"era5_idx_{day:%Y%m%d}.nc").exists():
             ok += 1
-            step(f"{day} · índice ya disponible")
+            step(f"[{i}/{total}] {day} · índice ya disponible ✓")
             continue
         try:
-            _generate_indices(day, a.region)
+            iso = day.isoformat()
+            step(f"[{i}/{total}] {day} · ⬇️ TOMANDO DATOS ERA5 (lo más lento, ~GB entre regiones)…")
+            _run(
+                ["uv", "run", "python", "scripts/pipeline/download_era5.py", "--start", iso,
+                 "--region", a.region],
+                timeout=DAY_TIMEOUT_S,
+            )
+            step(f"[{i}/{total}] {day} · ⚙️ CALCULANDO ÍNDICES (cizalladura, SRH, VGP, STP)…")
+            _run(
+                ["uv", "run", "python", "scripts/pipeline/process_era5.py", "--start", iso,
+                 "--region", a.region],
+                timeout=120,
+            )
             ok += 1
-            step(f"{day} · índice ERA5 generado")
+            step(f"[{i}/{total}] {day} · índice ERA5 listo ✓")
             # Sube el índice a S3 para reutilizarlo en futuras corridas.
             if a.indices_s3:
                 try:
@@ -168,15 +182,15 @@ def main() -> None:
                 except Exception as e:  # noqa: BLE001
                     print(f"  aviso: no se pudo subir el índice de {day} ({e})", flush=True)
         except subprocess.TimeoutExpired:
-            step(f"{day} · ⏱️ se excedió el tiempo (ERA5 lento); se omite")
+            step(f"[{i}/{total}] {day} · ⏱️ se excedió el tiempo bajando ERA5; se omite y sigue")
         except subprocess.CalledProcessError as e:
-            step(f"{day} · ⚠️ falló ({e}); se omite")
+            step(f"[{i}/{total}] {day} · ⚠️ falló ({e}); se omite y sigue")
 
     if ok == 0:
         step("No se generó ningún índice; no se puede entrenar", done=True)
         raise SystemExit("Sin índices ERA5.")
 
-    step(f"Entrenando XGBoost con {ok} días de índices…")
+    step(f"🧠 ENTRENANDO XGBoost con {ok} días de índices (esto es rápido, segundos)…")
     _run([
         "uv", "run", "python", "scripts/model/train_xgboost.py",
         "--indices", str(indices_dir),
