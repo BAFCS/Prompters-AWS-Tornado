@@ -8,9 +8,9 @@ variable "region" {
 }
 
 variable "training_region" {
-  description = "Región de la EC2 de entrenamiento. us-west-2 porque ERA5 vive ahí (nsf-ncar-era5)."
+  description = "Región de la EC2 de entrenamiento. us-east-1: la cuenta de hackathon deniega crear recursos en us-west-2. (ERA5 vive en us-west-2, así que la lectura es entre regiones.)"
   type        = string
-  default     = "us-west-2"
+  default     = "us-east-1"
 }
 
 variable "environment" {

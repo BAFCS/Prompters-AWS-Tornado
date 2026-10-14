@@ -114,6 +114,85 @@ terraform apply -replace=aws_instance.viewer
 (La IP de origen cambia, pero CloudFront usa el DNS público de la EC2, así que la URL pública no
 cambia.)
 
+## Entrenar el modelo XGBoost (EC2 aparte)
+
+El entrenamiento corre en **otra EC2**, separada del visor, para no mezclar un servicio
+*always-on* con cómputo pesado puntual. Esa instancia:
+
+1. Clona el repositorio e instala las dependencias con `uv`.
+2. Baja el catálogo desde S3 y, para los días con evento (y una muestra de días sin evento),
+   **genera los índices ERA5** (`download_era5.py` + `process_era5.py`) leyendo el bucket público
+   `nsf-ncar-era5`.
+3. Arma la tabla *positive-unlabeled*, entrena **XGBoost** y evalúa con **POD/FAR/CSI** usando
+   validación *dejar-un-evento-afuera* (sin fuga entre horas del mismo evento).
+4. Sube `model.json`, `metrics.json`, `importance.json` y `reporte.html` al prefijo
+   `resultados/` del bucket de datos.
+5. Si `stop_after_training = true`, se **apaga sola** al terminar (no sigue cobrando).
+
+```
+EC2 entrenamiento ──baja──► ERA5 público (nsf-ncar-era5)
+       │ genera índices, entrena XGBoost
+       └──sube resultados──► S3  ──(/resultados/* vía CloudFront)──► reporte HTML público
+```
+
+El entrenamiento se activa por defecto (`enable_training = true`). Para una **primera corrida
+rápida**, acota los días (descargar ERA5 es lento: ~0,3 GB/día entre regiones, más tiempo de
+cálculo):
+
+```bash
+terraform apply -var="max_event_days=6" -var="unlabeled_days=4"
+```
+
+Para entrenar con **todos** los días con evento del catálogo (unos 38; tarda bastante más):
+
+```bash
+terraform apply -var="max_event_days=0"
+```
+
+> La cuenta de la hackathon **deniega crear recursos en us-west-2**, donde vive ERA5. Por eso la
+> EC2 de entrenamiento va en `us-east-1` (variable `training_region`) y lee ERA5 entre regiones:
+> funciona porque `nsf-ncar-era5` es un bucket público de acceso anónimo.
+
+### Ver los resultados del modelo
+
+El reporte HTML con las métricas queda servido por CloudFront:
+
+```bash
+terraform output results_url
+# https://<dominio>.cloudfront.net/resultados/reporte.html
+```
+
+También puedes descargar los archivos crudos desde S3:
+
+```bash
+BUCKET="$(terraform output -raw data_bucket)"
+aws s3 ls "s3://$BUCKET/resultados/"
+aws s3 cp "s3://$BUCKET/resultados/metrics.json" .
+```
+
+### Volver a entrenar
+
+Fuerza un nuevo arranque de la EC2 de entrenamiento (vuelve a generar índices y modelo):
+
+```bash
+terraform apply -replace='aws_instance.training[0]' -var="max_event_days=6"
+```
+
+Para seguir el avance del job, mira su log por Session Manager:
+
+```bash
+aws ssm start-session --target "$(terraform output -raw training_instance_id)"
+# dentro: tail -f /var/log/training.log
+```
+
+### Apagar el entrenamiento
+
+Para no dejar la EC2 de entrenamiento encendida:
+
+```bash
+terraform apply -var="enable_training=false"
+```
+
 ## Ver la URL de nuevo
 
 ```bash

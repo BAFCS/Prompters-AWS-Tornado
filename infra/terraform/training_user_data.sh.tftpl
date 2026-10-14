@@ -46,6 +46,7 @@ export AWS_DEFAULT_REGION="${training_region}"
 uv run python scripts/model/run_cloud_training.py \
   --catalog "$APP_DIR/data/tornados_chile.xlsx" \
   --out "s3://$DATA_BUCKET/resultados" \
+  --indices-s3 "s3://$DATA_BUCKET/era5_indices" \
   --region "$REGION_NAME" \
   --max-event-days "$MAX_EVENT_DAYS" \
   --unlabeled-days "$UNLABELED_DAYS"
