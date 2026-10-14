@@ -3,68 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Arquitectura — Visor aws-mesocyclonic (EC2 + CloudFront)</title>
+<title>Arquitectura — aws-mesocyclonic (visor + entrenamiento)</title>
 <style>
   :root {
-    --bg: #0f1419;
-    --panel: #1a2230;
-    --panel-2: #232d3f;
-    --ink: #e6edf3;
-    --muted: #8b98a9;
-    --line: #3a4557;
-    --accent: #ff9900;      /* AWS orange */
-    --blue: #4a9eff;
-    --green: #3fb950;
-    --purple: #bc8cff;
-    --red: #f85149;
-    --shadow: 0 6px 20px rgba(0,0,0,.35);
+    --bg: #0f1419; --panel: #1a2230; --panel-2: #232d3f; --ink: #e6edf3; --muted: #8b98a9;
+    --line: #3a4557; --accent: #ff9900; --blue: #4a9eff; --green: #3fb950; --purple: #bc8cff;
   }
   [data-theme="light"] {
-    --bg: #f4f6fa;
-    --panel: #ffffff;
-    --panel-2: #eef2f8;
-    --ink: #182230;
-    --muted: #5a6675;
-    --line: #ccd4e0;
-    --shadow: 0 6px 20px rgba(30,45,70,.12);
+    --bg: #f4f6fa; --panel: #ffffff; --panel-2: #eef2f8; --ink: #182230; --muted: #5a6675; --line: #ccd4e0;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    transition: background .25s, color .25s;
-  }
-  header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 24px; border-bottom: 1px solid var(--line);
-  }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; transition: .25s; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--line); }
   header h1 { font-size: 18px; margin: 0; font-weight: 650; }
   header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
-  .toggle {
-    background: var(--panel-2); color: var(--ink); border: 1px solid var(--line);
-    border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 13px;
-  }
+  .toggle { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 13px; }
   .toggle:hover { border-color: var(--accent); }
-  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 24px 60px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px; }
   svg { width: 100%; height: auto; display: block; }
-
-  /* diagram text */
-  .t-title { font-weight: 700; font-size: 15px; fill: var(--ink); }
-  .t-sub   { font-size: 12px; fill: var(--muted); }
-  .t-edge  { font-size: 12px; fill: var(--muted); }
-  .box     { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; }
+  .t-title { font-weight: 700; font-size: 14px; fill: var(--ink); }
+  .t-sub { font-size: 11.5px; fill: var(--muted); }
+  .box { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; }
   .box:hover { stroke: var(--accent); stroke-width: 2.5; }
-  .boundary { fill: none; stroke: var(--line); stroke-width: 1.3; stroke-dasharray: 6 5; rx: 14; }
-  .bnd-label { font-size: 11px; fill: var(--muted); letter-spacing: .5px; }
-  .edge { stroke: var(--line); stroke-width: 2; fill: none; marker-end: url(#arrow); }
-  .edge-strong { stroke: var(--accent); stroke-width: 2.5; }
+  .boundary { fill: none; stroke-width: 1.3; stroke-dasharray: 6 5; rx: 14; }
+  .bnd-label { font-size: 11px; letter-spacing: .5px; }
+  .edge { stroke: var(--line); stroke-width: 2; fill: none; }
+  .edge-a { stroke: var(--accent); stroke-width: 2.5; fill: none; }
+  .edge-g { stroke: var(--green); stroke-width: 2; fill: none; }
+  .edge-p { stroke: var(--purple); stroke-width: 2; fill: none; }
   .chip { fill: var(--panel-2); }
-
-  .legend { display: flex; flex-wrap: wrap; gap: 14px 28px; margin-top: 26px;
-            padding-top: 20px; border-top: 1px solid var(--line); }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px 26px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
   .legend div { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
   .dot { width: 12px; height: 12px; border-radius: 3px; }
-  .note { margin-top: 22px; color: var(--muted); font-size: 13px; }
+  .note { margin-top: 20px; color: var(--muted); font-size: 13px; }
   .note b { color: var(--ink); }
   a { color: var(--blue); }
 </style>
@@ -72,116 +44,107 @@
 <body data-theme="dark">
 <header>
   <div>
-    <h1>Visor aws-mesocyclonic — arquitectura del despliegue</h1>
-    <p>Una sola EC2 sirve el visor; los datos viven en S3. CloudFront da la URL pública con HTTPS.</p>
+    <h1>aws-mesocyclonic — visor + entrenamiento en la nube</h1>
+    <p>Dos EC2 separadas: una sirve el visor, otra entrena el modelo. CloudFront da las URLs públicas.</p>
   </div>
-  <button class="toggle" onclick="document.body.dataset.theme = document.body.dataset.theme==='dark'?'light':'dark'">
-    Cambiar tema
-  </button>
+  <button class="toggle" onclick="document.body.dataset.theme = document.body.dataset.theme==='dark'?'light':'dark'">Cambiar tema</button>
 </header>
 
 <div class="wrap">
-<svg viewBox="0 0 1000 560" role="img" aria-label="Diagrama de arquitectura">
+<svg viewBox="0 0 1120 620" role="img" aria-label="Diagrama de arquitectura">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="var(--line)"/>
-    </marker>
-    <marker id="arrowA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
-    </marker>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--green)"/></marker>
+    <marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--purple)"/></marker>
+    <marker id="l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--line)"/></marker>
   </defs>
 
-  <!-- ===== Visitante ===== -->
-  <g>
-    <rect class="box" x="40" y="230" width="150" height="90" rx="12"/>
-    <text class="t-title" x="115" y="268" text-anchor="middle">👤 Visitante</text>
-    <text class="t-sub"   x="115" y="290" text-anchor="middle">navegador</text>
-    <text class="t-sub"   x="115" y="306" text-anchor="middle">con la URL</text>
-  </g>
+  <!-- Visitante -->
+  <rect class="box" x="24" y="250" width="130" height="80" rx="12"/>
+  <text class="t-title" x="89" y="284" text-anchor="middle">👤 Equipo</text>
+  <text class="t-sub" x="89" y="304" text-anchor="middle">navegador</text>
 
-  <!-- edge visitante -> cloudfront -->
-  <path class="edge edge-strong" d="M190,275 L255,275" marker-end="url(#arrowA)"/>
-  <text class="t-edge" x="222" y="266" text-anchor="middle">HTTPS</text>
-
-  <!-- ===== CloudFront ===== -->
-  <g>
-    <rect class="box" x="255" y="225" width="175" height="100" rx="12"/>
-    <text class="t-title" x="342" y="262" text-anchor="middle">CloudFront</text>
-    <text class="t-sub"   x="342" y="284" text-anchor="middle">CDN · HTTPS</text>
-    <text class="t-sub"   x="342" y="300" text-anchor="middle">URL pública</text>
-    <text class="t-sub"   x="342" y="316" text-anchor="middle">*.cloudfront.net</text>
-  </g>
+  <!-- CloudFront -->
+  <path class="edge-a" d="M154,290 L214,290" marker-end="url(#a)"/>
+  <text class="t-sub" x="184" y="282" text-anchor="middle">HTTPS</text>
+  <rect class="box" x="214" y="235" width="150" height="110" rx="12" style="stroke:var(--accent)"/>
+  <text class="t-title" x="289" y="268" text-anchor="middle">CloudFront</text>
+  <text class="t-sub" x="289" y="288" text-anchor="middle">CDN · HTTPS</text>
+  <text class="t-sub" x="289" y="305" text-anchor="middle">/ → visor</text>
+  <text class="t-sub" x="289" y="321" text-anchor="middle">/resultados/* → S3</text>
 
   <!-- AWS boundary -->
-  <rect class="boundary" x="470" y="40" width="490" height="490"/>
-  <text class="bnd-label" x="485" y="62">CUENTA AWS · us-east-1</text>
+  <rect class="boundary" x="400" y="24" width="700" height="580" style="stroke:var(--line)"/>
+  <text class="bnd-label" x="416" y="46" style="fill:var(--muted)">CUENTA AWS · us-east-1</text>
 
-  <!-- VPC boundary -->
-  <rect class="boundary" x="490" y="150" width="300" height="250" style="stroke:var(--blue)"/>
-  <text class="bnd-label" x="505" y="172" style="fill:var(--blue)">VPC · Security Group (solo CloudFront → :8501)</text>
+  <!-- Visor EC2 -->
+  <path class="edge-a" d="M364,275 L470,205" marker-end="url(#a)"/>
+  <text class="t-sub" x="415" y="225" text-anchor="middle">HTTP :8501</text>
+  <rect class="box" x="470" y="130" width="230" height="110" rx="12" style="stroke:var(--accent)"/>
+  <text class="t-title" x="585" y="162" text-anchor="middle">EC2 · VISOR</text>
+  <text class="t-sub" x="585" y="182" text-anchor="middle">t3.large (always-on)</text>
+  <rect class="chip" x="492" y="194" width="186" height="34" rx="8"/>
+  <text class="t-sub" x="585" y="215" text-anchor="middle" style="fill:var(--ink)">🐳 Docker · Streamlit</text>
 
-  <!-- edge cloudfront -> ec2 -->
-  <path class="edge edge-strong" d="M430,275 L540,275" marker-end="url(#arrowA)"/>
-  <text class="t-edge" x="485" y="266" text-anchor="middle">HTTP :8501</text>
+  <!-- Training EC2 -->
+  <rect class="box" x="470" y="330" width="230" height="130" rx="12" style="stroke:var(--blue)"/>
+  <text class="t-title" x="585" y="360" text-anchor="middle">EC2 · ENTRENAMIENTO</text>
+  <text class="t-sub" x="585" y="379" text-anchor="middle">c7i.2xlarge (efímera)</text>
+  <text class="t-sub" x="585" y="396" text-anchor="middle">se apaga al terminar</text>
+  <rect class="chip" x="492" y="408" width="186" height="42" rx="8"/>
+  <text class="t-sub" x="585" y="426" text-anchor="middle" style="fill:var(--ink)">genera índices ERA5</text>
+  <text class="t-sub" x="585" y="441" text-anchor="middle" style="fill:var(--ink)">🧠 entrena XGBoost</text>
 
-  <!-- ===== EC2 ===== -->
-  <g>
-    <rect class="box" x="540" y="220" width="210" height="120" rx="12" style="stroke:var(--accent)"/>
-    <text class="t-title" x="645" y="252" text-anchor="middle">EC2 (t3.large)</text>
-    <text class="t-sub"   x="645" y="274" text-anchor="middle">1 sola instancia</text>
-    <!-- docker chip -->
-    <rect class="chip" x="565" y="286" width="160" height="40" rx="8"/>
-    <text class="t-sub" x="645" y="304" text-anchor="middle" style="fill:var(--ink)">🐳 Docker</text>
-    <text class="t-sub" x="645" y="319" text-anchor="middle">visor Streamlit (frontend)</text>
-  </g>
+  <!-- S3 -->
+  <rect class="box" x="800" y="250" width="250" height="150" rx="12" style="stroke:var(--green)"/>
+  <text class="t-title" x="925" y="280" text-anchor="middle">S3 (privado)</text>
+  <text class="t-sub" x="925" y="300" text-anchor="middle">data/ · datos del visor</text>
+  <text class="t-sub" x="925" y="318" text-anchor="middle">era5_indices/ · índices (caché)</text>
+  <text class="t-sub" x="925" y="336" text-anchor="middle">resultados/ · modelo + reporte</text>
+  <rect class="chip" x="822" y="350" width="206" height="36" rx="8"/>
+  <text class="t-sub" x="925" y="372" text-anchor="middle" style="fill:var(--ink)">model.json · metrics · reporte.html</text>
 
-  <!-- edge ec2 -> s3 (baja datos al arrancar) -->
-  <path class="edge" d="M645,340 L645,420" marker-end="url(#arrow)"/>
-  <text class="t-edge" x="700" y="385" text-anchor="middle">lee data/</text>
-  <text class="t-edge" x="700" y="400" text-anchor="middle">al arrancar</text>
+  <!-- visor lee data de S3 -->
+  <path class="edge-g" d="M700,200 Q770,210 810,255" marker-end="url(#g)"/>
+  <text class="t-sub" x="775" y="200" text-anchor="middle">lee data/</text>
 
-  <!-- ===== S3 ===== -->
-  <g>
-    <rect class="box" x="540" y="420" width="210" height="90" rx="12" style="stroke:var(--green)"/>
-    <text class="t-title" x="645" y="454" text-anchor="middle">S3 (privado)</text>
-    <text class="t-sub"   x="645" y="476" text-anchor="middle">almacenamiento de datos</text>
-    <text class="t-sub"   x="645" y="492" text-anchor="middle">crops · catálogo · costa</text>
-  </g>
+  <!-- training lee indices / escribe resultados -->
+  <path class="edge-g" d="M700,380 Q770,370 805,355" marker-end="url(#g)"/>
+  <text class="t-sub" x="770" y="398" text-anchor="middle">lee/escribe índices + resultados</text>
 
-  <!-- IAM chip -->
-  <g>
-    <rect class="box" x="810" y="225" width="130" height="80" rx="12" style="stroke:var(--purple)"/>
-    <text class="t-title" x="875" y="258" text-anchor="middle" style="font-size:13px">IAM</text>
-    <text class="t-sub"   x="875" y="278" text-anchor="middle">rol EC2</text>
-    <text class="t-sub"   x="875" y="294" text-anchor="middle">solo lectura S3</text>
-  </g>
-  <path class="edge" d="M810,290 Q780,330 750,440" style="stroke:var(--purple)" marker-end="url(#arrow)"/>
+  <!-- CloudFront lee resultados de S3 (OAC) -->
+  <path class="edge-a" d="M300,345 Q330,520 820,398" marker-end="url(#a)"/>
+  <text class="t-sub" x="520" y="500" text-anchor="middle">/resultados/* (OAC)</text>
 
-  <!-- SSM chip -->
-  <g>
-    <rect class="box" x="810" y="330" width="130" height="60" rx="12"/>
-    <text class="t-sub" x="875" y="356" text-anchor="middle" style="fill:var(--ink)">SSM</text>
-    <text class="t-sub" x="875" y="372" text-anchor="middle">consola sin SSH</text>
-  </g>
-  <path class="edge" d="M810,360 L752,320" marker-end="url(#arrow)"/>
+  <!-- ERA5 público -->
+  <rect class="box" x="470" y="505" width="230" height="75" rx="12"/>
+  <text class="t-title" x="585" y="535" text-anchor="middle" style="font-size:13px">ERA5 público</text>
+  <text class="t-sub" x="585" y="554" text-anchor="middle">s3://nsf-ncar-era5 (us-west-2)</text>
+  <text class="t-sub" x="585" y="570" text-anchor="middle">bloques globales ~GB/día</text>
+  <path class="edge" d="M585,505 L585,462" marker-end="url(#l)"/>
+  <text class="t-sub" x="648" y="488" text-anchor="middle">⬇️ lento</text>
 </svg>
 
 <div class="legend">
-  <div><span class="dot" style="background:var(--accent)"></span> Ruta del tráfico web (HTTPS → HTTP)</div>
-  <div><span class="dot" style="background:var(--green)"></span> S3 — almacenamiento, no es un servidor</div>
-  <div><span class="dot" style="background:var(--blue)"></span> Red / límite de seguridad</div>
-  <div><span class="dot" style="background:var(--purple)"></span> Permisos (IAM)</div>
+  <div><span class="dot" style="background:var(--accent)"></span> Tráfico web / resultados (CloudFront)</div>
+  <div><span class="dot" style="background:var(--green)"></span> S3 (almacenamiento)</div>
+  <div><span class="dot" style="background:var(--blue)"></span> EC2 de entrenamiento (efímera)</div>
 </div>
 
 <p class="note">
-  <b>Lo clave:</b> hay <b>una sola EC2</b>. El frontend (la web de Streamlit) y la lógica corren
-  ahí dentro, en un contenedor Docker. Los datos <b>no</b> están en otra EC2: viven en
-  <b>S3</b> (almacenamiento) y la EC2 los baja a su disco al arrancar. CloudFront es la única puerta
-  pública y entrega la URL con HTTPS; el security group solo deja que CloudFront llegue a la
-  instancia por el puerto 8501.
+  <b>Dos EC2 separadas:</b> el <b>visor</b> (siempre encendido, sirve la web) y el
+  <b>entrenamiento</b> (efímera: arranca, entrena y se apaga). <b>No comparten máquina</b>, para no
+  mezclar un servicio público con cómputo pesado.
 </p>
 <p class="note">
-  URL en vivo: <a href="https://d2vcu1id4v0sta.cloudfront.net">https://d2vcu1id4v0sta.cloudfront.net</a>
+  <b>Flujo de entrenamiento:</b> la EC2 de entrenamiento baja ERA5 (lo lento, bloques globales),
+  calcula los <b>índices</b> y los guarda en <code>era5_indices/</code> de S3 (caché: no se vuelven
+  a bajar), entrena <b>XGBoost</b> y sube <code>model.json</code> + <code>reporte.html</code> a
+  <code>resultados/</code>. CloudFront sirve ese reporte en <code>/resultados/*</code>.
+</p>
+<p class="note">
+  Visor: <a href="https://d2vcu1id4v0sta.cloudfront.net">d2vcu1id4v0sta.cloudfront.net</a> ·
+  Reporte: <a href="https://d2vcu1id4v0sta.cloudfront.net/resultados/reporte.html">/resultados/reporte.html</a>
 </p>
 </div>
 </body>
