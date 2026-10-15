@@ -41,7 +41,7 @@ import bedrock_encoder as be  # noqa: E402
 import common  # noqa: E402
 
 MODEL_DATA = common.DATA / "model"
-DEFAULT_ML_REGION = "us-west-2"
+DEFAULT_ML_REGION = "us-east-1"
 MANIFEST_COLUMNS = ("cell_id", "png_path", "recipe", "recipe_version")
 
 ClientFactory = Callable[[str], tuple[Any, Any]]

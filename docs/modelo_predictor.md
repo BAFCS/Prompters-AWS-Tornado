@@ -222,9 +222,9 @@ muestran `--start`, `--end`, `--region` y `--force` con valores de ejemplo. Si `
 | Reductor | se ejecuta dentro del Entrenador (`scripts/model/reducer.py`); no tiene CLI propia |
 | Constructor_Tabla (construcción) | `uv run python scripts/model/build_table.py --stage build --config physical --seed 0 --start 2019-05-30 --end 2019-05-31 --region south-central-austral` |
 | Entrenador (local) | `uv run python scripts/model/train_xgboost.py --indices data/model/south-central-austral/era5_indices --catalog data/tornados_chile.xlsx --out out --seed 0` |
-| Entrenador (SageMaker) | `uv run python scripts/model/launch_sagemaker.py train --ml-region us-west-2 --role-arn <ARN> --bucket <ML_BUCKET> --run-id R1 --seed 0` |
+| Entrenador (SageMaker) | `uv run python scripts/model/launch_sagemaker.py train --ml-region us-east-1 --role-arn <ARN> --bucket <ML_BUCKET> --run-id R1 --seed 0` |
 | Comparación y selección | `uv run python scripts/model/compare_runs.py --run-id R1 --bucket <ML_BUCKET>` |
-| Servicio_Inferencia | `uv run python scripts/model/launch_sagemaker.py transform --ml-region us-west-2 --role-arn <ARN> --bucket <ML_BUCKET> --run-id R1 --start 2021-06-12 --end 2021-06-12 --region south-central-austral` |
+| Servicio_Inferencia | `uv run python scripts/model/launch_sagemaker.py transform --ml-region us-east-1 --role-arn <ARN> --bucket <ML_BUCKET> --run-id R1 --start 2021-06-12 --end 2021-06-12 --region south-central-austral` |
 
 Para una corrida local completa de la rama física, el Makefile ofrece el atajo `make check` (que
 corre las pruebas) y los pasos de datos documentados en el README. Cada script detalla sus opciones
@@ -262,9 +262,10 @@ con `--help`.
 ## 11. Costos de llevar el modelo a AWS
 
 Mover el entrenamiento y la inferencia a SageMaker es un **cambio de infraestructura con costo**. Las
-cifras siguientes son **estimaciones en us-west-2**, consultadas el **15 de octubre de 2025**;
-confírmalas en la [calculadora de precios de AWS](https://calculator.aws/) antes de desplegar, porque
-los precios cambian.
+cifras siguientes son **estimaciones en us-west-2**, consultadas el **15 de octubre de 2025**,
+anteriores al traslado del pipeline a us-east-1: vuelve a consultarlas para us-east-1 en la
+[calculadora de precios de AWS](https://calculator.aws/) antes de desplegar, porque los precios
+cambian.
 
 | Recurso | Supuesto | Costo estimado (us-west-2, 2025-10-15) |
 |---|---|---|
@@ -285,11 +286,11 @@ crea y cómo eliminarlo:
 
 - **Bucket S3 de artefactos del modelo** (`ml_bucket` en la salida de Terraform): vacía el prefijo y
   bórralo con
-  `aws s3 rm s3://<ML_BUCKET>/model/inference/<run_id>/ --recursive --region us-west-2` (o el prefijo
+  `aws s3 rm s3://<ML_BUCKET>/model/inference/<run_id>/ --recursive --region us-east-1` (o el prefijo
   que corresponda). `terraform destroy` elimina el bucket (tiene `force_destroy = true`).
 - **Endpoint en tiempo real** (si se despliega): es el recurso más caro por quedar encendido.
   Bórralo con
-  `uv run python scripts/model/launch_sagemaker.py endpoint delete --ml-region us-west-2 --endpoint-name <NOMBRE>`,
+  `uv run python scripts/model/launch_sagemaker.py endpoint delete --ml-region us-east-1 --endpoint-name <NOMBRE>`,
   que elimina el endpoint, su configuración y el modelo asociado.
 - **Trabajos de entrenamiento y Batch Transform**: terminan solos; no hay que borrarlos, pero dejan
   objetos en S3 bajo `model/results/<run_id>/` y `model/inference/<run_id>/` que puedes vaciar con
@@ -297,10 +298,12 @@ crea y cómo eliminarlo:
 - **Rol de ejecución de SageMaker y bucket**: `terraform destroy` en `infra/terraform/` los elimina
   junto con el resto de la infraestructura.
 
-> **La cuenta debe permitir us-west-2.** SageMaker y Bedrock de este pipeline viven en **us-west-2**
-> (la región de `nsf-ncar-era5`). Antes del `terraform apply`, confirma que la cuenta puede crear
-> recursos y tiene acceso a los modelos de Bedrock en esa región. La variable `ml_region` está
-> validada a `us-west-2` en `infra/terraform/variables.tf`.
+> **SageMaker y Bedrock van en us-east-1.** Es la única región que permite la cuenta de la hackathon
+> y la del bucket de datos. Los trabajos leen las tablas ya armadas del bucket ML, no
+> `nsf-ncar-era5` (us-west-2), así que no hay transferencia entre regiones. Titan Multimodal
+> Embeddings G1 y Cohere Embed v4 se ofrecen en la región en us-east-1; habilita el acceso a los
+> modelos en la consola de Bedrock antes del `terraform apply`. La variable `ml_region` está validada
+> a `us-east-1` en `infra/terraform/variables.tf`.
 
 ## 13. Nota sobre el contenedor de SageMaker
 

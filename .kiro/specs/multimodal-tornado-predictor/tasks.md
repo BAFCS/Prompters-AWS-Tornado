@@ -283,7 +283,7 @@ uv run ruff check scripts tests; uv run ruff format --check scripts tests; uv ru
 
 - [x] 12. Infraestructura en Terraform (sin `apply`)
   - [x] 12.1 Actualizar `infra/terraform/variables.tf`
-    - Agregar `ml_region` (por defecto `us-west-2`) con bloque `validation` y mensaje en español que indica la región requerida, y `enable_cohere` (bool)
+    - Agregar `ml_region` (por defecto `us-east-1`) con bloque `validation` y mensaje en español que indica la región requerida, y `enable_cohere` (bool)
     - Actualizar la descripción de `training_region` para dejar claro que la EC2 sigue en us-east-1 y que SageMaker y Bedrock usan `ml_region`, independiente de ella
     - _Requirements: 9.3, 9.4_
 

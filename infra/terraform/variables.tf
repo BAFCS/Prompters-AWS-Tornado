@@ -8,7 +8,7 @@ variable "region" {
 }
 
 variable "training_region" {
-  description = "Región de la EC2 de entrenamiento existente. Sigue en us-east-1 por la restricción histórica de la cuenta de hackathon (ERA5 vive en us-west-2, así que esa lectura es entre regiones). No afecta a SageMaker ni a Bedrock: ese flujo usa ml_region, independiente de esta variable."
+  description = "Región de la EC2 de entrenamiento existente. Sigue en us-east-1 por la restricción histórica de la cuenta de hackathon (ERA5 vive en us-west-2, así que esa lectura es entre regiones). SageMaker y Bedrock usan ml_region (también us-east-1), una variable aparte."
   type        = string
   default     = "us-east-1"
 }
@@ -16,13 +16,13 @@ variable "training_region" {
 # --- SageMaker y Bedrock ----------------------------------------------------------------------
 
 variable "ml_region" {
-  description = "Región de SageMaker (entrenamiento, modelos, Batch Transform, endpoints) y de las llamadas a Bedrock. Debe ser us-west-2, la región de nsf-ncar-era5. Independiente de training_region y de region."
+  description = "Región de SageMaker (entrenamiento, modelos, Batch Transform, endpoints) y de las llamadas a Bedrock. Debe ser us-east-1: la cuenta de hackathon solo permite esa región y ahí está el bucket de datos. Los trabajos leen tablas ya armadas, no nsf-ncar-era5, así que no cruzan regiones. Titan Multimodal G1 y Cohere Embed v4 se ofrecen en la región (in-region) en us-east-1."
   type        = string
-  default     = "us-west-2"
+  default     = "us-east-1"
 
   validation {
-    condition     = var.ml_region == "us-west-2"
-    error_message = "SageMaker y Bedrock deben ir en us-west-2 (región de nsf-ncar-era5)."
+    condition     = var.ml_region == "us-east-1"
+    error_message = "SageMaker y Bedrock deben ir en us-east-1 (región de la cuenta y del bucket de datos)."
   }
 }
 
