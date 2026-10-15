@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Arquitectura AWS · Predicción de mesociclones en Chile",
+    "subtitle": "ERA5 + GOES → recortes → variables → modelo → visor",
+    "output": "tornado-aws.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "era5", "type": "cloud", "label": "ERA5", "sublabel": "nsf-ncar-era5 (S3)", "pos": [40, 110], "size": [150, 66], "tag": "us-west-2 · reanálisis 0,25° horario" },
+    { "id": "goes", "type": "cloud", "label": "GOES-16/19", "sublabel": "noaa-goes16 / 19 (S3)", "pos": [40, 300], "size": [150, 66], "tag": "us-east-1 · ABI 16 bandas · 10 min" },
+    { "id": "catalog", "type": "external", "label": "Catálogo", "sublabel": "Tornados y Trombas (figshare)", "pos": [280, 40], "size": [160, 66], "tag": "102 eventos 1554–2025 · CC BY 4.0" },
+
+    { "id": "extract", "type": "backend", "label": "Extracción", "sublabel": "AWS Batch / Lambda", "pos": [280, 210], "size": [160, 66], "tag": "xarray · fsspec · lectura por rangos" },
+    { "id": "crops", "type": "database", "label": "Recortes Chile", "sublabel": "S3 · Zarr", "pos": [280, 410], "size": [160, 66], "tag": "17°S–56°S, 80°W–66°W" },
+
+    { "id": "features", "type": "backend", "label": "Variables derivadas", "sublabel": "MetPy · xarray · dask", "pos": [540, 210], "size": [170, 66], "tag": "cizalladura, SRH, STP, VGP (signos del sur)" },
+    { "id": "feature_store", "type": "database", "label": "Tabla de features", "sublabel": "S3 · Parquet", "pos": [540, 410], "size": [170, 66], "tag": "un ejemplo por fila" },
+
+    { "id": "train", "type": "backend", "label": "Entrenamiento", "sublabel": "SageMaker", "pos": [810, 210], "size": [160, 66], "tag": "PU learning · gradient boosting · CNN" },
+    { "id": "endpoint", "type": "backend", "label": "Inferencia", "sublabel": "SageMaker / Lambda + API Gateway", "pos": [810, 410], "size": [160, 66], "tag": "mapa de probabilidades" },
+
+    { "id": "viewer", "type": "frontend", "label": "Visor", "sublabel": "Streamlit · S3 + CloudFront", "pos": [1070, 310], "size": [160, 66], "tag": "problema · datos · mapas · casos" }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Datos públicos abiertos (AWS Open Data)", "wraps": ["era5", "goes"] },
+    { "kind": "region", "label": "Pipeline del proyecto", "wraps": ["extract", "crops", "features", "feature_store", "train", "endpoint"] }
+  ],
+  "connections": [
+    { "id": "era5-extract", "from": "era5", "to": "extract", "label": "~11 GB/día", "variant": "emphasis", "fromSide": "right", "toSide": "left" },
+    { "id": "goes-extract", "from": "goes", "to": "extract", "label": "disco completo", "fromSide": "right", "toSide": "left" },
+    { "id": "extract-crops", "from": "extract", "to": "crops", "label": "guarda recortes", "fromSide": "bottom", "toSide": "top" },
+    { "id": "crops-features", "from": "crops", "to": "features", "label": "lee bloques", "fromSide": "right", "toSide": "bottom" },
+    { "id": "features-store", "from": "features", "to": "feature_store", "label": "índices", "fromSide": "bottom", "toSide": "top" },
+    { "id": "catalog-features", "from": "catalog", "to": "features", "label": "etiquetas (positivos)", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "store-train", "from": "feature_store", "to": "train", "label": "entrena", "fromSide": "right", "toSide": "left" },
+    { "id": "train-endpoint", "from": "train", "to": "endpoint", "label": "modelo", "fromSide": "bottom", "toSide": "top" },
+    { "id": "endpoint-viewer", "from": "endpoint", "to": "viewer", "label": "puntuaciones", "variant": "emphasis", "fromSide": "right", "toSide": "bottom" },
+    { "id": "crops-viewer", "from": "crops", "to": "viewer", "label": "mapas", "variant": "dashed", "fromSide": "bottom", "toSide": "left", "labelDy": 60 }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Lectura", "items": ["ERA5 en us-west-2, GOES en us-east-1", "Sin recorte del lado del servidor: lectura por rangos de bytes", "Guardar recortes evita releer archivos globales"] },
+    { "dot": "emerald", "title": "Cómputo", "items": ["Batch/Lambda por día", "MetPy con ramas y signos del hemisferio sur", "SageMaker para entrenar y comparar modelos"] },
+    { "dot": "amber", "title": "Etiquetas", "items": ["Solo positivos: PU learning", "Sin negativos confiables", "ERA5 es histórico, no pronóstico en tiempo real"] }
+  ]
+}
