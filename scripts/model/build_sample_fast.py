@@ -221,17 +221,25 @@ def main() -> None:
     print(f"Procesando {len(days)} días (GOES={'sí' if a.goes else 'no'})", flush=True)
 
     rng = np.random.default_rng(0)
+    import time as _time
     all_rows: list[dict] = []
-    for day in days:
+    t_start = _time.time()
+    for i, day in enumerate(days, 1):
+        t0 = _time.time()
         try:
             r = rows_for_day(a.bucket, day, events, a.goes, a.goes_stride,
                              a.neighbor, a.hours, a.ratio, rng)
             npos = sum(x["label"] == 1 for x in r)
-            print(f"  {day}: {len(r)} filas ({npos} pos)", flush=True)
+            elapsed = _time.time() - t0
+            total = _time.time() - t_start
+            print(f"  [{i}/{len(days)}] {day}: {len(r)} filas ({npos} pos) "
+                  f"— {elapsed:.1f}s (acumulado {total:.0f}s)", flush=True)
             all_rows.extend(r)
         except Exception as e:  # noqa: BLE001
-            print(f"  {day}: ERROR {e!r}", flush=True)
+            print(f"  [{i}/{len(days)}] {day}: ERROR {e!r}", flush=True)
 
+    if not all_rows:
+        raise SystemExit("No se generó ninguna fila (¿faltan días en el bucket?).")
     table = pd.DataFrame(all_rows).dropna(subset=[f for f in ERA5_FEATURES if f in all_rows[0]])
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     table.to_parquet(a.out, index=False)
