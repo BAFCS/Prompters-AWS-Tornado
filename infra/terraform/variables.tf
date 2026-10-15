@@ -53,7 +53,7 @@ variable "repo_url" {
 variable "repo_branch" {
   description = "Rama del repositorio a clonar."
   type        = string
-  default     = "main"
+  default     = "adapter-bucket"
 }
 
 variable "instance_type" {

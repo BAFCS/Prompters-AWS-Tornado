@@ -34,6 +34,20 @@ resource "aws_iam_role_policy" "s3_read" {
   policy      = data.aws_iam_policy_document.s3_read.json
 }
 
+# Permiso para que la página «Predecir» del visor genere embeddings con Bedrock (Titan).
+data "aws_iam_policy_document" "bedrock_invoke" {
+  statement {
+    actions   = ["bedrock:InvokeModel"]
+    resources = ["arn:aws:bedrock:*::foundation-model/amazon.titan-embed-image-v1"]
+  }
+}
+
+resource "aws_iam_role_policy" "bedrock_invoke" {
+  name_prefix = "bedrock-invoke-"
+  role        = aws_iam_role.ec2.id
+  policy      = data.aws_iam_policy_document.bedrock_invoke.json
+}
+
 # Session Manager: consola en la instancia sin abrir SSH.
 resource "aws_iam_role_policy_attachment" "ssm" {
   role       = aws_iam_role.ec2.name
