@@ -5,6 +5,7 @@ description = "Predicción de tormentas mesociclónicas en Chile a partir de ERA
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "boto3==1.43.75",
     "botocore>=1.43.75",
     "fsspec>=2026.9.0",
     "geopandas>=1.2.0",
@@ -19,6 +20,7 @@ dependencies = [
     "plotly>=7.1.0",
     "pyarrow>=25.0.1",
     "s3fs>=2026.9.0",
+    "sagemaker==3.21.0",
     "scikit-learn>=1.9.1",
     "scipy>=1.18.1",
     "streamlit>=1.64.0",
@@ -28,6 +30,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "hypothesis==6.169.4",
     "pandas-stubs>=3.0.5.260914",
     "pyright>=1.1.414",
     "ruff>=0.16.9",
@@ -65,7 +68,7 @@ known-first-party = ["common", "viewer_app"]
 
 [tool.pyright]
 include = ["scripts"]
-extraPaths = ["scripts", "scripts/viewer"]
+extraPaths = ["scripts", "scripts/model", "scripts/viewer"]
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 venvPath = "."
