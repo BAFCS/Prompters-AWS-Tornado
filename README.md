@@ -17,6 +17,7 @@ a partir del reanálisis **ERA5** y las imágenes multiespectrales del satélite
 | `docs/mesociclones_chile.md` | **El documento principal.** El problema, la física, el caso chileno, los datos de entrada, las variables a calcular, cómo plantear el modelo, la arquitectura en AWS y las tareas abiertas. |
 | `scripts/viewer/viewer.py` y `scripts/viewer/viewer_app/` | **El visor**: una aplicación web local con el problema, las fichas de variables, el starter kit para AWS, el caso de estudio y los mapas. |
 | `scripts/pipeline/download_*.py`, `scripts/pipeline/process_*.py` | Descargan ERA5 y GOES recortados a Chile y calculan los índices que usa el visor. |
+| `scripts/ingest/` y `docs/DATOS_AWS.md` | **Ingesta optimizada a S3 (tanda de prueba).** Trae ERA5 (NSF NCAR + Copernicus CDS) y GOES a un data lake en S3 recortado a Chile, con flota de EC2 en paralelo (~25× más rápido que la descarga día a día). Ver también `docs/ARQUITECTURA_CLON.md`, `docs/ESTADO_ACTUAL.md`, `docs/PENDIENTES.md`. |
 | `scripts/figures/figs_*.py` | Generan las cuatro figuras de `figs/` desde los datos reales. |
 | `tests/` | Pruebas automáticas. |
 | `AGENTS.md` | Convenciones del código y trampas del dominio, para personas y agentes de código. |

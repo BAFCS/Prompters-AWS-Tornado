@@ -1,5 +1,10 @@
 # Despliegue del visor en AWS (CDK)
 
+> [!NOTE]
+> Para la **ingesta de datos optimizada** (data lake multi-fuente ERA5+GOES en S3, recortado a
+> Chile, con flota de EC2 en paralelo ~25× más rápida que la descarga día a día), ver
+> `docs/ARQUITECTURA_CLON.md`, `docs/DATOS_AWS.md`, `docs/ESTADO_ACTUAL.md` y `docs/PENDIENTES.md`.
+
 Con un solo comando, `cdk deploy` crea en tu cuenta de AWS:
 
 ```
