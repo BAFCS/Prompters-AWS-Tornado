@@ -1,0 +1,25 @@
+{
+  "config": "embeddings",
+  "seed": 0,
+  "xgb_params": {
+    "objective": "binary:logistic",
+    "tree_method": "hist",
+    "n_estimators": 1000,
+    "early_stopping_rounds": 30,
+    "eval_metric": [
+      "logloss",
+      "aucpr"
+    ],
+    "max_depth": 4,
+    "min_child_weight": 5,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_lambda": 1.0,
+    "learning_rate": 0.05
+  },
+  "scale_pos_weight": 30.0,
+  "best_iteration": 299,
+  "early_stopping": false,
+  "n_components": 8,
+  "model_id": "amazon.titan-embed-image-v1"
+}
