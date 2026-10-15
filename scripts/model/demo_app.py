@@ -61,6 +61,12 @@ def load_model() -> tuple[xgb.XGBClassifier, dict]:
     return model, meta
 
 
+def _load_typical() -> dict:
+    """Valores típicos de ERA5 (mediana del entrenamiento) para el modo solo-imagen."""
+    f = DEMO / "era5_typical.json"
+    return json.loads(f.read_text()) if f.exists() else {}
+
+
 def image_embedding(png: bytes, n_emb: int) -> np.ndarray:
     """Embedding de la imagen: Bedrock Titan si hay credenciales; si no, sintético determinista.
 
@@ -154,6 +160,14 @@ def main() -> None:
 
     model, meta = load_model()
     n_emb = meta.get("n_emb", 1024)
+    typical = _load_typical()
+
+    modo = st.radio(
+        "Modo de inferencia",
+        ["Solo imagen (features ERA5 típicas)", "Híbrido (imagen + ERA5 ajustable)"],
+        horizontal=True,
+    )
+    solo_imagen = modo.startswith("Solo")
 
     col_img, col_feat = st.columns([1, 1])
 
@@ -169,10 +183,17 @@ def main() -> None:
         st.image(img, caption="Entrada visual", width=280)
 
     with col_feat:
-        st.subheader("2. Features ERA5 (entorno)")
-        feat_vals: dict[str, float] = {}
-        for name, (lo, hi, dflt) in ERA5_RANGES.items():
-            feat_vals[name] = st.slider(name, lo, hi, dflt)
+        if solo_imagen:
+            st.subheader("2. Features ERA5 — valores típicos (automáticos)")
+            st.caption("En modo *solo imagen* no se piden features: se rellenan con los valores "
+                       "típicos del entorno tornádico (mediana del entrenamiento).")
+            feat_vals = {name: typical.get(name, ERA5_RANGES[name][2]) for name in ERA5_RANGES}
+            st.json(feat_vals, expanded=False)
+        else:
+            st.subheader("2. Features ERA5 (entorno)")
+            feat_vals = {}
+            for name, (lo, hi, dflt) in ERA5_RANGES.items():
+                feat_vals[name] = st.slider(name, lo, hi, dflt)
 
     st.divider()
     if st.button("🚀 Predecir", type="primary", use_container_width=True):
