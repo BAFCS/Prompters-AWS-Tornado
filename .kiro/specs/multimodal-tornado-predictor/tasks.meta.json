@@ -1,0 +1,204 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Agregar dependencias y crear la estructura de `scripts/model/sagemaker/`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080754023
+      },
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080768293
+      }
+    ],
+    "2.1 Implementar `scripts/model/goes_features.py` (lógica pura)": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080755927
+      }
+    ],
+    "2.7 Implementar la CLI `scripts/model/extract_goes_features.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080756141
+      }
+    ],
+    "3.1 Implementar `scripts/model/rgb.py` (lógica pura)": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080756222
+      }
+    ],
+    "3.5 Implementar la CLI `scripts/model/compose_rgb.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080756301
+      }
+    ],
+    "4. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080756383
+      }
+    ],
+    "5.1 Implementar `scripts/model/bedrock_encoder.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080756455
+      }
+    ],
+    "5.5 Pruebas unitarias obligatorias del Codificador_Bedrock con dobles de prueba": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080756530
+      }
+    ],
+    "5.6 Implementar la CLI `scripts/model/encode_bedrock.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080756600
+      }
+    ],
+    "6.1 Implementar `scripts/model/reducer.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080756691
+      }
+    ],
+    "7.1 Implementar el etiquetado y el muestreo en `scripts/model/table.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080756814
+      }
+    ],
+    "7.5 Implementar rezagos, columnas por configuración y `build` en `scripts/model/table.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080756898
+      }
+    ],
+    "7.10 Implementar la CLI `scripts/model/build_table.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080756969
+      }
+    ],
+    "8. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080757063
+      }
+    ],
+    "9.1 Implementar `scripts/model/loeo.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080757186
+      }
+    ],
+    "9.9 Refactorizar `scripts/model/train_xgboost.py` para delegar en `table.py` y `loeo.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080757340
+      }
+    ],
+    "10.1 Implementar `scripts/model/sagemaker/train_entry.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080757421
+      }
+    ],
+    "10.2 Implementar `scripts/model/sagemaker/inference.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080757537
+      }
+    ],
+    "10.5 Implementar la CLI `scripts/model/compare_runs.py`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080757618
+      }
+    ],
+    "10.7 Implementar la CLI `scripts/model/launch_sagemaker.py` con subcomandos `train`, `transform` y `endpoint`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080757699
+      }
+    ],
+    "11. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080757772
+      }
+    ],
+    "12.1 Actualizar `infra/terraform/variables.tf`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080757855
+      },
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080768984
+      }
+    ],
+    "12.2 Crear `infra/terraform/sagemaker.tf` y ampliar `outputs.tf`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080757930
+      }
+    ],
+    "12.3 Validar el Terraform sin crear recursos": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080758027
+      }
+    ],
+    "13.1 Escribir `docs/modelo_predictor.md`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080758126
+      }
+    ],
+    "13.2 Agregar a `README.md` el enlace relativo a `docs/modelo_predictor.md`": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080758242
+      }
+    ],
+    "14. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "870e777d-8855-4a9e-bdac-06e7cde47cad",
+        "chatSessionId": "sess_5c1e32ca-dd93-468f-b67e-469b16b194d0",
+        "timestamp": 1792080758353
+      }
+    ]
+  }
+}

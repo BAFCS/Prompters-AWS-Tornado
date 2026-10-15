@@ -8,9 +8,28 @@ variable "region" {
 }
 
 variable "training_region" {
-  description = "Región de la EC2 de entrenamiento. us-east-1: la cuenta de hackathon deniega crear recursos en us-west-2. (ERA5 vive en us-west-2, así que la lectura es entre regiones.)"
+  description = "Región de la EC2 de entrenamiento existente. Sigue en us-east-1 por la restricción histórica de la cuenta de hackathon (ERA5 vive en us-west-2, así que esa lectura es entre regiones). No afecta a SageMaker ni a Bedrock: ese flujo usa ml_region, independiente de esta variable."
   type        = string
   default     = "us-east-1"
+}
+
+# --- SageMaker y Bedrock ----------------------------------------------------------------------
+
+variable "ml_region" {
+  description = "Región de SageMaker (entrenamiento, modelos, Batch Transform, endpoints) y de las llamadas a Bedrock. Debe ser us-west-2, la región de nsf-ncar-era5. Independiente de training_region y de region."
+  type        = string
+  default     = "us-west-2"
+
+  validation {
+    condition     = var.ml_region == "us-west-2"
+    error_message = "SageMaker y Bedrock deben ir en us-west-2 (región de nsf-ncar-era5)."
+  }
+}
+
+variable "enable_cohere" {
+  description = "Si es true, el rol de SageMaker también puede invocar Cohere Embed v4 (cohere.embed-v4:0) en Bedrock. Titan Multimodal Embeddings G1 siempre queda habilitado."
+  type        = bool
+  default     = false
 }
 
 variable "environment" {

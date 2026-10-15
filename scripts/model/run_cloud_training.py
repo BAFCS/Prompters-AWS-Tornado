@@ -25,6 +25,7 @@ import io
 import subprocess
 import sys
 from pathlib import Path
+from typing import BinaryIO, cast
 
 import fsspec
 import pandas as pd
@@ -39,7 +40,7 @@ DAY_TIMEOUT_S = 600  # tope por día; si ERA5 se cuelga, se omite ese día y el 
 def _read_catalog_days(catalog: str) -> list[dt.date]:
     """Días (ordenados, únicos) con evento en la era de GOES-16, leídos del catálogo en S3 o local."""
     with fsspec.open(catalog, "rb") as f:  # type: ignore[union-attr]
-        raw = f.read()
+        raw = cast(BinaryIO, f).read()
     d = pd.read_excel(io.BytesIO(raw), sheet_name="Final_Table")
     dates = pd.to_datetime(d["Date (Gregorian Calendar)"], errors="coerce").dt.date.dropna()
     return sorted({x for x in dates if x >= GOES16_START})
@@ -59,10 +60,18 @@ def _status_html(steps: list[str], done: bool = False) -> str:
     # Historial en orden inverso (lo más reciente arriba).
     items = "".join(f"<li>{s}</li>" for s in reversed(steps))
     refresh = "" if done else '<meta http-equiv="refresh" content="10">'
-    link = '<p class="link"><a href="reporte.html">📊 Ver el reporte de métricas →</a></p>' if done else ""
-    phase = "" if done else (
-        '<div class="phase"><div class="phase-label">Paso actual</div>'
-        f'<div class="phase-now">{current}</div></div>'
+    link = (
+        '<p class="link"><a href="reporte.html">📊 Ver el reporte de métricas →</a></p>'
+        if done
+        else ""
+    )
+    phase = (
+        ""
+        if done
+        else (
+            '<div class="phase"><div class="phase-label">Paso actual</div>'
+            f'<div class="phase-now">{current}</div></div>'
+        )
     )
     legend = (
         '<p class="muted">Fases: <b>⬇️ TOMANDO DATOS</b> baja ERA5 (lo más lento, ~GB por día entre '
@@ -102,7 +111,7 @@ def _write_html(path: str, html: str) -> None:
             f.write(data)
     else:
         with fsspec.open(path, "wb") as f:  # type: ignore[union-attr]
-            f.write(data)
+            cast(BinaryIO, f).write(data)
 
 
 def _publish(out: str, steps: list[str], done: bool = False) -> None:
@@ -115,13 +124,21 @@ def _publish(out: str, steps: list[str], done: bool = False) -> None:
 
 def main() -> None:
     """Punto de entrada: genera índices y entrena, publicando el avance a S3."""
-    p = argparse.ArgumentParser(description="Entrenamiento en la nube de XGBoost (índices + modelo).")
+    p = argparse.ArgumentParser(
+        description="Entrenamiento en la nube de XGBoost (índices + modelo)."
+    )
     p.add_argument("--catalog", required=True, help="Ruta o s3:// del tornados_chile.xlsx")
     p.add_argument("--out", required=True, help="Prefijo s3:// donde dejar los resultados")
     p.add_argument("--region", default="south-central-austral", help="Región de recorte")
-    p.add_argument("--max-event-days", type=int, default=0, help="Límite de días con evento (0 = todos)")
-    p.add_argument("--unlabeled-days", type=int, default=0, help="Días extra SIN evento (no etiquetados)")
-    p.add_argument("--indices-s3", default="", help="Prefijo s3:// para reutilizar/guardar índices ERA5")
+    p.add_argument(
+        "--max-event-days", type=int, default=0, help="Límite de días con evento (0 = todos)"
+    )
+    p.add_argument(
+        "--unlabeled-days", type=int, default=0, help="Días extra SIN evento (no etiquetados)"
+    )
+    p.add_argument(
+        "--indices-s3", default="", help="Prefijo s3:// para reutilizar/guardar índices ERA5"
+    )
     a = p.parse_args()
 
     out = a.out.rstrip("/")
@@ -190,15 +207,42 @@ def main() -> None:
             # (añade w, q, r, vo) que no entran en ninguna feature: pedir solo 4 corta a la mitad
             # el tráfico de ERA5, que es el cuello de botella. --sfc solo lo que leen los índices.
             _run(
-                ["uv", "run", "python", "scripts/pipeline/download_era5.py", "--start", iso,
-                 "--region", a.region, "--pl", "u", "v", "t", "z",
-                 "--sfc", "10u", "10v", "2t", "2d", "sp", "cape"],
+                [
+                    "uv",
+                    "run",
+                    "python",
+                    "scripts/pipeline/download_era5.py",
+                    "--start",
+                    iso,
+                    "--region",
+                    a.region,
+                    "--pl",
+                    "u",
+                    "v",
+                    "t",
+                    "z",
+                    "--sfc",
+                    "10u",
+                    "10v",
+                    "2t",
+                    "2d",
+                    "sp",
+                    "cape",
+                ],
                 timeout=DAY_TIMEOUT_S,
             )
             step(f"[{i}/{total}] {day} · ⚙️ CALCULANDO ÍNDICES (cizalladura, SRH, VGP, STP)…")
             _run(
-                ["uv", "run", "python", "scripts/pipeline/process_era5.py", "--start", iso,
-                 "--region", a.region],
+                [
+                    "uv",
+                    "run",
+                    "python",
+                    "scripts/pipeline/process_era5.py",
+                    "--start",
+                    iso,
+                    "--region",
+                    a.region,
+                ],
                 timeout=120,
             )
             ok += 1
@@ -207,10 +251,11 @@ def main() -> None:
             if a.indices_s3:
                 try:
                     src = indices_dir / f"era5_idx_{day:%Y%m%d}.nc"
-                    with open(src, "rb") as fsrc, fsspec.open(
-                        f"{a.indices_s3.rstrip('/')}/{src.name}", "wb"
-                    ) as fdst:  # type: ignore[union-attr]
-                        fdst.write(fsrc.read())
+                    with (
+                        open(src, "rb") as fsrc,
+                        fsspec.open(f"{a.indices_s3.rstrip('/')}/{src.name}", "wb") as fdst,
+                    ):  # type: ignore[union-attr]
+                        cast(BinaryIO, fdst).write(fsrc.read())
                 except Exception as e:  # noqa: BLE001
                     print(f"  aviso: no se pudo subir el índice de {day} ({e})", flush=True)
         except subprocess.TimeoutExpired:
@@ -225,9 +270,22 @@ def main() -> None:
     step(f"🧠 ENTRENANDO XGBoost con {ok} días de índices (esto es rápido, segundos)…")
     try:
         proc = subprocess.run(
-            ["uv", "run", "python", "scripts/model/train_xgboost.py",
-             "--indices", str(indices_dir), "--catalog", a.catalog, "--out", out],
-            capture_output=True, text=True, timeout=600, check=True,
+            [
+                "uv",
+                "run",
+                "python",
+                "scripts/model/train_xgboost.py",
+                "--indices",
+                str(indices_dir),
+                "--catalog",
+                a.catalog,
+                "--out",
+                out,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=600,
+            check=True,
         )
         print(proc.stdout, flush=True)
     except subprocess.CalledProcessError as e:
