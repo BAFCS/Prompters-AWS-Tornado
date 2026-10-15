@@ -104,3 +104,14 @@ NO trae el agente SSM: el user-data lo instala (`dnf install -y amazon-ssm-agent
 
 Nota de entorno en las EC2: usar el AWS CLI v2 oficial (`/usr/local/bin/aws`) y un venv Python 3.12
 (`/opt/lab/venv312`), NO el Python del sistema (3.9) ni pip global (rompe el AWS CLI).
+
+### Scripts de ingesta (fuente de verdad: `scripts/ingest/`)
+
+Los scripts versionados viven en `scripts/ingest/`; la copia en `s3://.../code/ingest/` es solo
+para que las EC2 los descarguen. Scripts clave:
+- `ingest_cds.py` — un día vía CDS. `ingest_cds_year.py` — **rango largo por día** (orquestador que
+  usa el `cds_year` para ago-sep y años completos, con `progreso.json` a S3).
+- `ingest_ncar_zarr.py` — un día ERA5 ncar → Zarr. `ingest_ncar_parallel.py` — **orquestador
+  paralelo** (N días a la vez + sharding), el que usa la flota.
+- `ingest_goes.py` — GOES por día/rango con `--shard-index/--shard-total` y `--skip-existing`.
+- `panel_monitor.py` — panel de los `progreso_*.json`.
