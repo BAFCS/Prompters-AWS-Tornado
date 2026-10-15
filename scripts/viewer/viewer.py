@@ -33,6 +33,7 @@ from viewer_app import (  # noqa: E402
     data,
     p_case,
     p_data,
+    p_forecast,
     p_maps,
     p_predict,
     p_project,
@@ -54,11 +55,12 @@ PAGES = {
     "case": st.Page(p_case.page, title="Caso de estudio", icon=":material/history_edu:", url_path="caso"),
     "maps": st.Page(p_maps.page, title="Mapas", icon=":material/map:", url_path="mapas"),
     "predict": st.Page(p_predict.page, title="Predecir", icon=":material/online_prediction:", url_path="predecir"),
+    "forecast": st.Page(p_forecast.page, title="Mapa del modelo", icon=":material/thunderstorm:", url_path="mapa-modelo"),
     "starter": st.Page(p_starter.page, title="Starter kit", icon=":material/rocket_launch:", url_path="starter-kit"),
     "references": st.Page(p_references.page, title="Referencias", icon=":material/menu_book:", url_path="referencias"),
 }  # fmt: skip
 st.session_state["pages"] = PAGES
-NO_DATA_PAGES = ("project", "data", "predict", "starter", "references")  # se muestran aunque no haya recortes
+NO_DATA_PAGES = ("project", "data", "predict", "forecast", "starter", "references")  # se muestran aunque no haya recortes
 navigation = st.navigation(list(PAGES.values()), position="top")
 
 # --- Región y día --------------------------------------------------------------------------------
