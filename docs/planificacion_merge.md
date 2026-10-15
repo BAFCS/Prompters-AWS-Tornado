@@ -41,7 +41,7 @@ Generador_Sitio y Motor_Alertas leen el mismo CSV_Predicciones de forma independ
 
 | # | Pregunta | Opciones consideradas | Componente afectado | Estado |
 |---|---|---|---|---|
-| P1 | ¿En qué región corre ML? | a) `us-east-1` (la cuenta del hackathon solo permite esta región); b) `us-west-2` (Daniel usa `ml_region = us-west-2` en `variables.tf`) | Despliegue, `sagemaker.tf`, Ejecutor_Inferencia | abierta |
+| P1 | ¿En qué región corre ML? | a) `us-east-1` (la cuenta del hackathon solo permite esta región); b) `us-west-2` (Daniel usa `ml_region = us-west-2` en `variables.tf`) | Despliegue, `sagemaker.tf`, Ejecutor_Inferencia | resuelta: a) `us-east-1` (`ml_region` validada a us-east-1) |
 | P2 | ¿Cuál es la cuenta AWS de producción? | a) Hackathon 822870558093 (temporal, credenciales que expiran); b) cuenta gpu 905418466452 | Despliegue, Adaptador (origen S3) | abierta |
 | P3 | ¿Se calibra el puntaje PU del modelo? | a) Mostrarlo como índice relativo sin calibrar (v1); b) calibrar (Platt/isotónica) con una prevalencia supuesta | Ejecutor_Inferencia, Generador_Sitio | abierta |
 | P4 | ¿Qué umbrales de alerta usamos? | a) Umbral fijo único (p. ej. 50); b) umbral por zona; c) percentil histórico por zona | Motor_Alertas | abierta |

@@ -1,4 +1,4 @@
-# Infraestructura de SageMaker y Bedrock en ml_region (us-west-2). No crea trabajos, modelos ni
+# Infraestructura de SageMaker y Bedrock en ml_region (us-east-1). No crea trabajos, modelos ni
 # endpoints: eso lo hace el SDK desde scripts/model/launch_sagemaker.py. Aquí solo quedan el bucket
 # de artefactos del modelo y el rol de ejecución con permisos mínimos. training.tf no se toca.
 
@@ -19,7 +19,7 @@ locals {
   bedrock_model_arns = var.enable_cohere ? [local.bedrock_titan_arn, local.bedrock_cohere_arn] : [local.bedrock_titan_arn]
 }
 
-# --- Bucket de artefactos del modelo (us-west-2) --------------------------------------------
+# --- Bucket de artefactos del modelo (us-east-1) --------------------------------------------
 # Tablas, folds, resultados, modelos e inferencias bajo el prefijo model/. Privado y cifrado.
 resource "aws_s3_bucket" "ml" {
   provider      = aws.ml

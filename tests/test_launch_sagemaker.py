@@ -233,10 +233,10 @@ class TrainTest(unittest.TestCase):
         self.assertIn((BUCKET, "model/results/R1/comparacion.html"), fake.objects)
 
     def test_rejects_other_region(self) -> None:
-        """Una región ML distinta de us-west-2 se rechaza antes de todo."""
+        """Una región ML distinta de us-east-1 se rechaza antes de todo."""
         with self.assertRaises(SystemExit) as cm:
-            ls.run(["train", *COMMON, "--ml-region", "us-east-1"], FakeBackend())
-        self.assertIn("us-west-2", str(cm.exception))
+            ls.run(["train", *COMMON, "--ml-region", "us-west-2"], FakeBackend())
+        self.assertIn("us-east-1", str(cm.exception))
 
 
 class TransformTest(unittest.TestCase):

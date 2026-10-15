@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Entrenamiento, inferencia por lotes y endpoint privado del predictor en SageMaker (us-west-2).
+"""Entrenamiento, inferencia por lotes y endpoint privado del predictor en SageMaker (us-east-1).
 
 Subcomandos:
 
@@ -74,7 +74,9 @@ import table as tb  # noqa: E402
 
 import common  # noqa: E402
 
-ML_REGION = "us-west-2"
+# us-east-1: la cuenta solo permite esa región y ahí está el bucket de datos. Los trabajos leen las
+# tablas ya armadas del bucket ML, no nsf-ncar-era5 (us-west-2), así que no cruzan regiones.
+ML_REGION = "us-east-1"
 SOURCE_DIR = "scripts/model"
 ENTRY_SCRIPT = "sm_job/train_entry.py"
 REQUIREMENTS = "sm_job/requirements.txt"
@@ -645,7 +647,7 @@ def run(
     a = build_parser().parse_args(argv)
     if a.ml_region != ML_REGION:
         raise SystemExit(
-            f"error: SageMaker y Bedrock deben ir en {ML_REGION} (región de nsf-ncar-era5); "
+            f"error: SageMaker y Bedrock deben ir en {ML_REGION} (región de la cuenta y del bucket de datos); "
             f"se recibió --ml-region {a.ml_region}"
         )
 

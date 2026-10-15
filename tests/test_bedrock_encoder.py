@@ -427,7 +427,7 @@ class EncodeCliTest(unittest.TestCase):
     def test_titan_by_default(self) -> None:
         """Sin ``--model`` usa Titan (1024), escribe la tabla y el resumen y sale con 0."""
         self.assertEqual(self.run_cli(), 0)
-        self.assertEqual(self.regions, ["us-west-2"])
+        self.assertEqual(self.regions, ["us-east-1"])
         df = pd.read_parquet(self.out_dir() / "titan_1024_ir_wv_v1.parquet")
         self.assertEqual(df["cell_id"].tolist(), ["2019053012_a", "2019053013_b"])
         self.assertEqual(list(df.columns[:4]), ["cell_id", "model_id", "dim", "emb_0000"])

@@ -25,10 +25,10 @@ El modelo no es secuencial (ni LSTM ni Transformer). Con ~102 Eventos positivos,
 | PCA | Ajuste por partición dentro del trabajo de entrenamiento | Evita fuga del Evento retenido (Req. 5.2) |
 | Lógica compartida | Módulos puros en `scripts/model/`, importados por la CLI local y por el trabajo de SageMaker | Paridad exacta script ↔ SageMaker (Req. 7.10, 9.6) |
 | Contenedor | Contenedor de XGBoost de SageMaker en *script mode*, con `requirements.txt` que fija la misma versión de `xgboost` que `uv.lock` | Sin mantener imagen propia; misma versión de librería |
-| Región ML | us-west-2 con validación en Terraform | Req. 9.3–9.4; región de `nsf-ncar-era5` |
+| Región ML | us-east-1 con validación en Terraform | Req. 9.3–9.4; única región de la cuenta y del bucket de datos |
 | Formato | Parquet (pyarrow ya es dependencia) | Columnar, tipado, lo lee el contenedor sin dependencias extra |
 
-**Región: decisión tomada.** El equipo acepta us-west-2 para SageMaker y Bedrock (Req. 9.3–9.4) y se encarga de que la cuenta permita crear recursos en esa región antes del `terraform apply`. La nueva variable `ml_region` (us-west-2, validada) es independiente de `training_region` (us-east-1, EC2 de entrenamiento existente) y de `region` (us-east-1, CloudFront). El comentario de `training_region` en `variables.tf` se actualiza para que no contradiga a `ml_region`: indica que esa EC2 sigue en us-east-1 por la restricción histórica de la cuenta y que el flujo de SageMaker usa `ml_region`.
+**Región: decisión tomada (revisada).** SageMaker y Bedrock van en us-east-1 (Req. 9.3–9.4), la única región que permite la cuenta de hackathon y la del bucket de datos. Los trabajos leen las tablas ya armadas del bucket ML, no `nsf-ncar-era5`, así que no cruzan regiones; Titan Multimodal G1 y Cohere Embed v4 se ofrecen in-region en us-east-1. La variable `ml_region` (us-east-1, validada) sigue siendo independiente de `training_region` (us-east-1, EC2 de entrenamiento existente) y de `region` (us-east-1, CloudFront).
 
 ## Architecture
 
@@ -95,7 +95,7 @@ El orden importa porque el Compositor_RGB y el Codificador_Bedrock solo procesan
 sequenceDiagram
     participant U as Usuario
     participant L as launch_sagemaker.py
-    participant S3 as S3 ML (us-west-2)
+    participant S3 as S3 ML (us-east-1)
     participant SM as SageMaker Training
     participant J as train_entry.py (contenedor)
     participant C as compare_runs.py
@@ -127,7 +127,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart TB
-    subgraph usw2["us-west-2 (validado)"]
+    subgraph use1["us-east-1 (validado)"]
         BKT[("S3 ml bucket<br/>prefijos model/")]
         ROLE["Rol de ejecución SageMaker"]
         TJ["Training jobs"]
@@ -171,7 +171,7 @@ tests/
   test_goes_features.py  test_rgb.py  test_bedrock_encoder.py
   test_reducer.py        test_table.py  test_loeo.py
 infra/terraform/
-  sagemaker.tf  (rol, bucket ML us-west-2, políticas)  variables.tf (ml_region con validación)
+  sagemaker.tf  (rol, bucket ML us-east-1, políticas)  variables.tf (ml_region con validación)
 docs/modelo_predictor.md
 ```
 
@@ -390,13 +390,13 @@ def output_fn(pred: pd.DataFrame, accept: str) -> bytes        # text/csv
 
 ### Infraestructura (`infra/terraform/sagemaker.tf`)
 
-- Proveedor `aws.ml` con `region = var.ml_region`; `variable "ml_region"` con `default = "us-west-2"` y `validation { condition = var.ml_region == "us-west-2"; error_message = "SageMaker y Bedrock deben ir en us-west-2 (región de nsf-ncar-era5)." }` (Req. 9.4).
-- `aws_s3_bucket.ml` en us-west-2, cifrado, bloqueo de acceso público, prefijos `model/`.
+- Proveedor `aws.ml` con `region = var.ml_region`; `variable "ml_region"` con `default = "us-east-1"` y `validation { condition = var.ml_region == "us-east-1"; error_message = "SageMaker y Bedrock deben ir en us-east-1 (región de la cuenta y del bucket de datos)." }` (Req. 9.4).
+- `aws_s3_bucket.ml` en us-east-1, cifrado, bloqueo de acceso público, prefijos `model/`.
 - `aws_iam_role.sagemaker_exec` (asume `sagemaker.amazonaws.com`) con políticas inline:
   - `s3:GetObject`, `s3:PutObject` en `arn:aws:s3:::<ml>/model/*` y en el prefijo del Catálogo del bucket de datos; `s3:ListBucket` en esos buckets con condición `s3:prefix`;
   - `s3:GetObject`, `s3:ListBucket` en `nsf-ncar-era5`, `noaa-goes16`, `noaa-goes19`;
-  - `bedrock:InvokeModel` en `arn:aws:bedrock:us-west-2::foundation-model/amazon.titan-embed-image-v1` y, si `var.enable_cohere`, `…/cohere.embed-v4:0`.
-  - `logs:CreateLogGroup`, `logs:CreateLogStream`, `logs:PutLogEvents`, `logs:DescribeLogStreams` en `arn:aws:logs:us-west-2:<cuenta>:log-group:/aws/sagemaker/*` (y sus `log-stream:*` dentro de ese grupo);
+  - `bedrock:InvokeModel` en `arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-embed-image-v1` y, si `var.enable_cohere`, `…/cohere.embed-v4:0`.
+  - `logs:CreateLogGroup`, `logs:CreateLogStream`, `logs:PutLogEvents`, `logs:DescribeLogStreams` en `arn:aws:logs:us-east-1:<cuenta>:log-group:/aws/sagemaker/*` (y sus `log-stream:*` dentro de ese grupo);
   - `cloudwatch:PutMetricData` con `Resource = "*"` (AWS no admite otro recurso para esta acción) y condición `StringLike { "cloudwatch:namespace" = "/aws/sagemaker/*" }`. Es la única declaración con recurso `*` y queda como excepción explícita del Req. 9.2.
   - Ninguna acción con `*`, ninguna acción `iam:*`, `s3:DeleteBucket` ni `s3:PutBucketPolicy` (Req. 9.2).
 - **Brecha con el Req. 9.1: resuelta.** El Req. 9.1 ahora incluye los permisos de CloudWatch Logs acotados a `/aws/sagemaker/*` y `cloudwatch:PutMetricData` con condición de espacio de nombres, y el Req. 9.2 declara esa excepción. Las imágenes de XGBoost propiedad de AWS no requieren permisos de ECR en el rol (si se cambiara a imagen propia en ECR, sí harían falta y `ecr:GetAuthorizationToken` exige recurso `*`).

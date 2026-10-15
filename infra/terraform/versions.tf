@@ -38,8 +38,8 @@ provider "aws" {
   }
 }
 
-# Proveedor de SageMaker y Bedrock. Vive en ml_region (us-west-2, validada en variables.tf),
-# que es la región de nsf-ncar-era5. Es independiente de region y de training_region.
+# Proveedor de SageMaker y Bedrock. Vive en ml_region (us-east-1, validada en variables.tf), la
+# única región que permite la cuenta. Es independiente de region y de training_region.
 provider "aws" {
   alias  = "ml"
   region = var.ml_region
