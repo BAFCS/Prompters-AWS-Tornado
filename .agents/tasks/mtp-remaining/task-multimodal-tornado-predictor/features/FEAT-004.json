@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "tasks.md grupos 12-14: Terraform de SageMaker sin apply (12.2, 12.3 con fallback por Terraform ausente; 12.1 YA HECHA, no rehacer), docs/modelo_predictor.md + enlace en README + tests/test_docs.py (13.1-13.3) y Checkpoint final 14. Depende de FEAT-003 (rutas y comandos reales que documenta).",
+  "status": "pending",
+  "steps": [
+    "12.2 Agregar en infra/terraform/versions.tf el proveedor `provider \"aws\" { alias = \"ml\" region = var.ml_region default_tags {...mismas etiquetas...} }`. Crear infra/terraform/sagemaker.tf: data aws_caller_identity; aws_s3_bucket.ml (provider aws.ml, bucket_prefix \"${var.project_name}-${var.environment}-ml-\", force_destroy como s3.tf), aws_s3_bucket_server_side_encryption_configuration (AES256), aws_s3_bucket_public_access_block (4 en true); aws_iam_policy_document sagemaker_assume (sagemaker.amazonaws.com); aws_iam_role.sagemaker_exec (name_prefix); aws_iam_policy_document sagemaker_exec con statements: (a) s3:GetObject,s3:PutObject en \"${aws_s3_bucket.ml.arn}/model/*\" y \"${aws_s3_bucket.data.arn}/data/*\"; (b) s3:ListBucket en ambos buckets con condition StringLike s3:prefix = [\"model/*\"] / [\"data/*\"]; (c) s3:GetObject en arn:aws:s3:::nsf-ncar-era5/*, noaa-goes16/*, noaa-goes19/* y s3:ListBucket en los tres buckets; (d) bedrock:InvokeModel en concat([titan ARN], var.enable_cohere ? [cohere ARN] : []) con ARN arn:aws:bedrock:${var.ml_region}::foundation-model/<id>; (e) logs:CreateLogGroup, CreateLogStream, PutLogEvents, DescribeLogStreams en arn:aws:logs:${var.ml_region}:${account}:log-group:/aws/sagemaker/* y ...:log-group:/aws/sagemaker/*:log-stream:*; (f) cloudwatch:PutMetricData con resources [\"*\"] y condition StringLike cloudwatch:namespace = \"/aws/sagemaker/*\" (comentario en español: única excepción del Req. 9.2). aws_iam_role_policy inline. Sin acciones '*', sin iam:*, s3:DeleteBucket, s3:PutBucketPolicy, timestamp(), uuid(). Comentarios en español.",
+    "12.2 outputs.tf: output ml_bucket (aws_s3_bucket.ml.bucket) y sagemaker_execution_role_arn (aws_iam_role.sagemaker_exec.arn), descripciones en español. training.tf sin cambios.",
+    "12.3 `Get-Command terraform -ErrorAction SilentlyContinue`. Si existe: en infra/terraform `terraform fmt -check`, `terraform init -backend=false`, `terraform validate`, corregir. Si no existe (estado esperado): NO instalar; revisión manual (balance de llaves, referencias a var.ml_region/var.enable_cohere/aws_s3_bucket.data existentes, provider = aws.ml en bucket ML y recursos asociados, alineación de '=' estilo terraform fmt, checklist IAM del Req. 9.2) y escribir el resultado en c:\\Users\\zanel\\OneDrive\\Documentos\\Prompters\\Prompters-AWS-Tornado\\.agents\\tasks\\mtp-remaining\\terraform-validation.md y en findings. Nunca plan/apply. Marcar 12.2, 12.3 y grupo 12 [x].",
+    "13.1 Escribir docs/modelo_predictor.md en español con todo lo listado en tasks.md 13.1 (objetivo, mesociclón ≠ tornado, etapas, PU/LOEO/métricas con fórmulas y enlaces relativos a las secciones 6.1-6.3 de mesociclones_chile.md, cinco riesgos de embeddings con mitigación, rezagos con ~102 Eventos, convenciones australes, umbrales HSLC de la sección 3.2 con unidad copiados del Documento_Fuente, sin corrección de paralaje, diagrama en texto con los nodos del glosario, comandos por componente con --start --end --region --force usando las rutas reales scripts/model/*.py y scripts/model/sm_job/, configuración XGBoost, costos USD con fecha de consulta (si no hay web, estimación con fecha), recursos y comandos de borrado, probabilidades como candidatos y ERA5 no operativo, cuenta debe permitir us-west-2, riesgo del contenedor/SDK v3 y por qué el paquete es sm_job).",
+    "13.2 README.md: enlace relativo [..](docs/modelo_predictor.md) en la sección de documentación.",
+    "13.3 tests/test_docs.py: umbrales HSLC del doc = los de la sección 3.2 de docs/mesociclones_chile.md (parsear ambos), todos los enlaces relativos resuelven a archivos existentes (y anclas si se usan), el diagrama contiene todos los nodos del glosario, README enlaza al documento. Solo lee archivos versionados.",
+    "14 Checkpoint final: gate completo en verde; todas las casillas de tasks.md en [x] (incluido grupo 14); `Test-Path scripts/model/sagemaker` False; `git status` solo con cambios esperados; sin commits."
+  ],
+  "acceptance_criteria": [
+    "infra/terraform/sagemaker.tf y outputs.tf cumplen el Req. 9.1/9.2: sin '*' en Action, el único Resource '*' es PutMetricData con condición StringLike; sin iam:*, s3:DeleteBucket, s3:PutBucketPolicy, timestamp(); training.tf intacto.",
+    "Validación de Terraform ejecutada o, si Terraform falta, documentada en terraform-validation.md con la revisión manual.",
+    "docs/modelo_predictor.md existe, README.md lo enlaza y tests/test_docs.py pasa.",
+    "Gate completo en verde y tasks.md completamente marcado."
+  ],
+  "verification": [
+    "git diff --stat infra/terraform/training.tf (vacío)",
+    "python -m uv run python -m unittest discover -s tests -p \"test_docs.py\" -v",
+    "python -m uv run ruff check scripts tests; python -m uv run ruff format --check scripts tests; python -m uv run pyright; python -m uv run python -m unittest discover -s tests -v"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

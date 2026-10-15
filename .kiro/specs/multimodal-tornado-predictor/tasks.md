@@ -352,9 +352,9 @@ uv run ruff check scripts tests; uv run ruff format --check scripts tests; uv ru
 
 Fecha: 2026-10-15. Rama: `feat/multimodal-tornado-predictor-wip`.
 
-- Completos y verificados: grupos 1 a 11 (todas sus sub-tareas, incluidas las opcionales `*`) y la tarea 12.1.
-- Pendientes: 12.2 (`sagemaker.tf` y `outputs.tf`), 12.3 (validar Terraform), 13.1–13.3 (`docs/modelo_predictor.md`, enlace en README, `tests/test_docs.py`) y 14 (checkpoint final). No quedó nada pendiente de los grupos 9–11.
-- Último gate (2026-10-15): `ruff check` sin errores, `ruff format --check` con 66 archivos ya formateados, `pyright` con 0 errores y `unittest` con 139 pruebas OK en ~196 s.
+- Completos y verificados: grupos 1 a 14 (commits `7f6de80` y `3cd882b`).
+- Único pendiente fuera de esta máquina: 12.3 con Terraform real (`terraform fmt -check`, `terraform init -backend=false`, `terraform validate` en `infra/terraform/`). Terraform no está instalado aquí; se revisó a mano `sagemaker.tf` (sin acciones `*`, `iam:*`, `s3:DeleteBucket`, `s3:PutBucketPolicy`, `timestamp()` ni `uuid()`; los únicos `"*"` son el `Deny` de TLS del bucket ML y `PutMetricData` con condición de namespace) y `training.tf` no cambió.
+- Último gate (2026-10-15): `ruff check` sin errores, `ruff format --check` con 67 archivos ya formateados, `pyright` con 0 errores y `unittest` con 144 pruebas OK en ~150 s.
 
 Desviaciones del spec original ya aplicadas:
 

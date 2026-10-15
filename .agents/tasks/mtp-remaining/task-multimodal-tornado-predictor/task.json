@@ -1,0 +1,7 @@
+{
+  "task_id": "task-multimodal-tornado-predictor",
+  "task_description": "Implementar las tareas restantes (1.1 y 2.x-14, menos 12.1 ya hecha) de la spec Kiro multimodal-tornado-predictor en el checkout principal, en el orden de tasks.md, renombrando scripts/model/sagemaker/ a scripts/model/sm_job/ y marcando cada casilla de tasks.md solo tras verificarla. Sin commits, sin recursos de AWS.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}
