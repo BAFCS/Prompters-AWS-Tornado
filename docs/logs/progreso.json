@@ -128,5 +128,33 @@
       "sync_from_bucket reemplaza tareas 7.2-7.5",
       "prototipo con Modelo_Sustituto y Leaflet por CDN"
     ]
+  },
+  {
+    "timestamp": "2026-10-15T23:14:21Z",
+    "tarea": "Predicción real XGBoost híbrido (embeddings) con todos los datos + retención 2019-05-30",
+    "estado": "hecho",
+    "notas": "35 días evento (44 positivas) + 40 negativos; LOEO embeddings CSI 0.345 / PR-AUC 0.503 (completo), 0.377/0.512 (retención); 300 árboles (sin degeneración); 2019-05-30 fuera de muestra: 5 tornados en percentil 96-100 de su hora; sitio con 5 días reales. Informe .agents/tasks/hibrido/real_report.md",
+    "decisiones": [
+      "Sin parada temprana si la validación interna tiene <10 positivas (300 árboles fijos)",
+      "Negativos exigen GOES; días de evento sin GOES quedan en NaN",
+      "Otros días con stride 3 para respetar 15000 imágenes"
+    ]
+  },
+  {
+    "timestamp": "2026-10-15T23:21:01Z",
+    "tarea": "Predicción real con XGBoost híbrido (ERA5+GOES+Titan) y retención 2019-05-30",
+    "estado": "hecho",
+    "notas": "35 días evento + 40 negativos, 44 positivas, 1364 filas. LOEO embeddings CSI 0.345 / PR-AUC 0.503 (physical 0.294/0.455, baseline 0.274/0.347). Modelo retención fuera de muestra en 2019-05-30: los 5 tornados en el top 1% de su hora. 300 árboles, ~1600 valores distintos. Sitio con 5 días reales. Riesgo: sesgo de fuente GOES (NOAA vs bucket). Informe .agents/tasks/hibrido/real_report.md",
+    "decisiones": []
+  },
+  {
+    "timestamp": "2026-10-15T23:26:20Z",
+    "tarea": "predicción real híbrido",
+    "estado": "hecho",
+    "notas": "XGBoost híbrido (embeddings) entrenado con 35 días con evento, 44 positivas, 40 negativos. LOEO CSI 0,345, PR-AUC 0,50; holdout 2019-05-30 CSI 0,377, 5 tornados en percentil 96-100. Sitio local con 5 días reales. ~16.160 imágenes Titan (~1 USD). Riesgo: sesgo de fuente GOES (eventos NOAA vs negativos bucket). make check OK.",
+    "decisiones": [
+      "adaptador lee goes_<ymd>_C13.nc",
+      "mínimo de árboles para evitar modelo degenerado"
+    ]
   }
 ]

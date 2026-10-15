@@ -41,13 +41,13 @@ ERA5_RANGES = {
     "shear_01": (0.0, 30.0, 10.0),
     "shear_03": (0.0, 40.0, 15.0),
     "shear_06": (0.0, 50.0, 20.0),
-    "srh_01": (-400.0, 100.0, -100.0),   # negativa en el hemisferio sur
+    "srh_01": (-400.0, 100.0, -100.0),  # negativa en el hemisferio sur
     "srh_03": (-600.0, 100.0, -150.0),
     "lcl": (0.0, 3000.0, 800.0),
     "gamma_03": (0.0, 10.0, 6.0),
     "gamma_75": (0.0, 10.0, 6.5),
     "vgp_01": (0.0, 0.5, 0.15),
-    "stp_lm": (-3.0, 1.0, -0.5),         # rama left-mover, negativa
+    "stp_lm": (-3.0, 1.0, -0.5),  # rama left-mover, negativa
     "sherbs3": (0.0, 3.0, 1.0),
 }
 
@@ -61,7 +61,7 @@ def load_model() -> tuple[xgb.XGBClassifier, dict]:
     return model, meta
 
 
-def image_embedding(png: bytes, n_emb: int) -> np.ndarray:
+def image_embedding(png: bytes, n_emb: int) -> tuple[np.ndarray, str]:
     """Embedding de la imagen: Bedrock Titan si hay credenciales; si no, sintético determinista.
 
     El sintético se deriva del hash de la imagen, para que una misma imagen dé siempre el mismo
@@ -70,9 +70,15 @@ def image_embedding(png: bytes, n_emb: int) -> np.ndarray:
     try:
         import botocore.session
 
-        cli = botocore.session.get_session().create_client("bedrock-runtime", region_name="us-east-1")
-        body = json.dumps({"inputImage": base64.b64encode(png).decode(),
-                           "embeddingConfig": {"outputEmbeddingLength": 1024}})
+        cli = botocore.session.get_session().create_client(
+            "bedrock-runtime", region_name="us-east-1"
+        )
+        body = json.dumps(
+            {
+                "inputImage": base64.b64encode(png).decode(),
+                "embeddingConfig": {"outputEmbeddingLength": 1024},
+            }
+        )
         resp = cli.invoke_model(modelId="amazon.titan-embed-image-v1", body=body)
         vec = np.array(json.loads(resp["body"].read())["embedding"], dtype=float)
         return vec[:n_emb], "Bedrock Titan (real)"
@@ -86,8 +92,10 @@ def main() -> None:
     """App de la demo."""
     st.set_page_config(page_title="Demo predictor de tornados", page_icon="🌪️", layout="wide")
     st.title("🌪️ Demo — Predictor multimodal de entorno tornádico")
-    st.caption("Imagen GOES + features ERA5 → embedding → XGBoost → probabilidad. "
-               "Modelo de demostración (entrenado con etiquetas sintéticas).")
+    st.caption(
+        "Imagen GOES + features ERA5 → embedding → XGBoost → probabilidad. "
+        "Modelo de demostración (entrenado con etiquetas sintéticas)."
+    )
 
     if not MODEL_FILE.exists():
         st.error(f"Falta el modelo de demo en {MODEL_FILE}. Genera primero el modelo sintético.")
@@ -137,7 +145,9 @@ def main() -> None:
         try:
             prob = float(model.predict_proba(x)[:, 1][0])
         except Exception as e:  # noqa: BLE001
-            st.warning(f"El modelo espera columnas reducidas (PCA). Demo con features ERA5 solamente. ({e!s:.80})")
+            st.warning(
+                f"El modelo espera columnas reducidas (PCA). Demo con features ERA5 solamente. ({e!s:.80})"
+            )
             # fallback: solo features ERA5 contra un umbral físico simple
             prob = min(max((feat_vals["cape"] / 2000 + feat_vals["vgp_01"] / 0.2) / 2, 0), 1)
 
@@ -148,8 +158,9 @@ def main() -> None:
             st.error("⚠️ Entorno FAVORABLE a tornado (según el modelo de demo)")
         else:
             st.success("✅ Entorno poco favorable (según el modelo de demo)")
-        st.caption(f"Embedding de la imagen: {source} · {n_emb} dims · "
-                   f"{len(feat_vals)} features ERA5")
+        st.caption(
+            f"Embedding de la imagen: {source} · {n_emb} dims · {len(feat_vals)} features ERA5"
+        )
 
 
 if __name__ == "__main__":

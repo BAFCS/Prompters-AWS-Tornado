@@ -111,7 +111,10 @@ def sync_goes(bucket: str, day: dt.date, region: str, force: bool) -> bool:
         print(f"  GOES {day}: ya existe, se omite", flush=True)
         return True
 
-    c13 = _open_goes_nc(bucket, day, f"goes_{day:%Y%m%d}.nc")  # principal = C13
+    # C13: tanda anual sin sufijo (goes_AAAAMMDD.nc) o archivo por banda (goes_AAAAMMDD_C13.nc).
+    c13 = _open_goes_nc(bucket, day, f"goes_{day:%Y%m%d}.nc")
+    if c13 is None:
+        c13 = _open_goes_nc(bucket, day, f"goes_{day:%Y%m%d}_C13.nc")
     c08 = _open_goes_nc(bucket, day, f"goes_{day:%Y%m%d}_C08.nc")
     if c13 is None:
         print(f"  GOES {day}: sin archivo C13 en el bucket; se omite", flush=True)

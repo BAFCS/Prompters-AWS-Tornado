@@ -16,6 +16,10 @@ Uso::
 
     uv run python scripts/model/sync_from_bucket.py --bucket <bucket> --start 2019-05-30 --only era5
     uv run python scripts/app/prototype.py --start 2019-05-30 --serve
+
+Con ``--predictions-dir`` usa el ``pred_AAAAMMDD.csv`` del Modelo_Real (``infer_grid.py``) si
+existe, es válido y su meta dice ``modelo: real``; si no, cae al sustituto. Un CSV real nunca se
+pisa con el sustituto.
 """
 
 from __future__ import annotations
@@ -38,6 +42,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "app"))
 sys.path.insert(0, str(ROOT / "scripts" / "viewer"))
 
 import atomic  # noqa: E402
+import predictions  # noqa: E402
 import stub_model  # noqa: E402
 
 import common  # noqa: E402
@@ -58,6 +63,11 @@ ZONES = {
 }
 THRESHOLD = 20.0
 SUPPRESSION_H = 6
+GRID_STEP = 0.25  # paso ERA5 por defecto si el día tiene una sola latitud
+BADGES = {
+    "real": "Modelo XGBoost híbrido (ERA5 + imágenes GOES)",
+    "sustituto": "Modelo sustituto heurístico (demo)",
+}
 
 
 # --- Predicciones ---------------------------------------------------------------------------
@@ -73,6 +83,36 @@ def predict_day(idx_file: Path) -> pd.DataFrame:
     df["date"] = pd.to_datetime(df["time"]).dt.normalize()
     df["hour_utc"] = pd.to_datetime(df["time"]).dt.hour
     return stub_model.predict(df, "baseline_era5")
+
+
+def load_real(pred_dir: Path, day: str) -> tuple[pd.DataFrame, dict] | None:
+    """``(predicciones, metadatos)`` del Modelo_Real de ``pred_dir/pred_AAAAMMDD.csv``, o None."""
+    csv = pred_dir / f"pred_{day.replace('-', '')}.csv"
+    if not csv.exists():
+        return None
+    try:
+        loaded = predictions.load(csv)
+    except predictions.InvalidPredictions as exc:
+        print(f"aviso: {exc}; se usa el sustituto", file=sys.stderr)
+        return None
+    return (loaded.df, loaded.meta) if loaded.meta.get("modelo") == "real" else None
+
+
+def is_real(csv: Path) -> bool:
+    """True si ``csv`` ya tiene metadatos con ``modelo: real`` (no se pisa con el sustituto)."""
+    meta = predictions.meta_path(csv)
+    try:
+        return json.loads(meta.read_text(encoding="utf-8")).get("modelo") == "real"
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
+def grid_step(values: np.ndarray) -> float:
+    """Paso de la grilla: la menor separación entre latitudes únicas (0,25° si hay una sola)."""
+    u = np.unique(np.asarray(values, dtype=np.float64))
+    d = np.diff(u)
+    d = d[d > 1e-9]
+    return round(float(d.min()), 6) if d.size else GRID_STEP
 
 
 def write_predictions(pred: pd.DataFrame, out_dir: Path, day: str) -> Path:
@@ -92,8 +132,20 @@ def write_predictions(pred: pd.DataFrame, out_dir: Path, day: str) -> Path:
 # --- Sitio ----------------------------------------------------------------------------------
 
 
-def day_payload(pred: pd.DataFrame, modelo: str) -> dict:
-    """JSON compacto del día: ejes y, por hora, enteros 0–10000 (o null) en orden lat × lon."""
+def model_info(meta: dict | None) -> dict:
+    """Lo que el sitio muestra del modelo: carpeta, configuración y si el día es fuera de muestra."""
+    if not meta:
+        return {}
+    keys = ("config", "model_dir", "evaluacion", "en_entrenamiento", "generado", "stride")
+    return {k: meta[k] for k in keys if k in meta}
+
+
+def day_payload(pred: pd.DataFrame, modelo: str, meta: dict | None = None) -> dict:
+    """JSON compacto del día: ejes y, por hora, enteros 0–10000 (o null) en orden lat × lon.
+
+    ``meta`` (metadatos del CSV real) agrega ``modelo_info`` y, si el día no se usó para entrenar,
+    lo dice en la insignia. ``max`` es el máximo del día (para la escala relativa del sitio).
+    """
     lats = sorted(pred["latitude"].unique(), reverse=True)
     lons = sorted(pred["longitude"].unique())
     hours: dict[str, list[int | None]] = {}
@@ -103,12 +155,21 @@ def day_payload(pred: pd.DataFrame, modelo: str) -> dict:
         grid = grid.reindex(index=lats, columns=lons)
         vals = np.rint(grid.to_numpy() * SCALE)
         hours[str(int(hour))] = [None if np.isnan(v) else int(v) for v in vals.ravel()]
+    info = model_info(meta)
+    badge = BADGES[modelo]
+    if info.get("en_entrenamiento") is False:
+        badge += " · fuera de muestra (día retenido)"
+    elif info.get("en_entrenamiento") is True:
+        badge += " · en muestra (día de entrenamiento)"
     return {
         "date": str(pred["date"].iloc[0]),
         "modelo": modelo,
+        "badge": badge,
+        "modelo_info": info,
+        "max": int(np.rint(float(pred["probability"].max()) * SCALE)),
         "lats": [float(x) for x in lats],
         "lons": [float(x) for x in lons],
-        "step": 0.25,
+        "step": grid_step(pred["latitude"].to_numpy()),
         "hours": hours,
     }
 
@@ -192,8 +253,12 @@ def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    p.add_argument("--start", type=dt.date.fromisoformat, help="primer día AAAA-MM-DD")
     p.add_argument(
-        "--start", type=dt.date.fromisoformat, required=True, help="primer día AAAA-MM-DD"
+        "--days",
+        type=dt.date.fromisoformat,
+        nargs="+",
+        help="días sueltos AAAA-MM-DD (en vez de --start/--end)",
     )
     p.add_argument("--end", type=dt.date.fromisoformat, help="último día (por defecto --start)")
     p.add_argument("--region", default="south-central-austral")
@@ -201,24 +266,44 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--catalog", type=Path, default=common.DATA / "tornados_chile.xlsx")
     p.add_argument("--serve", action="store_true", help="sirve el sitio en http://localhost:PORT")
     p.add_argument("--port", type=int, default=8000)
+    p.add_argument(
+        "--predictions-dir",
+        type=Path,
+        help="usa pred_AAAAMMDD.csv de esta carpeta si su meta dice modelo real (infer_grid.py)",
+    )
     a = p.parse_args(argv)
 
     idx_dir = common.CROPS / a.region / "era5_indices"
-    end = a.end or a.start
-    days = [a.start + dt.timedelta(days=k) for k in range((end - a.start).days + 1)]
+    if a.days:
+        days = sorted(set(a.days))
+    elif a.start:
+        end = a.end or a.start
+        days = [a.start + dt.timedelta(days=k) for k in range((end - a.start).days + 1)]
+    else:
+        p.error("falta --start o --days")
     payloads, all_alerts = [], []
     for day in days:
-        f = idx_dir / f"era5_idx_{day:%Y%m%d}.nc"
-        if not f.exists():
-            print(f"{day}: falta {f.name}; corre sync_from_bucket.py --start {day} --only era5")
-            continue
-        pred = predict_day(f)
-        csv = write_predictions(pred, a.out / "predictions", day.isoformat())
-        payloads.append(day_payload(pred, "sustituto"))
-        day_alerts = alerts(pred, "sustituto")
+        real = load_real(a.predictions_dir, day.isoformat()) if a.predictions_dir else None
+        meta = None
+        if real is not None:
+            (pred, meta), modelo = real, "real"
+            csv = a.predictions_dir / f"pred_{day:%Y%m%d}.csv"
+        else:
+            f = idx_dir / f"era5_idx_{day:%Y%m%d}.nc"
+            if not f.exists():
+                print(f"{day}: falta {f.name}; corre sync_from_bucket.py --start {day} --only era5")
+                continue
+            pred, modelo = predict_day(f), "sustituto"
+            csv = a.out / "predictions" / f"pred_{day:%Y%m%d}.csv"
+            if is_real(csv):
+                print(f"{day}: {csv.name} es del modelo real; no se pisa (usa --predictions-dir)")
+            else:
+                csv = write_predictions(pred, a.out / "predictions", day.isoformat())
+        payloads.append(day_payload(pred, modelo, meta))
+        day_alerts = alerts(pred, modelo)
         all_alerts += day_alerts
-        print(f"{day}: {len(pred)} celdas-hora, máx {pred['probability'].max() * 100:.1f} %, "
-              f"{len(day_alerts)} alertas → {csv.relative_to(ROOT)}")  # fmt: skip
+        print(f"{day}: {modelo}, {len(pred)} celdas-hora, máx {pred['probability'].max() * 100:.1f} %, "
+              f"{len(day_alerts)} alertas → {csv}")  # fmt: skip
     if not payloads:
         raise SystemExit("ningún día con índices ERA5; nada que publicar")
 
@@ -252,7 +337,7 @@ INDEX_HTML = """<!DOCTYPE html>
  h1{font-size:18px;margin:0 0 4px} .disc{font-size:13px;color:#3d4652;margin:0}
  .bar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:8px}
  label{font-weight:600} select,input{font:inherit}
- .badge{background:#7a3e00;color:#fff;border-radius:6px;padding:2px 8px;font-size:13px}
+ .badge{background:#7a3e00;color:#fff;border-radius:6px;padding:2px 8px;font-size:13px} .badge.real{background:#14532d}
  main{flex:1;display:flex;min-height:0} #map{flex:1}
  aside{width:300px;overflow:auto;background:#fff;border-left:1px solid #ccd4e0;padding:12px}
  .legend span{display:inline-block;width:44px;height:14px} .legend small{display:flex;justify-content:space-between;width:220px}
@@ -261,20 +346,23 @@ INDEX_HTML = """<!DOCTYPE html>
  @media(max-width:800px){main{flex-direction:column}aside{width:auto;max-height:35vh}}
 </style></head><body>
 <header>
- <h1>Favorabilidad de tornados en Chile <span id="badge" class="badge" hidden>Modelo sustituto heurístico (demo)</span></h1>
+ <h1>Favorabilidad de tornados en Chile <span id="badge" class="badge" hidden></span></h1>
  <p class="disc">__DISCLAIMER__</p>
  <div class="bar">
   <label for="day">Día</label><select id="day"></select>
   <label for="hour">Hora UTC</label>
   <input id="hour" type="range" min="0" max="23" value="20" aria-valuetext="20 UTC">
   <output id="hourlbl" for="hour">20 UTC</output>
+  <label><input id="rel" type="checkbox"> Escala relativa al máximo del día</label>
   <span id="max"></span><span id="nodata" role="status"></span>
  </div>
+ <p class="disc" id="minfo"></p>
 </header>
 <main><div id="map" aria-label="Mapa del índice de favorabilidad"></div>
 <aside>
  <h2 style="font-size:15px">Leyenda (%)</h2>
  <div class="legend" id="legend"></div>
+ <p class="disc" id="lgnote"></p>
  <h2 style="font-size:15px">Eventos del catálogo en el día</h2>
  <ul id="events" style="padding-left:18px"></ul>
 </aside></main>
@@ -282,21 +370,27 @@ INDEX_HTML = """<!DOCTYPE html>
 const COLORS=["#440154","#3b528b","#21918c","#5ec962","#fde725"];
 const color=v=>COLORS[Math.min(4,Math.floor(v/20))];
 const lg=document.getElementById("legend");
-lg.innerHTML=COLORS.map(c=>`<span style="background:${c}"></span>`).join("")+"<small><b>0</b><b>20</b><b>40</b><b>60</b><b>80</b><b>100</b></small>";
+function legend(rel,dmax){const t=rel?[0,20,40,60,80,100].map(x=>(x*dmax/100).toFixed(1)):[0,20,40,60,80,100];
+ lg.innerHTML=COLORS.map(c=>`<span style="background:${c}"></span>`).join("")+"<small>"+t.map(x=>`<b>${x}</b>`).join("")+"</small>";
+ document.getElementById("lgnote").textContent=rel?`Colores relativos al máximo del día (${dmax.toFixed(1)} %); el valor absoluto está en el recuadro de cada celda.`:"Colores en % absoluto del índice.";}
 const map=L.map("map",{preferCanvas:true}).setView([-38.5,-72],5);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:9,attribution:"© OpenStreetMap"}).addTo(map);
+let relTouched=false;
 const cells=L.layerGroup().addTo(map), marks=L.layerGroup().addTo(map), cache={};
 const $=id=>document.getElementById(id);
 async function day(d){return cache[d]??=(await fetch(`days/${d}.json`)).json();}
 async function draw(){
  const d=await day($("day").value), h=$("hour").value; $("hourlbl").textContent=h+" UTC";
- $("hour").setAttribute("aria-valuetext",h+" UTC"); $("badge").hidden=d.modelo!=="sustituto";
+ $("hour").setAttribute("aria-valuetext",h+" UTC"); const b=$("badge"); b.textContent=d.badge; b.className=d.modelo==="real"?"badge real":"badge"; b.hidden=!d.badge;
+ const mi=d.modelo_info||{}; $("minfo").textContent=mi.model_dir?`Modelo: ${mi.config} · ${mi.model_dir} · ${mi.evaluacion||""}`:"";
+ const dmax=(d.max??10000)/100||1; if(!relTouched)$("rel").checked=dmax<50;
+ const rel=$("rel").checked; legend(rel,dmax);
  cells.clearLayers(); const vals=d.hours[h]; const half=d.step/2; let mx=0;
  if(!vals){$("nodata").textContent="Sin datos para esta hora";}
  else{$("nodata").textContent="";
-  vals.forEach((v,i)=>{if(v===null)return; const pct=v/100; mx=Math.max(mx,pct); if(pct<1)return;
+  vals.forEach((v,i)=>{if(v===null)return; const pct=v/100; mx=Math.max(mx,pct); const cv=rel?pct/dmax*100:pct; if(cv<1)return;
    const la=d.lats[Math.floor(i/d.lons.length)], lo=d.lons[i%d.lons.length];
-   L.rectangle([[la-half,lo-half],[la+half,lo+half]],{stroke:false,fillColor:color(pct),fillOpacity:.65})
+   L.rectangle([[la-half,lo-half],[la+half,lo+half]],{stroke:false,fillColor:color(cv),fillOpacity:.65})
     .bindTooltip(`${pct.toFixed(1)} %`).addTo(cells);});}
  $("max").textContent=vals?`Máximo: ${mx.toFixed(1)} %`:"";
  marks.clearLayers(); const ul=$("events"); ul.replaceChildren();
@@ -308,7 +402,7 @@ async function draw(){
 }
 (async()=>{const idx=await (await fetch("days/index.json")).json();
  for(const d of idx.days){const o=document.createElement("option"); o.value=o.textContent=d; $("day").append(o);}
- $("day").value=idx.default; $("day").onchange=draw; $("hour").oninput=draw; draw();})();
+ $("day").value=idx.default; $("day").onchange=draw; $("hour").oninput=draw; $("rel").onchange=()=>{relTouched=true;draw();}; draw();})();
 </script></body></html>
 """
 

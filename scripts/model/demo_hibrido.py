@@ -71,11 +71,17 @@ def make_synthetic_cells(days: list[dt.date], n_pos: int, n_neg: int, seed: int)
         t = pd.Timestamp(f"{day}T{hour:02d}:00", tz="UTC")
         cid = tb.make_cell_id(t, la, lo)
         label = 1 if k < n_pos else 0
-        rows.append({
-            "cell_id": cid, "time": t, "latitude": la, "longitude": lo,
-            "label": label, "event_id": f"syn{k}" if label else "",
-            "fold_group": f"syn{k}" if label else f"neg{k}",
-        })
+        rows.append(
+            {
+                "cell_id": cid,
+                "time": t,
+                "latitude": la,
+                "longitude": lo,
+                "label": label,
+                "event_id": f"syn{k}" if label else "",
+                "fold_group": f"syn{k}" if label else f"neg{k}",
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -87,14 +93,18 @@ def _run(cmd: list[str]) -> int:
 
 def main() -> None:
     """Genera cells sintéticas, corre RGB+embedding, arma la tabla híbrida y entrena."""
-    p = argparse.ArgumentParser(description="Demo híbrido ERA5+embedding GOES (etiquetas sintéticas).")
+    p = argparse.ArgumentParser(
+        description="Demo híbrido ERA5+embedding GOES (etiquetas sintéticas)."
+    )
     p.add_argument("--n-pos", type=int, default=5, help="Positivas sintéticas")
     p.add_argument("--n-neg", type=int, default=50, help="Negativas")
     p.add_argument("--seed", type=int, default=0)
     a = p.parse_args()
 
     days = days_with_both()
-    print(f"=== Días con ERA5+GOES locales: {len(days)} -> {[str(d) for d in days]} ===", flush=True)
+    print(
+        f"=== Días con ERA5+GOES locales: {len(days)} -> {[str(d) for d in days]} ===", flush=True
+    )
     if not days:
         raise SystemExit("No hay días con ambos. Corre antes sync_from_bucket.py --only both.")
 
@@ -110,24 +120,80 @@ def main() -> None:
     model = ["uv", "run", "python"]
     # 2) RGB
     print("[2/4] compose_rgb (GOES -> PNG)", flush=True)
-    _run([*model, "scripts/model/compose_rgb.py", "--cells", str(cells_file), "--recipe", "ir_wv",
-          "--recipe-version", "1", "--size", "224", "--window-km", "100",
-          "--start", start, "--end", end, "--region", REGION, "--force"])
+    _run(
+        [
+            *model,
+            "scripts/model/compose_rgb.py",
+            "--cells",
+            str(cells_file),
+            "--recipe",
+            "ir_wv",
+            "--recipe-version",
+            "1",
+            "--size",
+            "224",
+            "--window-km",
+            "100",
+            "--start",
+            start,
+            "--end",
+            end,
+            "--region",
+            REGION,
+            "--force",
+        ]
+    )
 
     # 3) embeddings
     manifest = MODEL_DIR / "rgb" / "ir_wv_v1" / "manifest.parquet"
     print("[3/4] encode_bedrock (PNG -> embedding)", flush=True)
-    _run([*model, "scripts/model/encode_bedrock.py", "--manifest", str(manifest), "--model", "titan",
-          "--cache", "local", "--start", start, "--end", end, "--region", REGION, "--force"])
+    _run(
+        [
+            *model,
+            "scripts/model/encode_bedrock.py",
+            "--manifest",
+            str(manifest),
+            "--model",
+            "titan",
+            "--cache",
+            "local",
+            "--start",
+            start,
+            "--end",
+            end,
+            "--region",
+            REGION,
+            "--force",
+        ]
+    )
 
     # 4) tabla híbrida + entrenamiento
     print("[4/4] build_table build --config embeddings + train", flush=True)
     emb = MODEL_DIR / "embeddings" / "titan_1024_ir_wv_v1.parquet"
-    _run([*model, "scripts/model/build_table.py", "--stage", "build", "--config", "embeddings",
-          "--embeddings", str(emb), "--start", start, "--end", end, "--region", REGION])
+    _run(
+        [
+            *model,
+            "scripts/model/build_table.py",
+            "--stage",
+            "build",
+            "--config",
+            "embeddings",
+            "--embeddings",
+            str(emb),
+            "--start",
+            start,
+            "--end",
+            end,
+            "--region",
+            REGION,
+        ]
+    )
 
     print("\n=== DEMO LISTA ===", flush=True)
-    print("La tabla híbrida (ERA5 + embeddings) está en data/model/.../tables/config=embeddings/", flush=True)
+    print(
+        "La tabla híbrida (ERA5 + embeddings) está en data/model/.../tables/config=embeddings/",
+        flush=True,
+    )
     print("Entrena con: uv run python scripts/model/train_xgboost.py (ver su CLI)", flush=True)
 
 

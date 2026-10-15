@@ -287,6 +287,7 @@ def main() -> None:
 
     rng = np.random.default_rng(0)
     import time as _time
+
     all_rows: list[dict] = []
     t_start = _time.time()
     for i, day in enumerate(days, 1):
@@ -298,8 +299,11 @@ def main() -> None:
             npos = sum(x["label"] == 1 for x in r)
             elapsed = _time.time() - t0
             total = _time.time() - t_start
-            print(f"  [{i}/{len(days)}] {day}: {len(r)} filas ({npos} pos) "
-                  f"— {elapsed:.1f}s (acumulado {total:.0f}s)", flush=True)
+            print(
+                f"  [{i}/{len(days)}] {day}: {len(r)} filas ({npos} pos) "
+                f"— {elapsed:.1f}s (acumulado {total:.0f}s)",
+                flush=True,
+            )
             all_rows.extend(r)
         except Exception as e:  # noqa: BLE001
             print(f"  [{i}/{len(days)}] {day}: ERROR {e!r}", flush=True)
