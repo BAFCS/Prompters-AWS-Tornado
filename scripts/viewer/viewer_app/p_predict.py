@@ -112,6 +112,79 @@ def _to_png(img) -> bytes:
     return buf.getvalue()
 
 
+@st.cache_data(show_spinner=False, ttl=300)
+def _goes_tiempo_real() -> tuple[bytes, str] | None:
+    """Baja la imagen C13 más reciente de GOES-East en vivo y la recorta a la región del modelo.
+
+    Usa el bucket público de NOAA (``noaa-goes19``, GOES-East actual; ``noaa-goes16`` antes de
+    abr-2025), producto ``ABI-L2-CMIPF`` banda 13 (full-disk). Reproyecta de la grilla geoestacionaria
+    ABI a la región centro-sur/austral. Devuelve (PNG recortado, etiqueta con la hora UTC), o None.
+
+    Es más pesado que las imágenes recortadas del bucket del equipo (full-disk ~23 MB); en la EC2
+    (us-east-1, misma región que NOAA) es rápido. Cachea 5 min (TTL) para no rebajar en cada clic.
+    """
+    import datetime as _dt
+
+    import fsspec
+    import h5py
+
+    fs = fsspec.filesystem("s3", anon=True)
+    now = _dt.datetime.now(_dt.UTC)
+    # Busca en la hora actual y, si está vacía, en la anterior.
+    for back in (0, 1):
+        t = now - _dt.timedelta(hours=back)
+        bucket = "noaa-goes19" if t >= _dt.datetime(2025, 4, 4, 15, tzinfo=_dt.UTC) else "noaa-goes16"
+        prefix = f"{bucket}/ABI-L2-CMIPF/{t.year}/{t.timetuple().tm_yday:03d}/{t.hour:02d}/"
+        try:
+            c13 = sorted(f for f in fs.ls(prefix, detail=False) if "C13" in f)
+        except FileNotFoundError:
+            c13 = []
+        if c13:
+            key = c13[-1]
+            with fs.open(key, "rb") as f:
+                raw = f.read()
+            with h5py.File(io.BytesIO(raw), "r") as h:
+                x, y, lat, lon = _abi_latlon(h)
+                cmi = h["CMI"][:]
+            png = _crop_to_region(cmi, lat, lon)
+            # hora del nombre del archivo (campo sYYYYJJJHHMMSS)
+            stamp = key.split("_s")[1][:11]
+            hh = f"{stamp[7:9]}:{stamp[9:11]}"
+            return png, f"{t:%Y-%m-%d} {hh} UTC (en vivo)"
+    return None
+
+
+def _abi_latlon(h: "object") -> tuple:
+    """Lat/lon de la grilla ABI usando scripts/common.latlon_abi."""
+    import sys as _sys
+
+    _sys.path.insert(0, str(ROOT / "scripts"))
+    import common
+
+    return common.latlon_abi(h)
+
+
+def _crop_to_region(cmi: np.ndarray, lat: np.ndarray, lon: np.ndarray) -> bytes:
+    """Recorta/reproyecta la banda a la región del modelo (vecino más cercano) y devuelve PNG."""
+    from PIL import Image
+    from scipy.spatial import cKDTree
+
+    glat = np.arange(NORTH, SOUTH - 0.05, -0.05)
+    glon = np.arange(WEST, EAST + 0.05, 0.05)
+    gla, glo = np.meshgrid(glat, glon, indexing="ij")
+    arr = np.asarray(cmi, dtype=float)
+    ok = np.isfinite(lat.ravel()) & np.isfinite(lon.ravel()) & np.isfinite(arr.ravel())
+    k = np.cos(np.deg2rad((NORTH + SOUTH) / 2))
+    tree = cKDTree(np.column_stack([lat.ravel()[ok], lon.ravel()[ok] * k]))
+    _, idx = tree.query(np.column_stack([gla.ravel(), glo.ravel() * k]))
+    sub = arr.ravel()[ok][idx].reshape(gla.shape)
+    sub = np.nan_to_num(sub, nan=float(np.nanmean(sub)))
+    lo, hi = np.percentile(sub, 2), np.percentile(sub, 98)
+    norm = np.clip((sub - lo) / (hi - lo + 1e-9), 0, 1)
+    img8 = (255 * (1 - norm)).astype("uint8")
+    return _to_png(Image.fromarray(np.stack([img8, img8, img8], axis=-1)))
+
+
 def _grid() -> tuple[np.ndarray, np.ndarray]:
     """Latitudes (norte→sur) y longitudes (oeste→este) de la grilla de la región."""
     lat = np.round(np.arange(NORTH, SOUTH - GRID_RES / 2, -GRID_RES), 3)
@@ -200,9 +273,20 @@ def page() -> None:
         from PIL import Image
 
         fuente = st.radio("Imagen de entrada",
-                          ["GOES real de Chile (bucket)", "Subir archivo"], horizontal=True)
+                          ["GOES en vivo (hoy)", "GOES real de Chile (bucket)", "Subir archivo"],
+                          horizontal=True)
         img = None
-        if fuente.startswith("GOES"):
+        if fuente.startswith("GOES en vivo"):
+            with st.spinner("Bajando la imagen GOES más reciente de Chile…"):
+                vivo = _goes_tiempo_real()
+            if vivo is None:
+                st.warning("No se pudo obtener la imagen en vivo; usa otra fuente.")
+                img = Image.fromarray(np.zeros((224, 224, 3), "uint8"))
+            else:
+                png_vivo, etiqueta = vivo
+                img = Image.open(io.BytesIO(png_vivo)).convert("RGB")
+                st.caption(f"GOES-East C13 · {etiqueta} · tope de nubes sobre el centro-sur/austral")
+        elif fuente.startswith("GOES real"):
             dia = st.selectbox("Día con tornado (GOES disponible)", TORNADO_DAYS)
             real = _goes_real(dia)
             if real is None:
