@@ -83,25 +83,22 @@ def image_embedding(png: bytes, n_emb: int) -> np.ndarray:
 
 
 def _area_map(png: bytes, feat_vals: dict, n_emb: int):
-    """Genera el mapa de probabilidad por área (figura, CSV, min, máx) a partir de la imagen + features.
+    """Mapa de probabilidad por área, interactivo (Plotly), superpuesto sobre la imagen GOES.
 
-    Reutiliza predict_map: el embedding de la imagen se combina con un campo ERA5 modulado por los
-    valores de los deslizadores, para que el mapa reaccione a lo que el usuario ajusta.
+    Devuelve (figura Plotly, CSV, min, máx). El heatmap es semitransparente sobre la imagen, con
+    hover de lat/lon/probabilidad y zoom. Reacciona a los deslizadores de features ERA5.
     """
+    import base64 as _b64
     import sys as _sys
 
     _sys.path.insert(0, str(Path(__file__).resolve().parent))
     import tempfile
 
-    import matplotlib
     import pandas as pd
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
+    import plotly.graph_objects as go
     import predict_map as pm
 
     lat, lon = pm.grid()
-    # Campo base sintético, escalado por los sliders (la zona de inestabilidad se intensifica con CAPE/VGP).
     base = pm.synthetic_fields(lat, lon)
     scale = (feat_vals["cape"] / 500.0 + feat_vals["vgp_01"] / 0.15) / 2
     for k in base:
@@ -116,22 +113,31 @@ def _area_map(png: bytes, feat_vals: dict, n_emb: int):
             for i in range(len(lat)) for j in range(len(lon))]
     csv_df = pd.DataFrame(rows)
 
-    # Imagen GOES de fondo + heatmap de probabilidad SUPERPUESTO (semitransparente), no un panel aparte.
-    ext = [pm.REGION.west, pm.REGION.east, pm.REGION.south, pm.REGION.north]
-    bg = Image.open(io.BytesIO(png)).convert("RGB")
-    fig, ax = plt.subplots(figsize=(6, 9))
-    ax.imshow(bg, extent=ext, aspect="auto", zorder=0)
-    mesh = ax.imshow(prob, extent=ext, origin="upper", cmap="turbo", vmin=0, vmax=1,
-                     alpha=0.5, aspect="auto", zorder=1)
-    ax.contour(lon, lat, prob, levels=[0.5, 0.7, 0.9], colors="white", linewidths=0.8,
-               alpha=0.9, zorder=2)
-    pm.draw_coast(ax)
-    ax.set_xlim(pm.REGION.west, pm.REGION.east)
-    ax.set_ylim(pm.REGION.south, pm.REGION.north)
-    ax.set_xlabel("Longitud")
-    ax.set_ylabel("Latitud")
-    ax.set_title("Probabilidad de tornado sobre la imagen GOES")
-    fig.colorbar(mesh, ax=ax, label="probabilidad", shrink=0.6)
+    west, east, south, north = pm.REGION.west, pm.REGION.east, pm.REGION.south, pm.REGION.north
+    data_uri = "data:image/png;base64," + _b64.b64encode(png).decode()
+
+    fig = go.Figure()
+    # Imagen GOES de fondo
+    fig.add_layout_image(dict(source=data_uri, xref="x", yref="y", x=west, y=north,
+                              sizex=east - west, sizey=north - south, sizing="stretch",
+                              layer="below", opacity=1.0))
+    # Heatmap de probabilidad semitransparente encima (colorscale Turbo, interactivo con hover)
+    fig.add_trace(go.Heatmap(
+        z=prob, x=lon, y=lat, colorscale="Turbo", zmin=0, zmax=1, opacity=0.55,
+        colorbar=dict(title="prob", thickness=12, len=0.8),
+        hovertemplate="lat %{y:.2f}<br>lon %{x:.2f}<br>prob %{z:.2f}<extra></extra>",
+    ))
+    # Contornos de riesgo alto
+    fig.add_trace(go.Contour(
+        z=prob, x=lon, y=lat, showscale=False, contours=dict(start=0.5, end=0.9, size=0.2,
+        coloring="lines"), line=dict(color="white", width=1), opacity=0.8, hoverinfo="skip",
+    ))
+    fig.update_layout(
+        title="Probabilidad de tornado sobre la imagen GOES",
+        xaxis=dict(title="Longitud", range=[west, east], constrain="domain"),
+        yaxis=dict(title="Latitud", range=[south, north], scaleanchor="x", scaleratio=1),
+        width=430, height=560, margin=dict(l=40, r=10, t=40, b=40),
+    )
     return fig, csv_df, float(prob.min()), float(prob.max())
 
 
@@ -178,7 +184,7 @@ def main() -> None:
         buf2 = io.BytesIO()
         img.resize((224, 224)).save(buf2, format="PNG")
         fig, csv_df, pmin, pmax = _area_map(buf2.getvalue(), feat_vals, n_emb)
-        st.pyplot(fig)
+        st.plotly_chart(fig, use_container_width=False)
         st.caption(f"Mapa de calor sobre Chile centro-sur/austral · prob {pmin:.2f}–{pmax:.2f} · "
                    f"embedding: {source}")
         st.download_button("⬇️ Descargar CSV de probabilidad por área",
