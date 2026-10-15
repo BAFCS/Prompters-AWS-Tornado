@@ -60,7 +60,14 @@ PAGES = {
     "references": st.Page(p_references.page, title="Referencias", icon=":material/menu_book:", url_path="referencias"),
 }  # fmt: skip
 st.session_state["pages"] = PAGES
-NO_DATA_PAGES = ("project", "data", "predict", "forecast", "starter", "references")  # se muestran aunque no haya recortes
+NO_DATA_PAGES = (
+    "project",
+    "data",
+    "predict",
+    "forecast",
+    "starter",
+    "references",
+)  # se muestran aunque no haya recortes
 navigation = st.navigation(list(PAGES.values()), position="top")
 
 # --- Región y día --------------------------------------------------------------------------------

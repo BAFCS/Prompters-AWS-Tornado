@@ -10,7 +10,6 @@ puede cambiar con la variable de entorno ``FORECAST_SITE_URL`` (por ejemplo para
 import os
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 DEFAULT_URL = "https://d1m48zea07nk1y.cloudfront.net/resultados/sitio/index.html"
 
@@ -35,5 +34,5 @@ def page() -> None:
         "CSI 0,345 (híbrido) frente a 0,294 (solo variables físicas) y 0,274 (solo ERA5)."
     )
     url = site_url()
-    components.iframe(url, height=760, scrolling=True)
+    st.iframe(url, height=760)
     st.link_button("Abrir el mapa en pantalla completa", url, icon=":material/open_in_new:")
