@@ -82,6 +82,52 @@ def image_embedding(png: bytes, n_emb: int) -> np.ndarray:
         return rng.standard_normal(n_emb) * 0.1, "sintético (sin credenciales Bedrock)"
 
 
+def _area_map(png: bytes, feat_vals: dict, n_emb: int):
+    """Genera el mapa de probabilidad por área (figura, CSV, min, máx) a partir de la imagen + features.
+
+    Reutiliza predict_map: el embedding de la imagen se combina con un campo ERA5 modulado por los
+    valores de los deslizadores, para que el mapa reaccione a lo que el usuario ajusta.
+    """
+    import sys as _sys
+
+    _sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import tempfile
+
+    import matplotlib
+    import pandas as pd
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import predict_map as pm
+
+    lat, lon = pm.grid()
+    # Campo base sintético, escalado por los sliders (la zona de inestabilidad se intensifica con CAPE/VGP).
+    base = pm.synthetic_fields(lat, lon)
+    scale = (feat_vals["cape"] / 500.0 + feat_vals["vgp_01"] / 0.15) / 2
+    for k in base:
+        base[k] = base[k] * (0.5 + scale)
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tf:
+        tf.write(png)
+        img_path = Path(tf.name)
+    emb = pm.image_embedding(img_path, n_emb)
+    prob = pm.predict_grid(base, lat, lon, emb)
+
+    rows = [{"latitude": float(lat[i]), "longitude": float(lon[j]), "prob": float(prob[i, j])}
+            for i in range(len(lat)) for j in range(len(lon))]
+    csv_df = pd.DataFrame(rows)
+
+    fig, ax = plt.subplots(figsize=(5, 8))
+    mesh = ax.pcolormesh(lon, lat, prob, cmap="turbo", vmin=0, vmax=1, shading="auto")
+    pm.draw_coast(ax)
+    ax.set_xlim(pm.REGION.west, pm.REGION.east)
+    ax.set_ylim(pm.REGION.south, pm.REGION.north)
+    ax.set_xlabel("Longitud")
+    ax.set_ylabel("Latitud")
+    ax.set_title("Probabilidad de tornado por área")
+    fig.colorbar(mesh, ax=ax, label="probabilidad", shrink=0.6)
+    return fig, csv_df, float(prob.min()), float(prob.max())
+
+
 def main() -> None:
     """App de la demo."""
     st.set_page_config(page_title="Demo predictor de tornados", page_icon="🌪️", layout="wide")
@@ -117,39 +163,21 @@ def main() -> None:
 
     st.divider()
     if st.button("🚀 Predecir", type="primary", use_container_width=True):
-        # Imagen -> PNG -> embedding
         buf = io.BytesIO()
         img.resize((224, 224)).save(buf, format="PNG")
         emb, source = image_embedding(buf.getvalue(), n_emb)
 
-        # Vector completo en el orden que espera el modelo
-        row = {}
-        for name, val in feat_vals.items():
-            row[name] = val
-        for i, v in enumerate(emb):
-            row[f"emb_{i:04d}"] = float(v)
-        # alinear a las columnas del modelo (rezagos y pca se completan con NaN/lo disponible)
-        import pandas as pd
-
-        cols = meta["model_columns"]
-        x = pd.DataFrame([{c: row.get(c, np.nan) for c in cols}])
-
-        try:
-            prob = float(model.predict_proba(x)[:, 1][0])
-        except Exception as e:  # noqa: BLE001
-            st.warning(f"El modelo espera columnas reducidas (PCA). Demo con features ERA5 solamente. ({e!s:.80})")
-            # fallback: solo features ERA5 contra un umbral físico simple
-            prob = min(max((feat_vals["cape"] / 2000 + feat_vals["vgp_01"] / 0.2) / 2, 0), 1)
-
-        st.subheader("3. Resultado")
-        st.metric("Probabilidad de entorno tornádico", f"{prob * 100:.1f}%")
-        st.progress(prob)
-        if prob >= 0.5:
-            st.error("⚠️ Entorno FAVORABLE a tornado (según el modelo de demo)")
-        else:
-            st.success("✅ Entorno poco favorable (según el modelo de demo)")
-        st.caption(f"Embedding de la imagen: {source} · {n_emb} dims · "
-                   f"{len(feat_vals)} features ERA5")
+        st.subheader("3. Resultado — probabilidad por área")
+        buf2 = io.BytesIO()
+        img.resize((224, 224)).save(buf2, format="PNG")
+        fig, csv_df, pmin, pmax = _area_map(buf2.getvalue(), feat_vals, n_emb)
+        st.pyplot(fig)
+        st.caption(f"Mapa de calor sobre Chile centro-sur/austral · prob {pmin:.2f}–{pmax:.2f} · "
+                   f"embedding: {source}")
+        st.download_button("⬇️ Descargar CSV de probabilidad por área",
+                           csv_df.to_csv(index=False).encode(), "probabilidades.csv", "text/csv")
+        with st.expander("Ver tabla (celdas de mayor probabilidad)"):
+            st.dataframe(csv_df.nlargest(15, "prob"), use_container_width=True)
 
 
 if __name__ == "__main__":
