@@ -34,6 +34,8 @@ Generador_Sitio y Motor_Alertas leen el mismo CSV_Predicciones de forma independ
 | 2026-10-15 | Configuración por defecto `baseline_era5` | `goes_store` solo trae C13 y `physical` necesita C08 (`goes_wv_ir_max` quedaría NaN). |
 | 2026-10-15 | `git rerere` activado | Las Sincronizaciones repiten los mismos conflictos; rerere reutiliza la resolución. |
 | 2026-10-15 | Cambios locales del usuario al Makefile de diagramas guardados en `stash@{0}` | Árbol limpio para el merge sin perder ese trabajo. No se toca el stash. |
+| 2026-10-15 | Integrar `adapter-bucket`; su `sync_from_bucket.py` reemplaza las tareas 7.2–7.5 | Ya probado con datos reales; evita duplicar el adaptador. |
+| 2026-10-15 | Prototipo `scripts/app/prototype.py` con Modelo_Sustituto | Necesidad de una demo funcional inmediata. |
 
 ## Preguntas abiertas
 
@@ -63,6 +65,8 @@ Errores del Lago_Datos (rama de Nico). El Adaptador no corrige el código de ing
 
 ## Riesgos
 
+- **Bucket del Lago_Datos público (lectura anónima)**: cualquiera puede leer y generar costos de transferencia. Confirmar si es intencional o restringir con política de bucket.
+
 | Riesgo | Impacto | Mitigación o aceptación |
 |---|---|---|
 | Sitio público sin autenticación | Cualquiera con la URL lo ve | Se acepta en v1. Se documenta en `infra/terraform/README.md`; el sitio no contiene credenciales ni datos personales (ver P7). |
@@ -80,6 +84,9 @@ Cambios en el commit de merge 44e9172, más allá de resolver conflictos (Req. 1
 | `scripts/ingest/ingest_cds_year.py`, `ingest_goes.py`, `ingest_goes_multiband.py`, `ingest_ncar_parallel.py`, `verif_cds_vs_ncar.py` | `intentos-nico` | Solo `ruff format` (espaciado), sin cambios de lógica | `make check` (ruff format --check) |
 | `scripts/common.py` | ambas ramas / `main` | `# noqa: UP047` en `retry()` | El `TypeVar` es intencional: compatibilidad con Python 3.9 en EC2 |
 | `pyproject.toml` | ambas ramas | `[tool.pyright] executionEnvironments` para `scripts/ingest` | `cdsapi` solo está instalado en EC2; pyright no debe exigirlo localmente |
+
+| `scripts/model/build_sample_fast.py` | `adapter-bucket` | Anotaciones de tipo y `noqa: E402` | `make check` (ruff ANN001, pyright) |
+| `scripts/model/bedrock_encoder.py` | `feat/multimodal-tornado-predictor-wip` | `.encode("utf-8", "surrogatepass")` en `cache_key` | La prueba de propiedad generaba texto con surrogates y fallaba con `UnicodeEncodeError` |
 
 ## Sincronización con ramas en movimiento
 
@@ -110,3 +117,4 @@ Modos de falla de `make sync` (`scripts/app/sync_branches.py`):
 | Fecha | SHA `intentos-nico` | SHA `feat/multimodal-tornado-predictor-wip` | SHA `origin/main` | Conflictos resueltos | Puerta_Calidad |
 |---|---|---|---|---|---|
 | 2026-10-15 | `ec238df` | `3cd882b` | `cf59a73` | `pyproject.toml` (boto3, extraPaths), `uv.lock` regenerado | `make check` OK (144 tests) |
+| 2026-10-15 | `ec238df` | `3cd882b` (+ `adapter-bucket` `7274812`) | `cf59a73` | `pyproject.toml`/`uv.lock` (`zarr==3.4.1`) | `make check` OK (191 pruebas) |

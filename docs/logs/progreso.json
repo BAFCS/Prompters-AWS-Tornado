@@ -118,5 +118,15 @@
     "decisiones": [
       "publicar merge/datos-modelo sin abrir PR"
     ]
+  },
+  {
+    "timestamp": "2026-10-15T20:41:39Z",
+    "tarea": "merge adapter-bucket + prototipo",
+    "estado": "hecho",
+    "notas": "Merge 979e893 (adapter-bucket 7274812): conflicto pyproject/uv.lock por zarr==3.4.1. Arreglos: lint/tipos build_sample_fast, surrogatepass en bedrock_encoder.cache_key. Prototipo scripts/app/prototype.py probado con datos reales 2019-05-30/31 (5 tornados en el mapa, alertas en Biobío/Araucanía). make check OK. Riesgo: bucket legible anónimo.",
+    "decisiones": [
+      "sync_from_bucket reemplaza tareas 7.2-7.5",
+      "prototipo con Modelo_Sustituto y Leaflet por CDN"
+    ]
   }
 ]

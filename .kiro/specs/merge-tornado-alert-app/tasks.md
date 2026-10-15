@@ -23,6 +23,12 @@ Lenguaje: Python 3 (el del repo), con `unittest`, ruff y pyright mediante `make 
 
 ## Tasks
 
+- [x] 0. Prototipo de demo (`scripts/app/prototype.py`)
+  - Índices ERA5 de `sync_from_bucket` → Modelo_Sustituto → CSV_Predicciones → sitio Leaflet (CDN) → alertas por zona en JSONL
+  - `uv run python scripts/app/prototype.py --start 2019-05-30 --end 2019-05-31 --serve` abre http://localhost:8000
+  - Las tareas 9.3 (infer), 10 (sitio definitivo con Leaflet vendorizado), 12 (alertas configurables) y 14 (run_day) lo reemplazan pieza a pieza
+  - _Requirements: 5.2, 6.2, 6.4, 6.5, 6.6, 6.7, 7.1, 7.8_
+
 - [x] 1. Primera Sincronización de ramas (sin push)
   - [x] 1.1 Crear `merge/datos-modelo` e integrar las cabezas vigentes
     - `git fetch origin` y registrar los SHA de `origin/main`, `origin/intentos-nico` y `origin/feat/multimodal-tornado-predictor-wip` con `git rev-parse` (anotarlos para la tarea 2.6)
@@ -121,20 +127,22 @@ Lenguaje: Python 3 (el del repo), con `unittest`, ruff y pyright mediante `make 
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Adaptador del Lago_Datos
-  - [ ] 7.1 Implementar `scripts/app/awsauth.py`
+
+  > **Cambio 2026-10-15:** la rama `adapter-bucket` (BAFCS) trajo `scripts/model/sync_from_bucket.py`, que ya convierte el Lago_Datos (`era5_store` Zarr y `goes_store` C13/C08) a `era5_indices` y `goes_latlon`, probado con datos reales. Las tareas 7.2–7.5 se reemplazan por ese adaptador; solo queda pendiente 7.12 (Reporte_Calidad encima de `sync_from_bucket`).
+  - [x] 7.1 Implementar `scripts/app/awsauth.py`
     - `CredentialsError` y `check(profile)` con `sts:GetCallerIdentity`; mensaje con el nombre del perfil (`default` si es `None`)
     - _Requirements: 4.11, 8.12_
-  - [ ] 7.2 Implementar `scripts/app/lake.py`
+  - [x] 7.2 Implementar `scripts/app/lake.py` _(reemplazada por `sync_from_bucket.py`)_
     - `Lake`, `LocalLake`, `S3Lake` (s3fs con perfil, `awsauth.check` previo, descarga a temporal y renombrado en caché, Zarr con `fs.get(recursive=True)`), `open_lake` y las funciones de rutas relativas usando solo `lake_layout`
     - _Requirements: 4.5, 4.11, 9.15_
-  - [ ] 7.3 Implementar las funciones ERA5 puras en `scripts/app/adapter.py`
+  - [x] 7.3 Implementar las funciones ERA5 puras en `scripts/app/adapter.py` _(reemplazada por `sync_from_bucket.py`)_
     - `harmonize_cds` (renombrado, `number`/`expver` fuera, `provenance = "ERA5T"` si `expver == 5`), `select_store`, `check_era5` (variables, niveles, dimensiones, fracción de NaN contra umbral) y `era5_indices` (`process_era5.process_day(ds, ds, reg)` con `attrs` de nota y procedencia)
     - Sin literales de prefijos ni niveles propios
     - _Requirements: 4.1, 4.2, 4.8, 4.9_
-  - [ ] 7.4 Implementar las funciones GOES puras en `scripts/app/adapter.py`
+  - [x] 7.4 Implementar las funciones GOES puras en `scripts/app/adapter.py` _(reemplazada por `sync_from_bucket.py`)_
     - `decode_c13`, `encode_c13`, `group_hours`, `check_goes` (forma nativa = `GOES_SHAPE`, advertencia por hora vacía) y `goes_hours` (`mask_and_scale=False`, `nearest_index` una vez por día, `reproject` por hora)
     - _Requirements: 4.3, 4.4, 4.7, 4.9, 4.14_
-  - [ ] 7.5 Implementar `process_day`, el Reporte_Calidad y `main` en `scripts/app/adapter.py`
+  - [x] 7.5 Implementar `process_day`, el Reporte_Calidad y `main` en `scripts/app/adapter.py` _(reemplazada por `sync_from_bucket.py`)_
     - Omisión si ya existe sin errores (salvo `--force`), `era5_store` con caída a `era5_cds_year`, Zarr ilegible como `era5_store_unreadable`, `source_missing` si no hay origen, escrituras atómicas y reporte siempre al final
     - Un día con error no detiene los siguientes; código distinto de cero solo ante credenciales o argumentos inválidos
     - CLI: `--source`, `--profile`, `--start`, `--end`, `--region`, `--out`, `--nan-threshold`, `--force`, `--cache`
@@ -159,15 +167,20 @@ Lenguaje: Python 3 (el del repo), con `unittest`, ruff y pyright mediante `make 
     - `era5_idx` con las 12 `ERA5_FEATURES`, reporte completo, día sin origen con continuidad, credenciales inválidas sin escrituras, fallo de `os.replace`, omisión y `--force`, S3 frente a local con `LocalFileSystem` de fsspec, grilla nativa distinta de 882 × 466
     - _Requirements: 4.1, 4.5, 4.6, 4.9, 4.10, 4.11, 4.12, 4.13_
 
+  - [ ] 7.12 Agregar Reporte_Calidad a `scripts/model/sync_from_bucket.py`
+    - Contar escenas GOES por hora, fracción de NaN ERA5, variables y niveles; escribir `quality_AAAAMMDD.json` con severidades y no marcar como hecho un día subido a medias
+    - Escrituras atómicas (`scripts/app/atomic.py`) en lugar de `common.write` directo
+    - _Requirements: 4.6, 4.7, 4.8, 4.9, 4.12_
+
 - [ ] 8. Checkpoint - Adaptador
   - Ejecutar `make check`; revisar los modos de falla del diseño (credenciales expiradas, día GOES incompleto, ERA5 con NaN, Zarr escrito a medias, ERA5T, índices de capa baja burdos) y registrar hallazgos en la Bitácora_Progreso.
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 9. Ejecutor_Inferencia y lectura de predicciones
-  - [ ] 9.1 Implementar `scripts/app/stub_model.py`
+  - [x] 9.1 Implementar `scripts/app/stub_model.py`
     - `CAPE_REF`, `SHEAR_REF`, `REQUIRED`, `score` (monótona, en [0, 1], NaN → 0) y `predict` con `OUTPUT_COLUMNS` y `config = "sustituto/<config>"`
     - _Requirements: 5.4, 5.7, 5.8_
-  - [ ] 9.2 Implementar `scripts/app/predictions.py`
+  - [x] 9.2 Implementar `scripts/app/predictions.py`
     - `SCHEMA`, `Predictions`, `InvalidPredictions`, `meta_path` y `load` (columnas exactas, `probability` en [0, 1] sin NaN, `hour_utc` 0–23, fecha AAAA-MM-DD, sin duplicados, metadatos con `modelo` válido)
     - _Requirements: 6.10, 7.13_
   - [ ] 9.3 Implementar `scripts/app/infer.py`
@@ -275,7 +288,7 @@ Lenguaje: Python 3 (el del repo), con `unittest`, ruff y pyright mediante `make 
 
 - [ ] 14. Orquestador
   - [ ] 14.1 Implementar `scripts/app/run_day.py`
-    - Encadena `adapter.process_day` → `build_table.main(["--stage", "infer", ...])` (con `extract_goes_features.main` solo si `config != baseline_era5`) → `infer` → `build_site` → `alerts` por cada CSV nuevo
+    - Encadena `sync_from_bucket` (sync_era5/sync_goes) → `build_table.main(["--stage", "infer", ...])` (con `extract_goes_features.main` solo si `config != baseline_era5`) → `infer` → `build_site` → `alerts` por cada CSV nuevo
     - Entrada `en_curso` y luego `hecho` o `bloqueado` por paso; ante `MissingColumnsError` sugiere `--config baseline_era5`
     - CLI: `--source`, `--profile`, `--start`, `--end`, `--config`, `--model-dir`, `--skip-site`, `--skip-alerts`
     - _Requirements: 2.1, 4.10, 5.6, 9.7_

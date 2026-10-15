@@ -40,6 +40,13 @@ Revisé los archivos de las ramas remotas en modo de solo lectura con `raw.githu
   - Los recursos del sitio usan el proveedor por defecto (`us-east-1`), no `aws.ml`.
 - Los SHA citados en este documento (`cf59a73` de `main`, `0167b08`, `7f6de80` y `3cd882b`) son **notas históricas** del momento de la redacción. El procedimiento nunca los usa como valores fijos: cada Sincronización registra los SHA vigentes y verifica contra ellos (Req. 1.1, 1.2 y 1.13).
 
+### Cambio 2026-10-15: adaptador de `adapter-bucket` y prototipo
+
+- Se integró la rama `adapter-bucket` (BAFCS). `scripts/model/sync_from_bucket.py` reemplaza al Adaptador planeado (`lake.py` + `adapter.py`): lee `era5_store/era5_AAAAMMDD.zarr` y `goes_store/AAAA-MM-DD/goes_AAAAMMDD{,_C08}.nc` con acceso anónimo, calcula índices con `process_era5.process_day` (agrega `cape`, que `process_era5` no escribe) y reproyecta GOES por hora con `process_goes`. `run_pipeline.py` orquesta hasta la tabla de entrenamiento.
+- Falta sobre ese adaptador: Reporte_Calidad, escrituras atómicas y fallo explícito por día (tarea 7.12).
+- `scripts/app/prototype.py` es un atajo de demo: índices → Modelo_Sustituto → CSV_Predicciones → sitio Leaflet (CDN, no vendorizado) → alertas JSONL, con `--serve` en `localhost:8000`. Las tareas 9.3, 10, 12 y 14 lo reemplazan pieza a pieza.
+- **Riesgo de seguridad:** el bucket del Lago_Datos es legible sin credenciales (`--no-sign-request`). Confirmar que es intencional.
+
 ### Limitaciones conocidas que la v1 acepta y documenta
 
 - Con solo 6 niveles de presión (1000–300 hPa), los índices de capa baja (`shear_01`, `srh_01`, `lcl`, `vgp_01`) quedan muy suavizados: entre la superficie y 925 hPa no hay niveles intermedios. Se documenta en el Documento_Planificación y en `attrs["note"]` de cada `era5_idx`.
