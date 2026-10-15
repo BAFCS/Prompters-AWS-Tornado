@@ -25,6 +25,7 @@ dependencies = [
     "scipy==1.18.1",
     "streamlit==1.64.0",
     "xarray==2026.9.0",
+    "zarr==3.4.1",
     "xgboost==3.4.1",
 ]
 
