@@ -44,7 +44,10 @@ def run_task(day_iso: str, band: int) -> tuple[str, int, bool, float]:
     try:
         subprocess.run(
             [PY, SCRIPT, "--date", day_iso, "--band", str(band), "--skip-existing"],
-            check=True, capture_output=True, text=True, timeout=3600,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=3600,
         )
         return day_iso, band, True, time.time() - t0
     except Exception:  # noqa: BLE001
@@ -57,7 +60,8 @@ def publish(payload: dict) -> None:
         import boto3
 
         boto3.client("s3", region_name=AWS_REGION).put_object(
-            Bucket=BUCKET, Key="experimentos/progreso_goes_mb.json",
+            Bucket=BUCKET,
+            Key="experimentos/progreso_goes_mb.json",
             Body=json.dumps(payload, ensure_ascii=False).encode(),
             ContentType="application/json",
         )
@@ -93,13 +97,24 @@ def main() -> int:
     tasks = [(d.isoformat(), b) for d in days for b in a.bands]
     tasks = [t for i, t in enumerate(tasks) if i % a.shard_total == a.shard_index]
     total = len(tasks)
-    print(f"GOES multibanda | shard {a.shard_index}/{a.shard_total} | bandas {a.bands} | "
-          f"{len(days)} días | {total} tareas | {a.workers} workers", flush=True)
+    print(
+        f"GOES multibanda | shard {a.shard_index}/{a.shard_total} | bandas {a.bands} | "
+        f"{len(days)} días | {total} tareas | {a.workers} workers",
+        flush=True,
+    )
 
     done = ok = 0
     t0 = time.time()
-    publish({"fuente": "goes_mb", "hecho": 0, "total": total, "porcentaje": 0.0,
-             "estado": "en curso", "bandas": a.bands})
+    publish(
+        {
+            "fuente": "goes_mb",
+            "hecho": 0,
+            "total": total,
+            "porcentaje": 0.0,
+            "estado": "en curso",
+            "bandas": a.bands,
+        }
+    )
 
     with ProcessPoolExecutor(max_workers=a.workers) as ex:
         futs = {ex.submit(run_task, d, b): (d, b) for d, b in tasks}
@@ -110,18 +125,41 @@ def main() -> int:
             pct = 100.0 * done / total
             el = time.time() - t0
             eta = (total - done) / (done / el) if done and el else 0
-            print(f"[{done:4d}/{total}] {pct:5.1f}% | {d} C{b:02d} {'ok' if success else 'FALLO'} "
-                  f"| ETA {eta/60:.0f} min | ok={ok}", flush=True)
-            publish({"fuente": "goes_mb", "hecho": done, "total": total,
-                     "porcentaje": round(pct, 1), "segundos": round(el, 1),
-                     "estado": "en curso", "eta_segundos": round(eta, 1),
-                     "ok": ok, "fallos": done - ok, "bandas": a.bands})
+            print(
+                f"[{done:4d}/{total}] {pct:5.1f}% | {d} C{b:02d} {'ok' if success else 'FALLO'} "
+                f"| ETA {eta / 60:.0f} min | ok={ok}",
+                flush=True,
+            )
+            publish(
+                {
+                    "fuente": "goes_mb",
+                    "hecho": done,
+                    "total": total,
+                    "porcentaje": round(pct, 1),
+                    "segundos": round(el, 1),
+                    "estado": "en curso",
+                    "eta_segundos": round(eta, 1),
+                    "ok": ok,
+                    "fallos": done - ok,
+                    "bandas": a.bands,
+                }
+            )
 
     el = time.time() - t0
-    print(f"=== FIN GOES multibanda: {ok}/{total} tareas OK en {el/60:.1f} min ===", flush=True)
-    publish({"fuente": "goes_mb", "hecho": total, "total": total, "porcentaje": 100.0,
-             "segundos": round(el, 1), "estado": "completado", "ok": ok,
-             "fallos": total - ok, "bandas": a.bands})
+    print(f"=== FIN GOES multibanda: {ok}/{total} tareas OK en {el / 60:.1f} min ===", flush=True)
+    publish(
+        {
+            "fuente": "goes_mb",
+            "hecho": total,
+            "total": total,
+            "porcentaje": 100.0,
+            "segundos": round(el, 1),
+            "estado": "completado",
+            "ok": ok,
+            "fallos": total - ok,
+            "bandas": a.bands,
+        }
+    )
     return 0 if ok == total else 2
 
 

@@ -558,9 +558,7 @@ def main() -> int:
                 import boto3
 
                 key = f"goes_store/{day:%Y-%m-%d}/goes_{day:%Y%m%d}_C{band:02d}.nc"
-                boto3.client("s3", region_name=AWS_REGION).head_object(
-                    Bucket=DEST_BUCKET, Key=key
-                )
+                boto3.client("s3", region_name=AWS_REGION).head_object(Bucket=DEST_BUCKET, Key=key)
                 hecho += 1
                 print(f"  {day}: ya existe en S3, saltado", flush=True)
                 continue

@@ -143,8 +143,16 @@ def main() -> int:
         flush=True,
     )
     publish_progress(
-        progress_s3, a.bucket,
-        {"hecho": 0, "total": total, "porcentaje": 0.0, "mb": 0.0, "segundos": 0, "estado": "iniciando"},
+        progress_s3,
+        a.bucket,
+        {
+            "hecho": 0,
+            "total": total,
+            "porcentaje": 0.0,
+            "mb": 0.0,
+            "segundos": 0,
+            "estado": "iniciando",
+        },
     )
 
     for day, kind in steps:
@@ -161,11 +169,19 @@ def main() -> int:
                 f"| total {total_mb:.1f} MB | {elapsed} s",
                 flush=True,
             )
-            publish_progress(progress_s3, a.bucket, {
-                "hecho": done, "total": total, "porcentaje": round(pct, 1),
-                "mb": round(total_mb, 1), "segundos": elapsed, "estado": "en curso",
-                "ultimo": f"{day} {kind} (saltado)",
-            })
+            publish_progress(
+                progress_s3,
+                a.bucket,
+                {
+                    "hecho": done,
+                    "total": total,
+                    "porcentaje": round(pct, 1),
+                    "mb": round(total_mb, 1),
+                    "segundos": elapsed,
+                    "estado": "en curso",
+                    "ultimo": f"{day} {kind} (saltado)",
+                },
+            )
             continue
 
         request = one.build_pl_request(day) if kind == "pl" else one.build_sfc_request(day)
@@ -184,20 +200,38 @@ def main() -> int:
                 f"| total {total_mb:.1f} MB | {elapsed} s",
                 flush=True,
             )
-            publish_progress(progress_s3, a.bucket, {
-                "hecho": done, "total": total, "porcentaje": round(pct, 1),
-                "mb": round(total_mb, 1), "segundos": elapsed, "estado": "en curso",
-                "ultimo": f"{day} {kind}", "errores": len(errors),
-            })
+            publish_progress(
+                progress_s3,
+                a.bucket,
+                {
+                    "hecho": done,
+                    "total": total,
+                    "porcentaje": round(pct, 1),
+                    "mb": round(total_mb, 1),
+                    "segundos": elapsed,
+                    "estado": "en curso",
+                    "ultimo": f"{day} {kind}",
+                    "errores": len(errors),
+                },
+            )
         except Exception as e:  # noqa: BLE001
             msg = f"{day} {kind}: {e!s:.160}"
             errors.append(msg)
             print(f"[{done:4d}/{total}] {pct:5.1f}% | ERROR {msg}", file=sys.stderr, flush=True)
-            publish_progress(progress_s3, a.bucket, {
-                "hecho": done, "total": total, "porcentaje": round(pct, 1),
-                "mb": round(total_mb, 1), "segundos": int(time.time() - t0),
-                "estado": "en curso con errores", "errores": len(errors), "ultimo_error": msg,
-            })
+            publish_progress(
+                progress_s3,
+                a.bucket,
+                {
+                    "hecho": done,
+                    "total": total,
+                    "porcentaje": round(pct, 1),
+                    "mb": round(total_mb, 1),
+                    "segundos": int(time.time() - t0),
+                    "estado": "en curso con errores",
+                    "errores": len(errors),
+                    "ultimo_error": msg,
+                },
+            )
 
     elapsed = int(time.time() - t0)
     estado = "completo" if not errors else f"completo con {len(errors)} errores"
@@ -209,10 +243,19 @@ def main() -> int:
         print("Errores:", flush=True)
         for e in errors:
             print(f"  - {e}", flush=True)
-    publish_progress(progress_s3, a.bucket, {
-        "hecho": done, "total": total, "porcentaje": 100.0,
-        "mb": round(total_mb, 1), "segundos": elapsed, "estado": estado, "errores": len(errors),
-    })
+    publish_progress(
+        progress_s3,
+        a.bucket,
+        {
+            "hecho": done,
+            "total": total,
+            "porcentaje": 100.0,
+            "mb": round(total_mb, 1),
+            "segundos": elapsed,
+            "estado": estado,
+            "errores": len(errors),
+        },
+    )
     return 0 if not errors else 2
 
 

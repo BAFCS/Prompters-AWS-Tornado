@@ -153,7 +153,7 @@ def s3() -> s3fs.S3FileSystem:
     return s3fs.S3FileSystem(anon=True)
 
 
-def retry(fn: Callable[..., T], *args: object, attempts: int = 5) -> T:
+def retry(fn: Callable[..., T], *args: object, attempts: int = 5) -> T:  # noqa: UP047 (py3.9 en EC2)
     """Llama ``fn(*args)`` y reintenta ante errores de red, esperando 2, 4, 8… segundos entre intentos."""
     for k in range(attempts):
         try:
@@ -222,7 +222,9 @@ def latlon(x: np.ndarray, y: np.ndarray, pr: h5py.Dataset) -> tuple[np.ndarray, 
     return lat, lon
 
 
-def latlon_abi(h: h5py.File, stride: int = 1) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def latlon_abi(
+    h: h5py.File, stride: int = 1
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Coordenadas de la grilla fija del ABI de un archivo GOES abierto ``h``.
 
     Devuelve ``(x, y, lat, lon)``: los ángulos de barrido en radianes (1D) y la latitud y longitud

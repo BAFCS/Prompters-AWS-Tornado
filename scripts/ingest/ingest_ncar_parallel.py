@@ -115,9 +115,21 @@ def main() -> int:
     ok = 0
     t0 = time.time()
     times: list[float] = []
-    publish({"fuente": "ncar", "dia_actual": 0, "dia_total": total, "hecho": 0, "total": total,
-             "porcentaje": 0.0, "mb": 0.0, "segundos": 0.0, "estado": "en curso (paralelo)",
-             "eta_segundos": 0.0, "workers": a.workers})
+    publish(
+        {
+            "fuente": "ncar",
+            "dia_actual": 0,
+            "dia_total": total,
+            "hecho": 0,
+            "total": total,
+            "porcentaje": 0.0,
+            "mb": 0.0,
+            "segundos": 0.0,
+            "estado": "en curso (paralelo)",
+            "eta_segundos": 0.0,
+            "workers": a.workers,
+        }
+    )
 
     with ProcessPoolExecutor(max_workers=a.workers) as ex:
         futs = {ex.submit(run_one_day, d.isoformat()): d for d in days}
@@ -135,21 +147,47 @@ def main() -> int:
             avg = sum(times) / len(times) if times else 0
             print(
                 f"[{done:3d}/{total}] {pct:5.1f}% | {day_iso} {'ok' if success else 'FALLO'} "
-                f"| medio/dia {avg:.0f}s | ETA {eta/60:.0f} min | ok={ok}",
+                f"| medio/dia {avg:.0f}s | ETA {eta / 60:.0f} min | ok={ok}",
                 flush=True,
             )
-            publish({"fuente": "ncar", "dia_actual": done, "dia_total": total, "hecho": done,
-                     "total": total, "porcentaje": round(pct, 1), "mb": 0.0,
-                     "segundos": round(elapsed, 1), "estado": "en curso (paralelo)",
-                     "eta_segundos": round(eta, 1), "workers": a.workers,
-                     "tiempo_medio_dia_s": round(avg, 1), "ok": ok, "fallos": done - ok})
+            publish(
+                {
+                    "fuente": "ncar",
+                    "dia_actual": done,
+                    "dia_total": total,
+                    "hecho": done,
+                    "total": total,
+                    "porcentaje": round(pct, 1),
+                    "mb": 0.0,
+                    "segundos": round(elapsed, 1),
+                    "estado": "en curso (paralelo)",
+                    "eta_segundos": round(eta, 1),
+                    "workers": a.workers,
+                    "tiempo_medio_dia_s": round(avg, 1),
+                    "ok": ok,
+                    "fallos": done - ok,
+                }
+            )
 
     elapsed = time.time() - t0
-    print(f"=== FIN ncar paralelo: {ok}/{total} días OK en {elapsed/60:.1f} min ===", flush=True)
-    publish({"fuente": "ncar", "dia_actual": total, "dia_total": total, "hecho": total,
-             "total": total, "porcentaje": 100.0, "mb": 0.0, "segundos": round(elapsed, 1),
-             "estado": "completado", "eta_segundos": 0.0, "workers": a.workers,
-             "ok": ok, "fallos": total - ok})
+    print(f"=== FIN ncar paralelo: {ok}/{total} días OK en {elapsed / 60:.1f} min ===", flush=True)
+    publish(
+        {
+            "fuente": "ncar",
+            "dia_actual": total,
+            "dia_total": total,
+            "hecho": total,
+            "total": total,
+            "porcentaje": 100.0,
+            "mb": 0.0,
+            "segundos": round(elapsed, 1),
+            "estado": "completado",
+            "eta_segundos": 0.0,
+            "workers": a.workers,
+            "ok": ok,
+            "fallos": total - ok,
+        }
+    )
     return 0 if ok == total else 2
 
 
