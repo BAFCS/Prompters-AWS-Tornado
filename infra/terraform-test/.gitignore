@@ -1,0 +1,11 @@
+# Estado y artefactos locales de Terraform: nunca se versionan (contienen IDs/ARNs y binarios).
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+crash.log
+*.tfvars
+
+# salidas temporales de terraform (no versionar)
+*.txt
+exp_logs/

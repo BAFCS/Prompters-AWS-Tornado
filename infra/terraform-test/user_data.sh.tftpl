@@ -1,0 +1,53 @@
+#!/bin/bash
+# user-data de la EC2: instala Docker, clona el repositorio, baja los datos desde S3, construye la
+# imagen del visor con el Dockerfile del repo y la deja corriendo en el puerto 8501.
+# Todo ocurre en la nube; no se construye ni se prueba nada en el equipo local.
+set -euxo pipefail
+
+exec > >(tee /var/log/viewer-setup.log) 2>&1
+echo "=== Inicio del aprovisionamiento del visor: $(date -u) ==="
+
+DATA_BUCKET="${data_bucket}"
+REGION="${region}"
+REPO_URL="${repo_url}"
+REPO_BRANCH="${repo_branch}"
+APP_DIR=/opt/mesocyclonic
+
+# --- Dependencias del sistema: Docker, git y el CLI de AWS ---------------------------------
+dnf update -y
+dnf install -y docker git
+
+systemctl enable --now docker
+
+# AWS CLI v2 (Amazon Linux 2023 lo trae; si falta, se instala).
+if ! command -v aws >/dev/null 2>&1; then
+  dnf install -y awscli || {
+    curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+    (cd /tmp && unzip -q awscliv2.zip && ./aws/install)
+  }
+fi
+
+# --- Código del visor -----------------------------------------------------------------------
+rm -rf "$APP_DIR"
+git clone --depth 1 --branch "$REPO_BRANCH" "$REPO_URL" "$APP_DIR"
+cd "$APP_DIR"
+
+# --- Datos desde S3 a ./data (lo que lee el visor) ------------------------------------------
+mkdir -p "$APP_DIR/data"
+aws s3 sync "s3://$DATA_BUCKET/data/" "$APP_DIR/data/" --region "$REGION"
+echo "Datos descargados desde S3:"
+find "$APP_DIR/data" -maxdepth 3 -type f | head -50
+
+# --- Imagen del visor con el Dockerfile del repo --------------------------------------------
+docker build -t mesocyclonic-viewer "$APP_DIR"
+
+# --- Contenedor del visor, reinicio automático, data/ montado -------------------------------
+docker rm -f viewer 2>/dev/null || true
+docker run -d \
+  --name viewer \
+  --restart unless-stopped \
+  -p 8501:8501 \
+  -v "$APP_DIR/data:/app/data" \
+  mesocyclonic-viewer
+
+echo "=== Visor en marcha: $(date -u) ==="
