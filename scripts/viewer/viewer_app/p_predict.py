@@ -71,14 +71,34 @@ def _goes_real(day: str) -> tuple[bytes, list[str]] | None:
 
 
 def _goes_image(raw: bytes, hour_idx: int) -> bytes:
-    """Convierte el barrido ``hour_idx`` de C13 en un PNG (tope frío resaltado)."""
+    """Convierte el barrido ``hour_idx`` de C13 en un PNG RECORTADO a la región del modelo.
+
+    El modelo se entrenó en el centro-sur/austral (lat NORTH..SOUTH, lon WEST..EAST). La imagen del
+    bucket cubre un área más amplia, así que se reproyecta de la grilla ABI (lat/lon 2-D) a una
+    grilla regular de esa región, para que la imagen y el mapa de probabilidad coincidan.
+    """
     import xarray as xr
+    from scipy.spatial import cKDTree
 
     ds = xr.load_dataset(io.BytesIO(raw))
     arr = ds["C13"].isel(time=hour_idx).values.astype(float)
-    arr = np.nan_to_num(arr, nan=float(np.nanmean(arr)))
-    lo, hi = np.percentile(arr, 2), np.percentile(arr, 98)
-    norm = np.clip((arr - lo) / (hi - lo + 1e-9), 0, 1)
+    lat2d = ds["lat"].values
+    lon2d = ds["lon"].values
+
+    # grilla regular de la región del modelo (misma extensión que el mapa)
+    glat = np.arange(NORTH, SOUTH - 0.05, -0.05)
+    glon = np.arange(WEST, EAST + 0.05, 0.05)
+    gla, glo = np.meshgrid(glat, glon, indexing="ij")
+
+    ok = np.isfinite(lat2d.ravel()) & np.isfinite(lon2d.ravel()) & np.isfinite(arr.ravel())
+    k = np.cos(np.deg2rad((NORTH + SOUTH) / 2))
+    tree = cKDTree(np.column_stack([lat2d.ravel()[ok], lon2d.ravel()[ok] * k]))
+    _, idx = tree.query(np.column_stack([gla.ravel(), glo.ravel() * k]))
+    sub = arr.ravel()[ok][idx].reshape(gla.shape)
+
+    sub = np.nan_to_num(sub, nan=float(np.nanmean(sub)))
+    lo, hi = np.percentile(sub, 2), np.percentile(sub, 98)
+    norm = np.clip((sub - lo) / (hi - lo + 1e-9), 0, 1)
     img8 = (255 * (1 - norm)).astype("uint8")  # invertido: nubes frías claras
     from PIL import Image
 
