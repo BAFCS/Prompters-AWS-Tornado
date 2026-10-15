@@ -60,6 +60,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
 import sys
 import time
@@ -85,8 +86,9 @@ PRODUCT = "ABI-L2-CMIPF"
 # Fecha de corte de GOES-16 a GOES-19 (misma que usa el pipeline).
 G19_SWITCH = dt.datetime(2025, 4, 4, 15)
 
-# Bucket y prefijo de destino del experimento.
-DEST_BUCKET = "mesocyclonic-test-data-20261015013924290100000003"
+# Bucket y prefijo de destino del experimento. El bucket se puede sobreescribir con la variable de
+# entorno DEST_BUCKET, para que otro equipo escriba en SU propio bucket sin tocar el código.
+DEST_BUCKET = os.environ.get("DEST_BUCKET", "mesocyclonic-test-data-20261015013924290100000003")
 DEST_PREFIX = "goes_store"
 PROGRESS_KEY = "experimentos/progreso_goes.json"
 AWS_REGION = "us-east-1"
@@ -155,7 +157,8 @@ def read_scene(fs: s3fs.S3FileSystem, path: str, v: dict) -> dict:
     """
     with fs.open(path, "rb", block_size=2**20) as f, h5py.File(f, "r") as h:
         d = common.dataset(h, "CMI")
-        data = d[v["r0"] : v["r1"], v["c0"] : v["c1"]]
+        s = v.get("stride", 1)
+        data = d[v["r0"] * s : v["r1"] * s : s, v["c0"] * s : v["c1"] * s : s]
         return {
             "time": np.datetime64(goes.scan_start(path), "ms"),
             "satellite": common.text(h.attrs.get("platform_ID", "?")),
@@ -236,7 +239,11 @@ def read_day(fs: s3fs.S3FileSystem, day: dt.date, band: int, reg: common.Region)
     scenes = [p for ps in by_hour.values() for p in ps]
     if not scenes:
         return []
-    v = common.retry(goes.window, scenes[0], reg, attempts=RETRY_ATTEMPTS)
+    # Submuestreo según resolución nativa de la banda: C02 es 0,5 km (stride 4 -> 2 km) y las
+    # bandas 1/3/5 son 1 km (stride 2). El resto son 2 km (stride 1). Evita el OOM del meshgrid
+    # full-disk y deja todas las bandas en la misma grilla de 2 km (apilables para el modelo).
+    stride = {2: 4, 1: 2, 3: 2, 5: 2}.get(band, 1)
+    v = common.retry(goes.window, scenes[0], reg, stride, attempts=RETRY_ATTEMPTS)
     parts: list[dict] = []
     for path in scenes:
         part = common.retry(read_scene, fs, path, v, attempts=RETRY_ATTEMPTS)
@@ -304,10 +311,14 @@ def encoding(parts: list[dict], band: int) -> dict[str, dict]:
     return enc
 
 
-def dest_path(day: dt.date, fmt: str) -> str:
-    """Ruta ``s3://`` de destino para ``day`` según el formato (``nc`` o ``zarr``)."""
+def dest_path(day: dt.date, fmt: str, band: int) -> str:
+    """Ruta ``s3://`` de destino para ``day`` y ``band`` (``nc`` o ``zarr``).
+
+    Incluye la banda en el nombre (``goes_YYYYMMDD_CNN.nc``) para que varias bandas del mismo día
+    no se pisen entre sí. El prefijo por banda es ``goes_store/<fecha>/``.
+    """
     suffix = "nc" if fmt == "nc" else "zarr"
-    return f"s3://{DEST_BUCKET}/{DEST_PREFIX}/{day:%Y-%m-%d}/goes_{day:%Y%m%d}.{suffix}"
+    return f"s3://{DEST_BUCKET}/{DEST_PREFIX}/{day:%Y-%m-%d}/goes_{day:%Y%m%d}_C{band:02d}.{suffix}"
 
 
 def dest_fs() -> s3fs.S3FileSystem:
@@ -406,7 +417,7 @@ def ingest_day(
     enc = encoding(parts, band)
 
     if upload:
-        dest = dest_path(day, fmt)
+        dest = dest_path(day, fmt, band)
         if fmt == "nc":
             write_netcdf_s3(ds, enc, dest)
         else:
@@ -546,7 +557,7 @@ def main() -> int:
             try:
                 import boto3
 
-                key = f"goes_store/{day:%Y-%m-%d}/goes_{day:%Y%m%d}.nc"
+                key = f"goes_store/{day:%Y-%m-%d}/goes_{day:%Y%m%d}_C{band:02d}.nc"
                 boto3.client("s3", region_name=AWS_REGION).head_object(
                     Bucket=DEST_BUCKET, Key=key
                 )

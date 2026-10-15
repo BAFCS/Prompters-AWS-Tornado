@@ -68,17 +68,23 @@ def files(day: dt.date, hours: range) -> dict[int, list[str]]:
     return out
 
 
-def window(path: str, reg: common.Region) -> dict:
-    """Rectángulo de la grilla fija (filas y columnas) que cubre ``reg``, con sus coordenadas."""
+def window(path: str, reg: common.Region, stride: int = 1) -> dict:
+    """Rectángulo de la grilla fija (filas y columnas) que cubre ``reg``, con sus coordenadas.
+
+    ``stride`` submuestrea la grilla nativa de la banda antes de calcular lat/lon (p. ej. 4 lleva
+    C02 de 0,5 km a 2 km). Evita el meshgrid full-disk de las bandas de alta resolución, que agota
+    la RAM. ``r0/r1/c0/c1`` quedan en coordenadas de la grilla decimada; ``read_scene`` reconstruye
+    los índices nativos multiplicando por ``stride``.
+    """
     fs = common.s3()
     with fs.open(path, "rb", block_size=2**20) as f, h5py.File(f, "r") as h:
-        x, y, lat, lon = common.latlon_abi(h)
+        x, y, lat, lon = common.latlon_abi(h, stride=stride)
     inside = reg.contains(np.nan_to_num(lat, nan=99), np.nan_to_num(lon, nan=999))
     rows, cols = np.flatnonzero(inside.any(axis=1)), np.flatnonzero(inside.any(axis=0))
     assert rows.size, f"la región {reg.name} no cae dentro del disco del satélite"
     r0, r1, c0, c1 = rows[0], rows[-1] + 1, cols[0], cols[-1] + 1
     return {
-        "r0": r0, "r1": r1, "c0": c0, "c1": c1,
+        "r0": r0, "r1": r1, "c0": c0, "c1": c1, "stride": stride,
         "x": x[c0:c1], "y": y[r0:r1], "lat": lat[r0:r1, c0:c1], "lon": lon[r0:r1, c0:c1],
     }  # fmt: skip
 

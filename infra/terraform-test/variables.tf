@@ -86,3 +86,11 @@ variable "stop_after_training" {
   type        = bool
   default     = true
 }
+
+# --- Acceso público al bucket de datos ------------------------------------------------------
+
+variable "data_bucket_public" {
+  description = "Si es true, el bucket de datos permite lectura anónima (GetObject + ListBucket). Para compartir el data lake con el equipo durante la hackathon. En dev debe quedar false. Recuerda revertir al cierre."
+  type        = bool
+  default     = false
+}

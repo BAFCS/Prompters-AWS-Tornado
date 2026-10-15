@@ -36,3 +36,9 @@ enable_training = false
 #   max_event_days         = 6               # prueba rápida
 #   unlabeled_days         = 4
 #   stop_after_training    = true            # se apaga sola al terminar
+
+# --- Bucket de datos PÚBLICO para compartir el data lake con el equipo ---
+# Los datos (ERA5 + GOES recortados a Chile) no son sensibles. Lectura anónima
+# (GetObject + ListBucket). IMPORTANTE: revertir a false al cierre de la hackathon.
+# El acceso sigue siendo solo-TLS (DenyInsecureTransport se mantiene).
+data_bucket_public = true

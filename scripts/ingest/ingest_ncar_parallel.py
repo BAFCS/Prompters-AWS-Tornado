@@ -78,16 +78,30 @@ def publish(payload: dict) -> None:
 def main() -> int:
     """Punto de entrada: reparte el rango en shards y corre ``--workers`` días en paralelo."""
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--start", required=True, help="día inicial AAAA-MM-DD")
-    p.add_argument("--end", required=True, help="día final AAAA-MM-DD inclusive")
+    p.add_argument("--start", help="día inicial AAAA-MM-DD (rango continuo)")
+    p.add_argument("--end", help="día final AAAA-MM-DD inclusive (rango continuo)")
+    p.add_argument(
+        "--days-file",
+        help="archivo JSON con una lista de días AAAA-MM-DD (bloques dispersos); "
+        "alternativa a --start/--end para ingerir solo días alrededor de eventos",
+    )
     p.add_argument("--workers", type=int, default=12, help="días en paralelo (red es el cuello)")
     p.add_argument("--shard-index", type=int, default=0, help="índice de esta instancia (0..N-1)")
     p.add_argument("--shard-total", type=int, default=1, help="número de instancias de la flota")
     a = p.parse_args()
 
-    start = dt.date.fromisoformat(a.start)
-    end = dt.date.fromisoformat(a.end)
-    all_days = date_range(start, end)
+    if a.days_file:
+        with open(a.days_file) as f:
+            all_days = [dt.date.fromisoformat(s) for s in json.load(f)]
+        all_days.sort()
+        start, end = all_days[0], all_days[-1]
+    elif a.start and a.end:
+        start = dt.date.fromisoformat(a.start)
+        end = dt.date.fromisoformat(a.end)
+        all_days = date_range(start, end)
+    else:
+        print("ERROR: usa --start/--end o --days-file", file=sys.stderr)
+        return 1
     # Esta instancia toma solo los días de su shard.
     days = [d for i, d in enumerate(all_days) if i % a.shard_total == a.shard_index]
     total = len(days)
