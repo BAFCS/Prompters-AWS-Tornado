@@ -306,7 +306,9 @@ def page() -> None:
             else:
                 st.info("Sin imagen: se usa una de ejemplo.")
                 img = Image.fromarray((np.random.default_rng(0).random((224, 224, 3)) * 255).astype("uint8"))
-        st.image(img, width=260)
+        # Placeholder: aquí se muestra la imagen y, al predecir, se reemplaza por el mapa de probabilidad.
+        visor = st.empty()
+        visor.image(img, width=260)
 
     with c2:
         if solo:
@@ -324,9 +326,10 @@ def page() -> None:
 
         lat, lon = _grid()
         prob = _physical_prob(_field_grid(feat_vals, lat, lon), lat, lon)
-        st.plotly_chart(_figure(png, prob, lat, lon), use_container_width=True)
-        st.caption(f"Probabilidad por área · min {prob.min():.2f} / máx {prob.max():.2f} · "
-                   f"embedding de la imagen: {source}")
+        # La predicción reemplaza la imagen en el mismo lugar (no aparece abajo).
+        visor.plotly_chart(_figure(png, prob, lat, lon), use_container_width=True)
+        st.caption(f"Probabilidad por área sobre la imagen · min {prob.min():.2f} / máx {prob.max():.2f} · "
+                   f"embedding: {source}")
 
         import pandas as pd
 
