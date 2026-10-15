@@ -84,7 +84,9 @@ def cache_key(png: bytes, model_id: str, dim: int, recipe_version: str) -> str:
         if "|" in value:
             raise ValueError(f"{name} no puede contener '|': {value!r}")
     digest = hashlib.sha256(png).hexdigest()
-    return hashlib.sha256(f"{digest}|{model_id}|{int(dim)}|{recipe_version}".encode()).hexdigest()
+    return hashlib.sha256(
+        f"{digest}|{model_id}|{int(dim)}|{recipe_version}".encode("utf-8", "surrogatepass")
+    ).hexdigest()
 
 
 def error_code(e: BaseException) -> str:

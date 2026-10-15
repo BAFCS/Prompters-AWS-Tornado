@@ -83,10 +83,16 @@ def sync_era5(bucket: str, day: dt.date, region: str, force: bool) -> bool:
     # Lo añadimos al índice desde el sfc, alineado al mismo eje temporal.
     if "cape" in sfc:
         cape = np.maximum(sfc["cape"].sel(time=idx["time"]).values, 0.0)
-        idx["cape"] = (("time", "latitude", "longitude"), cape.astype("f4"),
-                       {"long_name": "Convective available potential energy", "units": "J kg-1"})
+        idx["cape"] = (
+            ("time", "latitude", "longitude"),
+            cape.astype("f4"),
+            {"long_name": "Convective available potential energy", "units": "J kg-1"},
+        )
     common.write(idx, out_file)
-    print(f"  ERA5 {day}: índices escritos ({dict(idx.sizes)}, cape={'sí' if 'cape' in idx else 'no'})", flush=True)
+    print(
+        f"  ERA5 {day}: índices escritos ({dict(idx.sizes)}, cape={'sí' if 'cape' in idx else 'no'})",
+        flush=True,
+    )
     return True
 
 
@@ -120,7 +126,9 @@ def sync_goes(bucket: str, day: dt.date, region: str, force: bool) -> bool:
         r08 = _reproject_band(c08, "C08", reg)
         bands["C08"] = r08["C08"]
     else:
-        print(f"  GOES {day}: aviso, sin C08 (goes_wv_ir_max/cooling quedarán limitadas)", flush=True)
+        print(
+            f"  GOES {day}: aviso, sin C08 (goes_wv_ir_max/cooling quedarán limitadas)", flush=True
+        )
 
     merged = xr.Dataset(bands, coords=r13.coords)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -146,12 +154,16 @@ def sync_goes(bucket: str, day: dt.date, region: str, force: bool) -> bool:
 
 def main() -> None:
     """Punto de entrada: sincroniza ERA5 y/o GOES del bucket al formato del proyecto."""
-    p = argparse.ArgumentParser(description="Trae datos del bucket del equipo al formato del modelo.")
+    p = argparse.ArgumentParser(
+        description="Trae datos del bucket del equipo al formato del modelo."
+    )
     p.add_argument("--bucket", required=True, help="Bucket S3 público (sin s3://)")
     p.add_argument("--start", required=True, help="Primer día AAAA-MM-DD")
     p.add_argument("--end", default="", help="Último día AAAA-MM-DD (por defecto = start)")
     p.add_argument("--region", default="south-central-austral", help="Región de recorte")
-    p.add_argument("--only", choices=["era5", "goes", "both"], default="both", help="Qué sincronizar")
+    p.add_argument(
+        "--only", choices=["era5", "goes", "both"], default="both", help="Qué sincronizar"
+    )
     p.add_argument("--force", action="store_true", help="Recalcular aunque ya exista")
     a = p.parse_args()
 

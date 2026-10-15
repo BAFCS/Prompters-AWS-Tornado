@@ -41,7 +41,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
 
-import contextlib
+import contextlib  # noqa: E402
 
 import process_era5 as pe  # noqa: E402
 
@@ -50,8 +50,18 @@ GOES16_START = dt.date(2017, 12, 1)
 TEST_FROM = dt.date(2023, 1, 1)  # split temporal: eventos recientes a test
 
 ERA5_FEATURES = [
-    "cape", "shear_01", "shear_03", "shear_06", "srh_01", "srh_03",
-    "lcl", "gamma_03", "gamma_75", "vgp_01", "stp_lm", "sherbs3",
+    "cape",
+    "shear_01",
+    "shear_03",
+    "shear_06",
+    "srh_01",
+    "srh_03",
+    "lcl",
+    "gamma_03",
+    "gamma_75",
+    "vgp_01",
+    "stp_lm",
+    "sherbs3",
 ]
 
 
@@ -132,8 +142,11 @@ def goes_features_at(c13: xr.DataArray | None, lat0: float, lon0: float, hour: i
     hours = pd.to_datetime(c13["time"].values).hour.to_numpy()
     ti = int(np.argmin(np.abs(hours - hour)))
     half = 6
-    crop = c13.isel(time=ti, y=slice(max(yi - half, 0), yi + half + 1),
-                    x=slice(max(xi - half, 0), xi + half + 1)).values
+    crop = c13.isel(
+        time=ti,
+        y=slice(max(yi - half, 0), yi + half + 1),
+        x=slice(max(xi - half, 0), xi + half + 1),
+    ).values
     crop = crop[np.isfinite(crop)]
     if crop.size == 0:
         return nan
@@ -149,9 +162,17 @@ def _nearest(a: np.ndarray, v: float) -> int:
     return int(np.abs(a - v).argmin())
 
 
-def rows_for_day(bucket: str, day: dt.date, events: pd.DataFrame, use_goes: bool,
-                 stride: int, neighbor: int, hours_win: int, ratio: int,
-                 rng: np.random.Generator) -> list[dict]:
+def rows_for_day(
+    bucket: str,
+    day: dt.date,
+    events: pd.DataFrame,
+    use_goes: bool,
+    stride: int,
+    neighbor: int,
+    hours_win: int,
+    ratio: int,
+    rng: np.random.Generator,
+) -> list[dict]:
     """Filas (positivos + negativos) de un día."""
     fields, lat, lon, hours = era5_indices(bucket, day)
     nt, ny, nx = len(hours), len(lat), len(lon)
@@ -172,26 +193,59 @@ def rows_for_day(bucket: str, day: dt.date, events: pd.DataFrame, use_goes: bool
                     yi, xi = yi0 + di, xi0 + dj
                     if 0 <= yi < ny and 0 <= xi < nx:
                         pos_cells.add((ti, yi, xi))
-                        rows.append(_mk(fields, ti, yi, xi, 1, eid, day, split,
-                                        c13, float(lat[yi]), float(lon[xi]), hr))
+                        rows.append(
+                            _mk(
+                                fields,
+                                ti,
+                                yi,
+                                xi,
+                                1,
+                                eid,
+                                day,
+                                split,
+                                c13,
+                                float(lat[yi]),
+                                float(lon[xi]),
+                                hr,
+                            )
+                        )
 
     n_neg = max(len(rows) * ratio, ratio)
     got, tries = 0, 0
     while got < n_neg and tries < n_neg * 20:
         tries += 1
         ti, yi, xi = int(rng.integers(nt)), int(rng.integers(ny)), int(rng.integers(nx))
-        if any(abs(ti - a) <= hours_win and abs(yi - b) <= neighbor and abs(xi - c) <= neighbor
-               for a, b, c in pos_cells):
+        if any(
+            abs(ti - a) <= hours_win and abs(yi - b) <= neighbor and abs(xi - c) <= neighbor
+            for a, b, c in pos_cells
+        ):
             continue
-        rows.append(_mk(fields, ti, yi, xi, 0, f"{day:%Y%m%d}-neg", day, split,
-                        c13, float(lat[yi]), float(lon[xi]), int(hours[ti])))
+        rows.append(
+            _mk(
+                fields,
+                ti,
+                yi,
+                xi,
+                0,
+                f"{day:%Y%m%d}-neg",
+                day,
+                split,
+                c13,
+                float(lat[yi]),
+                float(lon[xi]),
+                int(hours[ti]),
+            )
+        )
         got += 1
     return rows
 
 
-def _mk(fields, ti, yi, xi, label, eid, day, split, c13, lat0, lon0, hr) -> dict:
+def _mk(  # noqa: PLR0913
+    fields: dict, ti: int, yi: int, xi: int, label: int, eid: str, day: dt.date, split: str,
+    c13: xr.DataArray | None, lat0: float, lon0: float, hr: int,
+) -> dict:  # fmt: skip
     """Arma una fila: features ERA5 + GOES + metadatos."""
-    r = {k: float(v[ti, yi, xi]) for k, v in fields.items()}
+    r: dict[str, object] = {k: float(v[ti, yi, xi]) for k, v in fields.items()}
     r.update(goes_features_at(c13, lat0, lon0, hr))
     r.update({"label": label, "event_id": eid, "day": str(day), "split": split})
     return r
@@ -199,11 +253,15 @@ def _mk(fields, ti, yi, xi, label, eid, day, split, c13, lat0, lon0, hr) -> dict
 
 def main() -> None:
     """Punto de entrada."""
-    p = argparse.ArgumentParser(description="Muestreo rápido desde el bucket (para la presentación).")
+    p = argparse.ArgumentParser(
+        description="Muestreo rápido desde el bucket (para la presentación)."
+    )
     p.add_argument("--bucket", required=True)
     p.add_argument("--out", default="data/model/tabla.parquet")
     p.add_argument("--goes", action="store_true", help="Añadir features GOES C13 (más lento)")
-    p.add_argument("--goes-stride", type=int, default=4, help="Submuestreo de la grilla GOES (4 = ~8 km)")
+    p.add_argument(
+        "--goes-stride", type=int, default=4, help="Submuestreo de la grilla GOES (4 = ~8 km)"
+    )
     p.add_argument("--neighbor", type=int, default=3)
     p.add_argument("--hours", type=int, default=2)
     p.add_argument("--ratio", type=int, default=10)
@@ -215,17 +273,25 @@ def main() -> None:
     avail = available_days(a.bucket)
     event_days = sorted(set(events["date"]) & set(avail))
     neg_days = [d for d in avail if d not in set(events["date"])][: a.max_neg_days]
-    days = [dt.date.fromisoformat(d) for d in a.days] if a.days else sorted(set(event_days) | set(neg_days))
+    days = (
+        [dt.date.fromisoformat(d) for d in a.days]
+        if a.days
+        else sorted(set(event_days) | set(neg_days))
+    )
 
-    print(f"Bucket: {len(avail)} días ERA5 | con evento: {len(event_days)} | negativos: {len(neg_days)}", flush=True)
+    print(
+        f"Bucket: {len(avail)} días ERA5 | con evento: {len(event_days)} | negativos: {len(neg_days)}",
+        flush=True,
+    )
     print(f"Procesando {len(days)} días (GOES={'sí' if a.goes else 'no'})", flush=True)
 
     rng = np.random.default_rng(0)
     all_rows: list[dict] = []
     for day in days:
         try:
-            r = rows_for_day(a.bucket, day, events, a.goes, a.goes_stride,
-                             a.neighbor, a.hours, a.ratio, rng)
+            r = rows_for_day(
+                a.bucket, day, events, a.goes, a.goes_stride, a.neighbor, a.hours, a.ratio, rng
+            )
             npos = sum(x["label"] == 1 for x in r)
             print(f"  {day}: {len(r)} filas ({npos} pos)", flush=True)
             all_rows.extend(r)
@@ -236,9 +302,15 @@ def main() -> None:
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     table.to_parquet(a.out, index=False)
     print(f"\n=== TABLA LISTA: {a.out} ===", flush=True)
-    print(f"filas: {len(table)} | pos: {int((table['label']==1).sum())} | neg: {int((table['label']==0).sum())}", flush=True)
+    print(
+        f"filas: {len(table)} | pos: {int((table['label'] == 1).sum())} | neg: {int((table['label'] == 0).sum())}",
+        flush=True,
+    )
     print(f"columnas: {list(table.columns)}", flush=True)
-    print(f"train/test: {int((table['split']=='train').sum())}/{int((table['split']=='test').sum())}", flush=True)
+    print(
+        f"train/test: {int((table['split'] == 'train').sum())}/{int((table['split'] == 'test').sum())}",
+        flush=True,
+    )
 
 
 if __name__ == "__main__":

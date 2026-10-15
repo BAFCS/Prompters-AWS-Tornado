@@ -80,16 +80,29 @@ def _sync_one(bucket: str, day: dt.date, with_goes: bool) -> tuple[str, int]:
     """Sincroniza un día del bucket (ERA5 y, si procede, GOES). Para el pool paralelo."""
     only = "both" if with_goes else "era5"
     code = subprocess.run(
-        [sys.executable, str(SYNC), "--bucket", bucket, "--start", day.isoformat(),
-         "--region", REGION, "--only", only],
-        cwd=ROOT, timeout=1800,
+        [
+            sys.executable,
+            str(SYNC),
+            "--bucket",
+            bucket,
+            "--start",
+            day.isoformat(),
+            "--region",
+            REGION,
+            "--only",
+            only,
+        ],
+        cwd=ROOT,
+        timeout=1800,
     ).returncode
     return (day.isoformat(), code)
 
 
 def sync_bucket(bucket: str, days: list[dt.date], with_goes: bool, workers: int) -> None:
     """Paso 1: baja y adapta los días del bucket en paralelo."""
-    print(f"[1/5] Sync bucket: {len(days)} días, {workers} en paralelo, GOES={with_goes}", flush=True)
+    print(
+        f"[1/5] Sync bucket: {len(days)} días, {workers} en paralelo, GOES={with_goes}", flush=True
+    )
     with ProcessPoolExecutor(max_workers=workers) as ex:
         futs = {ex.submit(_sync_one, bucket, d, with_goes): d for d in days}
         for f in as_completed(futs):
@@ -103,7 +116,9 @@ def main() -> None:
     p.add_argument("--bucket", required=True, help="Bucket S3 público (sin s3://)")
     p.add_argument("--config", choices=("physical", "embeddings"), default="physical")
     p.add_argument("--workers", type=int, default=10, help="Descargas/sync en paralelo")
-    p.add_argument("--ratio", type=int, default=50, help="No etiquetadas por positiva (build_table select)")
+    p.add_argument(
+        "--ratio", type=int, default=50, help="No etiquetadas por positiva (build_table select)"
+    )
     p.add_argument("--max-neg-days", type=int, default=15, help="Días sin evento a incluir")
     p.add_argument("--recipe", default="ir_wv", help="Receta RGB (compose_rgb)")
     p.add_argument("--model", default="titan", help="Modelo de embeddings (encode_bedrock)")
@@ -112,12 +127,16 @@ def main() -> None:
 
     with_goes = a.config == "embeddings"
     event_days = sorted(_catalog_event_days() & set(_bucket_days(a.bucket)))
-    neg_days = [d for d in _bucket_days(a.bucket) if d not in _catalog_event_days()][: a.max_neg_days]
+    neg_days = [d for d in _bucket_days(a.bucket) if d not in _catalog_event_days()][
+        : a.max_neg_days
+    ]
     days = sorted(set(event_days) | set(neg_days))
     if not days:
         raise SystemExit("No hay días del catálogo disponibles en el bucket todavía.")
     start, end = days[0].isoformat(), days[-1].isoformat()
-    print(f"Días: {len(days)} ({len(event_days)} con evento, {len(neg_days)} negativos)", flush=True)
+    print(
+        f"Días: {len(days)} ({len(event_days)} con evento, {len(neg_days)} negativos)", flush=True
+    )
 
     model = ["uv", "run", "python"]
 
@@ -127,26 +146,91 @@ def main() -> None:
 
     # 2) Selección de celdas
     print("[2/5] build_table --stage select", flush=True)
-    _run([*model, "scripts/model/build_table.py", "--stage", "select", "--ratio", str(a.ratio),
-          "--seed", "0", "--start", start, "--end", end, "--region", REGION])
+    _run(
+        [
+            *model,
+            "scripts/model/build_table.py",
+            "--stage",
+            "select",
+            "--ratio",
+            str(a.ratio),
+            "--seed",
+            "0",
+            "--start",
+            start,
+            "--end",
+            end,
+            "--region",
+            REGION,
+        ]
+    )
 
     # 3-4) RGB + embeddings (solo config embeddings)
     if with_goes:
         cells = f"data/model/{REGION}/cells.parquet"
         print("[3/5] compose_rgb", flush=True)
-        _run([*model, "scripts/model/compose_rgb.py", "--cells", cells, "--recipe", a.recipe,
-              "--recipe-version", "1", "--size", "224", "--window-km", "100",
-              "--start", start, "--end", end, "--region", REGION, "--force"])
+        _run(
+            [
+                *model,
+                "scripts/model/compose_rgb.py",
+                "--cells",
+                cells,
+                "--recipe",
+                a.recipe,
+                "--recipe-version",
+                "1",
+                "--size",
+                "224",
+                "--window-km",
+                "100",
+                "--start",
+                start,
+                "--end",
+                end,
+                "--region",
+                REGION,
+                "--force",
+            ]
+        )
         print("[4/5] encode_bedrock", flush=True)
-        _run([*model, "scripts/model/encode_bedrock.py", "--model", a.model, "--cache", "local",
-              "--start", start, "--end", end, "--region", REGION, "--force"])
+        _run(
+            [
+                *model,
+                "scripts/model/encode_bedrock.py",
+                "--model",
+                a.model,
+                "--cache",
+                "local",
+                "--start",
+                start,
+                "--end",
+                end,
+                "--region",
+                REGION,
+                "--force",
+            ]
+        )
     else:
         print("[3-4/5] (omitido: config physical, sin embeddings)", flush=True)
 
     # 5) Tabla final
     print("[5/5] build_table --stage build", flush=True)
-    _run([*model, "scripts/model/build_table.py", "--stage", "build", "--config", a.config,
-          "--start", start, "--end", end, "--region", REGION])
+    _run(
+        [
+            *model,
+            "scripts/model/build_table.py",
+            "--stage",
+            "build",
+            "--config",
+            a.config,
+            "--start",
+            start,
+            "--end",
+            end,
+            "--region",
+            REGION,
+        ]
+    )
 
     print("\n=== PIPELINE COMPLETO ===", flush=True)
     print(f"Tabla del modelo en data/model/{REGION}/ (config {a.config})", flush=True)
