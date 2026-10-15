@@ -116,14 +116,21 @@ def _area_map(png: bytes, feat_vals: dict, n_emb: int):
             for i in range(len(lat)) for j in range(len(lon))]
     csv_df = pd.DataFrame(rows)
 
-    fig, ax = plt.subplots(figsize=(5, 8))
-    mesh = ax.pcolormesh(lon, lat, prob, cmap="turbo", vmin=0, vmax=1, shading="auto")
+    # Imagen GOES de fondo + heatmap de probabilidad SUPERPUESTO (semitransparente), no un panel aparte.
+    ext = [pm.REGION.west, pm.REGION.east, pm.REGION.south, pm.REGION.north]
+    bg = Image.open(io.BytesIO(png)).convert("RGB")
+    fig, ax = plt.subplots(figsize=(6, 9))
+    ax.imshow(bg, extent=ext, aspect="auto", zorder=0)
+    mesh = ax.imshow(prob, extent=ext, origin="upper", cmap="turbo", vmin=0, vmax=1,
+                     alpha=0.5, aspect="auto", zorder=1)
+    ax.contour(lon, lat, prob, levels=[0.5, 0.7, 0.9], colors="white", linewidths=0.8,
+               alpha=0.9, zorder=2)
     pm.draw_coast(ax)
     ax.set_xlim(pm.REGION.west, pm.REGION.east)
     ax.set_ylim(pm.REGION.south, pm.REGION.north)
     ax.set_xlabel("Longitud")
     ax.set_ylabel("Latitud")
-    ax.set_title("Probabilidad de tornado por área")
+    ax.set_title("Probabilidad de tornado sobre la imagen GOES")
     fig.colorbar(mesh, ax=ax, label="probabilidad", shrink=0.6)
     return fig, csv_df, float(prob.min()), float(prob.max())
 
