@@ -68,7 +68,7 @@ known-first-party = ["common", "viewer_app"]
 
 [tool.pyright]
 include = ["scripts"]
-extraPaths = ["scripts", "scripts/model", "scripts/viewer", "scripts/pipeline"]
+extraPaths = ["scripts", "scripts/model", "scripts/viewer", "scripts/pipeline", "scripts/app"]
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 venvPath = "."

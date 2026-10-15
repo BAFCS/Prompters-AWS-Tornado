@@ -1,0 +1,686 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Crear `merge/datos-modelo` e integrar las cabezas vigentes": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262428
+      },
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092272797
+      },
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092590819
+      }
+    ],
+    "1.2 Resolver conflictos según las reglas del diseño y verificar": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262472
+      },
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092596973
+      },
+      {
+        "executionId": "4bab7bd2-deb2-4e0f-b0ee-b8b64c5f954f",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093168804
+      }
+    ],
+    "2.1 Implementar `scripts/app/atomic.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262493
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221118
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093232941
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093507309
+      }
+    ],
+    "2.2 Implementar `scripts/app/progress_log.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262515
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221152
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093515741
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093785973
+      }
+    ],
+    "2.6 Crear `docs/logs/progreso.json` con la entrada inicial": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262535
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221194
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093793012
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792094210131
+      }
+    ],
+    "3.1 Escribir `docs/planificacion_merge.md`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262554
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221222
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093234233
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093507334
+      }
+    ],
+    "4.1 Implementar `scripts/app/lake_layout.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262574
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221246
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093235162
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093507474
+      }
+    ],
+    "4.2 Implementar `scripts/app/contracts.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262594
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221283
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093235860
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093507783
+      }
+    ],
+    "4.3 Crear `tests/app_synthetic.py` y `tests/test_app_contracts.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262621
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221313
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093516292
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093786414
+      }
+    ],
+    "5.1 Implementar `scripts/app/sync_branches.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262648
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221337
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093517261
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093786833
+      }
+    ],
+    "5.2 Agregar el objetivo `sync` al `Makefile`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262666
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221360
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093793847
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792094210091
+      }
+    ],
+    "6. Checkpoint - Bitácora, planificación, contratos y sincronización": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262684
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221382
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792094210972
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792094395011
+      }
+    ],
+    "7.1 Implementar `scripts/app/awsauth.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262706
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221405
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792094443073
+      }
+    ],
+    "7.2 Implementar `scripts/app/lake.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262723
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221427
+      }
+    ],
+    "7.3 Implementar las funciones ERA5 puras en `scripts/app/adapter.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262741
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221451
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792094452710
+      }
+    ],
+    "7.4 Implementar las funciones GOES puras en `scripts/app/adapter.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262763
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221494
+      }
+    ],
+    "7.5 Implementar `process_day`, el Reporte_Calidad y `main` en `scripts/app/adapter.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262781
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221516
+      }
+    ],
+    "7.6 Extender `tests/app_synthetic.py` con generadores ERA5 y GOES": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262804
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221539
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792094452940
+      }
+    ],
+    "8. Checkpoint - Adaptador": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262829
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221560
+      }
+    ],
+    "9.1 Implementar `scripts/app/stub_model.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262854
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221583
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792094454209
+      }
+    ],
+    "9.2 Implementar `scripts/app/predictions.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262880
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221605
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792094455107
+      }
+    ],
+    "9.3 Implementar `scripts/app/infer.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262904
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221626
+      }
+    ],
+    "9.4 Extender `tests/app_synthetic.py` con Tablas_Inferencia, CSV_Predicciones y configuraciones de alertas": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262929
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221647
+      }
+    ],
+    "10.1 Crear `scripts/app/site_template/`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262954
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221668
+      }
+    ],
+    "10.2 Implementar `scripts/app/build_site.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092262981
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221689
+      }
+    ],
+    "11. Checkpoint - Inferencia y sitio": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263013
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221713
+      }
+    ],
+    "12.1 Implementar `scripts/app/geo.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263041
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221735
+      }
+    ],
+    "12.2 Implementar la lógica pura de `scripts/app/alerts.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263083
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221755
+      }
+    ],
+    "12.3 Implementar `scripts/app/sinks.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263104
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221776
+      }
+    ],
+    "12.4 Implementar `main` de `scripts/app/alerts.py` y `configs/alerts.json`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263126
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221796
+      }
+    ],
+    "13. Checkpoint - Motor_Alertas": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263149
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221817
+      }
+    ],
+    "14.1 Implementar `scripts/app/run_day.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263169
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221838
+      }
+    ],
+    "15.1 Agregar `infra/terraform/site.tf` y las ediciones acotadas": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263190
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221858
+      }
+    ],
+    "15.2 Implementar `scripts/app/deploy_site.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263208
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221876
+      }
+    ],
+    "16.1 Crear `tests/test_app_repo.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263229
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221896
+      }
+    ],
+    "16.2 Crear `tests/test_app_e2e.py`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263251
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221917
+      }
+    ],
+    "17. Checkpoint final de implementación": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263274
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221938
+      }
+    ],
+    "18.1 Ejecutar `make sync` contra las cabezas vigentes": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263293
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221957
+      }
+    ],
+    "19.1 Publicar `merge/datos-modelo`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263316
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093221979
+      }
+    ],
+    "19.2 Abrir el PR hacia `main`": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263339
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093222000
+      }
+    ],
+    "20.1 Aplicar Terraform del sitio": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263360
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093222021
+      }
+    ],
+    "20.2 Subir el sitio e invalidar la caché": [
+      {
+        "executionId": "bb6e43e9-05cd-4399-9b18-3dab0c710f94",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792092263382
+      },
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093222043
+      }
+    ],
+    "1. Primera Sincronización de ramas (sin push)": [
+      {
+        "executionId": "4bab7bd2-deb2-4e0f-b0ee-b8b64c5f954f",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093168872
+      }
+    ],
+    "3. Documento_Planificación": [
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093507374
+      }
+    ],
+    "4. Constantes del Lago_Datos y pruebas de contrato tempranas": [
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792093786442
+      }
+    ],
+    "5. Sincronización repetible (`make sync`)": [
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792094210148
+      }
+    ],
+    "2. Escritura atómica y Bitácora_Progreso": [
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792094210166
+      }
+    ],
+    "2.3 Escribir prueba de propiedad de ida y vuelta de la bitácora": [
+      {
+        "executionId": "8eb1feba-e99e-4a17-8699-910b22760b77",
+        "chatSessionId": "sess_ad8da1a0-63a1-4b5f-bf95-d62e4f4eb0de",
+        "timestamp": 1792094422726
+      }
+    ]
+  }
+}

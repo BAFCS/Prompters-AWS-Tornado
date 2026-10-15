@@ -32,3 +32,7 @@ data/coast.zip:
 data/goes:
 	aws s3 sync --no-sign-request s3://noaa-goes16/ABI-L2-CMIPF/2019/150/21/ $@/ \
 	  --exclude '*' --include '*M6C13*s201915021[345]*'
+
+.PHONY: sync
+sync: ## fusiona origin/main y las ramas de origen en merge/datos-modelo (sin push)
+	uv run python scripts/app/sync_branches.py

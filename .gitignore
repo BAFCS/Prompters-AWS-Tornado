@@ -15,6 +15,10 @@ data/
 *.parquet
 *.xlsx   # la base de figshare se descarga, no se versiona
 
+# bloqueos de scripts/app/atomic.locked (uv.lock sí se versiona)
+*.json.lock
+*.jsonl.lock
+
 # credenciales
 .env
 .aws/

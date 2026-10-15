@@ -1,0 +1,122 @@
+[
+  {
+    "timestamp": "2026-10-15T19:55:51Z",
+    "tarea": "sincronización",
+    "estado": "hecho",
+    "notas": "SHA: origin/main=cf59a73e13abb50f25697a4bc862588372ef8007; intentos-nico=ec238dfaf6b8b638eaff52b8e64dd169d3a6f4eb; feat/multimodal-tornado-predictor-wip=3cd882ba26870b8aa2bdb99734512c3f4643237d. Merges: ecf305a (nico, sin conflictos), b48a44a (modelo; conflictos en pyproject.toml: boto3 >= vs ==, pyright extraPaths; uv.lock regenerado con uv lock), 44e9172 (pins == según uv.lock; pyright executionEnvironments para scripts/ingest; noqa UP047 en common.retry; ruff format de scripts/ingest/*). make check en 44e9172: OK (144 pruebas).",
+    "decisiones": [
+      "boto3==1.43.75",
+      "todas las dependencias fijadas con == según uv.lock",
+      "pyright extraPaths como unión de ambas ramas (+scripts/app agregado después)",
+      "config por defecto baseline_era5",
+      "git rerere habilitado",
+      "cambio del usuario en Makefile (diagramas) guardado en stash@{0}"
+    ]
+  },
+  {
+    "timestamp": "2026-10-15T19:56:20Z",
+    "tarea": "1. Primera Sincronización",
+    "estado": "hecho",
+    "notas": "Ramas integradas en 3 merges (ecf305a, b48a44a, 44e9172); make check OK con 144 pruebas. Fallas revisadas: conflicto de pins en pyproject.toml, uv.lock desfasado, lint/format de scripts/ingest.",
+    "decisiones": [
+      "resolver conflictos de dependencias fijando con == según uv.lock"
+    ]
+  },
+  {
+    "timestamp": "2026-10-15T19:56:20Z",
+    "tarea": "2.1 atomic.py",
+    "estado": "hecho",
+    "notas": "Escritura atómica (temporal + os.replace) y flock en archivo .lock. Fallas revisadas: escritura interrumpida, escritores concurrentes.",
+    "decisiones": [
+      "flock en .lock separado para no bloquear el archivo destino"
+    ]
+  },
+  {
+    "timestamp": "2026-10-15T19:56:20Z",
+    "tarea": "2.2 progress_log.py",
+    "estado": "hecho",
+    "notas": "CLI de bitácora de solo agregado con validación de 5 campos. Fallas revisadas: entrada inválida y archivo corrupto terminan con código distinto de cero sin tocar el archivo.",
+    "decisiones": [
+      "JSON sin dependencias externas",
+      "timestamp ISO 8601 UTC por defecto"
+    ]
+  },
+  {
+    "timestamp": "2026-10-15T19:56:20Z",
+    "tarea": "3.1 planificacion_merge.md",
+    "estado": "hecho",
+    "notas": "docs/planificacion_merge.md creado con el plan de integración y resolución de conflictos.",
+    "decisiones": []
+  },
+  {
+    "timestamp": "2026-10-15T19:56:20Z",
+    "tarea": "4.1 lake_layout.py",
+    "estado": "hecho",
+    "notas": "Rutas del data lake centralizadas en scripts/app/lake_layout.py.",
+    "decisiones": []
+  },
+  {
+    "timestamp": "2026-10-15T19:56:20Z",
+    "tarea": "4.2 contracts.py",
+    "estado": "hecho",
+    "notas": "Contratos de datos entre ingesta y modelo definidos en scripts/app/contracts.py.",
+    "decisiones": []
+  },
+  {
+    "timestamp": "2026-10-15T19:56:20Z",
+    "tarea": "4.3 pruebas de contrato",
+    "estado": "hecho",
+    "notas": "8 pruebas OK (tests/test_app_contracts.py). ingest_goes.py de Nico ahora escribe un archivo por banda goes_<ymd>_CNN.nc; C08 no confirmado en S3; la configuración física sigue bloqueada.",
+    "decisiones": [
+      "contrato GOES por banda (goes_<ymd>_CNN.nc)"
+    ]
+  },
+  {
+    "timestamp": "2026-10-15T19:56:20Z",
+    "tarea": "5.1 sync_branches.py",
+    "estado": "hecho",
+    "notas": "Script de sincronización de ramas listo. Falla revisada: un árbol sucio aborta la sincronización; el script no hace commit de las actualizaciones de docs/bitácora, así que deben commitearse antes de la siguiente sincronización.",
+    "decisiones": [
+      "abortar si el árbol de trabajo está sucio"
+    ]
+  },
+  {
+    "timestamp": "2026-10-15T19:59:35Z",
+    "tarea": "6. Checkpoint",
+    "estado": "hecho",
+    "notas": "make check OK: ruff check sin hallazgos, ruff format 90 archivos OK, pyright 0 errores/3 avisos (cdsapi solo en EC2), 163 tests OK. Modos de falla revisados: conflicto que rerere no resuelve (sync_branches sale con 1, deja el merge en curso, registra bloqueado; --continue retoma); resolución reaplicada que rompe reglas (paso manual git rerere diff / git rerere forget documentado en planificacion_merge.md); origin/main que avanza (se relee al final, sale con 1 sin fila); deriva de contrato con Daniel y Nico (tests de contratos OK; origin/main cf59a73, intentos-nico ec238df y predictor 3cd882b sin cambios según ls-remote). Ningún .md versionado usa subrayado ======= (git grep vacío). Arreglos: atomic conserva el modo del archivo existente o usa 0o666 menos umask (antes 0600) con prueba nueva; progreso.json a 644; .gitignore ignora *.json.lock y *.jsonl.lock (uv.lock sigue versionado).",
+    "decisiones": []
+  },
+  {
+    "timestamp": "2026-10-15T20:02:44Z",
+    "tarea": "7.1 awsauth.py",
+    "estado": "hecho",
+    "notas": "scripts/app/awsauth.py: CredentialsError(SystemExit, código 2, .profile/.message) y check(profile) con botocore Session(profile) + sts:GetCallerIdentity (región del perfil o us-east-1); captura BotoCoreError/ClientError (ProfileNotFound, NoCredentials, Partial, EndpointConnection, ExpiredToken*), escribe en stderr 'credenciales inválidas o expiradas para el perfil <p>; renueva y reintenta (causa)'; None->'default'. tests/test_app_awsauth.py: 4 pruebas sin red (ARN, token expirado, default, perfil inexistente real). ruff/format/pyright OK.",
+    "decisiones": []
+  },
+  {
+    "timestamp": "2026-10-15T20:03:03Z",
+    "tarea": "9.1 stub_model.py",
+    "estado": "hecho",
+    "notas": "stub_model.py: CAPE_REF=1000, SHEAR_REF=25, REQUIRED=(cape, shear_06), score con clip [0,1] (inf/negativos recortados, NaN->0) y predict con OUTPUT_COLUMNS local (date %Y-%m-%d, hour_utc int, config sustituto/<config>), sin importar xgboost. tests/test_app_stub_model.py: 8 pruebas OK (incluye igualdad de OUTPUT_COLUMNS con inference.py vía contracts.tuple_constant). ruff check/format y pyright sin errores. Modos de falla revisados: NaN, ±inf, negativos, índice desordenado, tabla vacía.",
+    "decisiones": []
+  },
+  {
+    "timestamp": "2026-10-15T20:04:55Z",
+    "tarea": "pausa: avance guardado en AVANCE.md",
+    "estado": "en_curso",
+    "notas": "Hechas 1-6, 7.1, 9.1. 9.2 sin verificar; 7.3 y 7.6 interrumpidas (agentes cancelados). Nada commiteado después de 44e9172.",
+    "decisiones": [
+      "seguir avance con docs/logs/AVANCE.md"
+    ]
+  },
+  {
+    "timestamp": "2026-10-15T20:09:55Z",
+    "tarea": "commit para traspaso",
+    "estado": "bloqueado",
+    "notas": "make check: 190 pruebas, 1 error en test_bedrock_encoder (bug de cache_key con surrogates, código de Daniel). Arreglados 2 lint en tests propios. Se commitea y publica merge/datos-modelo para que otro integrante continúe.",
+    "decisiones": [
+      "publicar merge/datos-modelo sin abrir PR"
+    ]
+  }
+]
