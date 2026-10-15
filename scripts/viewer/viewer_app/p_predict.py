@@ -42,6 +42,55 @@ ERA5_RANGES = {
     "vgp_01": (0.0, 0.5, 0.15), "stp_lm": (-3.0, 1.0, -0.5), "sherbs3": (0.0, 3.0, 1.0),
 }
 
+# Bucket público del equipo con las imágenes GOES de Chile y los días con tornado conocidos.
+BUCKET = "mesocyclonic-test-data-20261015013924290100000003"
+# Días con tornado que tienen imagen GOES en el bucket (caso real para predecir).
+TORNADO_DAYS = [
+    "2019-05-30", "2019-05-31", "2019-06-13", "2019-10-28",
+    "2018-03-22", "2018-09-30", "2020-04-25", "2020-05-03",
+]
+
+
+@st.cache_data(show_spinner=False)
+def _goes_real(day: str) -> tuple[bytes, list[str]] | None:
+    """Baja C13 del día desde el bucket y devuelve (NetCDF en bytes, lista de horas HH:MM)."""
+    import fsspec
+
+    fs = fsspec.filesystem("s3", anon=True)
+    key = f"{BUCKET}/goes_store/{day}/goes_{day.replace('-', '')}_C13.nc"
+    if not fs.exists(key):
+        return None
+    with fs.open(key, "rb") as f:
+        raw = f.read()
+    import pandas as pd
+    import xarray as xr
+
+    ds = xr.load_dataset(io.BytesIO(raw))
+    horas = [str(t)[11:16] for t in pd.to_datetime(ds["time"].values)]
+    return raw, horas
+
+
+def _goes_image(raw: bytes, hour_idx: int) -> bytes:
+    """Convierte el barrido ``hour_idx`` de C13 en un PNG (tope frío resaltado)."""
+    import xarray as xr
+
+    ds = xr.load_dataset(io.BytesIO(raw))
+    arr = ds["C13"].isel(time=hour_idx).values.astype(float)
+    arr = np.nan_to_num(arr, nan=float(np.nanmean(arr)))
+    lo, hi = np.percentile(arr, 2), np.percentile(arr, 98)
+    norm = np.clip((arr - lo) / (hi - lo + 1e-9), 0, 1)
+    img8 = (255 * (1 - norm)).astype("uint8")  # invertido: nubes frías claras
+    from PIL import Image
+
+    return _to_png(Image.fromarray(np.stack([img8, img8, img8], axis=-1)))
+
+
+def _to_png(img) -> bytes:
+    """Serializa una imagen PIL a PNG en bytes."""
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
 
 def _grid() -> tuple[np.ndarray, np.ndarray]:
     """Latitudes (norte→sur) y longitudes (oeste→este) de la grilla de la región."""
@@ -120,22 +169,39 @@ def _figure(png: bytes, prob: np.ndarray, lat: np.ndarray, lon: np.ndarray):
 def page() -> None:
     """Dibuja la página «Predecir»."""
     st.title("Predecir")
-    st.caption("Sube una imagen GOES y el modelo estima la probabilidad de tornado por área. "
-               "Demostración con un modelo de ejemplo; no sustituye un pronóstico operativo.")
+    st.caption("Toma una imagen GOES real de Chile (o sube una) y el modelo estima la probabilidad "
+               "de tornado por área. Demostración con un modelo de ejemplo; no es un pronóstico operativo.")
 
     modo = st.radio("Modo", ["Solo imagen (ERA5 típica)", "Híbrido (imagen + ERA5)"], horizontal=True)
     solo = modo.startswith("Solo")
 
     c1, c2 = theme.columns([1, 1], "predict_cols")
     with c1:
-        up = st.file_uploader("Imagen GOES (PNG/JPG)", type=["png", "jpg", "jpeg"])
         from PIL import Image
 
-        if up is not None:
-            img = Image.open(up).convert("RGB")
+        fuente = st.radio("Imagen de entrada",
+                          ["GOES real de Chile (bucket)", "Subir archivo"], horizontal=True)
+        img = None
+        if fuente.startswith("GOES"):
+            dia = st.selectbox("Día con tornado (GOES disponible)", TORNADO_DAYS)
+            real = _goes_real(dia)
+            if real is None:
+                st.warning(f"No hay GOES para {dia} en el bucket.")
+                img = Image.fromarray(np.zeros((224, 224, 3), "uint8"))
+            else:
+                raw, horas = real
+                hidx = st.select_slider("Hora UTC del barrido", options=list(range(len(horas))),
+                                        format_func=lambda i: horas[i],
+                                        value=min(len(horas) - 1, len(horas) * 4 // 5))
+                img = Image.open(io.BytesIO(_goes_image(raw, hidx))).convert("RGB")
+                st.caption(f"GOES-16 C13 · {dia} {horas[hidx]} UTC (tope de nubes)")
         else:
-            st.info("Sin imagen: se usa una de ejemplo.")
-            img = Image.fromarray((np.random.default_rng(0).random((224, 224, 3)) * 255).astype("uint8"))
+            up = st.file_uploader("Imagen GOES (PNG/JPG)", type=["png", "jpg", "jpeg"])
+            if up is not None:
+                img = Image.open(up).convert("RGB")
+            else:
+                st.info("Sin imagen: se usa una de ejemplo.")
+                img = Image.fromarray((np.random.default_rng(0).random((224, 224, 3)) * 255).astype("uint8"))
         st.image(img, width=260)
 
     with c2:
