@@ -281,42 +281,42 @@ uv run ruff check scripts tests; uv run ruff format --check scripts tests; uv ru
 - [x] 11. Checkpoint - Ensure all tests pass
   - Ejecutar `make check` (o el equivalente con `uv run` en Windows). Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Infraestructura en Terraform (sin `apply`)
+- [x] 12. Infraestructura en Terraform (sin `apply`)
   - [x] 12.1 Actualizar `infra/terraform/variables.tf`
     - Agregar `ml_region` (por defecto `us-west-2`) con bloque `validation` y mensaje en español que indica la región requerida, y `enable_cohere` (bool)
     - Actualizar la descripción de `training_region` para dejar claro que la EC2 sigue en us-east-1 y que SageMaker y Bedrock usan `ml_region`, independiente de ella
     - _Requirements: 9.3, 9.4_
 
-  - [ ] 12.2 Crear `infra/terraform/sagemaker.tf` y ampliar `outputs.tf`
+  - [x] 12.2 Crear `infra/terraform/sagemaker.tf` y ampliar `outputs.tf`
     - Proveedor `aws.ml` con `region = var.ml_region`; bucket ML cifrado, con bloqueo de acceso público y prefijo `model/`
     - Rol `sagemaker_exec` con políticas inline: S3 del proyecto (lectura/escritura bajo `model/` y prefijo del Catálogo, `ListBucket` con condición `s3:prefix`), lectura y listado de `nsf-ncar-era5`, `noaa-goes16`, `noaa-goes19`, `bedrock:InvokeModel` acotado a los ARN de Titan y (si `enable_cohere`) Cohere Embed v4, CloudWatch Logs acotado a `/aws/sagemaker/*`, y `cloudwatch:PutMetricData` con recurso `*` y condición `StringLike` sobre `cloudwatch:namespace` = `/aws/sagemaker/*` como única excepción
     - Sin acciones `*`, `iam:*`, `s3:DeleteBucket` ni `s3:PutBucketPolicy`; sin `timestamp()` ni valores no deterministas; `training.tf` sin cambios
     - Salidas: nombre del bucket ML y ARN del rol
     - _Requirements: 9.1, 9.2, 9.3, 9.5, 9.6_
 
-  - [ ] 12.3 Validar el Terraform sin crear recursos
+  - [x] 12.3 Validar el Terraform sin crear recursos
     - Si `terraform` está disponible: `terraform fmt -check` y `terraform init -backend=false` + `terraform validate` en `infra/terraform/`; corregir lo que reporten
     - Si no está disponible o `init` no puede descargar proveedores, omitir y dejar una nota en el resumen de la tarea
     - No ejecutar `terraform plan` contra la cuenta ni `terraform apply`
     - _Requirements: 9.4, 9.5_
 
-- [ ] 13. Documento_Predictor y README
-  - [ ] 13.1 Escribir `docs/modelo_predictor.md`
+- [x] 13. Documento_Predictor y README
+  - [x] 13.1 Escribir `docs/modelo_predictor.md`
     - Objetivo, mesociclón ≠ tornado, tres etapas, PU/LOEO/métricas con fórmulas y enlaces a 6.1–6.3, cinco riesgos de embeddings con mitigación, justificación de rezagos con ~102 Eventos, convenciones australes (2.6), umbrales HSLC de 3.2 con unidad, sin corrección de paralaje, diagrama en texto con los nodos del glosario, comandos por componente con `--start`, `--end`, `--region`, `--force`
     - Configuración de XGBoost (parada temprana interna agrupada, `scale_pos_weight` por partición, NaN nativos, PR-AUC y umbral de máximo CSI informativos, restricciones monótonas como trabajo futuro)
     - Costos estimados en USD por trabajo de entrenamiento, por Batch Transform y por hora de endpoint con fecha de consulta; lista de recursos y comandos de borrado (endpoints y prefijos S3); probabilidades como candidatos y ERA5 no operativo; nota de que la cuenta debe permitir us-west-2
     - Valores numéricos tomados de `docs/mesociclones_chile.md`
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.14, 8.5, 9.7, 9.8_
 
-  - [ ] 13.2 Agregar a `README.md` el enlace relativo a `docs/modelo_predictor.md`
+  - [x] 13.2 Agregar a `README.md` el enlace relativo a `docs/modelo_predictor.md`
     - _Requirements: 1.13_
 
-  - [ ]* 13.3 Pruebas unitarias del documento
+  - [x]* 13.3 Pruebas unitarias del documento
     - En `tests/test_docs.py`: los umbrales HSLC coinciden con la sección 3.2 del Documento_Fuente, los enlaces relativos resuelven, el diagrama contiene todos los nodos y el README enlaza al documento
     - Solo lee archivos versionados del repositorio, no `data/`
     - _Requirements: 1.5, 1.9, 1.11, 1.13, 1.14, 10.3_
 
-- [ ] 14. Final checkpoint - Ensure all tests pass
+- [x] 14. Final checkpoint - Ensure all tests pass
   - Ejecutar `make check` (o el equivalente con `uv run` en Windows). Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

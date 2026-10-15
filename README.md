@@ -15,6 +15,7 @@ a partir del reanálisis **ERA5** y las imágenes multiespectrales del satélite
 | Ruta | Qué es |
 |---|---|
 | `docs/mesociclones_chile.md` | **El documento principal.** El problema, la física, el caso chileno, los datos de entrada, las variables a calcular, cómo plantear el modelo, la arquitectura en AWS y las tareas abiertas. |
+| [`docs/modelo_predictor.md`](docs/modelo_predictor.md) | **El modelo predictor multimodal.** Qué se predice, el planteamiento PU y la Validación_LOEO, las métricas, los riesgos de los embeddings, el flujo de componentes, los comandos y los costos de llevarlo a AWS. |
 | `scripts/viewer/viewer.py` y `scripts/viewer/viewer_app/` | **El visor**: una aplicación web local con el problema, las fichas de variables, el starter kit para AWS, el caso de estudio y los mapas. |
 | `scripts/pipeline/download_*.py`, `scripts/pipeline/process_*.py` | Descargan ERA5 y GOES recortados a Chile y calculan los índices que usa el visor. |
 | `scripts/figures/figs_*.py` | Generan las cuatro figuras de `figs/` desde los datos reales. |

@@ -37,3 +37,18 @@ provider "aws" {
     }
   }
 }
+
+# Proveedor de SageMaker y Bedrock. Vive en ml_region (us-west-2, validada en variables.tf),
+# que es la región de nsf-ncar-era5. Es independiente de region y de training_region.
+provider "aws" {
+  alias  = "ml"
+  region = var.ml_region
+
+  default_tags {
+    tags = {
+      project     = "aws-mesocyclonic"
+      environment = var.environment
+      managed_by  = "terraform"
+    }
+  }
+}
