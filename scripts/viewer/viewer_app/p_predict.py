@@ -44,11 +44,38 @@ ERA5_RANGES = {
 
 # Bucket público del equipo con las imágenes GOES de Chile y los días con tornado conocidos.
 BUCKET = "mesocyclonic-test-data-20261015013924290100000003"
-# Días con tornado que tienen imagen GOES en el bucket (caso real para predecir).
-TORNADO_DAYS = [
-    "2019-05-30", "2019-05-31", "2019-06-13", "2019-10-28",
-    "2018-03-22", "2018-09-30", "2020-04-25", "2020-05-03",
-]
+
+
+@st.cache_data(show_spinner=False, ttl=600)
+def _tornado_days() -> list[str]:
+    """Días con tornado del catálogo que YA tienen GOES en el bucket (descubiertos dinámicamente).
+
+    Así la lista crece sola cuando el equipo sube más días, sin tocar el código. Si falla la
+    consulta, cae a una lista mínima conocida.
+    """
+    fallback = ["2019-05-30", "2019-05-31", "2019-06-13", "2019-10-28", "2018-03-22", "2018-09-30"]
+    try:
+        import datetime as _dt
+
+        import fsspec
+        import pandas as pd
+
+        fs = fsspec.filesystem("s3", anon=True)
+        goes = set()
+        for p in fs.ls(f"{BUCKET}/goes_store", detail=False):
+            try:
+                goes.add(_dt.date.fromisoformat(p.rstrip("/").split("/")[-1]))
+            except ValueError:
+                pass
+        cat = pd.read_excel(ROOT / "data" / "tornados_chile.xlsx", sheet_name="Final_Table")
+        dates = pd.to_datetime(cat["Date (Gregorian Calendar)"], errors="coerce").dt.date
+        hours = pd.to_numeric(
+            cat["Hour (UTC)"].astype(str).str.extract(r"(\d{1,2})", expand=False), errors="coerce")
+        days = {d for d, h in zip(dates, hours, strict=True) if pd.notna(d) and pd.notna(h)}
+        avail = sorted(str(d) for d in (days & goes))
+        return avail or fallback
+    except Exception:  # noqa: BLE001
+        return fallback
 
 
 @st.cache_data(show_spinner=False)
@@ -287,7 +314,7 @@ def page() -> None:
                 img = Image.open(io.BytesIO(png_vivo)).convert("RGB")
                 st.caption(f"GOES-East C13 · {etiqueta} · tope de nubes sobre el centro-sur/austral")
         elif fuente.startswith("GOES real"):
-            dia = st.selectbox("Día con tornado (GOES disponible)", TORNADO_DAYS)
+            dia = st.selectbox("Día con tornado (GOES disponible)", _tornado_days())
             real = _goes_real(dia)
             if real is None:
                 st.warning(f"No hay GOES para {dia} en el bucket.")
