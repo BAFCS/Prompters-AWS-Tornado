@@ -32,6 +32,7 @@ import sys
 from pathlib import Path
 
 import fsspec
+import numpy as np
 import pandas as pd
 import xarray as xr
 
@@ -78,8 +79,14 @@ def sync_era5(bucket: str, day: dt.date, region: str, force: bool) -> bool:
     sfc = ds[[v for v in ("10u", "10v", "2t", "2d", "sp", "cape") if v in ds]]
     reg = common.REGIONS[region]
     idx = pe.process_day(pl, sfc, reg)
+    # process_era5 usa CAPE internamente pero no lo escribe; build_table.ERA5_FEATURES sí lo espera.
+    # Lo añadimos al índice desde el sfc, alineado al mismo eje temporal.
+    if "cape" in sfc:
+        cape = np.maximum(sfc["cape"].sel(time=idx["time"]).values, 0.0)
+        idx["cape"] = (("time", "latitude", "longitude"), cape.astype("f4"),
+                       {"long_name": "Convective available potential energy", "units": "J kg-1"})
     common.write(idx, out_file)
-    print(f"  ERA5 {day}: índices escritos ({dict(idx.sizes)})", flush=True)
+    print(f"  ERA5 {day}: índices escritos ({dict(idx.sizes)}, cape={'sí' if 'cape' in idx else 'no'})", flush=True)
     return True
 
 
@@ -119,9 +126,11 @@ def sync_goes(bucket: str, day: dt.date, region: str, force: bool) -> bool:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Partir por hora: una imagen por barrido -> archivo de la hora de su inicio.
+    # Se agrupa por una coordenada de hora derivada del tiempo (xarray no acepta un índice suelto).
     times = pd.to_datetime(merged["time"].values)
+    hour_key = xr.DataArray(times.floor("h").values, dims="time", coords={"time": merged["time"]})
     written = 0
-    for hour, group in merged.groupby(times.floor("h")):
+    for hour, group in merged.groupby(hour_key):
         hour_dt = pd.Timestamp(hour).to_pydatetime()
         enc = {}
         for v in group.data_vars:

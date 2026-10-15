@@ -26,6 +26,7 @@ dependencies = [
     "streamlit>=1.64.0",
     "xarray>=2026.9.0",
     "xgboost>=3.4.1",
+    "zarr>=3.4.1",
 ]
 
 [dependency-groups]
