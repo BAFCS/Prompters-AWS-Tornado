@@ -1,0 +1,7 @@
+Sincronizando 1 día(s) desde s3://mesocyclonic-test-data-20261015013924290100000003 (era5)
+2020-07-11:
+  ERA5 2020-07-11: índices escritos ({'time': 24, 'latitude': 105, 'longitude': 41}, cape=sí)
+Sincronizando 1 día(s) desde s3://mesocyclonic-test-data-20261015013924290100000003 (both)
+2020-07-12:
+  ERA5 2020-07-12: índices escritos ({'time': 24, 'latitude': 105, 'longitude': 41}, cape=sí)
+  GOES 2020-07-12: 24 archivos horarios reproyectados

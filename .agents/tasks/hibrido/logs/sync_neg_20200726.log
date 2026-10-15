@@ -1,0 +1,7 @@
+Sincronizando 1 día(s) desde s3://mesocyclonic-test-data-20261015013924290100000003 (era5)
+2020-07-25:
+  ERROR en 2020-07-25: GroupNotFoundError("No group found in store <fsspec.mapping.FSMap object at 0x140da0d70> at path ''")
+Sincronizando 1 día(s) desde s3://mesocyclonic-test-data-20261015013924290100000003 (both)
+2020-07-26:
+  ERA5 2020-07-26: índices escritos ({'time': 24, 'latitude': 105, 'longitude': 41}, cape=sí)
+  GOES 2020-07-26: 21 archivos horarios reproyectados

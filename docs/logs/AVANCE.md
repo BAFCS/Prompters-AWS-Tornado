@@ -63,3 +63,13 @@ git log --oneline -5 && git status --short
 
 Orden sugerido: 7.12 → 9.3 (infer real) → 10 (sitio definitivo) → 12 (alertas) → 14 (run_day sobre `sync_from_bucket`) → 15 (terraform/deploy) → 16–18.
 Abrir `tasks.md` en Kiro y usar "Run All Tasks".
+
+## Modelo híbrido real (2026-10-15)
+
+- Modelos versionados en `models/` (`hibrido/`, `hibrido_holdout_20190530/`); sitio demo en `demo_site/`
+  (`python -m http.server 8000 -d demo_site`). Métricas LOEO: CSI 0,345 (embeddings) vs 0,294 (physical)
+  y 0,274 (baseline_era5). Detalle en `.agents/tasks/hibrido/real_report.md`.
+- Snapshot de datos usados: `.agents/tasks/hibrido/{era5_snapshot,goes_snapshot,neg_days}.txt`.
+- **Pendiente: reentrenar sin sesgo de fuente.** Los positivos usaron GOES de NOAA y los negativos GOES
+  del bucket. El bucket ya trae GOES 2018–2026 (2.991 archivos, 21 días con evento con C08+C13; 2023–2024
+  aún a medias; 2017 sin datos). Reentrenar con GOES del bucket para todos los días.

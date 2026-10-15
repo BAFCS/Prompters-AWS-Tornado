@@ -1,0 +1,64 @@
+  aviso: 2019-05-30 15 UTC sin archivos GOES; se omite la hora
+  aviso: 2019-05-30 16 UTC sin archivos GOES; se omite la hora
+  aviso: 2019-05-30 17 UTC sin archivos GOES; se omite la hora
+2019-05-30: 53×21 puntos (paso 0.5°) × 6 horas = 6678 celdas; estimación 6678 imágenes para Bedrock (las que ya estén en caché no se cobran)
+goes_feat_20190530.parquet: 103320 Celdas_Hora
+ir_wv_v1: 5565 imágenes, 1113 Celdas_Hora omitidas
+amazon.titan-embed-image-v1 (1024) en us-east-1: 5565 imágenes
+  embeddings 100/5565 (Bedrock 99, caché 1, fallidas 0)
+  embeddings 200/5565 (Bedrock 199, caché 1, fallidas 0)
+  embeddings 300/5565 (Bedrock 299, caché 1, fallidas 0)
+  embeddings 400/5565 (Bedrock 399, caché 1, fallidas 0)
+  embeddings 500/5565 (Bedrock 499, caché 1, fallidas 0)
+  embeddings 600/5565 (Bedrock 599, caché 1, fallidas 0)
+  embeddings 700/5565 (Bedrock 699, caché 1, fallidas 0)
+  embeddings 800/5565 (Bedrock 798, caché 2, fallidas 0)
+  embeddings 900/5565 (Bedrock 897, caché 3, fallidas 0)
+  embeddings 1000/5565 (Bedrock 997, caché 3, fallidas 0)
+  embeddings 1100/5565 (Bedrock 1097, caché 3, fallidas 0)
+  embeddings 1200/5565 (Bedrock 1197, caché 3, fallidas 0)
+  embeddings 1300/5565 (Bedrock 1297, caché 3, fallidas 0)
+  embeddings 1400/5565 (Bedrock 1397, caché 3, fallidas 0)
+  embeddings 1500/5565 (Bedrock 1497, caché 3, fallidas 0)
+  embeddings 1600/5565 (Bedrock 1597, caché 3, fallidas 0)
+  embeddings 1700/5565 (Bedrock 1697, caché 3, fallidas 0)
+  embeddings 1800/5565 (Bedrock 1797, caché 3, fallidas 0)
+  embeddings 1900/5565 (Bedrock 1897, caché 3, fallidas 0)
+  embeddings 2000/5565 (Bedrock 1997, caché 3, fallidas 0)
+  embeddings 2100/5565 (Bedrock 2097, caché 3, fallidas 0)
+  embeddings 2200/5565 (Bedrock 2197, caché 3, fallidas 0)
+  embeddings 2300/5565 (Bedrock 2297, caché 3, fallidas 0)
+  embeddings 2400/5565 (Bedrock 2397, caché 3, fallidas 0)
+  embeddings 2500/5565 (Bedrock 2497, caché 3, fallidas 0)
+Traceback (most recent call last):
+  File "/Users/renatogutierrez/Desktop/Amazon/proyecto_final/scripts/app/infer_grid.py", line 350, in <module>
+    main()
+    ~~~~^^
+  File "/Users/renatogutierrez/Desktop/Amazon/proyecto_final/scripts/app/infer_grid.py", line 346, in main
+    run(build_parser().parse_args(argv))
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/renatogutierrez/Desktop/Amazon/proyecto_final/scripts/app/infer_grid.py", line 268, in run
+    emb, emb_stats = embed_cells(
+                     ~~~~~~~~~~~^
+        cells,
+        ^^^^^^
+    ...<11 lines>...
+        cache_root,
+        ^^^^^^^^^^^
+    )
+    ^
+  File "/Users/renatogutierrez/Desktop/Amazon/proyecto_final/scripts/app/infer_grid.py", line 174, in embed_cells
+    summary = encode_parallel(encoder, items, workers)
+  File "/Users/renatogutierrez/Desktop/Amazon/proyecto_final/scripts/app/infer_grid.py", line 129, in encode_parallel
+    for fut in as_completed(futures):
+               ~~~~~~~~~~~~^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.13/concurrent/futures/_base.py", line 243, in as_completed
+    waiter.event.wait(wait_timeout)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.13/threading.py", line 660, in wait
+    signaled = self._cond.wait(timeout)
+  File "/opt/miniconda3/lib/python3.13/threading.py", line 359, in wait
+    waiter.acquire()
+    ~~~~~~~~~~~~~~^^
+KeyboardInterrupt
+EXIT 130

@@ -1,0 +1,7 @@
+2025-05-17: ventana de 882 × 466 píxeles, 5 horas
+  goes_2025051714.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2025051715.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2025051716.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2025051717.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2025051718.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+2025-05-17: sin recortes GOES en /Users/renatogutierrez/Desktop/Amazon/proyecto_final/data/crops/south-central-austral/goes/20250517 (corre antes download_goes.py)

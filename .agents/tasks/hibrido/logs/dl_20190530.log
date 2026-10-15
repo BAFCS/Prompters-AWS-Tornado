@@ -1,0 +1,15 @@
+  sin datos en s3://noaa-goes16/ABI-L2-MCMIPF/2019/150/15/
+  sin datos en s3://noaa-goes16/ABI-L2-MCMIPF/2019/150/16/
+  sin datos en s3://noaa-goes16/ABI-L2-MCMIPF/2019/150/17/
+2019-05-30: ventana de 882 × 466 píxeles, 6 horas
+  goes_2019053018.nc: 3 imágenes (29 s de espera)
+  goes_2019053019.nc: 6 imágenes (27 s de espera)
+  goes_2019053020.nc: 6 imágenes (22 s de espera)
+  goes_2019053021.nc: 6 imágenes (23 s de espera)
+  goes_2019053022.nc: 6 imágenes (24 s de espera)
+  goes_2019053023.nc: 6 imágenes (20 s de espera)
+uv run --no-sync python scripts/pipeline/download_goes.py --start 2019-05-30   17.44s user 5.15s system 14% cpu 2:38.08 total
+  sin datos en s3://noaa-goes16/ABI-L2-MCMIPF/2019/150/16/
+  sin datos en s3://noaa-goes16/ABI-L2-MCMIPF/2019/150/17/
+2019-05-30: nada que descargar
+2019-05-30: 6 horas en 1301 × 501 puntos (0 s)

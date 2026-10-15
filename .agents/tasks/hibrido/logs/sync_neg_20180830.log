@@ -1,0 +1,7 @@
+Sincronizando 1 día(s) desde s3://mesocyclonic-test-data-20261015013924290100000003 (era5)
+2018-08-29:
+  ERA5 2018-08-29: índices escritos ({'time': 24, 'latitude': 105, 'longitude': 41}, cape=sí)
+Sincronizando 1 día(s) desde s3://mesocyclonic-test-data-20261015013924290100000003 (both)
+2018-08-30:
+  ERA5 2018-08-30: ya existe, se omite
+  GOES 2018-08-30: 24 archivos horarios reproyectados

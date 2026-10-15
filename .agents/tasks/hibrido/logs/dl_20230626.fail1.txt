@@ -1,0 +1,10 @@
+2023-06-26: ventana de 882 × 466 píxeles, 8 horas
+  goes_2023062613.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2023062614.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2023062615.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2023062616.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2023062617.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2023062618.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2023062619.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2023062620.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+2023-06-26: sin recortes GOES en /Users/renatogutierrez/Desktop/Amazon/proyecto_final/data/crops/south-central-austral/goes/20230626 (corre antes download_goes.py)

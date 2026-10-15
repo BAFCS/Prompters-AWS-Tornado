@@ -1,0 +1,25 @@
+2024-06-20: ventana de 882 × 466 píxeles, 23 horas
+  goes_2024062000.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062001.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062002.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062003.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062004.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062005.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062006.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062007.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062008.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062009.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062010.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062011.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062012.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062013.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062014.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062015.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062016.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062017.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062018.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062019.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062020.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062021.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+  goes_2024062022.nc: falló (filtros inesperados en /CMI_C08); vuelve a correr para completarla
+2024-06-20: sin recortes GOES en /Users/renatogutierrez/Desktop/Amazon/proyecto_final/data/crops/south-central-austral/goes/20240620 (corre antes download_goes.py)
