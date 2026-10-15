@@ -3,6 +3,14 @@
 Spec: `.kiro/specs/merge-tornado-alert-app/` · Rama: `merge/datos-modelo`
 Bitácora detallada: `docs/logs/progreso.json`
 
+## Sitio público (AWS)
+
+**https://d1m48zea07nk1y.cloudfront.net/resultados/sitio/index.html**
+
+CloudFront `E1QZXODGHESLF4` → bucket `mesocyclonic-dev-data-20261015215812490800000001` (cuenta `gpu`, us-east-1),
+prefijo `resultados/sitio/` (ya permitido por la OAC). Republicar tras regenerar `demo_site/`: `make publish`.
+Sitio público sin autenticación.
+
 ## Correr el prototipo (demo)
 
 ```bash

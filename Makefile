@@ -36,3 +36,13 @@ data/goes:
 .PHONY: sync
 sync: ## fusiona origin/main y las ramas de origen en merge/datos-modelo (sin push)
 	uv run python scripts/app/sync_branches.py
+
+.PHONY: publish
+SITE_BUCKET ?= mesocyclonic-dev-data-20261015215812490800000001
+SITE_DIST ?= E1QZXODGHESLF4
+SITE_PROFILE ?= gpu
+SITE_DIR ?= demo_site
+publish: ## sube el sitio a S3 (resultados/sitio/) e invalida CloudFront
+	aws s3 cp $(SITE_DIR)/index.html s3://$(SITE_BUCKET)/resultados/sitio/index.html --profile $(SITE_PROFILE) --content-type "text/html; charset=utf-8" --cache-control no-cache
+	aws s3 sync $(SITE_DIR)/days s3://$(SITE_BUCKET)/resultados/sitio/days --profile $(SITE_PROFILE) --content-type application/json --cache-control max-age=300 --delete
+	aws cloudfront create-invalidation --distribution-id $(SITE_DIST) --paths "/resultados/sitio/*" --profile $(SITE_PROFILE)
