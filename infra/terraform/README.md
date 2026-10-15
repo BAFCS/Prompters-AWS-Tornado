@@ -1,5 +1,18 @@
 # Despliegue del visor en AWS con Terraform (EC2 + CloudFront)
 
+> [!NOTE]
+> **Ingesta de datos optimizada (data lake en S3).** Este README describe el flujo original: la
+> descarga/subida de datos día a día (ver «Agregar días nuevos» más abajo), que vuelve a leer ERA5
+> cross-region en cada corrida. Existe una **alternativa optimizada** que trae ERA5 (NSF NCAR + CDS)
+> y GOES a nuestro S3 **una sola vez**, recortados a Chile, con una **flota de EC2 en paralelo**
+> (~25× más rápido). Para esa ruta, ver:
+> - `docs/ARQUITECTURA_CLON.md` — diseño, diferencias y hoja de ruta.
+> - `docs/DATOS_AWS.md` — dónde están los datos en S3 y cómo leerlos sin descargar.
+> - `docs/ESTADO_ACTUAL.md` — estado operativo (buckets, cobertura, qué corre).
+> - `docs/PENDIENTES.md` — qué falta (armonización, curación, actualización recurrente).
+>
+> El flujo de abajo sigue siendo válido para pruebas locales de uno o dos días.
+
 Esta carpeta despliega el visor Streamlit en AWS usando **Terraform**, con una instancia **EC2**
 que corre el contenedor Docker del visor y **CloudFront** por delante para dar una URL pública con
 HTTPS que puedes compartir.

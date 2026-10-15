@@ -1,0 +1,54 @@
+#!/bin/bash
+# Worker de ingesta auto-configurable. templatefile() sustituye solo las variables listadas abajo
+# (bucket, region, source, idx, total, fleet_start, fleet_end); todo lo demas (incluido $PATH, $B,
+# $IDX) es shell literal, sin escapes fragiles.
+set -ux
+exec > >(tee /var/log/worker.log) 2>&1
+echo "=== worker setup $(date -u) | source=${source} idx=${idx}/${total} ==="
+
+B="${bucket}"
+REGION="${region}"
+SOURCE="${source}"
+IDX="${idx}"
+TOTAL="${total}"
+
+# Agente SSM (la AMI no lo trae) para poder supervisar.
+dnf install -y amazon-ssm-agent || true
+systemctl enable --now amazon-ssm-agent || true
+
+# AWS CLI v2 aislado + Python 3.11 (la AMI nueva ya no trae 3.12; common.py se hizo compatible
+# con 3.9+ al reemplazar el generic PEP695 de retry() por TypeVar) + git.
+dnf install -y unzip python3.11 python3.11-pip git || true
+cd /tmp
+curl -sS https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
+unzip -q -o awscliv2.zip
+./aws/install --update
+export PATH=/usr/local/bin:$PATH
+
+python3.11 -m venv /opt/lab/venv312
+/opt/lab/venv312/bin/pip install --quiet --upgrade pip
+/opt/lab/venv312/bin/pip install --quiet xarray zarr s3fs netCDF4 h5py h5netcdf numpy pandas boto3
+
+mkdir -p /opt/lab/scripts/ingest /opt/lab/scripts/pipeline
+aws s3 cp "s3://$B/code/ingest/"   /opt/lab/scripts/ingest/   --recursive --region "$REGION"
+aws s3 cp "s3://$B/code/common.py" /opt/lab/scripts/common.py --region "$REGION"
+aws s3 cp "s3://$B/code/pipeline/" /opt/lab/scripts/pipeline/ --recursive --region "$REGION"
+
+cd /opt/lab
+if [ "$SOURCE" = "ncar" ]; then
+  # Si existe la lista de días-bloque (ingesta alrededor de eventos), se usa; si no, rango continuo.
+  if [ -f /opt/lab/scripts/ingest/dias_bloque.json ]; then
+    /opt/lab/venv312/bin/python scripts/ingest/ingest_ncar_parallel.py \
+      --days-file /opt/lab/scripts/ingest/dias_bloque.json --workers 8 \
+      --shard-index "$IDX" --shard-total "$TOTAL" > /tmp/shard.log 2>&1
+  else
+    /opt/lab/venv312/bin/python scripts/ingest/ingest_ncar_parallel.py \
+      --start "${fleet_start}" --end "${fleet_end}" --workers 6 \
+      --shard-index "$IDX" --shard-total "$TOTAL" > /tmp/shard.log 2>&1
+  fi
+else
+  /opt/lab/venv312/bin/python scripts/ingest/ingest_goes_multiband.py \
+    --start "${fleet_start}" --end "${fleet_end}" --bands 10 14 15 --workers 4 \
+    --shard-index "$IDX" --shard-total "$TOTAL" > /tmp/shard.log 2>&1
+fi
+echo "=== worker fin $(date -u) ==="

@@ -1,0 +1,62 @@
+#!/bin/bash
+# user-data de la EC2 de ENTRENAMIENTO (us-west-2, cerca de ERA5). Clona el repo, instala uv,
+# genera los índices ERA5 de los días con evento, entrena XGBoost y sube los resultados a S3.
+# Al terminar, opcionalmente apaga la instancia para no seguir cobrando.
+set -euxo pipefail
+
+exec > >(tee /var/log/training.log) 2>&1
+echo "=== Inicio del entrenamiento: $(date -u) ==="
+
+DATA_BUCKET="${data_bucket}"
+BUCKET_REGION="${bucket_region}"
+REPO_URL="${repo_url}"
+REPO_BRANCH="${repo_branch}"
+REGION_NAME="${region_name}"
+MAX_EVENT_DAYS="${max_event_days}"
+UNLABELED_DAYS="${unlabeled_days}"
+STOP_AFTER="${stop_after}"
+APP_DIR=/opt/mesocyclonic-train
+
+# --- Dependencias del sistema ---------------------------------------------------------------
+dnf update -y
+dnf install -y git tar gzip
+if ! command -v aws >/dev/null 2>&1; then
+  dnf install -y awscli || true
+fi
+
+# uv (instalador de Python y librerías del proyecto).
+export HOME=/root
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="/root/.local/bin:$PATH"
+
+# --- Código ---------------------------------------------------------------------------------
+rm -rf "$APP_DIR"
+git clone --depth 1 --branch "$REPO_BRANCH" "$REPO_URL" "$APP_DIR"
+cd "$APP_DIR"
+uv sync --frozen
+
+# --- Catálogo desde S3 (lo subió el visor) --------------------------------------------------
+mkdir -p "$APP_DIR/data"
+aws s3 cp "s3://$DATA_BUCKET/data/tornados_chile.xlsx" "$APP_DIR/data/tornados_chile.xlsx" --region "$BUCKET_REGION"
+
+# --- Entrenamiento: genera índices ERA5 + entrena + sube resultados -------------------------
+# AWS_DEFAULT_REGION se deja en la región de ERA5 para la lectura anónima de nsf-ncar-era5.
+export AWS_DEFAULT_REGION="${training_region}"
+
+uv run python scripts/model/run_cloud_training.py \
+  --catalog "$APP_DIR/data/tornados_chile.xlsx" \
+  --out "s3://$DATA_BUCKET/resultados" \
+  --indices-s3 "s3://$DATA_BUCKET/era5_indices" \
+  --region "$REGION_NAME" \
+  --max-event-days "$MAX_EVENT_DAYS" \
+  --unlabeled-days "$UNLABELED_DAYS"
+
+echo "=== Resultados subidos a s3://$DATA_BUCKET/resultados/ : $(date -u) ==="
+
+# --- Apagado opcional para ahorrar costo ----------------------------------------------------
+if [ "$STOP_AFTER" = "true" ]; then
+  echo "Apagando la instancia de entrenamiento..."
+  TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+  IID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+  aws ec2 stop-instances --region "${training_region}" --instance-ids "$IID" || true
+fi
