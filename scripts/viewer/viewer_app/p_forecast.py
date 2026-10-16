@@ -31,9 +31,11 @@ def page() -> None:
     )
     st.caption(
         "Índice relativo: no es una probabilidad calibrada ni un pronóstico oficial. "
+        "Modelo v2: GOES de una sola fuente (bucket del equipo) para días con y sin tornado. "
         "El 30 y 31 de mayo de 2019 se predicen **fuera de muestra** (el modelo no vio esos días); "
         "los demás días los vio en el entrenamiento. Validación dejando un evento afuera: "
-        "CSI 0,345 (híbrido) frente a 0,294 (solo variables físicas) y 0,274 (solo ERA5)."
+        "CSI 0,298 (híbrido) frente a 0,309 (solo variables físicas) y 0,271 (solo ERA5); "
+        "con pocos eventos (37) las diferencias entre las dos primeras están dentro del ruido."
     )
     url = site_url()
     # El mapa toma los colores del tema activo del visor (claro u oscuro).
