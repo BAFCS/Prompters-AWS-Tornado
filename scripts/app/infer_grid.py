@@ -216,6 +216,7 @@ def evaluation(model_dir: Path, day: dt.date) -> dict[str, Any]:
         "en_entrenamiento": inside,
         "dias_entrenamiento": len(used),
         "excluidos": list(s.get("args", {}).get("exclude_days", [])),
+        **({"version": s["version"]} if s.get("version") else {}),
     }
 
 

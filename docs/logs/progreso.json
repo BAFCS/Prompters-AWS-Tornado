@@ -156,5 +156,16 @@
       "adaptador lee goes_<ymd>_C13.nc",
       "mínimo de árboles para evitar modelo degenerado"
     ]
+  },
+  {
+    "timestamp": "2026-10-16T02:00:06Z",
+    "tarea": "Reentreno modelo híbrido v2 (GOES solo del bucket) y publicación",
+    "estado": "hecho",
+    "notas": "35 días evento + 70 negativos; LOEO CSI embeddings 0.298, physical 0.309, baseline 0.271; holdout 2019-05-30/31: 7/7 eventos en el 0,6 % superior; 22694 imágenes Titan; sitio v2 publicado; artefactos en s3://mesocyclonic-model-905418466452/models/v2_2026-10-15/",
+    "decisiones": [
+      "GOES NOAA de v1 movido a data/crops/_noaa_v1_backup/",
+      "Se publica embeddings aunque physical tiene CSI algo mayor (dentro del ruido)",
+      "Texto de la pestaña actualizado en adapter-bucket; requiere reiniciar la EC2"
+    ]
   }
 ]

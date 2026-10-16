@@ -40,6 +40,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -55,6 +56,7 @@ for _p in (ROOT / "scripts", ROOT / "scripts" / "model", ROOT / "scripts" / "mod
 import bedrock_encoder as be  # noqa: E402
 import build_table as bt  # noqa: E402
 import compose_rgb as cr  # noqa: E402
+import encode_bedrock as enc  # noqa: E402
 import goes_features as gf  # noqa: E402
 import loeo  # noqa: E402
 import rgb  # noqa: E402
@@ -111,6 +113,22 @@ def _fit_xgb_min_rounds(
 _ORIG_FIT_XGB = loeo.fit_xgb
 # run_loeo y train_final (que llama sm_job/train_entry) buscan fit_xgb en el módulo loeo.
 loeo.fit_xgb = _fit_xgb_min_rounds  # type: ignore[assignment]
+# Todos los núcleos para XGBoost (tree_method ya es hist en loeo.XGB_PARAMS).
+loeo.XGB_PARAMS["n_jobs"] = -1
+
+
+class Timer:
+    """Tiempo de reloj por etapa (segundos), para ``train_summary.json``."""
+
+    def __init__(self) -> None:
+        self.t0 = time.perf_counter()
+        self.stages: dict[str, float] = {}
+
+    def lap(self, name: str) -> None:
+        now = time.perf_counter()
+        self.stages[name] = round(now - self.t0, 1)
+        print(f"[tiempo] {name}: {self.stages[name]:.1f} s", flush=True)
+        self.t0 = now
 
 
 def _py() -> list[str]:
@@ -202,19 +220,45 @@ def pick_days(a: argparse.Namespace) -> tuple[list[dt.date], list[dt.date]]:
     return ev, neg[: a.max_neg_days]
 
 
-def sync_era5(bucket: str, days: list[dt.date], workers: int) -> None:
-    """Baja del bucket los índices ERA5 que falten (los días pedidos y su día anterior)."""
+def _bucket_has_bands(bucket: str, day: dt.date) -> bool:
+    """True si ``goes_store`` del bucket trae C13 (con o sin sufijo) y C08 para ``day``."""
+    import fsspec
+
+    fs = fsspec.filesystem("s3", anon=True)
+    base = f"{bucket}/goes_store/{day:%Y-%m-%d}/goes_{day:%Y%m%d}"
+    c13 = fs.exists(f"{base}.nc") or fs.exists(f"{base}_C13.nc")
+    return c13 and fs.exists(f"{base}_C08.nc")
+
+
+def sync_bucket(bucket: str, days: list[dt.date], workers: int, goes: bool) -> None:
+    """Baja del bucket lo que falte: ERA5 de los días y su día anterior y, con ``goes``, GOES.
+
+    Un proceso ``sync_from_bucket`` por día, ``workers`` a la vez (paralelismo real: cada uno es
+    un intérprete aparte). GOES solo se baja si el bucket trae C08 y C13 del día; si no, el día
+    queda sin GOES (sus Variables_GOES y embeddings en NaN) en vez de quedar con C13 solo.
+    """
     need = sorted(
         {x for d in days for x in (d, d - dt.timedelta(days=1)) if not _era5_file(x).exists()}
     )
-    print(f"[sync] ERA5 faltantes: {len(need)}", flush=True)
+    jobs: list[tuple[dt.date, str]] = [(d, "era5") for d in need]
+    if goes:
+        todo = [d for d in days if not _has_goes(d)]
+        with ThreadPoolExecutor(workers) as ex:
+            ok = list(ex.map(lambda d: _bucket_has_bands(bucket, d), todo))
+        jobs += [(d, "goes") for d, k in zip(todo, ok, strict=True) if k]
+        no_bands = [str(d) for d, k in zip(todo, ok, strict=True) if not k]
+        if no_bands:
+            print(f"[sync] sin C08+C13 en el bucket (GOES en NaN): {no_bands}", flush=True)
+    print(f"[sync] faltantes: {sum(k == 'era5' for _, k in jobs)} ERA5, "
+          f"{sum(k == 'goes' for _, k in jobs)} GOES", flush=True)  # fmt: skip
 
-    def one(d: dt.date) -> int:
-        cmd = [*_py(), str(SYNC), "--bucket", bucket, "--start", d.isoformat(), "--only", "era5"]
-        return _run(cmd, log=WORK / "logs" / f"sync_{d:%Y%m%d}.log")
+    def one(job: tuple[dt.date, str]) -> int:
+        d, kind = job
+        cmd = [*_py(), str(SYNC), "--bucket", bucket, "--start", d.isoformat(), "--only", kind]
+        return _run(cmd, log=WORK / "logs" / f"sync_{kind}_{d:%Y%m%d}.log")
 
     with ThreadPoolExecutor(workers) as ex:
-        list(ex.map(one, need))
+        list(ex.map(one, jobs))
 
 
 def goes_features(days: list[dt.date], workers: int) -> None:
@@ -290,24 +334,26 @@ def candidate_times(
     if require_goes:
         times = sorted(t for t in available if t in ok)
         return times, {"horas": len(times)}
+    hours_of_day = {
+        (t + pd.Timedelta(hours=k)).hour
+        for d in days
+        if d in ev_t
+        for t in ev_t[d]
+        for k in range(-EVENT_PAD_H, EVENT_PAD_H + 1)
+    }
     by_day: dict[dt.date, set[pd.Timestamp]] = {}
     for d in days:
         if d not in ev_t:
             continue
         if _has_goes(d):
-            by_day[d] = {t for t in ok if t.date() == d} | ev_t[d]
+            # GOES del bucket cubre el día entero: mismas horas del día que los negativos.
+            by_day[d] = {t for t in ok if t.date() == d and t.hour in hours_of_day} | ev_t[d]
         else:
             by_day[d] = {
                 t + pd.Timedelta(hours=k)
                 for t in ev_t[d]
                 for k in range(-EVENT_PAD_H, EVENT_PAD_H + 1)
             }
-    hours_of_day = {
-        (t + pd.Timedelta(hours=k)).hour
-        for d in by_day
-        for t in ev_t[d]
-        for k in range(-EVENT_PAD_H, EVENT_PAD_H + 1)
-    }
     for d in days:
         if d not in ev_t:
             by_day[d] = {t for t in ok if t.date() == d and t.hour in hours_of_day}
@@ -373,22 +419,28 @@ def encode(manifest: Path, days: list[dt.date], a: argparse.Namespace) -> Path:
     )
     if new > a.max_images:
         raise SystemExit(f"error: {new} llamadas superan el tope --max-images {a.max_images}")
-    cmd = [
-        *_py(), "scripts/model/encode_bedrock.py", "--manifest", str(manifest), "--model", a.model,
-        "--cache", "local", "--ml-region", a.ml_region,
-        "--start", min(days).isoformat(), "--end", max(days).isoformat(), "--region", REGION,
-    ]  # fmt: skip
-    code = _run(cmd, env={"AWS_PROFILE": a.profile})
-    if code != 0:
-        print(f"  aviso: encode_bedrock terminó con código {code} (imágenes fallidas)", flush=True)
-    tag = pd.read_parquet(manifest, columns=["recipe", "recipe_version"]).iloc[0]
-    name = (
-        f"{a.model}_{be.MODELS[a.model].default_dim}_{tag['recipe']}_v{int(tag['recipe_version'])}"
+    # Lo mismo que la CLI encode_bedrock (misma caché, receta y modelo), pero con
+    # ``--bedrock-workers`` hilos (infer_grid.encode_parallel); los reintentos con espera
+    # creciente los hace BedrockEncoder.
+    import infer_grid
+
+    os.environ["AWS_PROFILE"] = a.profile
+    spec = be.MODELS[a.model]
+    items, _ = enc.read_items(manifest, days)
+    runtime, control = be.make_clients(a.ml_region)
+    encoder = be.BedrockEncoder(
+        runtime, control, spec, spec.default_dim, be.LocalCache(MODEL_DATA / "embeddings" / "cache")
     )
-    src = MODEL_DATA / REGION / "embeddings" / f"{name}.parquet"
+    encoder.preflight(a.ml_region)
+    summary = infer_grid.encode_parallel(encoder, items, a.bedrock_workers)
+    if summary.failed:
+        print(f"  aviso: {summary.failed} imágenes fallidas (sus filas quedan en NaN)", flush=True)
     dst = WORK / "embeddings.parquet"
-    shutil.copyfile(src, dst)
-    shutil.copyfile(src.parent / "run_summary.json", WORK / "embeddings_run_summary.json")
+    enc.embeddings_frame(summary, spec.model_id, spec.default_dim).to_parquet(dst, index=False)
+    report = summary.to_json(spec.model_id, spec.default_dim)
+    (WORK / "embeddings_run_summary.json").write_text(
+        json.dumps(report, indent=2, ensure_ascii=False), "utf-8"
+    )
     return dst
 
 
@@ -477,6 +529,58 @@ def oof_summary(m: dict, n_test_unlabeled: dict[str, int]) -> dict:
     return {"per_event": per}
 
 
+def bias_check(df: pd.DataFrame, event_days: set[dt.date]) -> dict:
+    """Comprobación de sesgo de fuente GOES sobre la tabla ``physical``.
+
+    - Media, desviación y fracción NaN de cada Variable_GOES (hora t) en tres grupos: positivas,
+      no etiquetadas de días de evento y filas de días negativos.
+    - AUC (validación cruzada agrupada por día) de un XGBoost pequeño que, solo con Variables_GOES
+      y solo con filas no etiquetadas, distingue «día de evento» de «día negativo». Con una sola
+      fuente debería quedar en la señal meteorológica (días de evento más tormentosos); un AUC
+      cercano a 1 haría sospechar de la fuente.
+    """
+    from sklearn.metrics import roc_auc_score
+    from sklearn.model_selection import GroupKFold
+
+    cols = [c for c in tb.GOES_FEATURES if c in df.columns]
+    day = tb.utc(df["time"]).dt.date
+    is_ev = day.isin(event_days).to_numpy()
+    lab = df["label"].to_numpy() == 1
+    groups = {
+        "positivas": lab,
+        "no_etiquetadas_dias_evento": ~lab & is_ev,
+        "dias_negativos": ~lab & ~is_ev,
+    }
+    stats = {
+        g: {
+            "n": int(m.sum()),
+            **{
+                c: {
+                    "mean": round(float(df.loc[m, c].mean()), 3),
+                    "std": round(float(df.loc[m, c].std()), 3),
+                    "nan": round(float(df.loc[m, c].isna().mean()), 3),
+                }
+                for c in cols
+            },
+        }
+        for g, m in groups.items()
+    }
+    unl = ~lab
+    X = df.loc[unl, cols].to_numpy(dtype=float)
+    y = is_ev[unl].astype(int)
+    g = day[unl].astype(str).to_numpy()
+    oof = np.full(len(y), np.nan)
+    for tr, te in GroupKFold(n_splits=5).split(X, y, g):
+        m = xgb.XGBClassifier(n_estimators=200, max_depth=3, learning_rate=0.05, n_jobs=-1,
+                              tree_method="hist")  # fmt: skip
+        m.fit(X[tr], y[tr])
+        oof[te] = m.predict_proba(X[te])[:, 1]
+    return {
+        "stats": stats,
+        "auc_dia_evento_vs_negativo_goes_only": round(float(roc_auc_score(y, oof)), 3),
+    }
+
+
 def column_counts(df: pd.DataFrame, config: str) -> dict[str, int]:
     """Columnas de variables por tipo en la tabla de ``config``."""
     n_emb = sum(str(c).startswith("emb_") for c in df.columns)
@@ -524,16 +628,26 @@ def main() -> None:
         "--skip-encode", action="store_true", help="no llamar a Bedrock (sin embeddings)"
     )
     p.add_argument("--workers", type=int, default=4)
+    p.add_argument("--sync-goes", action="store_true",
+                   help="con --bucket, baja también GOES (C08 + C13) de los días que no lo tengan")  # fmt: skip
+    p.add_argument("--bedrock-workers", type=int, default=8, help="hilos de llamadas a Bedrock")
+    p.add_argument("--version", default="", help="etiqueta del modelo (p. ej. v2) para el sitio")
     a = p.parse_args()
     OUT = a.out.resolve()
     WORK = OUT / "work"
+    timer = Timer()
 
     configs = [c for c in a.configs if not (a.skip_encode and c == "embeddings")]
     WORK.mkdir(parents=True, exist_ok=True)
-    ev, neg = pick_days(a)
     if a.bucket:
-        sync_era5(a.bucket, ev + neg, a.workers)
-        ev, neg = pick_days(a)
+        events, _ = catalog_days()
+        wanted = {dt.date.fromisoformat(d) for d in [*a.days, *read_day_list(a.neg_days_file)]}
+        if not a.days:
+            wanted |= events
+        wanted -= {dt.date.fromisoformat(d) for d in a.exclude_days}
+        sync_bucket(a.bucket, sorted(wanted), a.workers, a.sync_goes)
+    timer.lap("sync")
+    ev, neg = pick_days(a)
     days = sorted(ev + neg)
     print(f"Días: {len(days)} ({len(ev)} con evento, {len(neg)} negativos)", flush=True)
     print(f"  eventos: {[str(d) for d in ev]}\n  negativos: {[str(d) for d in neg]}", flush=True)
@@ -542,7 +656,9 @@ def main() -> None:
 
     if "baseline_era5" not in configs or len(configs) > 1:
         goes_features(days, a.workers)
+    timer.lap("goes_features")
     cells = select(days, a.ratio, a.seed, a.require_goes)
+    timer.lap("select")
 
     summary: dict = {
         "generated_utc": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
@@ -556,13 +672,16 @@ def main() -> None:
         manifest = compose(cells, a.recipe, a.size, a.window_km)
         skipped = pd.read_parquet(manifest.parent / "skipped.parquet")
         summary["rgb"] = {"images": len(pd.read_parquet(manifest)), "skipped": len(skipped)}
+        timer.lap("compose_rgb")
         emb = encode(manifest, days, a)
         summary["bedrock"] = json.loads((WORK / "embeddings_run_summary.json").read_text())
         summary["bedrock"].pop("failures", None)
+        timer.lap("bedrock")
 
     cell_days = sorted(set(tb.utc(cells["time"]).dt.date))
     summary["cells"]["days_with_cells"] = len(cell_days)
     tables = {c: build_tables(c, cell_days, emb, a.workers) for c in configs}
+    timer.lap("build_tables")
     # Mismas particiones para todas las configuraciones (dependen solo de label/event_id/fold_group).
     folds = loeo.compute_folds(next(iter(tables.values())))
     folds_json = loeo.folds_to_json(folds, a.seed)
@@ -600,6 +719,11 @@ def main() -> None:
         print(f"== {c}: POD={sel['pod']:.3f} FAR={sel['far']:.3f} CSI={sel['csi']:.3f}", flush=True)
     # Unlabeled en prueba por partición (para comprobar que FAR no es trivialmente 0).
     summary["unlabeled_in_test_per_fold"] = n_test_unl
+    if "physical" in tables:
+        summary["source_bias_check"] = bias_check(tables["physical"], set(ev))
+    timer.lap("train")
+    summary["timings_s"] = timer.stages
+    summary["version"] = a.version
     (OUT / "train_summary.json").write_text(json.dumps(summary, indent=2, default=str), "utf-8")
     print(f"Resumen en {OUT / 'train_summary.json'}", flush=True)
 

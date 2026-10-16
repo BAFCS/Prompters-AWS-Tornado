@@ -1,0 +1,270 @@
+{
+  "seed": 0,
+  "folds": [
+    {
+      "held": "20180322-52",
+      "date": "2018-03-22",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20180323-53",
+      "date": "2018-03-23",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20180930-55",
+      "date": "2018-09-30",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20190530-56",
+      "date": "2019-05-30",
+      "dev": true,
+      "skipped": false
+    },
+    {
+      "held": "20190530-57",
+      "date": "2019-05-30",
+      "dev": true,
+      "skipped": false
+    },
+    {
+      "held": "20190530-58",
+      "date": "2019-05-30",
+      "dev": true,
+      "skipped": false
+    },
+    {
+      "held": "20190530-59",
+      "date": "2019-05-30",
+      "dev": true,
+      "skipped": false
+    },
+    {
+      "held": "20190530-60",
+      "date": "2019-05-30",
+      "dev": true,
+      "skipped": false
+    },
+    {
+      "held": "20190531-61",
+      "date": "2019-05-31",
+      "dev": true,
+      "skipped": false
+    },
+    {
+      "held": "20190531-62",
+      "date": "2019-05-31",
+      "dev": true,
+      "skipped": false
+    },
+    {
+      "held": "20190613-63",
+      "date": "2019-06-13",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20191028-64",
+      "date": "2019-10-28",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20200425-65",
+      "date": "2020-04-25",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20200503-66",
+      "date": "2020-05-03",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20200619-68",
+      "date": "2020-06-19",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20200624-70",
+      "date": "2020-06-24",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20200629-71",
+      "date": "2020-06-29",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20200629-72",
+      "date": "2020-06-29",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20200704-73",
+      "date": "2020-07-04",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20210408-75",
+      "date": "2021-04-08",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20210503-76",
+      "date": "2021-05-03",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20210609-77",
+      "date": "2021-06-09",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20210609-78",
+      "date": "2021-06-09",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20210609-79",
+      "date": "2021-06-09",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20210819-80",
+      "date": "2021-08-19",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20220308-81",
+      "date": "2022-03-08",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20220701-82",
+      "date": "2022-07-01",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20220815-83",
+      "date": "2022-08-15",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20230602-86",
+      "date": "2023-06-02",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20230607-87",
+      "date": "2023-06-07",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20230625-88",
+      "date": "2023-06-25",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20230626-89",
+      "date": "2023-06-26",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20230626-90",
+      "date": "2023-06-26",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20230627-91",
+      "date": "2023-06-27",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20230714-92",
+      "date": "2023-07-14",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20230906-93",
+      "date": "2023-09-06",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20230911-94",
+      "date": "2023-09-11",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20240525-95",
+      "date": "2024-05-25",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20240618-96",
+      "date": "2024-06-18",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20240620-97",
+      "date": "2024-06-20",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20240620-98",
+      "date": "2024-06-20",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20240621-99",
+      "date": "2024-06-21",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20250517-100",
+      "date": "2025-05-17",
+      "dev": false,
+      "skipped": false
+    },
+    {
+      "held": "20250525-101",
+      "date": "2025-05-25",
+      "dev": false,
+      "skipped": false
+    }
+  ],
+  "n_skipped": 0
+}

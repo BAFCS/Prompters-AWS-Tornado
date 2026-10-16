@@ -82,6 +82,20 @@ Abrir `tasks.md` en Kiro y usar "Run All Tasks".
   del bucket. El bucket ya trae GOES 2018–2026 (2.991 archivos, 21 días con evento con C08+C13; 2023–2024
   aún a medias; 2017 sin datos). Reentrenar con GOES del bucket para todos los días.
 
+## Modelo híbrido v2 (2026-10-15, publicado)
+
+- Reentreno con GOES **solo del bucket** para eventos y negativos (sin sesgo de fuente NOAA/bucket):
+  35 días de evento (44 positivas) + 70 negativos estratificados por mes (`.agents/tasks/hibrido/v2_neg_days.txt`).
+  GOES de NOAA de v1 apartado en `data/crops/_noaa_v1_backup/`.
+- LOEO (37 eventos): CSI embeddings 0,298 · physical 0,309 · baseline 0,271 (v1: 0,345 / 0,294 / 0,274);
+  retención 2019-05-30/31: embeddings 0,322, physical 0,385. Comprobación de sesgo: AUC día-evento vs
+  negativo con GOES solo ≈ 0,45–0,55 en v1 y v2 (sin sesgo detectable). Sigue publicado embeddings.
+- Artefactos: `models/v2/`, `demo_site_v2/`, `s3://mesocyclonic-model-905418466452/models/v2_2026-10-15/` y
+  `sites/v2_2026-10-15/`. Sitio público ya en v2 (`make publish SITE_DIR=demo_site_v2`).
+- Texto de métricas de la pestaña actualizado en `adapter-bucket` (`9d82a1d`): **requiere reiniciar la EC2**
+  del visor (no hecho). Detalle: `.agents/tasks/hibrido/v2_report.md`.
+- Pendiente: 2024-06-20 y 2025-05-17 sin C08 en el bucket (GOES en NaN solo en días de evento: posible pista).
+
 ## Pestaña "Mapa del modelo" en el visor de producción (2026-10-16)
 
 - URL: https://d1m48zea07nk1y.cloudfront.net/mapa-modelo (junto a «Predecir»). Código en la rama de

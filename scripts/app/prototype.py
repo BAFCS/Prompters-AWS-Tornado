@@ -136,7 +136,15 @@ def model_info(meta: dict | None) -> dict:
     """Lo que el sitio muestra del modelo: carpeta, configuración y si el día es fuera de muestra."""
     if not meta:
         return {}
-    keys = ("config", "model_dir", "evaluacion", "en_entrenamiento", "generado", "stride")
+    keys = (
+        "config",
+        "model_dir",
+        "evaluacion",
+        "en_entrenamiento",
+        "generado",
+        "stride",
+        "version",
+    )
     return {k: meta[k] for k in keys if k in meta}
 
 
@@ -157,6 +165,8 @@ def day_payload(pred: pd.DataFrame, modelo: str, meta: dict | None = None) -> di
         hours[str(int(hour))] = [None if np.isnan(v) else int(v) for v in vals.ravel()]
     info = model_info(meta)
     badge = BADGES[modelo]
+    if info.get("version"):
+        badge += f" {info['version']}"
     if info.get("en_entrenamiento") is False:
         badge += " · fuera de muestra (día retenido)"
     elif info.get("en_entrenamiento") is True:
