@@ -170,13 +170,12 @@ def loeo_cv(df: pd.DataFrame, feats: list[str], balance: str) -> dict:
     """
     import xgboost as xgb
 
-    ev_ids = sorted(e for e in df.loc[df["label"] == 1, "event_id"].unique() if e)
-    if len(ev_ids) < 3:
-        return {"error": f"muy pocos eventos ({len(ev_ids)})"}
+    ev_days = sorted({e.rsplit("-", 1)[0] for e in df.loc[df["label"] == 1, "event_id"].unique() if e})
+    if len(ev_days) < 3:
+        return {"error": f"muy pocos días de evento ({len(ev_days)})"}
     feats = [f for f in feats if f in df]
     oof_y, oof_p, per_fold_csi = [], [], []
-    for ev in ev_ids:
-        day_of_ev = ev.split("-")[0]  # deja fuera TODO el día del evento (bloque)
+    for day_of_ev in ev_days:
         test_mask = df["date"].astype(str) == day_of_ev
         train = df[~test_mask]
         test = df[test_mask]
@@ -201,7 +200,7 @@ def loeo_cv(df: pd.DataFrame, feats: list[str], balance: str) -> dict:
     # umbral que maximiza CSI (informativo)
     best = max(((metrics(y, p, t)["CSI"], t) for t in np.linspace(0.05, 0.9, 18)), key=lambda x: x[0])
     agg["CSI_max"] = round(best[0], 3); agg["thr_max"] = round(best[1], 2)
-    agg["n_eventos"] = len(ev_ids)
+    agg["n_eventos"] = len(ev_days)
     agg["CSI_std_folds"] = round(float(np.std(per_fold_csi)), 3)
     agg["n_features"] = len(feats)
     return agg

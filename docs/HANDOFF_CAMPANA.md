@@ -41,7 +41,30 @@ Resultados a `s3://mesocyclonic-model-905418466452/experimentos/campania/<cfg>_l
    `df["date"].astype(str) == day_of_ev`. **ÚLTIMO FIX, en corrida 6 (i-059319ab47209330c).**
 
 ## HIPÓTESIS DEL BUG "sin folds válidos" (acotado, para arrancar directo)
-Hecho: 55 positivos en 48 días de evento cargados, pero LOEO reporta 0 folds válidos → el filtro
+RESUELTO: era `day_of_ev = ev.split("-")[0]` → daba el AÑO ("2024") en vez de la fecha; al filtrar
+`date=="2024"` ningún día matcheaba → test vacío → fold inválido. **Fix aplicado**: usar
+`ev_days = {e.rsplit("-",1)[0] ...}` y agrupar por fecha completa (train_campaign.py ya corregido y
+subido a code/model/). Validado por lógica en local (carga 619k filas OK, etiqueta positivos OK).
+
+## KPIs OBJETIVO (vara de éxito — imagen del equipo, Acto 3)
+- ⭐ **POD ≥ 70%** sobre los tornados de 2026 NO vistos al entrenar (= nuestro holdout temporal). Base: 0/7.
+- **FAR ≤ 50%** (base ~70%; base = días SHERBE≥1 sin tornado).
+- **Alertas por tornado ≤ 2** (días que un experto revisa por acierto; base ~4).
+- Nota: con ~37-55 positivos la vara es exigente; reportar honesto con IC. Si no se alcanza, plantear
+  alternativas (no forzar).
+
+## BLOQUEO ACTUAL (no es el modelo — es el user-data de la EC2)
+El fix de folds YA está. El último obstáculo son errores de user-data en las EC2 entrenadoras:
+- corrida 7: script buscado en /tmp en vez de /opt/code/model (ruta).
+- corrida 8: `cd /opt/code/model: No such file or directory` → el bloque de setup (mkdir + aws s3 cp
+  del código) NO se ejecutó antes del loop; probablemente el setup falló silencioso (sin set -e) o el
+  `aws s3 cp s3://.../code/model/` no corrió. El loop arrancó sin el código descargado.
+ARREGLO PARA LA PRÓXIMA: user-data con `set -e`, verificar que `/opt/code/model/train_campaign.py`
+existe ANTES del loop (ej. `test -f ... || exit 1`), y subir el log de setup siempre. O más simple:
+meter TODO (setup+corrida) en un script único que se baje primero y se ejecute, en vez de inline.
+Alternativa robusta: usar SageMaker (rol AmazonSageMakerExecutionRole ya existe en cuenta B).
+
+## HIPÓTESIS DEL BUG "sin folds válidos" (resuelto arriba; histórico)
 `test["label"].sum()==0` se cumple siempre. Es decir: al tomar `test = df[df.date==día_evento]`, ese
 subconjunto NO tiene el positivo. Causas probables a revisar EN ORDEN:
   1. **Índice desalineado**: `add_lags` hace `df.sort_values(...)` y luego `label_events` usa
