@@ -1,6 +1,13 @@
-"""Página «Predecir»: sube una imagen GOES y el modelo estima la probabilidad de tornado por área.
+"""Página «Predecir»: probabilidad de tornado por área con el modelo entrenado y una demo con imagen.
 
-Demostración del pipeline de inferencia dentro del visor. Dos modos:
+**Modelo v2 (por defecto)**: XGBoost ``physical`` (índices ERA5 + variables GOES C08/C13) entrenado
+con etiquetas reales del catálogo (rama ``merge/datos-modelo``). Sus predicciones por celda de 0,25°
+y hora UTC para los días con tornado se calculan con ``scripts/app/infer_grid.py`` y se publican en
+``/resultados/sitio/days/`` del mismo CloudFront; esta página las lee y las dibuja sobre la imagen GOES
+de esa hora. Validación dejando un evento afuera: CSI 0,31 y PR-AUC 0,43; el 30 y 31 de mayo de 2019
+son fuera de muestra (modelo entrenado sin esos días).
+
+**Demo con imagen** (modelo de ejemplo, el comportamiento anterior). Dos modos:
 
 - **Solo imagen**: las features ERA5 se rellenan con sus valores típicos (mediana del entorno
   tornádico), para predecir con una sola entrada.
@@ -14,9 +21,11 @@ Es una demostración con un modelo de ejemplo: no sustituye un pronóstico opera
 """
 
 import base64
+import contextlib
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -32,18 +41,81 @@ NORTH, SOUTH, WEST, EAST = -30.0, -56.0, -76.0, -66.0
 GRID_RES = 0.25
 
 ERA5_FEATURES = [
-    "cape", "shear_01", "shear_03", "shear_06", "srh_01", "srh_03",
-    "lcl", "gamma_03", "gamma_75", "vgp_01", "stp_lm", "sherbs3",
+    "cape",
+    "shear_01",
+    "shear_03",
+    "shear_06",
+    "srh_01",
+    "srh_03",
+    "lcl",
+    "gamma_03",
+    "gamma_75",
+    "vgp_01",
+    "stp_lm",
+    "sherbs3",
 ]
 ERA5_RANGES = {
-    "cape": (0.0, 3000.0, 500.0), "shear_01": (0.0, 30.0, 10.0), "shear_03": (0.0, 40.0, 15.0),
-    "shear_06": (0.0, 50.0, 20.0), "srh_01": (-400.0, 100.0, -100.0), "srh_03": (-600.0, 100.0, -150.0),
-    "lcl": (0.0, 3000.0, 800.0), "gamma_03": (0.0, 10.0, 6.0), "gamma_75": (0.0, 10.0, 6.5),
-    "vgp_01": (0.0, 0.5, 0.15), "stp_lm": (-3.0, 1.0, -0.5), "sherbs3": (0.0, 3.0, 1.0),
+    "cape": (0.0, 3000.0, 500.0),
+    "shear_01": (0.0, 30.0, 10.0),
+    "shear_03": (0.0, 40.0, 15.0),
+    "shear_06": (0.0, 50.0, 20.0),
+    "srh_01": (-400.0, 100.0, -100.0),
+    "srh_03": (-600.0, 100.0, -150.0),
+    "lcl": (0.0, 3000.0, 800.0),
+    "gamma_03": (0.0, 10.0, 6.0),
+    "gamma_75": (0.0, 10.0, 6.5),
+    "vgp_01": (0.0, 0.5, 0.15),
+    "stp_lm": (-3.0, 1.0, -0.5),
+    "sherbs3": (0.0, 3.0, 1.0),
 }
 
 # Bucket público del equipo con las imágenes GOES de Chile y los días con tornado conocidos.
 BUCKET = "mesocyclonic-test-data-20261015013924290100000003"
+
+
+# --- Modelo v2 real: predicciones publicadas por scripts/app/infer_grid.py ---------------------
+MODEL_SITE = os.environ.get(
+    "FORECAST_DATA_URL", "https://d1m48zea07nk1y.cloudfront.net/resultados/sitio/days"
+)
+MODEL_LABEL = "XGBoost v2 · ERA5 + variables GOES (etiquetas reales)"
+
+
+def _fetch_json(url: str) -> dict:
+    """Descarga y decodifica un JSON por HTTPS."""
+    import urllib.request
+
+    with urllib.request.urlopen(url, timeout=20) as r:  # noqa: S310 (URL fija del proyecto)
+        return json.loads(r.read().decode("utf-8"))
+
+
+@st.cache_data(show_spinner=False, ttl=600)
+def _model_days() -> list[str]:
+    """Días con predicción del modelo v2 publicada (``days/index.json``); vacío si no responde."""
+    try:
+        return list(_fetch_json(f"{MODEL_SITE}/index.json")["days"])
+    except Exception:  # noqa: BLE001
+        return []
+
+
+@st.cache_data(show_spinner=False, ttl=600)
+def _model_day(day: str) -> dict:
+    """JSON del día (ejes, enteros 0–10000 por hora, eventos del catálogo e insignia del modelo)."""
+    return _fetch_json(f"{MODEL_SITE}/{day}.json")
+
+
+def _model_grid(payload: dict, hour: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Probabilidad (0–1, NaN sin dato) de la hora ``hour`` en la grilla del JSON, con sus ejes."""
+    lat = np.array(payload["lats"], dtype=float)
+    lon = np.array(payload["lons"], dtype=float)
+    vals = payload["hours"][str(hour)]
+    arr = np.array([np.nan if v is None else v / 10000 for v in vals], dtype=float)
+    return arr.reshape(len(lat), len(lon)), lat, lon
+
+
+def _nearest_scene(horas: list[str], hour: int) -> int:
+    """Índice del barrido GOES más cercano a ``hour`` UTC (las horas vienen como HH:MM)."""
+    mins = [int(h[:2]) * 60 + int(h[3:5]) for h in horas]
+    return int(np.argmin([abs(m - (hour * 60 + 30)) for m in mins]))
 
 
 @st.cache_data(show_spinner=False, ttl=600)
@@ -63,14 +135,13 @@ def _tornado_days() -> list[str]:
         fs = fsspec.filesystem("s3", anon=True)
         goes = set()
         for p in fs.ls(f"{BUCKET}/goes_store", detail=False):
-            try:
+            with contextlib.suppress(ValueError):
                 goes.add(_dt.date.fromisoformat(p.rstrip("/").split("/")[-1]))
-            except ValueError:
-                pass
         cat = pd.read_excel(ROOT / "data" / "tornados_chile.xlsx", sheet_name="Final_Table")
         dates = pd.to_datetime(cat["Date (Gregorian Calendar)"], errors="coerce").dt.date
         hours = pd.to_numeric(
-            cat["Hour (UTC)"].astype(str).str.extract(r"(\d{1,2})", expand=False), errors="coerce")
+            cat["Hour (UTC)"].astype(str).str.extract(r"(\d{1,2})", expand=False), errors="coerce"
+        )
         days = {d for d, h in zip(dates, hours, strict=True) if pd.notna(d) and pd.notna(h)}
         avail = sorted(str(d) for d in (days & goes))
         return avail or fallback
@@ -132,7 +203,7 @@ def _goes_image(raw: bytes, hour_idx: int) -> bytes:
     return _to_png(Image.fromarray(np.stack([img8, img8, img8], axis=-1)))
 
 
-def _to_png(img) -> bytes:
+def _to_png(img: "Image.Image") -> bytes:  # noqa: F821
     """Serializa una imagen PIL a PNG en bytes."""
     buf = io.BytesIO()
     img.save(buf, format="PNG")
@@ -160,7 +231,9 @@ def _goes_tiempo_real() -> tuple[bytes, str] | None:
     # Busca en la hora actual y, si está vacía, en la anterior.
     for back in (0, 1):
         t = now - _dt.timedelta(hours=back)
-        bucket = "noaa-goes19" if t >= _dt.datetime(2025, 4, 4, 15, tzinfo=_dt.UTC) else "noaa-goes16"
+        bucket = (
+            "noaa-goes19" if t >= _dt.datetime(2025, 4, 4, 15, tzinfo=_dt.UTC) else "noaa-goes16"
+        )
         prefix = f"{bucket}/ABI-L2-CMIPF/{t.year}/{t.timetuple().tm_yday:03d}/{t.hour:02d}/"
         try:
             c13 = sorted(f for f in fs.ls(prefix, detail=False) if "C13" in f)
@@ -222,7 +295,9 @@ def _grid() -> tuple[np.ndarray, np.ndarray]:
 def _typical() -> dict:
     """Valores típicos de ERA5 (mediana del entrenamiento) para el modo solo-imagen."""
     f = DEMO / "era5_typical.json"
-    return json.loads(f.read_text()) if f.exists() else {n: ERA5_RANGES[n][2] for n in ERA5_FEATURES}
+    return (
+        json.loads(f.read_text()) if f.exists() else {n: ERA5_RANGES[n][2] for n in ERA5_FEATURES}
+    )
 
 
 def _embedding(png: bytes, n_emb: int) -> tuple[np.ndarray, str]:
@@ -230,11 +305,19 @@ def _embedding(png: bytes, n_emb: int) -> tuple[np.ndarray, str]:
     try:
         import botocore.session
 
-        cli = botocore.session.get_session().create_client("bedrock-runtime", region_name="us-east-1")
-        body = json.dumps({"inputImage": base64.b64encode(png).decode(),
-                           "embeddingConfig": {"outputEmbeddingLength": 1024}})
+        cli = botocore.session.get_session().create_client(
+            "bedrock-runtime", region_name="us-east-1"
+        )
+        body = json.dumps(
+            {
+                "inputImage": base64.b64encode(png).decode(),
+                "embeddingConfig": {"outputEmbeddingLength": 1024},
+            }
+        )
         resp = cli.invoke_model(modelId="amazon.titan-embed-image-v1", body=body)
-        return np.array(json.loads(resp["body"].read())["embedding"], dtype=float)[:n_emb], "Bedrock Titan"
+        return np.array(json.loads(resp["body"].read())["embedding"], dtype=float)[
+            :n_emb
+        ], "Bedrock Titan"
     except Exception:  # noqa: BLE001
         rng = np.random.default_rng(int(hashlib.sha256(png).hexdigest()[:8], 16))
         return rng.standard_normal(n_emb) * 0.1, "sintético (sin Bedrock)"
@@ -326,22 +409,132 @@ def _map_html(png: bytes, prob: np.ndarray, lat: np.ndarray, lon: np.ndarray, da
     )
 
 
+def _alert_ui(prob: np.ndarray, lat: np.ndarray, lon: np.ndarray, origen: str) -> None:
+    """Revisa el umbral, envía la alerta por correo y muestra el resultado (viewer_app/alerts.py)."""
+    with st.spinner("Revisando el umbral y enviando la alerta por correo…"):
+        aviso = alerts.alert(np.nan_to_num(prob, nan=0.0), lat, lon, GRID_RES, origen)
+    if aviso is None:
+        st.info(f"Ninguna celda supera el {alerts.threshold() * 100:.0f} %: no se envió alerta.")
+        return
+    z = aviso["spot"]
+    donde = (
+        f"{z['prob'] * 100:.1f} % en latitud {z['lat']:.2f}, longitud {z['lon']:.2f}, "
+        f"{alerts.place_text(z['place'])}"
+    )
+    if aviso["sent"]:
+        st.success(
+            f"Alerta enviada por correo ({donde}) a: " + ", ".join(aviso["sent"]),
+            icon=":material/mail:",
+        )
+    for to, err in aviso["failed"].items():
+        st.warning(f"No se pudo enviar a {to}: {err}")
+    with st.expander("Ver el recorte enviado (OpenStreetMap)"):
+        st.image(aviso["png"], caption=f"Zona sobre el umbral · máximo {donde}")
+
+
+def _csv_button(prob: np.ndarray, lat: np.ndarray, lon: np.ndarray, name: str) -> None:
+    """Botón para descargar la probabilidad por celda en CSV."""
+    import pandas as pd
+
+    la, lo = np.meshgrid(lat, lon, indexing="ij")
+    df = pd.DataFrame({"latitude": la.ravel(), "longitude": lo.ravel(), "prob": prob.ravel()})
+    st.download_button(
+        "Descargar CSV (probabilidad por área)",
+        df.dropna().to_csv(index=False).encode(),
+        name,
+        "text/csv",
+    )
+
+
+def _real_model() -> None:
+    """Predicción del modelo v2 real para un día con tornado y una hora UTC."""
+    days = _model_days()
+    if not days:
+        st.warning(
+            "No se pudo leer las predicciones publicadas del modelo v2; usa la demo con imagen."
+        )
+        return
+    c1, c2 = theme.columns([1, 1], "real_cols")
+    with c1:
+        default = days.index("2019-05-30") if "2019-05-30" in days else len(days) - 1
+        day = st.selectbox("Día con tornado (predicción del modelo v2)", days, index=default)
+        payload = _model_day(day)
+        hours = sorted(int(h) for h in payload["hours"])
+        best = max(hours, key=lambda h: np.nanmax([v or 0 for v in payload["hours"][str(h)]]))
+        hour = st.select_slider(
+            "Hora UTC", options=hours, value=best, format_func=lambda h: f"{h:02d} UTC"
+        )
+    with c2:
+        st.markdown(f"**Modelo:** {MODEL_LABEL}")
+        st.caption(payload.get("badge", ""))
+        ev = payload.get("events", [])
+        if ev:
+            st.markdown("**Tornados del catálogo ese día**")
+            for e in ev:
+                st.caption(
+                    f"{e.get('type', 'Evento')} · {e.get('hour', '')} UTC · {e.get('place', '')}"
+                )
+        else:
+            st.caption("Sin eventos del catálogo ese día.")
+
+    prob, lat, lon = _model_grid(payload, hour)
+    real = _goes_real(day)
+    if real is not None:
+        raw, horas = real
+        png = _goes_image(raw, _nearest_scene(horas, hour))
+        origen = f"modelo v2 · {day} {hour:02d} UTC (GOES C13 {horas[_nearest_scene(horas, hour)]})"
+    else:
+        from PIL import Image
+
+        png = _to_png(Image.fromarray(np.full((224, 224, 3), 40, "uint8")))
+        origen = f"modelo v2 · {day} {hour:02d} UTC (sin imagen GOES en el bucket)"
+
+    import streamlit.components.v1 as components
+
+    components.html(_map_html(png, prob, lat, lon, theme.is_dark()), height=600)
+    st.caption(
+        f"{origen} · máximo {np.nanmax(prob) * 100:.1f} % · índice relativo, no calibrado ni "
+        "pronóstico oficial. Los tornados del catálogo se ven en «Mapa del modelo»."
+    )
+    if st.button("Revisar umbral y enviar alerta", type="primary"):
+        _alert_ui(prob, lat, lon, origen)
+    _csv_button(prob, lat, lon, f"probabilidades_{day}_{hour:02d}UTC.csv")
+
+
 def page() -> None:
     """Dibuja la página «Predecir»."""
     st.title("Predecir")
-    st.caption("Toma una imagen GOES real de Chile (o sube una) y el modelo estima la probabilidad "
-               "de tornado por área. Demostración con un modelo de ejemplo; no es un pronóstico operativo.")
+    vista = st.radio(
+        "Modelo",
+        ["Modelo v2 entrenado (días con tornado)", "Demo con imagen (modelo de ejemplo)"],
+        horizontal=True,
+    )
+    if vista.startswith("Modelo v2"):
+        st.caption(
+            "Predicción real del XGBoost v2 (ERA5 + variables GOES), entrenado con los tornados del "
+            "catálogo. Elige el día y la hora UTC."
+        )
+        _real_model()
+        return
+    st.caption(
+        "Toma una imagen GOES real de Chile (o sube una) y el modelo estima la probabilidad "
+        "de tornado por área. Demostración con un modelo de ejemplo; no es un pronóstico operativo."
+    )
 
-    modo = st.radio("Modo", ["Solo imagen (ERA5 típica)", "Híbrido (imagen + ERA5)"], horizontal=True)
+    modo = st.radio(
+        "Modo", ["Solo imagen (ERA5 típica)", "Híbrido (imagen + ERA5)"], horizontal=True
+    )
     solo = modo.startswith("Solo")
 
     c1, c2 = theme.columns([1, 1], "predict_cols")
     with c1:
         from PIL import Image
 
-        fuente = st.radio("Imagen de entrada",
-                          ["GOES en vivo (hoy)", "GOES real de Chile (bucket)", "Subir archivo"],
-                          horizontal=True)
+        fuente = st.radio(
+            "Imagen de entrada",
+            ["GOES en vivo (hoy)", "GOES real de Chile (bucket)", "Subir archivo"],
+            horizontal=True,
+        )
         img = None
         origen = fuente
         if fuente.startswith("GOES en vivo"):
@@ -363,9 +556,12 @@ def page() -> None:
                 img = Image.fromarray(np.zeros((224, 224, 3), "uint8"))
             else:
                 raw, horas = real
-                hidx = st.select_slider("Hora UTC del barrido", options=list(range(len(horas))),
-                                        format_func=lambda i: horas[i],
-                                        value=min(len(horas) - 1, len(horas) * 4 // 5))
+                hidx = st.select_slider(
+                    "Hora UTC del barrido",
+                    options=list(range(len(horas))),
+                    format_func=lambda i: horas[i],
+                    value=min(len(horas) - 1, len(horas) * 4 // 5),
+                )
                 img = Image.open(io.BytesIO(_goes_image(raw, hidx))).convert("RGB")
                 origen = f"GOES-16 C13 · {dia} {horas[hidx]} UTC"
                 st.caption(f"{origen} (tope de nubes)")
@@ -376,7 +572,9 @@ def page() -> None:
                 origen = f"archivo subido ({up.name})"
             else:
                 st.info("Sin imagen: se usa una de ejemplo.")
-                img = Image.fromarray((np.random.default_rng(0).random((224, 224, 3)) * 255).astype("uint8"))
+                img = Image.fromarray(
+                    (np.random.default_rng(0).random((224, 224, 3)) * 255).astype("uint8")
+                )
         # Placeholder: aquí se muestra la imagen y, al predecir, se reemplaza por el mapa de probabilidad.
         visor = st.empty()
         visor.image(img, width=260)
@@ -403,21 +601,29 @@ def page() -> None:
 
         with visor.container():
             components.html(_map_html(png, prob, lat, lon, theme.is_dark()), height=600)
-        st.caption(f"Probabilidad por área sobre la imagen · min {prob.min():.2f} / máx {prob.max():.2f} · "
-                   f"embedding: {source}")
+        st.caption(
+            f"Probabilidad por área sobre la imagen · min {prob.min():.2f} / máx {prob.max():.2f} · "
+            f"embedding: {source}"
+        )
 
         # Alerta por correo si alguna celda supera el umbral (viewer_app/alerts.py).
         with st.spinner("Revisando el umbral y enviando la alerta por correo…"):
             aviso = alerts.alert(prob, lat, lon, GRID_RES, origen)
         if aviso is None:
-            st.info(f"Ninguna celda supera el {alerts.threshold() * 100:.0f} %: no se envió alerta.")
+            st.info(
+                f"Ninguna celda supera el {alerts.threshold() * 100:.0f} %: no se envió alerta."
+            )
         else:
             z = aviso["spot"]
-            donde = (f"{z['prob'] * 100:.1f} % en latitud {z['lat']:.2f}, longitud {z['lon']:.2f}, "
-                     f"{alerts.place_text(z['place'])}")
+            donde = (
+                f"{z['prob'] * 100:.1f} % en latitud {z['lat']:.2f}, longitud {z['lon']:.2f}, "
+                f"{alerts.place_text(z['place'])}"
+            )
             if aviso["sent"]:
-                st.success(f"Alerta enviada por correo ({donde}) a: " + ", ".join(aviso["sent"]),
-                           icon=":material/mail:")
+                st.success(
+                    f"Alerta enviada por correo ({donde}) a: " + ", ".join(aviso["sent"]),
+                    icon=":material/mail:",
+                )
             for to, err in aviso["failed"].items():
                 st.warning(f"No se pudo enviar a {to}: {err}")
             with st.expander("Ver el recorte enviado (OpenStreetMap)"):
@@ -425,8 +631,15 @@ def page() -> None:
 
         import pandas as pd
 
-        rows = [{"latitude": float(lat[i]), "longitude": float(lon[j]), "prob": float(prob[i, j])}
-                for i in range(len(lat)) for j in range(len(lon))]
+        rows = [
+            {"latitude": float(lat[i]), "longitude": float(lon[j]), "prob": float(prob[i, j])}
+            for i in range(len(lat))
+            for j in range(len(lon))
+        ]
         df = pd.DataFrame(rows)
-        st.download_button("Descargar CSV (probabilidad por área)",
-                           df.to_csv(index=False).encode(), "probabilidades.csv", "text/csv")
+        st.download_button(
+            "Descargar CSV (probabilidad por área)",
+            df.to_csv(index=False).encode(),
+            "probabilidades.csv",
+            "text/csv",
+        )
