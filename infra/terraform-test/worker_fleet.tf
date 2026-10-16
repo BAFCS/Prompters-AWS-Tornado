@@ -16,6 +16,18 @@ variable "ncar_fleet_size" {
   default     = 0
 }
 
+# AMI fija para la flota: evita que data.aws_ami.al2023 (most_recent) fuerce recrear workers vivos
+# cuando AWS publica una AMI nueva. Vacío = usa la dinámica. Se fija al ID actual al escalar.
+variable "worker_ami" {
+  description = "AMI fija para los workers de flota (vacío = usa la AMI dinámica al2023)."
+  type        = string
+  default     = ""
+}
+
+locals {
+  worker_ami = var.worker_ami != "" ? var.worker_ami : data.aws_ami.al2023.id
+}
+
 variable "goes_fleet_size" {
   description = "Número de EC2 worker para ingesta GOES (sharding). 0 = ninguna."
   type        = number
@@ -38,7 +50,7 @@ variable "fleet_end" {
 
 resource "aws_instance" "ncar_worker" {
   count                       = var.ncar_fleet_size
-  ami                         = data.aws_ami.al2023.id
+  ami                         = local.worker_ami
   instance_type               = "c7i.2xlarge" # 8 vCPU / 16 GB (<6xlarge, sin GPU)
   subnet_id                   = data.aws_subnets.default.ids[0]
   vpc_security_group_ids      = [aws_security_group.cdslab[0].id]
@@ -74,7 +86,7 @@ output "ncar_fleet_ids" {
 
 resource "aws_instance" "goes_worker" {
   count                       = var.goes_fleet_size
-  ami                         = data.aws_ami.al2023.id
+  ami                         = local.worker_ami
   instance_type               = "c7i.2xlarge" # 8 vCPU / 16 GB (<6xlarge, sin GPU)
   subnet_id                   = data.aws_subnets.default.ids[0]
   vpc_security_group_ids      = [aws_security_group.cdslab[0].id]
@@ -107,3 +119,4 @@ resource "aws_instance" "goes_worker" {
 output "goes_fleet_ids" {
   value = aws_instance.goes_worker[*].id
 }
+
