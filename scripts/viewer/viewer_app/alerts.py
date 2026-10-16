@@ -37,6 +37,7 @@ RECIPIENTS = (
     "bryanfabian4@gmail.com",
     "nicolas.e.delgado.a@gmail.com",
     "renato.gutierrez.maulme@gmail.com",
+    "nicolas.delgado.a@ug.uchile.cl",
 )
 REGION = "us-east-1"
 
