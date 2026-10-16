@@ -62,9 +62,10 @@ def report(name: str, d: pd.DataFrame, mj: dict) -> None:
     k = int(np.nanargmax(f1s[:-1]))
     for t, lab in ((0.5, "umbral 0,50"), (float(th[k]), f"umbral F1-óptimo {th[k]:.2f}")):
         q = (p >= t).astype(int)
+        prec = precision_score(y, q, zero_division=0)  # pyright: ignore[reportArgumentType]
         tn, fp, fn, tp = confusion_matrix(y, q, labels=[0, 1]).ravel()
         print(
-            f"   [{lab}] F1 {f1_score(y, q):.3f} | Precisión {precision_score(y, q, zero_division=0):.3f} | Recall {recall_score(y, q):.3f} | "
+            f"   [{lab}] F1 {f1_score(y, q):.3f} | Precisión {prec:.3f} | Recall {recall_score(y, q):.3f} | "
             f"Accuracy {accuracy_score(y, q):.3f} | Bal.Acc {balanced_accuracy_score(y, q):.3f} | MCC {matthews_corrcoef(y, q):.3f} | TP {tp} FP {fp} FN {fn} TN {tn}"
         )
     rng = np.random.default_rng(0)
