@@ -7,7 +7,7 @@ rol de la instancia (permiso ``ses:SendRawEmail`` limitado al remitente).
 
 Variables de entorno (todas opcionales):
 
-- ``ALERT_THRESHOLD``: umbral de probabilidad, entre 0 y 1 (por defecto 0.95).
+- ``ALERT_THRESHOLD``: umbral de probabilidad, entre 0 y 1 (por defecto 0.80).
 - ``ALERT_EMAIL_FROM``: remitente verificado en SES.
 - ``ALERT_EMAIL_TO``: destinatarios separados por comas. Mientras la cuenta de SES esté en modo
   sandbox, cada destinatario debe estar verificado en SES; a los que no lo estén no les llega.
@@ -30,7 +30,7 @@ from zoneinfo import ZoneInfo
 
 import numpy as np
 
-THRESHOLD = 0.95
+THRESHOLD = 0.80
 SENDER = "sjurado@das.uchile.cl"
 RECIPIENTS = (
     "sjurado@das.uchile.cl",
@@ -56,6 +56,83 @@ USER_AGENT = "mesocyclonic-viewer/1.0 (alertas de Predecir; contacto: sjurado@da
 CHILE = ZoneInfo("America/Santiago")
 
 
+# Ciudades y pueblos de referencia (lat, lon aproximadas al centro urbano), de Arica a Puerto
+# Williams, más las ciudades argentinas cercanas a la cordillera, porque la grilla del modelo también
+# cubre ese lado. Sirve para decir «a 18 km al noreste de Los Ángeles» sin depender de un servicio
+# de geocodificación externo.
+PLACES: tuple[tuple[str, float, float], ...] = (
+    ("Arica", -18.478, -70.321), ("Iquique", -20.214, -70.152), ("Tocopilla", -22.092, -70.198),
+    ("Calama", -22.456, -68.929), ("Antofagasta", -23.650, -70.400), ("Copiapó", -27.366, -70.332),
+    ("Vallenar", -28.576, -70.759), ("La Serena", -29.904, -71.249), ("Coquimbo", -29.953, -71.343),
+    ("Ovalle", -30.601, -71.199), ("Illapel", -31.633, -71.167), ("La Ligua", -32.452, -71.231),
+    ("Los Andes", -32.834, -70.598), ("San Felipe", -32.750, -70.725), ("Quillota", -32.881, -71.249),
+    ("Viña del Mar", -33.024, -71.552), ("Valparaíso", -33.047, -71.613),
+    ("San Antonio", -33.593, -71.621), ("Santiago", -33.449, -70.669), ("Talagante", -33.664, -70.928),
+    ("Melipilla", -33.686, -71.215), ("Buin", -33.732, -70.742), ("Rancagua", -34.170, -70.744),
+    ("Pichilemu", -34.387, -72.003), ("San Fernando", -34.586, -70.989), ("Santa Cruz", -34.639, -71.365),
+    ("Curicó", -34.983, -71.239), ("Constitución", -35.333, -72.414), ("Talca", -35.427, -71.655),
+    ("Linares", -35.847, -71.593), ("Cauquenes", -35.967, -72.322), ("Parral", -36.143, -71.826),
+    ("Quirihue", -36.284, -72.540), ("San Carlos", -36.425, -71.958), ("Chillán", -36.607, -72.103),
+    ("Coihueco", -36.627, -71.832), ("Bulnes", -36.742, -72.302), ("Yungay", -37.122, -72.017),
+    ("Talcahuano", -36.725, -73.117), ("Concepción", -36.827, -73.050), ("Coronel", -37.030, -73.149),
+    ("Lota", -37.090, -73.157), ("Arauco", -37.247, -73.317), ("Los Ángeles", -37.469, -72.354),
+    ("Nacimiento", -37.503, -72.672), ("Lebu", -37.608, -73.652), ("Mulchén", -37.718, -72.241),
+    ("Angol", -37.795, -72.716), ("Cañete", -37.801, -73.397), ("Collipulli", -37.955, -72.433),
+    ("Victoria", -38.232, -72.333), ("Curacautín", -38.441, -71.889), ("Lautaro", -38.531, -72.436),
+    ("Carahue", -38.711, -73.165), ("Temuco", -38.736, -72.590), ("Nueva Imperial", -38.744, -72.952),
+    ("Pitrufquén", -38.986, -72.638), ("Villarrica", -39.280, -72.227), ("Pucón", -39.282, -71.954),
+    ("Loncoche", -39.367, -72.633), ("Lanco", -39.452, -72.775), ("Panguipulli", -39.643, -72.336),
+    ("Valdivia", -39.814, -73.246), ("La Unión", -40.293, -73.083), ("Río Bueno", -40.335, -72.955),
+    ("Osorno", -40.574, -73.134), ("Purranque", -40.910, -73.160), ("Frutillar", -41.126, -73.060),
+    ("Puerto Varas", -41.319, -72.986), ("Puerto Montt", -41.469, -72.942), ("Maullín", -41.617, -73.596),
+    ("Calbuco", -41.773, -73.131), ("Ancud", -41.869, -73.828), ("Castro", -42.480, -73.763),
+    ("Chaitén", -42.917, -72.708), ("Quellón", -43.117, -73.617), ("Futaleufú", -43.185, -71.866),
+    ("Puerto Aysén", -45.403, -72.692), ("Coyhaique", -45.571, -72.068), ("Cochrane", -47.254, -72.573),
+    ("Puerto Natales", -51.729, -72.506), ("Punta Arenas", -53.163, -70.917), ("Porvenir", -53.296, -70.369),
+    ("Puerto Williams", -54.934, -67.604),
+    ("Mendoza (Argentina)", -32.889, -68.845), ("San Rafael (Argentina)", -34.618, -68.330),
+    ("Malargüe (Argentina)", -35.475, -69.585), ("Chos Malal (Argentina)", -37.378, -70.271),
+    ("Zapala (Argentina)", -38.899, -70.054), ("Neuquén (Argentina)", -38.952, -68.059),
+    ("San Martín de los Andes (Argentina)", -40.157, -71.353), ("Bariloche (Argentina)", -41.134, -71.310),
+    ("Esquel (Argentina)", -42.911, -71.319), ("Comodoro Rivadavia (Argentina)", -45.865, -67.497),
+    ("El Calafate (Argentina)", -50.338, -72.265), ("Río Gallegos (Argentina)", -51.623, -69.217),
+    ("Ushuaia (Argentina)", -54.801, -68.303),
+)  # fmt: skip
+_COMPASS = ("norte", "noreste", "este", "sureste", "sur", "suroeste", "oeste", "noroeste")
+
+
+def nearest_place(lat: float, lon: float) -> dict:
+    """Ciudad de ``PLACES`` más cercana a ``lat``/``lon``, con distancia (km) y rumbo desde ella.
+
+    El rumbo dice hacia dónde queda el punto visto desde la ciudad (``"noreste"`` = al noreste de).
+    """
+    r = 6371.0
+    p1, l1 = math.radians(lat), math.radians(lon)
+    best = None
+    for name, la, lo in PLACES:
+        p2, l2 = math.radians(la), math.radians(lo)
+        a = (
+            math.sin((p1 - p2) / 2) ** 2
+            + math.cos(p1) * math.cos(p2) * math.sin((l1 - l2) / 2) ** 2
+        )
+        d = 2 * r * math.asin(math.sqrt(a))
+        if best is None or d < best[1]:
+            best = (name, d, p2, l2)
+    assert best is not None
+    name, d, p2, l2 = best
+    y = math.sin(l1 - l2) * math.cos(p1)
+    x = math.cos(p2) * math.sin(p1) - math.sin(p2) * math.cos(p1) * math.cos(l1 - l2)
+    bearing = (math.degrees(math.atan2(y, x)) + 360) % 360
+    return {"name": name, "km": d, "dir": _COMPASS[int((bearing + 22.5) // 45) % 8]}
+
+
+def place_text(place: dict) -> str:
+    """Texto como «a 18 km al noreste de Los Ángeles» (o «en Los Ángeles» si está a menos de 5 km)."""
+    if place["km"] < 5:
+        return f"en {place['name']}"
+    return f"a {place['km']:.0f} km al {place['dir']} de {place['name']}"
+
+
 class SesClient(Protocol):
     """Lo que se usa del cliente ``sesv2`` de boto3 (permite pasar uno falso en las pruebas)."""
 
@@ -63,7 +140,7 @@ class SesClient(Protocol):
 
 
 def threshold() -> float:
-    """Umbral de probabilidad (``ALERT_THRESHOLD`` o 0.95)."""
+    """Umbral de probabilidad (``ALERT_THRESHOLD`` o 0.80)."""
     return float(os.environ.get("ALERT_THRESHOLD", THRESHOLD))
 
 
@@ -96,6 +173,7 @@ def hotspot(prob: np.ndarray, lat: np.ndarray, lon: np.ndarray, thr: float) -> d
         "cells": int(hot.sum()),
         "lat_range": (float(lat[rows].min()), float(lat[rows].max())),
         "lon_range": (float(lon[cols].min()), float(lon[cols].max())),
+        "place": nearest_place(float(lat[i]), float(lon[j])),
     }
 
 
@@ -207,12 +285,20 @@ def message(
     la, lo = spot["lat"], spot["lon"]
     osm = f"https://www.openstreetmap.org/?mlat={la:.4f}&mlon={lo:.4f}#map=9/{la:.4f}/{lo:.4f}"
     (s_lat, n_lat), (w_lon, e_lon) = spot["lat_range"], spot["lon_range"]
-    subject = f"[Demo] Alerta de tornado: {pct:.1f} % en {_fmt(la)}, {_fmt(lo)}"
+    cerca = place_text(spot["place"]) if "place" in spot else ""
+    subject = (
+        f"[Demo] Alerta de tornado: {pct:.1f} % cerca de {spot['place']['name']}"
+        if cerca
+        else (f"[Demo] Alerta de tornado: {pct:.1f} % en {_fmt(la)}, {_fmt(lo)}")
+    )
     lines = [
         f"El modelo de la página «Predecir» marcó una probabilidad de {pct:.1f} % "
         f"(umbral {thr * 100:.0f} %).",
         "",
         f"Punto más probable: latitud {_fmt(la)}, longitud {_fmt(lo)}",
+        f"Ciudad más cercana: {spot['place']['name']} (el punto está {cerca})"
+        if cerca
+        else "Ciudad más cercana: sin dato",
         f"Zona sobre el umbral: latitud {_fmt(s_lat)} a {_fmt(n_lat)}, "
         f"longitud {_fmt(w_lon)} a {_fmt(e_lon)} ({spot['cells']} celdas de 0,25°)",
         f"Imagen de entrada: {origen}",
@@ -224,7 +310,7 @@ def message(
     ]
     text = "\n".join(lines)
     cid = make_msgid(domain="mesocyclonic")
-    rows = "".join(f"<p style='margin:4px 0'>{x}</p>" for x in lines[2:6])
+    rows = "".join(f"<p style='margin:4px 0'>{x}</p>" for x in lines[2:7])
     html = (
         "<div style='font-family:system-ui,sans-serif;color:#0E1A2C'>"
         f"<h2 style='margin:0 0 8px'>⚠️ Alerta de tornado: {pct:.1f} %</h2>"

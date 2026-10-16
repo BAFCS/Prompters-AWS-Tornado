@@ -413,7 +413,8 @@ def page() -> None:
             st.info(f"Ninguna celda supera el {alerts.threshold() * 100:.0f} %: no se envió alerta.")
         else:
             z = aviso["spot"]
-            donde = f"{z['prob'] * 100:.1f} % en latitud {z['lat']:.2f}, longitud {z['lon']:.2f}"
+            donde = (f"{z['prob'] * 100:.1f} % en latitud {z['lat']:.2f}, longitud {z['lon']:.2f}, "
+                     f"{alerts.place_text(z['place'])}")
             if aviso["sent"]:
                 st.success(f"Alerta enviada por correo ({donde}) a: " + ", ".join(aviso["sent"]),
                            icon=":material/mail:")

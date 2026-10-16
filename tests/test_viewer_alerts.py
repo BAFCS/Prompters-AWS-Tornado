@@ -69,6 +69,26 @@ class HotspotTests(unittest.TestCase):
         self.assertAlmostEqual(z["prob"], 0.97)
 
 
+class PlaceTests(unittest.TestCase):
+    def test_nearest_city_distance_and_direction(self) -> None:
+        # ~10 km al noreste del centro de Los Ángeles.
+        p = alerts.nearest_place(-37.405, -72.275)
+        self.assertEqual(p["name"], "Los Ángeles")
+        self.assertEqual(p["dir"], "noreste")
+        self.assertAlmostEqual(p["km"], 10, delta=2)
+        self.assertEqual(alerts.place_text(p), f"a {p['km']:.0f} km al noreste de Los Ángeles")
+
+    def test_inside_city(self) -> None:
+        p = alerts.nearest_place(-36.607, -72.103)
+        self.assertEqual(alerts.place_text(p), "en Chillán")
+
+    def test_hotspot_includes_place(self) -> None:
+        prob, lat, lon = grid()
+        z = alerts.hotspot(prob, lat, lon, 0.95)
+        assert z is not None
+        self.assertIn(z["place"]["name"], {name for name, _, _ in alerts.PLACES})
+
+
 class CropTests(unittest.TestCase):
     def test_png_with_marker(self) -> None:
         prob, lat, lon = grid()
@@ -109,6 +129,7 @@ class MessageTests(unittest.TestCase):
             decode=True
         )
         self.assertIn(b"latitud -37,00, longitud -72,00", text)
+        self.assertIn("Ciudad más cercana: Yungay".encode(), text)
         self.assertIn(b"openstreetmap.org/?mlat=-37.0000&mlon=-72.0000", text)
         names = [p.get_filename() for p in msg.walk() if p.get_filename()]
         self.assertIn("alerta_-37.00_-72.00.png", names)
