@@ -173,6 +173,8 @@ def day_payload(pred: pd.DataFrame, modelo: str, meta: dict | None = None) -> di
         badge += " · fuera de muestra (día retenido)"
     elif info.get("en_entrenamiento") is True:
         badge += " · en muestra (día de entrenamiento)"
+    if (meta or {}).get("era5") == "tipico":
+        badge += " · solo imágenes GOES (ERA5 fijo en valores típicos)"
     return {
         "date": str(pred["date"].iloc[0]),
         "modelo": modelo,

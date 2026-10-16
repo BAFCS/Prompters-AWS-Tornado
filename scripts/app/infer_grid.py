@@ -17,9 +17,15 @@ deja vacías). Las horas sin archivos GOES (ni en t ni en t-1) se omiten y queda
 Antes de llamar a Bedrock imprime la estimación de imágenes y se niega a pasar de 15000 sin
 ``--yes``.
 
+Con ``--era5-typical ARCHIVO.json`` no se leen índices ERA5: las 12 variables ERA5 (y sus rezagos)
+quedan fijas en los valores del JSON (por ejemplo la mediana del entorno tornádico), así que el
+mapa solo cambia con las imágenes GOES. Sirve para días sin ERA5 todavía (ERA5 llega con ~5 días de
+retraso), como ayer; se pierde la información del entorno, que pesa ~80 % en el modelo.
+
 Uso::
 
     uv run --no-sync python scripts/app/infer_grid.py --day 2019-05-30
+    uv run --no-sync python scripts/app/infer_grid.py --day 2026-10-14 --era5-typical era5_typical.json
     uv run --no-sync python scripts/app/infer_grid.py --day 2019-05-30 --hours 19 23 --stride 1 --yes
 """
 
@@ -75,6 +81,32 @@ def grid(idx_file: Path, stride: int) -> tuple[np.ndarray, np.ndarray]:
         lat = np.asarray(ds["latitude"].values, dtype=np.float64)
         lon = np.asarray(ds["longitude"].values, dtype=np.float64)
     return lat[::stride], lon[::stride]
+
+
+def region_grid(region: str, stride: int) -> tuple[np.ndarray, np.ndarray]:
+    """Grilla ERA5 (0,25°) de la región, de norte a sur y de oeste a este, un punto cada ``stride``."""
+    reg = common.REGIONS[region]
+    lat = np.round(np.arange(reg.north, reg.south - GRID_STEP / 2, -GRID_STEP), 4)
+    lon = np.round(np.arange(reg.west, reg.east + GRID_STEP / 2, GRID_STEP), 4)
+    return lat[::stride], lon[::stride]
+
+
+def typical_era5(day: dt.date, lat: np.ndarray, lon: np.ndarray, values: dict) -> pd.DataFrame:
+    """Tabla ERA5 del día anterior y del día con cada variable fija en ``values`` (sin variación).
+
+    Cubre las 48 horas para que los rezagos t-1..t-3 también queden con el valor típico.
+    """
+    missing = [v for v in tb.ERA5_FEATURES if v not in values]
+    if missing:
+        raise SystemExit(f"error: el JSON de ERA5 típico no trae {missing}")
+    start = pd.Timestamp(day - dt.timedelta(days=1), tz="UTC")
+    times = [start + pd.Timedelta(hours=h) for h in range(48)]
+    idx = pd.MultiIndex.from_product([times, lat, lon], names=tb.POINT)
+    df = idx.to_frame(index=False)
+    for v in tb.ERA5_FEATURES:
+        df[v] = float(values[v])
+    df["time"] = tb.utc(df["time"])
+    return df
 
 
 def hours_with_goes(
@@ -200,6 +232,25 @@ def goes_frame(day: dt.date, region: str, crops_root: Path, work_root: Path) -> 
     return build_table.read_goes(work_root, region, [day])
 
 
+def goes_frame_grid(
+    day: dt.date, region: str, crops_root: Path, work_root: Path, lat: np.ndarray, lon: np.ndarray
+) -> pd.DataFrame | None:
+    """Como ``goes_frame``, pero sobre la grilla ``lat``/``lon`` dada (sin índices ERA5 del día).
+
+    ``extract_goes_features.process_day`` toma la grilla y las horas del archivo de índices ERA5;
+    con ERA5 típico no hay archivo, así que se calculan las 24 horas del día con el mismo lector.
+    """
+    t0 = dt.datetime.combine(day, dt.time(0))
+    hours = [t0 + dt.timedelta(hours=h) for h in range(24)]
+    reader = egf.GoesReader(crops_root, region, egf.BANDS)
+    parts = [egf.to_frame(egf.hour_rows(reader, t, lat, lon, GOES_WINDOW_DEG / 2)) for t in hours]
+    df = pd.concat(parts, ignore_index=True)
+    out = work_root / region / "goes_features" / f"goes_feat_{day:%Y%m%d}.parquet"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(out, index=False)
+    return build_table.read_goes(work_root, region, [day])
+
+
 def evaluation(model_dir: Path, day: dt.date) -> dict[str, Any]:
     """Si ``day`` se usó para entrenar el modelo (según ``train_summary.json`` de ``model_dir``)."""
     summary = Path(model_dir) / "train_summary.json"
@@ -249,11 +300,17 @@ def run(
         raise SystemExit("error: --hours espera INICIO FIN con 0 <= INICIO <= FIN <= 23")
     day: dt.date = a.day
     region = a.region
-    idx_file = crops_root / region / "era5_indices" / f"era5_idx_{day:%Y%m%d}.nc"
-    if not idx_file.exists():
-        raise SystemExit(f"error: falta {idx_file}; corre sync_from_bucket.py --only era5")
+    typical = json.loads(Path(a.era5_typical).read_text()) if a.era5_typical else None
     bundle = inference.model_fn(str(a.model_dir))
-    lat, lon = grid(idx_file, a.stride)
+    if typical is None:
+        idx_file = crops_root / region / "era5_indices" / f"era5_idx_{day:%Y%m%d}.nc"
+        if not idx_file.exists():
+            raise SystemExit(f"error: falta {idx_file}; corre sync_from_bucket.py --only era5")
+        lat, lon = grid(idx_file, a.stride)
+    else:
+        if bundle.config == "baseline_era5":
+            raise SystemExit("error: --era5-typical no tiene sentido con el modelo solo ERA5")
+        lat, lon = region_grid(region, a.stride)
     t0 = pd.Timestamp(day, tz="UTC")
     times = [t0 + pd.Timedelta(hours=h) for h in range(h0, h1 + 1)]
     use_goes = bundle.config != "baseline_era5"
@@ -278,8 +335,16 @@ def run(
         raise SystemExit(0)
 
     cells = tb.candidate_cells(times, lat, lon)
-    era5 = build_table.read_era5(crops_root, region, [day], build_table.previous_day([day]))
-    goes = goes_frame(day, region, crops_root, a.work) if use_goes else None
+    if typical is None:
+        era5 = build_table.read_era5(crops_root, region, [day], build_table.previous_day([day]))
+    else:
+        era5 = typical_era5(day, lat, lon, typical)
+    if not use_goes:
+        goes = None
+    elif typical is None:
+        goes = goes_frame(day, region, crops_root, a.work)
+    else:
+        goes = goes_frame_grid(day, region, crops_root, a.work, lat, lon)
     emb = None
     emb_stats: dict = {}
     if use_emb:
@@ -325,6 +390,9 @@ def run(
         "bedrock": emb_stats,
         **evaluation(a.model_dir, day),
     }
+    if typical is not None:
+        meta["era5"] = "tipico"
+        meta["era5_tipico"] = {v: float(typical[v]) for v in tb.ERA5_FEATURES}
     atomic.write_json(csv.with_name(f"{csv.stem}.meta.json"), meta)
     print(f"{csv}: {len(pred)} filas, máx {pred['probability'].max() * 100:.1f} %", flush=True)
     return csv
@@ -360,6 +428,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--workers", type=int, default=8, help="hilos de llamadas a Bedrock")
     p.add_argument("--yes", action="store_true", help=f"permite más de {MAX_IMAGES} imágenes")
     p.add_argument("--dry-run", action="store_true", help="solo imprime la estimación")
+    p.add_argument(
+        "--era5-typical",
+        type=Path,
+        help="JSON con valores ERA5 fijos (solo cambian las imágenes GOES); no lee índices ERA5",
+    )
     return p
 
 
