@@ -10,7 +10,7 @@ from pathlib import Path
 import streamlit as st
 
 import common
-from viewer_app import charts, data, diagrams, layout, state, theme
+from viewer_app import charts, data, diagrams, layout, model_metrics, state, theme
 
 DOCUMENT = "https://github.com/idia-tt/aws-mesocyclonic/blob/main/docs/mesociclones_chile.md"
 REPOSITORY = "https://github.com/idia-tt/aws-mesocyclonic"
@@ -48,6 +48,7 @@ def _links(key: str) -> None:
 def _cover() -> None:
     """Presenta el objetivo, las referencias del caso y los enlaces."""
     st.title("Predicción de tormentas mesociclónicas en el centro-sur de Chile", anchor="inicio")
+    model_metrics.stamp("project")
     with st.container(key="hero"):
         layout.image(
             ASSETS / "tornado_los_angeles.webp",
