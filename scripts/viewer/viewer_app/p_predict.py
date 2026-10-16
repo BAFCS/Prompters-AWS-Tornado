@@ -362,7 +362,7 @@ _MAP_HTML = """<!DOCTYPE html><html lang="es" data-theme="__THEME__"><head><meta
  #map{flex:1;background:var(--bg)}
  aside{width:230px;overflow:auto;border-left:1px solid var(--line);padding:12px;box-sizing:border-box}
  h2{font-size:15px;margin:0 0 8px} .disc{font-size:13px;color:var(--muted);margin:6px 0}
- .legend span{display:inline-block;width:38px;height:14px} .legend small{display:flex;justify-content:space-between;width:190px}
+ .legend span{display:inline-block;width:38px;height:14px} .legend small{display:flex;justify-content:space-between;width:190px;font-size:9px}
  :root[data-theme="dark"] .leaflet-bar a,:root[data-theme="dark"] .leaflet-control-layers,
  :root[data-theme="dark"] .leaflet-tooltip{background:var(--field);color:var(--ink);border-color:var(--line)}
  :root[data-theme="dark"] .leaflet-control-attribution{background:rgba(29,53,87,.8);color:var(--muted)}
@@ -378,7 +378,7 @@ const D=__DATA__;
 const COLORS=["#440154","#3b528b","#21918c","#5ec962","#fde725"];
 const color=v=>COLORS[Math.min(4,Math.floor(v/20))];
 document.getElementById("legend").innerHTML=COLORS.map(c=>`<span style="background:${c}"></span>`).join("")+
- "<small>"+[0,20,40,60,80,100].map(x=>`<b>${x}</b>`).join("")+"</small>";
+ "<small>"+[0,10,20,30,40,50,60,70,80,90,100].map(x=>`<b>${x}</b>`).join("")+"</small>";
 document.getElementById("stats").textContent=`Mínimo ${D.min.toFixed(1)} % · máximo ${D.max.toFixed(1)} %`;
 const map=L.map("map",{preferCanvas:true}).fitBounds(D.bounds);
 // El iframe de Streamlit todavía no tiene tamaño cuando arranca Leaflet: se reencuadra al cargar.
