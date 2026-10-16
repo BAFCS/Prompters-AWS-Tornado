@@ -501,14 +501,45 @@ def _real_model() -> None:
     _csv_button(prob, lat, lon, f"probabilidades_{day}_{hour:02d}UTC.csv")
 
 
+# Sitio del día completo «solo GOES» (rama merge/datos-modelo: infer_grid.py --era5-typical y
+# prototype.py, publicado con «make publish-goes»): el XGBoost híbrido real con las 12 variables ERA5
+# fijas en la mediana del entorno tornádico, así que el mapa solo cambia con las imágenes GOES.
+GOES_DAY_URL = "https://d1m48zea07nk1y.cloudfront.net/resultados/sitio_goes/index.html"
+
+
+def _day_view() -> None:
+    """Día completo hora a hora con el modelo real, usando solo las imágenes GOES."""
+    import os
+
+    st.caption(
+        "Predicción del **XGBoost híbrido real** para cada hora del día, con las imágenes GOES de "
+        "esa hora y las variables ERA5 **fijas en valores típicos** (mediana del entorno tornádico). "
+        "Sirve para días recientes, como ayer, que todavía no tienen ERA5. Se pierde la información "
+        "del entorno (~80 % del peso del modelo): el mapa muestra «dónde las nubes se parecen a las "
+        "de una tormenta severa», no la favorabilidad completa. Elige el día y mueve la hora; los "
+        "tornados del catálogo aparecen en su hora."
+    )
+    url = os.environ.get("GOES_DAY_URL", GOES_DAY_URL)
+    themed = f"{url}?theme={'dark' if theme.is_dark() else 'light'}"
+    st.iframe(themed, height=760)
+    st.link_button("Abrir el mapa en pantalla completa", themed, icon=":material/open_in_new:")
+
+
 def page() -> None:
     """Dibuja la página «Predecir»."""
     st.title("Predecir")
     vista = st.radio(
         "Modelo",
-        ["Modelo v2 entrenado (días con tornado)", "Demo con imagen (modelo de ejemplo)"],
+        [
+            "Modelo v2 entrenado (días con tornado)",
+            "Día completo hora a hora (solo GOES)",
+            "Demo con imagen (modelo de ejemplo)",
+        ],
         horizontal=True,
     )
+    if vista.startswith("Día completo"):
+        _day_view()
+        return
     if vista.startswith("Modelo v2"):
         st.caption(
             "Predicción real del XGBoost v2 (ERA5 + variables GOES), entrenado con los tornados del "
