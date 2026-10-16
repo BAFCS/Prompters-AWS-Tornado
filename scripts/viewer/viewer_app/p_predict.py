@@ -8,7 +8,7 @@ Demostración del pipeline de inferencia dentro del visor. Dos modos:
 
 El embedding de la imagen sale de Amazon Bedrock (Titan) si hay credenciales; si no, de un embedding
 sintético determinista, para que la demostración no dependa de la nube. La probabilidad se dibuja
-superpuesta sobre la propia imagen, con la grilla del centro-sur/austral.
+en un mapa Leaflet con el estilo de «Mapa del modelo», sobre la imagen y la grilla del centro-sur/austral.
 
 Es una demostración con un modelo de ejemplo: no sustituye un pronóstico operativo.
 """
@@ -262,28 +262,68 @@ def _field_grid(feat_vals: dict, lat: np.ndarray, lon: np.ndarray) -> dict:
     }
 
 
-def _figure(png: bytes, prob: np.ndarray, lat: np.ndarray, lon: np.ndarray):
-    """Figura Plotly: imagen GOES de fondo + heatmap de probabilidad superpuesto, interactivo."""
-    import plotly.graph_objects as go
+# Mapa del resultado con el mismo estilo que «Mapa del modelo» (scripts/app/prototype.py del sitio):
+# Leaflet sobre OpenStreetMap, celdas de 0,25° en la escala viridis de cinco tramos, leyenda al costado
+# y los colores del tema activo del visor. La imagen GOES va como capa que se puede apagar.
+_MAP_HTML = """<!DOCTYPE html><html lang="es" data-theme="__THEME__"><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+ integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+ integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+ :root{--bg:#FFFFFF;--ink:#0E1A2C;--muted:#465463;--line:#BDD4D6;--accent:#376284;--field:#EFF8F9}
+ :root[data-theme="dark"]{--bg:#1D3557;--ink:#F1FAEE;--muted:#A9B8BE;--line:#475C75;--accent:#A8DADC;--field:#2C4362}
+ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.4 "IBM Plex Sans",system-ui,sans-serif}
+ main{display:flex;height:100%;border:1px solid var(--line);border-radius:6px;overflow:hidden;box-sizing:border-box}
+ #map{flex:1;background:var(--bg)}
+ aside{width:230px;overflow:auto;border-left:1px solid var(--line);padding:12px;box-sizing:border-box}
+ h2{font-size:15px;margin:0 0 8px} .disc{font-size:13px;color:var(--muted);margin:6px 0}
+ .legend span{display:inline-block;width:38px;height:14px} .legend small{display:flex;justify-content:space-between;width:190px}
+ :root[data-theme="dark"] .leaflet-bar a,:root[data-theme="dark"] .leaflet-control-layers,
+ :root[data-theme="dark"] .leaflet-tooltip{background:var(--field);color:var(--ink);border-color:var(--line)}
+ :root[data-theme="dark"] .leaflet-control-attribution{background:rgba(29,53,87,.8);color:var(--muted)}
+ :root[data-theme="dark"] .leaflet-control-attribution a{color:var(--accent)}
+</style></head><body><main>
+<div id="map" aria-label="Mapa de probabilidad por área"></div>
+<aside><h2>Leyenda (%)</h2><div class="legend" id="legend"></div>
+<p class="disc">Probabilidad por celda de 0,25°. Pasa el cursor sobre una celda para ver su valor.</p>
+<p class="disc" id="stats"></p>
+<p class="disc">Usa el control de capas (arriba a la derecha) para mostrar u ocultar la imagen GOES.</p></aside>
+</main><script>
+const D=__DATA__;
+const COLORS=["#440154","#3b528b","#21918c","#5ec962","#fde725"];
+const color=v=>COLORS[Math.min(4,Math.floor(v/20))];
+document.getElementById("legend").innerHTML=COLORS.map(c=>`<span style="background:${c}"></span>`).join("")+
+ "<small>"+[0,20,40,60,80,100].map(x=>`<b>${x}</b>`).join("")+"</small>";
+document.getElementById("stats").textContent=`Mínimo ${D.min.toFixed(1)} % · máximo ${D.max.toFixed(1)} %`;
+const map=L.map("map",{preferCanvas:true}).fitBounds(D.bounds);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:9,attribution:"© OpenStreetMap"}).addTo(map);
+const goes=L.imageOverlay(D.image,D.bounds,{opacity:.55}).addTo(map);
+const cells=L.layerGroup().addTo(map), half=D.step/2;
+D.prob.forEach((v,i)=>{if(v===null||v<1)return;
+ const la=D.lats[Math.floor(i/D.lons.length)], lo=D.lons[i%D.lons.length];
+ L.rectangle([[la-half,lo-half],[la+half,lo+half]],{stroke:false,fillColor:color(v),fillOpacity:.65})
+  .bindTooltip(`${v.toFixed(1)} %`).addTo(cells);});
+L.control.layers(null,{"Imagen GOES":goes,"Probabilidad":cells},{collapsed:false}).addTo(map);
+</script></body></html>"""
 
-    data_uri = "data:image/png;base64," + base64.b64encode(png).decode()
-    fig = go.Figure()
-    fig.add_layout_image(dict(source=data_uri, xref="x", yref="y", x=WEST, y=NORTH,
-                              sizex=EAST - WEST, sizey=NORTH - SOUTH, sizing="stretch",
-                              layer="below", opacity=1.0))
-    fig.add_trace(go.Heatmap(
-        z=prob, x=lon, y=lat, colorscale="Turbo", zmin=0, zmax=1, opacity=0.55,
-        colorbar=dict(title="prob", thickness=12, len=0.8),
-        hovertemplate="lat %{y:.2f}<br>lon %{x:.2f}<br>prob %{z:.2f}<extra></extra>"))
-    fig.add_trace(go.Contour(
-        z=prob, x=lon, y=lat, showscale=False,
-        contours=dict(start=0.5, end=0.9, size=0.2, coloring="lines"),
-        line=dict(color="white", width=1), opacity=0.8, hoverinfo="skip"))
-    fig.update_layout(
-        xaxis=dict(title="Longitud", range=[WEST, EAST], constrain="domain"),
-        yaxis=dict(title="Latitud", range=[SOUTH, NORTH], scaleanchor="x", scaleratio=1),
-        height=560, margin=dict(l=40, r=10, t=10, b=40))
-    return fig
+
+def _map_html(png: bytes, prob: np.ndarray, lat: np.ndarray, lon: np.ndarray, dark: bool) -> str:
+    """Mapa Leaflet del resultado, con el estilo de «Mapa del modelo»: imagen GOES + probabilidad."""
+    pct = np.round(prob * 100, 1)
+    data = {
+        "image": "data:image/png;base64," + base64.b64encode(png).decode(),
+        "bounds": [[SOUTH, WEST], [NORTH, EAST]],
+        "lats": [float(x) for x in lat],
+        "lons": [float(x) for x in lon],
+        "step": GRID_RES,
+        "prob": [None if not np.isfinite(v) else float(v) for v in pct.ravel()],
+        "min": float(np.nanmin(pct)),
+        "max": float(np.nanmax(pct)),
+    }
+    return _MAP_HTML.replace("__THEME__", "dark" if dark else "light").replace(
+        "__DATA__", json.dumps(data, separators=(",", ":"))
+    )
 
 
 def page() -> None:
@@ -353,8 +393,12 @@ def page() -> None:
 
         lat, lon = _grid()
         prob = _physical_prob(_field_grid(feat_vals, lat, lon), lat, lon)
-        # La predicción reemplaza la imagen en el mismo lugar (no aparece abajo).
-        visor.plotly_chart(_figure(png, prob, lat, lon), use_container_width=True)
+        # La predicción reemplaza la imagen en el mismo lugar (no aparece abajo), con el estilo del
+        # «Mapa del modelo».
+        import streamlit.components.v1 as components
+
+        with visor.container():
+            components.html(_map_html(png, prob, lat, lon, theme.is_dark()), height=600)
         st.caption(f"Probabilidad por área sobre la imagen · min {prob.min():.2f} / máx {prob.max():.2f} · "
                    f"embedding: {source}")
 
