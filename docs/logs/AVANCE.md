@@ -81,3 +81,18 @@ Abrir `tasks.md` en Kiro y usar "Run All Tasks".
 - **Pendiente: reentrenar sin sesgo de fuente.** Los positivos usaron GOES de NOAA y los negativos GOES
   del bucket. El bucket ya trae GOES 2018–2026 (2.991 archivos, 21 días con evento con C08+C13; 2023–2024
   aún a medias; 2017 sin datos). Reentrenar con GOES del bucket para todos los días.
+
+## Pestaña "Mapa del modelo" en el visor de producción (2026-10-16)
+
+- URL: https://d1m48zea07nk1y.cloudfront.net/mapa-modelo (junto a «Predecir»). Código en la rama de
+  producción `adapter-bucket` (commits `f042530`, `5d6aa09`): `scripts/viewer/viewer_app/p_forecast.py`
+  embebe `/resultados/sitio/index.html`.
+- Redespliegue: la EC2 `i-06edee033ab05ac08` no está registrada en SSM, así que se paró, se le puso
+  user-data multipart con `cloud_final_modules: [scripts-user, always]` (el mismo script de Terraform,
+  ahora corre en cada arranque) y se volvió a iniciar. **Para redesplegar de ahora en adelante basta con
+  reiniciar la instancia (stop/start)**, pero cambia el DNS público: hay que actualizar el origen
+  `viewer-ec2` de CloudFront `E1QZXODGHESLF4` (hoy `ec2-34-237-2-186.compute-1.amazonaws.com`).
+- **Deriva de Terraform:** user-data y origen de CloudFront cambiaron fuera del state de BAFCS. Un
+  `terraform apply` revertiría la user-data (con `user_data_replace_on_change` podría recrear la EC2) y
+  re-sincronizaría el origen. Avisar a BAFCS antes de aplicar; lo correcto es portar el cambio a
+  `user_data.sh.tftpl` o usar una Elastic IP.
