@@ -32,7 +32,7 @@ from pathlib import Path
 import numpy as np
 import streamlit as st
 
-from viewer_app import alerts, theme
+from viewer_app import alerts, model_metrics, theme
 
 ROOT = Path(__file__).resolve().parents[3]
 DEMO = ROOT / "data" / "model" / "demo"
@@ -369,16 +369,28 @@ _MAP_HTML = """<!DOCTYPE html><html lang="es" data-theme="__THEME__"><head><meta
  :root[data-theme="dark"] .leaflet-control-attribution a{color:var(--accent)}
 </style></head><body><main>
 <div id="map" aria-label="Mapa de probabilidad por área"></div>
-<aside><h2>Leyenda (%)</h2><div class="legend" id="legend"></div>
+<aside><h2>Leyenda</h2>
+<label class="disc"><input id="logscale" type="checkbox" aria-describedby="lgnote"> Escala logarítmica</label>
+<div class="legend" id="legend"></div>
+<p class="disc" id="lgnote"></p>
 <p class="disc">Probabilidad por celda de 0,25°. Pasa el cursor sobre una celda para ver su valor.</p>
 <p class="disc" id="stats"></p>
 <p class="disc">Usa el control de capas (arriba a la derecha) para mostrar u ocultar la imagen GOES.</p></aside>
 </main><script>
 const D=__DATA__;
 const COLORS=["#440154","#3b528b","#21918c","#5ec962","#fde725"];
-const color=v=>COLORS[Math.min(4,Math.floor(v/20))];
-document.getElementById("legend").innerHTML=COLORS.map(c=>`<span style="background:${c}"></span>`).join("")+
- "<small>"+[0,10,20,30,40,50,60,70,80,90,100].map(x=>`<b>${x}</b>`).join("")+"</small>";
+// Escala log10 del puntaje (fracción 0–1) con piso 0,001: t=(log10(p)+3)/3 en [0,1].
+// Misma fórmula que score_color_index() en p_predict.py.
+const FLOOR=1e-3;
+const colorOf=(v,log)=>{if(!log)return COLORS[Math.min(4,Math.floor(v/20))];
+ const t=(Math.log10(Math.max(v/100,FLOOR))+3)/3; return COLORS[Math.min(4,Math.floor(t*5))];};
+const TICKS_LIN=[0,10,20,30,40,50,60,70,80,90,100], TICKS_LOG=["0.001","0.01","0.1","1"];
+const legend=log=>{
+ document.getElementById("legend").innerHTML=COLORS.map(c=>`<span style="background:${c}"></span>`).join("")+
+  "<small>"+(log?TICKS_LOG:TICKS_LIN).map(x=>`<b>${x}</b>`).join("")+"</small>";
+ document.getElementById("lgnote").textContent=log
+  ?"Escala log10 del puntaje, piso 0,001: resalta las diferencias entre valores bajos. El valor de cada celda está en su recuadro."
+  :"Colores en % del puntaje (lineal).";};
 document.getElementById("stats").textContent=`Mínimo ${D.min.toFixed(1)} % · máximo ${D.max.toFixed(1)} %`;
 const map=L.map("map",{preferCanvas:true}).fitBounds(D.bounds);
 // El iframe de Streamlit todavía no tiene tamaño cuando arranca Leaflet: se reencuadra al cargar.
@@ -387,17 +399,42 @@ window.addEventListener("load",()=>setTimeout(refit,150)); window.addEventListen
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:9,attribution:"© OpenStreetMap"}).addTo(map);
 const goes=L.imageOverlay(D.image,D.bounds,{opacity:.55}).addTo(map);
 const cells=L.layerGroup().addTo(map), half=D.step/2;
-D.prob.forEach((v,i)=>{if(v===null||v<1)return;
+// Se dibujan todas las celdas desde el piso (0,1 %); en lineal las de menos de 1 % quedan transparentes.
+const rects=[];
+D.prob.forEach((v,i)=>{if(v===null||v<0.1)return;
  const la=D.lats[Math.floor(i/D.lons.length)], lo=D.lons[i%D.lons.length];
- L.rectangle([[la-half,lo-half],[la+half,lo+half]],{stroke:false,fillColor:color(v),fillOpacity:.65})
-  .bindTooltip(`${v.toFixed(1)} %`).addTo(cells);});
+ const rect=L.rectangle([[la-half,lo-half],[la+half,lo+half]],{stroke:false})
+  .bindTooltip(`${v<1?v.toFixed(2):v.toFixed(1)} %`).addTo(cells);
+ rects.push({rect,v});});
+const paint=log=>rects.forEach(({rect,v})=>rect.setStyle({fillColor:colorOf(v,log),fillOpacity:(!log&&v<1)?0:.65}));
+const box=document.getElementById("logscale");
+box.checked=D.log; box.addEventListener("change",()=>{paint(box.checked);legend(box.checked);});
+paint(D.log); legend(D.log);
 L.control.layers(null,{"Imagen GOES":goes,"Probabilidad":cells},{collapsed:false}).addTo(map);
 </script></body></html>"""
 
 
-def _map_html(png: bytes, prob: np.ndarray, lat: np.ndarray, lon: np.ndarray, dark: bool) -> str:
-    """Mapa Leaflet del resultado, con el estilo de «Mapa del modelo»: imagen GOES + probabilidad."""
-    pct = np.round(prob * 100, 1)
+def score_color_index(pct: float, log: bool) -> int:
+    """Tramo de color (0–4) de una celda con puntaje ``pct`` en %; espeja ``colorOf`` de ``_MAP_HTML``.
+
+    Lineal: tramos de 20 %. Logarítmica: ``t = (log10(max(pct/100, 0,001)) + 3) / 3`` en [0, 1]
+    repartido en cinco tramos. Solo existe para fijar la fórmula del JavaScript en las pruebas.
+    """
+    if not log:
+        return min(4, int(pct // 20))
+    t = (np.log10(max(pct / 100, 1e-3)) + 3) / 3
+    return min(4, int(t * 5))
+
+
+def _map_html(
+    png: bytes, prob: np.ndarray, lat: np.ndarray, lon: np.ndarray, dark: bool, log: bool = False
+) -> str:
+    """Mapa Leaflet del resultado, con el estilo de «Mapa del modelo»: imagen GOES + probabilidad.
+
+    ``log`` fija el estado inicial del control «Escala logarítmica» del mapa (por defecto lineal).
+    """
+    # Dos decimales: la escala logarítmica distingue valores bajos (0,1 % a 1 %).
+    pct = np.round(prob * 100, 2)
     data = {
         "image": "data:image/png;base64," + base64.b64encode(png).decode(),
         "bounds": [[SOUTH, WEST], [NORTH, EAST]],
@@ -407,6 +444,7 @@ def _map_html(png: bytes, prob: np.ndarray, lat: np.ndarray, lon: np.ndarray, da
         "prob": [None if not np.isfinite(v) else float(v) for v in pct.ravel()],
         "min": float(np.nanmin(pct)),
         "max": float(np.nanmax(pct)),
+        "log": bool(log),
     }
     return _MAP_HTML.replace("__THEME__", "dark" if dark else "light").replace(
         "__DATA__", json.dumps(data, separators=(",", ":"))
@@ -532,6 +570,7 @@ def _day_view() -> None:
 def page() -> None:
     """Dibuja la página «Predecir»."""
     st.title("Predecir")
+    model_metrics.stamp("predict")
     vista = st.radio(
         "Modelo",
         [
