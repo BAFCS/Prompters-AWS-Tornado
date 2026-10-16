@@ -685,29 +685,24 @@
   // ---------- 4 · how it works on AWS (only the services the repo deploys) ----------
   { const s = slide("Cómo funciona"); s.noDeco = true;
     const c = calmOf(s);
-    // interactive Archify diagram (docs/presentation/archify) in its own presentation stage (present=1): toolbar,
-    // hover/focus traces, route, lens, zoom and the idle edge motion, as in the standalone file
-    const X = 20, Y = 92, W = 960, H = 440;
-    mk("rect", { x: X, y: Y, width: W, height: H, rx: 8, fill: "var(--paper)" }, c);
+    // Diagrama Archify embebido (docs/presentation/archify) sin chrome del lector:
+    // embed=1 oculta la barra de herramientas, la cabecera y las tarjetas; frame=inner
+    // conserva solo el marco interior del diagrama; motion=live arranca la animación;
+    // preset classic es el valor por defecto del propio archivo.
+    const X = 20, Y = 96, W = 960, H = 452;
     const arch = FO(X, Y, W, H, 1150, Math.round(1150 * H / W));
     const af = document.createElementNS(XHTML, "iframe");
     af.title = "Diagrama interactivo de la arquitectura en AWS";
     af.setAttribute("loading", "lazy");
     arch.host.appendChild(af);
     keepKeys(af);
-    reg(path(roughRect(X, Y, W, H, 730), "s-muted", 1.1, c));
     const archTheme = () => {
       const t = document.documentElement.getAttribute("data-theme");
       return t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
     };
-    const archSrc = () => "archify/tornado-aws.html?present=1&theme=" + archTheme();
-    // Archify starts still unless the reader chose "live" (stored under this key, shared with the iframe's origin);
-    // turn it on, unless the viewer asked for reduced motion (Archify also honours that itself)
-    if (!reduce) { try { localStorage.setItem("archify-motion", "live"); } catch (_) {} }
+    const archSrc = () => "archify/tornado-aws.html?embed=1&frame=inner&motion=live&theme=" + archTheme();
     s.onShow = () => { const u = archSrc(); if (af.getAttribute("src") !== u) af.setAttribute("src", u); };
     s.onTheme = s.onShow;
-    step(1);
-    T(500, 552, "¿Por qué AWS? Los datos ya viven ahí: procesamos junto a ellos", { size: 16 });
   }
 
   // ---------- 5 · live demo: dashboard (~2/3) + QR (~1/3) ----------
@@ -748,7 +743,7 @@
 
   // ---------- 6 · funding ask ----------
   { slide("Buscamos su Apoyo");
-    T(500, 125, "un apoyo esencial para la ciudadanía", { size: 22, boil: true });
+    T(500, 125, ["Buscamos financiamiento para mantener, escalar", "y perfeccionar el sistema"], { size: 22, boil: true, lh: 1.4 });
     // one drawn icon per column (x, y = icon centre)
     const icons = [
       (x, y) => D(`M${x} ${y - 34}L${x + 30} ${y - 22}Q${x + 30} ${y + 18} ${x} ${y + 34}Q${x - 30} ${y + 18} ${x - 30} ${y - 22}Z`, "s-red", 1.6),
@@ -767,8 +762,6 @@
         T(x + 130, 312, h, { size: 26, cls: col.replace("s-", "t-"), boil: true });
         T(x + 130, 352, lines, { size: 15, cls: "t-muted", lh: 1.5 });
       });
-    step(4);
-    T(500, 470, "Información abierta para comunidades, emergencias y meteorólogos", { size: 17 });
   }
 
   // ---------- 7 · closing ----------
@@ -838,17 +831,45 @@
   }
 
 
-  // ---------- 6 · ML framing ----------
-  { slide("Anexo · Cómo plantear el aprendizaje");
+  // ---------- 6 · model (PU learning + time-series prediction) ----------
+  { slide("Modelo");
+    // izquierda: PU learning
     step(0);
-    T(80, 130, "PU learning (positivos + no etiquetados)", { size: 20, cls: "t-red", anchor: "start", boil: true });
-    T(80, 168, ["102 registros = ejemplos positivos.","El resto NO es negativo: solo no está etiquetado."], { size: 17, anchor: "start", lh: 1.4 });
+    T(70, 120, "Aprendizaje PU (positivos + no etiquetados)", { size: 19, cls: "t-red", anchor: "start", boil: true });
+    T(70, 156, ["102 registros = ejemplos positivos.", "El resto NO es negativo: solo no está etiquetado.", "El modelo estima P(tornado) a partir del entorno,", "corrigiendo que no todo evento quedó reportado."], { size: 15, anchor: "start", lh: 1.5 });
     step(1);
-    T(80, 250, "P(reportado | entorno) =", { size: 18, anchor: "start", cls: "t-blue" });
-    T(110, 282, "P(tornado | entorno) × P(reportado | tornado, lugar, hora, año)", { size: 15, anchor: "start", cls: "t-muted" });
+    T(70, 268, "P(reportado | entorno) =", { size: 16, anchor: "start", cls: "t-blue" });
+    T(90, 296, "P(tornado | entorno) × P(reportado | tornado, lugar, hora)", { size: 13, anchor: "start", cls: "t-muted" });
+
+    // derecha: predicción en series de tiempo (diagrama)
     step(2);
-    T(80, 350, "Evaluación con etiquetas incompletas", { size: 20, cls: "t-red", anchor: "start", boil: true });
-    T(80, 388, ["La exactitud engaña: usar POD, FAR, AUC-PR, fiabilidad.","Separar por eventos completos (sin fuga de información).","Buscar controles difíciles: convección profunda sin rotación."], { size: 16, anchor: "start", lh: 1.45 });
+    T(735, 120, "Predicción en series de tiempo", { size: 19, cls: "t-blue", boil: true });
+    figure("Diagrama: ERA5 y GOES entregan una secuencia horaria; una ventana deslizante alimenta el modelo, que produce una probabilidad de rotación a lo largo del tiempo", () => {
+      // franja de pasos de tiempo (ERA5 + GOES hora a hora)
+      const tx = 540, ty = 180, dt = 60;
+      for (let i = 0; i < 6; i++) {
+        D(roughRect(tx + i * dt, ty, 44, 34, 700 + i * 3), "s-ink", 1.2);
+        T(tx + i * dt + 22, ty + 22, "t" + i, { size: 12, cls: "t-muted" });
+      }
+      T(tx + 3 * dt, ty - 14, "ERA5 + GOES hora a hora", { size: 13, cls: "t-muted" });
+      // ventana deslizante sobre las últimas horas
+      D(roughRect(tx + 2 * dt - 4, ty - 6, 3 * dt - 12, 46, 760), "s-violet", 1.5, { "fill-opacity": 0.08, class: "s-violet f-violet" });
+      T(tx + 3 * dt + 6, ty + 58, "ventana deslizante", { size: 12, cls: "t-violet" });
+      // flecha hacia el modelo
+      D(arrowPath(tx + 3 * dt + 6, ty + 80, tx + 3 * dt + 6, ty + 112, 770), "s-ink", 1.4);
+      // caja del modelo
+      D(roughRect(tx + 2 * dt - 10, ty + 118, 3 * dt + 2, 46, 780), "s-red", 1.6);
+      T(tx + 3 * dt - 4, ty + 146, "modelo", { size: 15, cls: "t-red", boil: true });
+      // flecha hacia la curva de salida
+      D(arrowPath(tx + 3 * dt - 4, ty + 170, tx + 3 * dt - 4, ty + 200, 790), "s-ink", 1.4);
+      // eje y curva de probabilidad de rotación en el tiempo
+      const cx = tx - 10, cy = ty + 300, cw = 6 * dt;
+      D(roughLine(cx, cy, cx + cw, cy, 800, 0.02), "s-ink", 1.2);
+      D(roughLine(cx, cy, cx, cy - 72, 810, 0.02), "s-ink", 1.2);
+      D("M" + cx + " " + (cy - 6) + " Q" + (cx + cw * 0.35) + " " + (cy - 10) + " " + (cx + cw * 0.55) + " " + (cy - 58) + " Q" + (cx + cw * 0.72) + " " + (cy - 70) + " " + (cx + cw) + " " + (cy - 20), "s-blue", 1.8, { fill: "none" });
+      T(cx - 4, cy - 80, "P(rotación)", { size: 12, anchor: "start", cls: "t-blue" });
+      T(cx + cw, cy + 18, "tiempo", { size: 12, anchor: "end", cls: "t-muted" });
+    });
     step(3);
     T(500, 500, "Una señal compatible con rotación motiva revisión — no confirma un tornado", { size: 14, cls: "t-muted" });
   }

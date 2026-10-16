@@ -21,6 +21,15 @@
           if (new URLSearchParams(window.location.search).get('present') === '1') {
             document.documentElement.setAttribute('data-present', 'true');
           }
+          // frame=inner conserva solo el marco interior del diagrama (sin la
+          // caja/chrome del lector); motion=live arranca la animación encendida.
+          if (new URLSearchParams(window.location.search).get('frame') === 'inner') {
+            document.documentElement.setAttribute('data-inner-frame', 'true');
+          }
+          var motionParam = new URLSearchParams(window.location.search).get('motion');
+          if (motionParam === 'live' || motionParam === 'still') {
+            document.documentElement.setAttribute('data-motion-param', motionParam);
+          }
         } catch (_) {}
         if (!theme) {
           try { theme = localStorage.getItem('archify-theme'); } catch (_) {}
@@ -545,6 +554,15 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       box-shadow: none;
     }
     html[data-embed="true"] .diagram-container svg { min-width: 0; }
+
+    /* frame=inner: en modo embed (sin toolbars ni cabecera) se conserva el
+       marco interior del diagrama, el borde redondeado de .diagram-container. */
+    html[data-embed="true"][data-inner-frame="true"] .diagram-container {
+      padding: 1rem;
+      border: 1px solid var(--panel-border);
+      border-radius: 1rem;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 16px 40px -20px rgba(15, 23, 42, 0.18);
+    }
 
     /* Presentation Stage is a viewer-only layer: it gives the live diagram
        the viewport while keeping guided views, theme, focus, and exports real.
@@ -8209,7 +8227,12 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       createFlows();
       html.setAttribute('data-motion-capable', 'true');
       btn.hidden = false;
-      readerPaused = readStored() !== 'live';
+      // El parámetro motion=live|still manda sobre lo guardado (lo usa el pitch
+      // embebido, cuyo localStorage no comparte con este documento).
+      var motionParam = html.getAttribute('data-motion-param');
+      if (motionParam === 'live') readerPaused = false;
+      else if (motionParam === 'still') readerPaused = true;
+      else readerPaused = readStored() !== 'live';
       btn.addEventListener('click', function () { setPaused(!readerPaused); });
       if (motionQuery) {
         if (typeof motionQuery.addEventListener === 'function') motionQuery.addEventListener('change', render);
