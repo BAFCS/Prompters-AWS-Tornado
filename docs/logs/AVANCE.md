@@ -110,3 +110,15 @@ Abrir `tasks.md` en Kiro y usar "Run All Tasks".
   `terraform apply` revertiría la user-data (con `user_data_replace_on_change` podría recrear la EC2) y
   re-sincronizaría el origen. Avisar a BAFCS antes de aplicar; lo correcto es portar el cambio a
   `user_data.sh.tftpl` o usar una Elastic IP.
+
+## Predecir con el modelo v2 (2026-10-16)
+
+- https://d1m48zea07nk1y.cloudfront.net/predecir → modo por defecto "Modelo v2 entrenado": XGBoost
+  `physical` (ERA5 + variables GOES, etiquetas reales). Lee `/resultados/sitio/days/<día>.json`
+  (33 días con tornado, 0,25° × 24 h) y lo dibuja sobre la imagen GOES C13 de la hora elegida;
+  alerta por correo solo a pedido (botón) y CSV. La demo con imagen anterior sigue como segunda opción.
+- Código en `adapter-bucket` (`0ab1ea2`). EC2 reiniciada; CloudFront `viewer-ec2` →
+  `ec2-184-195-181-197.compute-1.amazonaws.com`.
+- Predicciones: `data/app/predictions_v2_physical/` → S3 `predictions/v2_physical_2026-10-15/`;
+  sitio `demo_site_v2_physical/` → S3 `sites/v2_physical_2026-10-15/` y `resultados/sitio/`.
+- Sin predicción: 2024-06-20 y 2025-05-17 (sin C08 en el bucket).

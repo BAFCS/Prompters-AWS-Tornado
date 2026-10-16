@@ -1,0 +1,7 @@
+  aviso: 2023-09-11 18 UTC sin archivos GOES; se omite la hora
+  aviso: 2023-09-11 19 UTC sin archivos GOES; se omite la hora
+  aviso: 2023-09-11 20 UTC sin archivos GOES; se omite la hora
+  aviso: 2023-09-11 21 UTC sin archivos GOES; se omite la hora
+2023-09-11: 105×41 puntos (paso 0.25°) × 20 horas = 86100 celdas; estimación 0 imágenes para Bedrock (las que ya estén en caché no se cobran)
+goes_feat_20230911.parquet: 103320 Celdas_Hora
+data/app/predictions_v2_physical/pred_20230911.csv: 86100 filas, máx 99.8 %

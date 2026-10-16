@@ -1,0 +1,31 @@
+{
+  "required": [
+    "cape",
+    "shear_01",
+    "shear_03",
+    "shear_06",
+    "srh_01",
+    "srh_03",
+    "lcl",
+    "gamma_03",
+    "gamma_75",
+    "vgp_01",
+    "stp_lm",
+    "sherbs3"
+  ],
+  "model": [
+    "cape",
+    "shear_01",
+    "shear_03",
+    "shear_06",
+    "srh_01",
+    "srh_03",
+    "lcl",
+    "gamma_03",
+    "gamma_75",
+    "vgp_01",
+    "stp_lm",
+    "sherbs3"
+  ],
+  "embedding": []
+}
