@@ -13,6 +13,7 @@ from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TypeVar
 
 import h5py
 import numpy as np
@@ -25,6 +26,10 @@ DATA = ROOT / "data"
 CROPS = DATA / "crops"
 
 G = 9.80665  # m/s², gravedad estándar (geopotencial → altura)
+
+# Variable de tipo genérica para retry(); declarada con TypeVar (en vez de la sintaxis
+# ``def retry[T]`` de PEP 695) para mantener compatibilidad con Python 3.9–3.11, además de 3.12+.
+T = TypeVar("T")
 
 # Compresión sin pérdida para todo lo que se escribe en NetCDF (gzip + shuffle).
 COMPRESSION = {"zlib": True, "complevel": 4, "shuffle": True}
@@ -148,7 +153,7 @@ def s3() -> s3fs.S3FileSystem:
     return s3fs.S3FileSystem(anon=True)
 
 
-def retry[T](fn: Callable[..., T], *args: object, attempts: int = 5) -> T:
+def retry(fn: Callable[..., T], *args: object, attempts: int = 5) -> T:  # noqa: UP047 (py3.9 en EC2)
     """Llama ``fn(*args)`` y reintenta ante errores de red, esperando 2, 4, 8… segundos entre intentos."""
     for k in range(attempts):
         try:
@@ -217,12 +222,19 @@ def latlon(x: np.ndarray, y: np.ndarray, pr: h5py.Dataset) -> tuple[np.ndarray, 
     return lat, lon
 
 
-def latlon_abi(h: h5py.File) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def latlon_abi(
+    h: h5py.File, stride: int = 1
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Coordenadas de la grilla fija del ABI de un archivo GOES abierto ``h``.
 
     Devuelve ``(x, y, lat, lon)``: los ángulos de barrido en radianes (1D) y la latitud y longitud
     geodésicas en grados (2D, ``float32``, NaN fuera del disco), calculadas con ``latlon``.
+
+    ``stride`` decima los ejes antes del ``meshgrid`` (p. ej. 4 lleva C02 de 0,5 km a 2 km). Es
+    necesario para las bandas de alta resolución: el disco completo de C02 (0,5 km) son ~470M
+    puntos y calcular lat/lon de todo él agota la RAM (~38 GB). Con ``stride=4`` baja a la grilla
+    de 2 km (~2,4 GB), igual que las bandas IR, y alineada con ellas para un modelo multibanda.
     """
-    x, y = axis(h, "x"), axis(h, "y")
+    x, y = axis(h, "x")[::stride], axis(h, "y")[::stride]
     lat, lon = latlon(x, y, dataset(h, "goes_imager_projection"))
     return x, y, lat.astype("f4"), lon.astype("f4")

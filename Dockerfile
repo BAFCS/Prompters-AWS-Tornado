@@ -11,6 +11,7 @@ RUN uv sync --frozen
 COPY .streamlit .streamlit
 COPY scripts scripts
 COPY figs figs
+COPY models models
 
 EXPOSE 8501
 HEALTHCHECK CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"

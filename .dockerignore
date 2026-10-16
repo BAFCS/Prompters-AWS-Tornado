@@ -5,4 +5,5 @@
 !.streamlit
 !scripts
 !figs
+!models
 **/__pycache__

@@ -22,6 +22,7 @@ Es una demostración con un modelo de ejemplo: no sustituye un pronóstico opera
 
 import base64
 import contextlib
+import datetime as dt
 import hashlib
 import io
 import json
@@ -380,6 +381,9 @@ document.getElementById("legend").innerHTML=COLORS.map(c=>`<span style="backgrou
  "<small>"+[0,20,40,60,80,100].map(x=>`<b>${x}</b>`).join("")+"</small>";
 document.getElementById("stats").textContent=`Mínimo ${D.min.toFixed(1)} % · máximo ${D.max.toFixed(1)} %`;
 const map=L.map("map",{preferCanvas:true}).fitBounds(D.bounds);
+// El iframe de Streamlit todavía no tiene tamaño cuando arranca Leaflet: se reencuadra al cargar.
+const refit=()=>{map.invalidateSize();map.fitBounds(D.bounds);};
+window.addEventListener("load",()=>setTimeout(refit,150)); window.addEventListener("resize",refit);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:9,attribution:"© OpenStreetMap"}).addTo(map);
 const goes=L.imageOverlay(D.image,D.bounds,{opacity:.55}).addTo(map);
 const cells=L.layerGroup().addTo(map), half=D.step/2;
@@ -533,144 +537,114 @@ def page() -> None:
         [
             "Modelo v2 entrenado (días con tornado)",
             "Día completo hora a hora (solo GOES)",
-            "Demo con imagen (modelo de ejemplo)",
+            "Modelo v2 con imagen GOES (en vivo o cualquier hora)",
         ],
         horizontal=True,
     )
     if vista.startswith("Día completo"):
         _day_view()
         return
-    if vista.startswith("Modelo v2"):
+    if vista.startswith("Modelo v2 con imagen"):
+        _live_view()
+        return
+    if vista.startswith("Modelo v2 entrenado"):
         st.caption(
             "Predicción real del XGBoost v2 (ERA5 + variables GOES), entrenado con los tornados del "
             "catálogo. Elige el día y la hora UTC."
         )
         _real_model()
         return
+    _live_view()
+
+
+def _chile_label(t: dt.datetime) -> str:
+    """«16:00 hora de Chile (19 UTC, 13-10-2026)» para una hora UTC sin zona."""
+    from zoneinfo import ZoneInfo
+
+    local = t.replace(tzinfo=dt.UTC).astimezone(ZoneInfo("America/Santiago"))
+    return f"{local:%H:%M} hora de Chile ({t:%H} UTC, {local:%d-%m-%Y})"
+
+
+@st.cache_data(show_spinner=False, max_entries=48)
+def _live_predict(t: dt.datetime, mode: str) -> dict:
+    """Predicción del modelo v2 para la hora ``t``; cacheada para no volver a bajar GOES."""
+    from viewer_app import live_model
+
+    return live_model.predict(t, mode, log=lambda m: None)
+
+
+def _live_view() -> None:
+    """Modelo v2 real sobre la imagen GOES de una hora: la última disponible o una elegida."""
+    from zoneinfo import ZoneInfo
+
+    import streamlit.components.v1 as components
+
+    from viewer_app import live_model
+
     st.caption(
-        "Toma una imagen GOES real de Chile (o sube una) y el modelo estima la probabilidad "
-        "de tornado por área. Demostración con un modelo de ejemplo; no es un pronóstico operativo."
+        f"Predicción real del **{live_model.MODEL_LABEL}** para una hora: baja de NOAA las imágenes "
+        "GOES-East de esa hora y de las cuatro anteriores, calcula las variables GOES por celda de "
+        "0,25° y corre el modelo. Las variables ERA5 van **fijas en valores típicos** (mediana del "
+        "entorno tornádico) o, en modo híbrido, con el ERA5 real del día si el visor lo tiene "
+        "(ERA5 llega con ~5 días de retraso). Índice relativo, no un pronóstico oficial."
     )
-
-    modo = st.radio(
-        "Modo", ["Solo imagen (ERA5 típica)", "Híbrido (imagen + ERA5)"], horizontal=True
-    )
-    solo = modo.startswith("Solo")
-
-    c1, c2 = theme.columns([1, 1], "predict_cols")
+    c1, c2 = theme.columns([1, 1], "live_cols")
+    chile = ZoneInfo("America/Santiago")
     with c1:
-        from PIL import Image
-
         fuente = st.radio(
-            "Imagen de entrada",
-            ["GOES en vivo (hoy)", "GOES real de Chile (bucket)", "Subir archivo"],
+            "Imagen GOES",
+            ["En vivo (última hora disponible)", "Otra fecha y hora"],
             horizontal=True,
         )
-        img = None
-        origen = fuente
-        if fuente.startswith("GOES en vivo"):
-            with st.spinner("Bajando la imagen GOES más reciente de Chile…"):
-                vivo = _goes_tiempo_real()
-            if vivo is None:
-                st.warning("No se pudo obtener la imagen en vivo; usa otra fuente.")
-                img = Image.fromarray(np.zeros((224, 224, 3), "uint8"))
-            else:
-                png_vivo, etiqueta = vivo
-                img = Image.open(io.BytesIO(png_vivo)).convert("RGB")
-                origen = f"GOES-East C13 · {etiqueta}"
-                st.caption(f"{origen} · tope de nubes sobre el centro-sur/austral")
-        elif fuente.startswith("GOES real"):
-            dia = st.selectbox("Día con tornado (GOES disponible)", _tornado_days())
-            real = _goes_real(dia)
-            if real is None:
-                st.warning(f"No hay GOES para {dia} en el bucket.")
-                img = Image.fromarray(np.zeros((224, 224, 3), "uint8"))
-            else:
-                raw, horas = real
-                hidx = st.select_slider(
-                    "Hora UTC del barrido",
-                    options=list(range(len(horas))),
-                    format_func=lambda i: horas[i],
-                    value=min(len(horas) - 1, len(horas) * 4 // 5),
-                )
-                img = Image.open(io.BytesIO(_goes_image(raw, hidx))).convert("RGB")
-                origen = f"GOES-16 C13 · {dia} {horas[hidx]} UTC"
-                st.caption(f"{origen} (tope de nubes)")
+        if fuente.startswith("En vivo"):
+            t = live_model.latest_hour()
         else:
-            up = st.file_uploader("Imagen GOES (PNG/JPG)", type=["png", "jpg", "jpeg"])
-            if up is not None:
-                img = Image.open(up).convert("RGB")
-                origen = f"archivo subido ({up.name})"
-            else:
-                st.info("Sin imagen: se usa una de ejemplo.")
-                img = Image.fromarray(
-                    (np.random.default_rng(0).random((224, 224, 3)) * 255).astype("uint8")
-                )
-        # Placeholder: aquí se muestra la imagen y, al predecir, se reemplaza por el mapa de probabilidad.
-        visor = st.empty()
-        visor.image(img, width=260)
-
+            hoy = dt.datetime.now(chile).date()
+            dia = st.date_input(
+                "Día (hora de Chile)", value=hoy - dt.timedelta(days=1),
+                min_value=dt.date(2018, 1, 1), max_value=hoy, format="DD-MM-YYYY",
+            )  # fmt: skip
+            hora = st.select_slider(
+                "Hora de Chile",
+                options=list(range(24)),
+                value=16,
+                format_func=lambda h: f"{h:02d}:00",
+            )
+            local = dt.datetime.combine(dia, dt.time(hora), tzinfo=chile)
+            t = local.astimezone(dt.UTC).replace(tzinfo=None)
+            t = min(t, live_model.latest_hour())
+        st.caption(f"Hora de la imagen: {_chile_label(t)}")
     with c2:
-        if solo:
-            st.caption("Features ERA5 rellenadas con valores típicos del entorno tornádico.")
-            feat_vals = _typical()
-            st.json(feat_vals, expanded=False)
-        else:
-            feat_vals = {n: st.slider(n, *ERA5_RANGES[n]) for n in ERA5_FEATURES}
-
-    if st.button("Predecir", type="primary"):
-        buf = io.BytesIO()
-        img.resize((224, 224)).save(buf, format="PNG")
-        png = buf.getvalue()
-        _, source = _embedding(png, 1024)
-
-        lat, lon = _grid()
-        prob = _physical_prob(_field_grid(feat_vals, lat, lon), lat, lon)
-        # La predicción reemplaza la imagen en el mismo lugar (no aparece abajo), con el estilo del
-        # «Mapa del modelo».
-        import streamlit.components.v1 as components
-
-        with visor.container():
-            components.html(_map_html(png, prob, lat, lon, theme.is_dark()), height=600)
+        modo = st.radio(
+            "Variables ERA5",
+            ["Solo imagen GOES (ERA5 típico)", "Híbrido (ERA5 real del día, si está disponible)"],
+        )
+        mode = "tipico" if modo.startswith("Solo") else "real"
         st.caption(
-            f"Probabilidad por área sobre la imagen · min {prob.min():.2f} / máx {prob.max():.2f} · "
-            f"embedding: {source}"
+            "Con ERA5 típico el mapa solo cambia con las nubes; con ERA5 real el modelo también ve "
+            "si el ambiente era favorable (el entorno pesa ~80 % en sus decisiones)."
         )
 
-        # Alerta por correo si alguna celda supera el umbral (viewer_app/alerts.py).
-        with st.spinner("Revisando el umbral y enviando la alerta por correo…"):
-            aviso = alerts.alert(prob, lat, lon, GRID_RES, origen)
-        if aviso is None:
-            st.info(
-                f"Ninguna celda supera el {alerts.threshold() * 100:.0f} %: no se envió alerta."
-            )
-        else:
-            z = aviso["spot"]
-            donde = (
-                f"{z['prob'] * 100:.1f} % en latitud {z['lat']:.2f}, longitud {z['lon']:.2f}, "
-                f"{alerts.place_text(z['place'])}"
-            )
-            if aviso["sent"]:
-                st.success(
-                    f"Alerta enviada por correo ({donde}) a: " + ", ".join(aviso["sent"]),
-                    icon=":material/mail:",
-                )
-            for to, err in aviso["failed"].items():
-                st.warning(f"No se pudo enviar a {to}: {err}")
-            with st.expander("Ver el recorte enviado (OpenStreetMap)"):
-                st.image(aviso["png"], caption=f"Zona sobre el umbral · máximo {donde}")
-
-        import pandas as pd
-
-        rows = [
-            {"latitude": float(lat[i]), "longitude": float(lon[j]), "prob": float(prob[i, j])}
-            for i in range(len(lat))
-            for j in range(len(lon))
-        ]
-        df = pd.DataFrame(rows)
-        st.download_button(
-            "Descargar CSV (probabilidad por área)",
-            df.to_csv(index=False).encode(),
-            "probabilidades.csv",
-            "text/csv",
-        )
+    if not st.button("Predecir", type="primary"):
+        return
+    try:
+        with st.spinner(
+            "Bajando GOES de NOAA (la primera vez toma ~1 min) y corriendo el modelo v2…"
+        ):
+            res = _live_predict(t, mode)
+    except Exception as e:  # noqa: BLE001 (se informa en la página)
+        st.error(f"No se pudo predecir {_chile_label(t)}: {e}")
+        return
+    prob, lat, lon = res["prob"], res["lat"], res["lon"]
+    if mode == "real" and res["era5"] != "real":
+        st.warning("El visor no tiene ERA5 de ese día: se usaron los valores típicos.")
+    components.html(_map_html(res["png"], prob, lat, lon, theme.is_dark()), height=600)
+    fuente_era5 = "ERA5 real" if res["era5"] == "real" else "ERA5 típico"
+    st.caption(
+        f"{live_model.MODEL_LABEL} · {fuente_era5} · GOES-East C13 de {_chile_label(t)} · "
+        f"mín {np.nanmin(prob) * 100:.1f} % / máx {np.nanmax(prob) * 100:.1f} % · "
+        f"{int((prob >= 0.8).sum())} de {prob.size} celdas ≥ 80 %"
+    )
+    origen = f"modelo v2 ({fuente_era5}) · GOES-East C13 · {_chile_label(t)}"
+    _alert_ui(prob, lat, lon, origen)
+    _csv_button(prob, lat, lon, f"prediccion_v2_{t:%Y%m%d_%H}UTC.csv")
