@@ -1,0 +1,7 @@
+  aviso: 2019-05-30 14 UTC sin archivos GOES; se omite la hora
+  aviso: 2019-05-30 15 UTC sin archivos GOES; se omite la hora
+  aviso: 2019-05-30 16 UTC sin archivos GOES; se omite la hora
+  aviso: 2019-05-30 17 UTC sin archivos GOES; se omite la hora
+2019-05-30: 105×41 puntos (paso 0.25°) × 20 horas = 86100 celdas; estimación 0 imágenes para Bedrock (las que ya estén en caché no se cobran)
+goes_feat_20190530.parquet: 103320 Celdas_Hora
+data/app/predictions_v2_physical/pred_20190530.csv: 86100 filas, máx 99.8 %

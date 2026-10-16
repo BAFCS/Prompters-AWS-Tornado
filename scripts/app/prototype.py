@@ -66,6 +66,8 @@ SUPPRESSION_H = 6
 GRID_STEP = 0.25  # paso ERA5 por defecto si el día tiene una sola latitud
 BADGES = {
     "real": "Modelo XGBoost híbrido (ERA5 + imágenes GOES)",
+    "real/physical": "Modelo XGBoost (ERA5 + variables GOES)",
+    "real/baseline_era5": "Modelo XGBoost (solo ERA5)",
     "sustituto": "Modelo sustituto heurístico (demo)",
 }
 
@@ -164,7 +166,7 @@ def day_payload(pred: pd.DataFrame, modelo: str, meta: dict | None = None) -> di
         vals = np.rint(grid.to_numpy() * SCALE)
         hours[str(int(hour))] = [None if np.isnan(v) else int(v) for v in vals.ravel()]
     info = model_info(meta)
-    badge = BADGES[modelo]
+    badge = BADGES.get(f"{modelo}/{info.get('config')}", BADGES[modelo])
     if info.get("version"):
         badge += f" {info['version']}"
     if info.get("en_entrenamiento") is False:
