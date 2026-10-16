@@ -22,7 +22,7 @@ from pathlib import Path
 import numpy as np
 import streamlit as st
 
-from viewer_app import theme
+from viewer_app import alerts, theme
 
 ROOT = Path(__file__).resolve().parents[3]
 DEMO = ROOT / "data" / "model" / "demo"
@@ -343,6 +343,7 @@ def page() -> None:
                           ["GOES en vivo (hoy)", "GOES real de Chile (bucket)", "Subir archivo"],
                           horizontal=True)
         img = None
+        origen = fuente
         if fuente.startswith("GOES en vivo"):
             with st.spinner("Bajando la imagen GOES más reciente de Chile…"):
                 vivo = _goes_tiempo_real()
@@ -352,7 +353,8 @@ def page() -> None:
             else:
                 png_vivo, etiqueta = vivo
                 img = Image.open(io.BytesIO(png_vivo)).convert("RGB")
-                st.caption(f"GOES-East C13 · {etiqueta} · tope de nubes sobre el centro-sur/austral")
+                origen = f"GOES-East C13 · {etiqueta}"
+                st.caption(f"{origen} · tope de nubes sobre el centro-sur/austral")
         elif fuente.startswith("GOES real"):
             dia = st.selectbox("Día con tornado (GOES disponible)", _tornado_days())
             real = _goes_real(dia)
@@ -365,11 +367,13 @@ def page() -> None:
                                         format_func=lambda i: horas[i],
                                         value=min(len(horas) - 1, len(horas) * 4 // 5))
                 img = Image.open(io.BytesIO(_goes_image(raw, hidx))).convert("RGB")
-                st.caption(f"GOES-16 C13 · {dia} {horas[hidx]} UTC (tope de nubes)")
+                origen = f"GOES-16 C13 · {dia} {horas[hidx]} UTC"
+                st.caption(f"{origen} (tope de nubes)")
         else:
             up = st.file_uploader("Imagen GOES (PNG/JPG)", type=["png", "jpg", "jpeg"])
             if up is not None:
                 img = Image.open(up).convert("RGB")
+                origen = f"archivo subido ({up.name})"
             else:
                 st.info("Sin imagen: se usa una de ejemplo.")
                 img = Image.fromarray((np.random.default_rng(0).random((224, 224, 3)) * 255).astype("uint8"))
@@ -401,6 +405,22 @@ def page() -> None:
             components.html(_map_html(png, prob, lat, lon, theme.is_dark()), height=600)
         st.caption(f"Probabilidad por área sobre la imagen · min {prob.min():.2f} / máx {prob.max():.2f} · "
                    f"embedding: {source}")
+
+        # Alerta por correo si alguna celda supera el umbral (viewer_app/alerts.py).
+        with st.spinner("Revisando el umbral y enviando la alerta por correo…"):
+            aviso = alerts.alert(prob, lat, lon, GRID_RES, origen)
+        if aviso is None:
+            st.info(f"Ninguna celda supera el {alerts.threshold() * 100:.0f} %: no se envió alerta.")
+        else:
+            z = aviso["spot"]
+            donde = f"{z['prob'] * 100:.1f} % en latitud {z['lat']:.2f}, longitud {z['lon']:.2f}"
+            if aviso["sent"]:
+                st.success(f"Alerta enviada por correo ({donde}) a: " + ", ".join(aviso["sent"]),
+                           icon=":material/mail:")
+            for to, err in aviso["failed"].items():
+                st.warning(f"No se pudo enviar a {to}: {err}")
+            with st.expander("Ver el recorte enviado (OpenStreetMap)"):
+                st.image(aviso["png"], caption=f"Zona sobre el umbral · máximo {donde}")
 
         import pandas as pd
 

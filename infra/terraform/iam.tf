@@ -49,6 +49,33 @@ resource "aws_iam_role_policy" "bedrock_invoke" {
 }
 
 # Session Manager: consola en la instancia sin abrir SSH.
+# Alertas por correo de la página «Predecir» (scripts/viewer/viewer_app/alerts.py): la EC2 del visor
+# envía con SES solo desde el remitente configurado. Cada dirección es una identidad de SES; en modo
+# sandbox AWS les manda un correo de verificación y solo reciben las que hagan clic en el enlace.
+resource "aws_sesv2_email_identity" "alerts" {
+  for_each       = toset(concat([var.alert_sender], var.alert_recipients))
+  email_identity = each.value
+}
+
+data "aws_iam_policy_document" "ses_alerts" {
+  statement {
+    sid       = "EnviarAlertasDePredecir"
+    actions   = ["ses:SendEmail", "ses:SendRawEmail"]
+    resources = [for k, v in aws_sesv2_email_identity.alerts : v.arn]
+    condition {
+      test     = "StringEquals"
+      variable = "ses:FromAddress"
+      values   = [var.alert_sender]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "ses_alerts" {
+  name   = "ses-alertas-predecir"
+  role   = aws_iam_role.ec2.id
+  policy = data.aws_iam_policy_document.ses_alerts.json
+}
+
 resource "aws_iam_role_policy_attachment" "ssm" {
   role       = aws_iam_role.ec2.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"

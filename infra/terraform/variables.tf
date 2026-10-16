@@ -105,3 +105,20 @@ variable "stop_after_training" {
   type        = bool
   default     = true
 }
+
+variable "alert_sender" {
+  description = "Remitente de las alertas por correo de «Predecir» (identidad verificada en SES)."
+  type        = string
+  default     = "sjurado@das.uchile.cl"
+}
+
+variable "alert_recipients" {
+  description = "Destinatarios de las alertas por correo. Con SES en sandbox, cada uno debe estar verificado."
+  type        = list(string)
+  default = [
+    "sjurado@das.uchile.cl",
+    "bryanfabian4@gmail.com",
+    "nicolas.e.delgado.a@gmail.com",
+    "renato.gutierrez.maulme@gmail.com",
+  ]
+}
