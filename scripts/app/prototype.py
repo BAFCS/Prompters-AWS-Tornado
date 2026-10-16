@@ -364,7 +364,7 @@ document.documentElement.dataset.theme =
  .badge{background:#7a3e00;color:#fff;border-radius:6px;padding:2px 8px;font-size:13px} .badge.real{background:#14532d}
  main{flex:1;display:flex;min-height:0} #map{flex:1;background:var(--bg)}
  aside{width:300px;overflow:auto;background:var(--panel);border-left:1px solid var(--line);padding:12px}
- .legend span{display:inline-block;width:44px;height:14px} .legend small{display:flex;justify-content:space-between;width:220px}
+ .legend span{display:inline-block;width:44px;height:14px} .legend small{display:flex;justify-content:space-between;width:220px;font-size:9px}
  #nodata{color:#E69F00;font-weight:600} .ev{margin:6px 0;font-size:13px;color:var(--muted)}
  .ev.now{color:var(--ink);font-weight:600} .ev.now::marker{color:#E63946}
  .tor{background:#E63946;border:2px solid #fff;border-radius:50%;width:14px;height:14px;box-shadow:0 0 0 1px #000}
@@ -400,7 +400,7 @@ document.documentElement.dataset.theme =
 const COLORS=["#440154","#3b528b","#21918c","#5ec962","#fde725"];
 const color=v=>COLORS[Math.min(4,Math.floor(v/20))];
 const lg=document.getElementById("legend");
-function legend(rel,dmax){const t=rel?[0,20,40,60,80,100].map(x=>(x*dmax/100).toFixed(1)):[0,20,40,60,80,100];
+function legend(rel,dmax){const t=rel?[0,10,20,30,40,50,60,70,80,90,100].map(x=>(x*dmax/100).toFixed(1)):[0,10,20,30,40,50,60,70,80,90,100];
  lg.innerHTML=COLORS.map(c=>`<span style="background:${c}"></span>`).join("")+"<small>"+t.map(x=>`<b>${x}</b>`).join("")+"</small>";
  document.getElementById("lgnote").textContent=rel?`Colores relativos al máximo del día (${dmax.toFixed(1)} %); el valor absoluto está en el recuadro de cada celda.`:"Colores en % absoluto del índice.";}
 // Hora de Chile continental (America/Santiago): el navegador aplica el horario de invierno o verano
