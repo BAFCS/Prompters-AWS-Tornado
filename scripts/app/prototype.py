@@ -341,18 +341,33 @@ INDEX_HTML = """<!DOCTYPE html>
  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+// Tema: los mismos colores del visor (.streamlit/config.toml). El visor pasa ?theme=dark|light;
+// sin parámetro se usa oscuro, como la primera visita al visor.
+document.documentElement.dataset.theme =
+  new URLSearchParams(location.search).get("theme") === "light" ? "light" : "dark";
+</script>
 <style>
- body{margin:0;font:15px/1.4 system-ui,sans-serif;color:#1b1f24;background:#f4f6fa;display:flex;flex-direction:column;height:100vh}
- header{background:#fff;border-bottom:1px solid #ccd4e0;padding:10px 16px;position:sticky;top:0;z-index:1000}
- h1{font-size:18px;margin:0 0 4px} .disc{font-size:13px;color:#3d4652;margin:0}
+ :root{--bg:#FFFFFF;--panel:#FFFFFF;--ink:#0E1A2C;--muted:#465463;--line:#BDD4D6;--accent:#376284;--field:#EFF8F9}
+ :root[data-theme="dark"]{--bg:#1D3557;--panel:#1D3557;--ink:#F1FAEE;--muted:#A9B8BE;--line:#475C75;--accent:#A8DADC;--field:#2C4362}
+ body{margin:0;font:15px/1.4 "IBM Plex Sans",system-ui,sans-serif;color:var(--ink);background:var(--bg);display:flex;flex-direction:column;height:100vh}
+ header{background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;position:sticky;top:0;z-index:1000}
+ h1{font-size:18px;margin:0 0 4px} h2{font-size:15px} .disc{font-size:13px;color:var(--muted);margin:0}
  .bar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:8px}
  label{font-weight:600} select,input{font:inherit}
+ select{background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:2px 6px}
+ input[type=range]{accent-color:var(--accent)} a{color:var(--accent)}
  .badge{background:#7a3e00;color:#fff;border-radius:6px;padding:2px 8px;font-size:13px} .badge.real{background:#14532d}
- main{flex:1;display:flex;min-height:0} #map{flex:1}
- aside{width:300px;overflow:auto;background:#fff;border-left:1px solid #ccd4e0;padding:12px}
+ main{flex:1;display:flex;min-height:0} #map{flex:1;background:var(--bg)}
+ aside{width:300px;overflow:auto;background:var(--panel);border-left:1px solid var(--line);padding:12px}
  .legend span{display:inline-block;width:44px;height:14px} .legend small{display:flex;justify-content:space-between;width:220px}
- #nodata{color:#7a3e00;font-weight:600} .ev{margin:6px 0;font-size:13px}
- .tor{background:#d7263d;border:2px solid #fff;border-radius:50%;width:14px;height:14px;box-shadow:0 0 0 1px #000}
+ #nodata{color:#E69F00;font-weight:600} .ev{margin:6px 0;font-size:13px;color:var(--muted)}
+ .ev.now{color:var(--ink);font-weight:600} .ev.now::marker{color:#E63946}
+ .tor{background:#E63946;border:2px solid #fff;border-radius:50%;width:14px;height:14px;box-shadow:0 0 0 1px #000}
+ :root[data-theme="dark"] .leaflet-bar a,:root[data-theme="dark"] .leaflet-popup-content-wrapper,
+ :root[data-theme="dark"] .leaflet-popup-tip,:root[data-theme="dark"] .leaflet-tooltip{background:var(--field);color:var(--ink);border-color:var(--line)}
+ :root[data-theme="dark"] .leaflet-control-attribution{background:rgba(29,53,87,.8);color:var(--muted)}
+ :root[data-theme="dark"] .leaflet-control-attribution a{color:var(--accent)}
  @media(max-width:800px){main{flex-direction:column}aside{width:auto;max-height:35vh}}
 </style></head><body>
 <header>
@@ -360,9 +375,9 @@ INDEX_HTML = """<!DOCTYPE html>
  <p class="disc">__DISCLAIMER__</p>
  <div class="bar">
   <label for="day">Día</label><select id="day"></select>
-  <label for="hour">Hora UTC</label>
-  <input id="hour" type="range" min="0" max="23" value="20" aria-valuetext="20 UTC">
-  <output id="hourlbl" for="hour">20 UTC</output>
+  <label for="hour">Hora de Chile</label>
+  <input id="hour" type="range" min="0" max="23" value="20">
+  <output id="hourlbl" for="hour"></output>
   <label><input id="rel" type="checkbox"> Escala relativa al máximo del día</label>
   <span id="max"></span><span id="nodata" role="status"></span>
  </div>
@@ -370,10 +385,11 @@ INDEX_HTML = """<!DOCTYPE html>
 </header>
 <main><div id="map" aria-label="Mapa del índice de favorabilidad"></div>
 <aside>
- <h2 style="font-size:15px">Leyenda (%)</h2>
+ <h2>Leyenda (%)</h2>
  <div class="legend" id="legend"></div>
  <p class="disc" id="lgnote"></p>
- <h2 style="font-size:15px">Eventos del catálogo en el día</h2>
+ <h2>Eventos del catálogo en el día</h2>
+ <p class="disc">El punto rojo aparece solo en la hora del evento (en negrita).</p>
  <ul id="events" style="padding-left:18px"></ul>
 </aside></main>
 <script>
@@ -383,6 +399,22 @@ const lg=document.getElementById("legend");
 function legend(rel,dmax){const t=rel?[0,20,40,60,80,100].map(x=>(x*dmax/100).toFixed(1)):[0,20,40,60,80,100];
  lg.innerHTML=COLORS.map(c=>`<span style="background:${c}"></span>`).join("")+"<small>"+t.map(x=>`<b>${x}</b>`).join("")+"</small>";
  document.getElementById("lgnote").textContent=rel?`Colores relativos al máximo del día (${dmax.toFixed(1)} %); el valor absoluto está en el recuadro de cada celda.`:"Colores en % absoluto del índice.";}
+// Hora de Chile continental (America/Santiago): el navegador aplica el horario de invierno o verano
+// que correspondía en esa fecha. Los datos siguen indexados por hora UTC del día elegido.
+const CL=new Intl.DateTimeFormat("es-CL",{timeZone:"America/Santiago",hour:"2-digit",minute:"2-digit",hourCycle:"h23"});
+const CLDAY=new Intl.DateTimeFormat("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit"});
+const utc=(date,h,m=0)=>{const[y,mo,d]=date.split("-").map(Number);return new Date(Date.UTC(y,mo-1,d,h,m));};
+function chile(date,h,m=0){const t=utc(date,h,m), u=utc(date,12);
+ return CL.format(t)+(CLDAY.format(t)===CLDAY.format(u)?"":` del ${CLDAY.format(t)}`);}
+// Hora UTC del evento en el catálogo: "21:57", "19:00" o un rango "22-23". Devuelve las horas UTC
+// en que hay que mostrarlo y el texto en hora de Chile; sin hora conocida, null.
+function evHours(date,txt){
+ const r=String(txt).match(/^(\\d{1,2})\\s*-\\s*(\\d{1,2})/);
+ if(r){const a=+r[1],b=+r[2]; const hs=[]; for(let h=a;h<=b&&h<24;h++)hs.push(h);
+  return{hours:hs,label:`${chile(date,a)}–${chile(date,b)}`};}
+ const m=String(txt).match(/^(\\d{1,2})(?::(\\d{2}))?/);
+ if(m&&+m[1]<24)return{hours:[+m[1]],label:chile(date,+m[1],+(m[2]||0))};
+ return null;}
 const map=L.map("map",{preferCanvas:true}).setView([-38.5,-72],5);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:9,attribution:"© OpenStreetMap"}).addTo(map);
 let relTouched=false;
@@ -390,8 +422,9 @@ const cells=L.layerGroup().addTo(map), marks=L.layerGroup().addTo(map), cache={}
 const $=id=>document.getElementById(id);
 async function day(d){return cache[d]??=(await fetch(`days/${d}.json`)).json();}
 async function draw(){
- const d=await day($("day").value), h=$("hour").value; $("hourlbl").textContent=h+" UTC";
- $("hour").setAttribute("aria-valuetext",h+" UTC"); const b=$("badge"); b.textContent=d.badge; b.className=d.modelo==="real"?"badge real":"badge"; b.hidden=!d.badge;
+ const d=await day($("day").value), h=+$("hour").value, hl=chile(d.date,h)+" (hora de Chile)";
+ $("hourlbl").textContent=hl; $("hour").setAttribute("aria-valuetext",hl);
+ const b=$("badge"); b.textContent=d.badge; b.className=d.modelo==="real"?"badge real":"badge"; b.hidden=!d.badge;
  const mi=d.modelo_info||{}; $("minfo").textContent=mi.model_dir?`Modelo: ${mi.config} · ${mi.model_dir} · ${mi.evaluacion||""}`:"";
  const dmax=(d.max??10000)/100||1; if(!relTouched)$("rel").checked=dmax<50;
  const rel=$("rel").checked; legend(rel,dmax);
@@ -405,9 +438,11 @@ async function draw(){
  $("max").textContent=vals?`Máximo: ${mx.toFixed(1)} %`:"";
  marks.clearLayers(); const ul=$("events"); ul.replaceChildren();
  for(const e of d.events){
-  const m=L.marker([e.lat,e.lon],{icon:L.divIcon({className:"tor",iconSize:[14,14]}),keyboard:true,title:e.place}).addTo(marks);
-  const div=document.createElement("div"); div.textContent=`${e.type} · ${d.date} ${e.hour} UTC · ${e.place} · ${e.source}`;
-  m.bindPopup(div); const li=document.createElement("li"); li.className="ev"; li.textContent=div.textContent; ul.append(li);}
+  const t=evHours(d.date,e.hour), now=!!t&&t.hours.includes(h);
+  const text=`${e.type} · ${t?t.label+" hora de Chile":"hora desconocida"} · ${e.place} · ${e.source}`;
+  if(now){const m=L.marker([e.lat,e.lon],{icon:L.divIcon({className:"tor",iconSize:[14,14]}),keyboard:true,title:e.place}).addTo(marks);
+   const div=document.createElement("div"); div.textContent=text; m.bindPopup(div);}
+  const li=document.createElement("li"); li.className=now?"ev now":"ev"; li.textContent=text; ul.append(li);}
  if(!d.events.length){const li=document.createElement("li"); li.textContent="Sin eventos registrados"; ul.append(li);}
 }
 (async()=>{const idx=await (await fetch("days/index.json")).json();
