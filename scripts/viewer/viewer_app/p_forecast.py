@@ -11,6 +11,8 @@ import os
 
 import streamlit as st
 
+from viewer_app import theme
+
 DEFAULT_URL = "https://d1m48zea07nk1y.cloudfront.net/resultados/sitio/index.html"
 
 
@@ -24,8 +26,8 @@ def page() -> None:
     st.title("Mapa del modelo")
     st.markdown(
         "Índice de favorabilidad del **XGBoost híbrido** (índices ERA5 + variables GOES + embedding "
-        "de la imagen GOES con Bedrock Titan) por celda y hora UTC, con los tornados del catálogo "
-        "marcados. Elige el día y mueve la hora."
+        "de la imagen GOES con Bedrock Titan) por celda y hora (en hora de Chile), con los tornados del "
+        "catálogo marcados en su hora. Elige el día y mueve la hora."
     )
     st.caption(
         "Índice relativo: no es una probabilidad calibrada ni un pronóstico oficial. "
@@ -34,5 +36,8 @@ def page() -> None:
         "CSI 0,345 (híbrido) frente a 0,294 (solo variables físicas) y 0,274 (solo ERA5)."
     )
     url = site_url()
-    st.iframe(url, height=760)
-    st.link_button("Abrir el mapa en pantalla completa", url, icon=":material/open_in_new:")
+    # El mapa toma los colores del tema activo del visor (claro u oscuro).
+    sep = "&" if "?" in url else "?"
+    themed = f"{url}{sep}theme={'dark' if theme.is_dark() else 'light'}"
+    st.iframe(themed, height=760)
+    st.link_button("Abrir el mapa en pantalla completa", themed, icon=":material/open_in_new:")
