@@ -1,0 +1,21 @@
+
+== v2 physical (completo): 1181 filas, 37 positivas, 1144 no etiquetadas (prevalencia 0.031)
+   reproduce CSI LOEO 0.309
+   ROC-AUC 0.893 | PR-AUC 0.429 (azar 0.031) | Brier 0.024
+   [umbral 0,50] F1 0.472 | Precisión 0.486 | Recall 0.459 | Accuracy 0.968 | Bal.Acc 0.722 | MCC 0.456 | TP 17 FP 18 FN 20 TN 1126
+   [umbral F1-óptimo 0.28] F1 0.568 | Precisión 0.490 | Recall 0.676 | Accuracy 0.968 | Bal.Acc 0.826 | MCC 0.560 | TP 25 FP 26 FN 12 TN 1118
+   IC95% (bootstrap por evento): F1@0,5 [0.34, 0.58] | PR-AUC [0.32, 0.60]
+
+== v2 baseline_era5 (completo): 1181 filas, 37 positivas, 1144 no etiquetadas (prevalencia 0.031)
+   reproduce CSI LOEO 0.271
+   ROC-AUC 0.816 | PR-AUC 0.362 (azar 0.031) | Brier 0.030
+   [umbral 0,50] F1 0.427 | Precisión 0.421 | Recall 0.432 | Accuracy 0.964 | Bal.Acc 0.707 | MCC 0.408 | TP 16 FP 22 FN 21 TN 1122
+   [umbral F1-óptimo 0.24] F1 0.440 | Precisión 0.349 | Recall 0.595 | Accuracy 0.953 | Bal.Acc 0.779 | MCC 0.433 | TP 22 FP 41 FN 15 TN 1103
+   IC95% (bootstrap por evento): F1@0,5 [0.29, 0.55] | PR-AUC [0.24, 0.53]
+
+== v2 physical (sin 2019-05-30/31): 1147 filas, 37 positivas, 1110 no etiquetadas (prevalencia 0.032)
+   reproduce CSI LOEO 0.385
+   ROC-AUC 0.906 | PR-AUC 0.512 (azar 0.032) | Brier 0.022
+   [umbral 0,50] F1 0.556 | Precisión 0.571 | Recall 0.541 | Accuracy 0.972 | Bal.Acc 0.764 | MCC 0.541 | TP 20 FP 15 FN 17 TN 1095
+   [umbral F1-óptimo 0.47] F1 0.595 | Precisión 0.595 | Recall 0.595 | Accuracy 0.974 | Bal.Acc 0.791 | MCC 0.581 | TP 22 FP 15 FN 15 TN 1095
+   IC95% (bootstrap por evento): F1@0,5 [0.39, 0.71] | PR-AUC [0.34, 0.70]
