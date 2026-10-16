@@ -34,6 +34,7 @@ con credenciales de la cuenta (o ``--no-upload`` para dejar el Parquet en local 
 from __future__ import annotations
 
 import argparse
+import os
 import datetime as dt
 import io
 import sys
@@ -46,7 +47,8 @@ import xarray as xr
 
 # --- Configuración -----------------------------------------------------------------------------
 
-BUCKET = "mesocyclonic-test-data-20261015013924290100000003"
+BUCKET = "mesocyclonic-test-data-20261015013924290100000003"  # fuente (lectura)
+DEST_BUCKET = os.environ.get("DEST_BUCKET", BUCKET)  # destino (escritura); configurable
 ERA5_PREFIX = "era5_store"
 GOES_PREFIX = "goes_store"
 DEST_PREFIX = "curated/analysis_ready"  # prefijo NUEVO; no colisiona con las fuentes
@@ -270,8 +272,8 @@ def write_table(tab: pd.DataFrame, day: dt.date, *, upload: bool, output_dir: Pa
     buf = io.BytesIO()
     tab.to_parquet(buf, index=False)
     buf.seek(0)
-    boto3.client("s3", region_name=AWS_REGION).upload_fileobj(buf, BUCKET, key)
-    return f"s3://{BUCKET}/{key}"
+    boto3.client("s3", region_name=AWS_REGION).upload_fileobj(buf, DEST_BUCKET, key)
+    return f"s3://{DEST_BUCKET}/{key}"
 
 
 def dest_exists(day: dt.date) -> bool:
@@ -282,7 +284,7 @@ def dest_exists(day: dt.date) -> bool:
 
         key = f"{DEST_PREFIX}/{day:%Y}/curated_{day:%Y%m%d}.parquet"
         try:
-            boto3.client("s3", region_name=AWS_REGION).head_object(Bucket=BUCKET, Key=key)
+            boto3.client("s3", region_name=AWS_REGION).head_object(Bucket=DEST_BUCKET, Key=key)
             return True
         except ClientError:
             return False
@@ -303,41 +305,62 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--date", type=dt.date.fromisoformat, help="un solo día AAAA-MM-DD")
     p.add_argument("--start", type=dt.date.fromisoformat, help="primer día de un rango")
     p.add_argument("--end", type=dt.date.fromisoformat, help="último día (inclusive)")
+    p.add_argument("--days-file", help="JSON con lista de días AAAA-MM-DD (alternativa a --date/rango)")
+    p.add_argument("--workers", type=int, default=1, help="días en paralelo (procesos)")
     p.add_argument("--no-upload", action="store_true", help="escribe en --output-dir, no en S3")
     p.add_argument("--output-dir", type=Path, default=Path("data/curated"))
     p.add_argument("--force", action="store_true", help="rehace días cuyo Parquet ya está en S3")
     return p.parse_args()
 
 
+def process_one(day_iso: str, force: bool, no_upload: bool, output_dir: str) -> str:
+    """Procesa un día (para el pool). Devuelve una línea de estado."""
+    day = dt.date.fromisoformat(day_iso)
+    if not force and not no_upload and dest_exists(day):
+        return f"  {day}: ya existe, saltado"
+    fs = s3_anon()
+    tab = build_day_table(fs, day)
+    if tab is None or tab.empty:
+        return f"  {day}: sin datos (ERA5 ausente)"
+    dest = write_table(tab, day, upload=not no_upload, output_dir=Path(output_dir))
+    return f"  {day}: {len(tab):,} filas, {tab.shape[1]} cols, GOES {tab['goes_valid_frac'].iloc[0]:.0%} -> {dest}"
+
+
 def main() -> int:
-    """Punto de entrada: construye la tabla curada por día y la escribe al prefijo nuevo."""
+    """Punto de entrada: construye la tabla curada por día (en paralelo) y la escribe al prefijo nuevo."""
+    import json as _json
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+
     a = parse_args()
-    if a.date:
+    if a.days_file:
+        days = [dt.date.fromisoformat(s) for s in _json.load(open(a.days_file))]
+    elif a.date:
         days = [a.date]
     elif a.start and a.end:
         days = date_range(a.start, a.end)
     else:
-        print("ERROR: usa --date o --start/--end", file=sys.stderr)
+        print("ERROR: usa --date, --start/--end o --days-file", file=sys.stderr)
         return 1
+    days = sorted(set(days))
 
-    fs = s3_anon()
     hechos = 0
-    for day in days:
-        if not a.force and not a.no_upload and dest_exists(day):
-            print(f"  {day}: ya existe en {DEST_PREFIX}/, saltado", flush=True)
+    if a.workers <= 1:
+        for day in days:
+            line = process_one(day.isoformat(), a.force, a.no_upload, str(a.output_dir))
             hechos += 1
-            continue
-        tab = build_day_table(fs, day)
-        if tab is None or tab.empty:
-            print(f"  {day}: sin datos (ERA5 ausente); saltado", flush=True)
-            continue
-        dest = write_table(tab, day, upload=not a.no_upload, output_dir=a.output_dir)
-        hechos += 1
-        print(
-            f"  {day}: {len(tab):,} filas, {tab.shape[1]} columnas, "
-            f"GOES válido {tab['goes_valid_frac'].iloc[0]:.0%} -> {dest}",
-            flush=True,
-        )
+            print(line, flush=True)
+    else:
+        import multiprocessing as mp
+
+        ctx = mp.get_context("spawn")  # s3fs no tolera fork
+        with ProcessPoolExecutor(max_workers=a.workers, mp_context=ctx) as ex:
+            futs = {
+                ex.submit(process_one, d.isoformat(), a.force, a.no_upload, str(a.output_dir)): d
+                for d in days
+            }
+            for fut in as_completed(futs):
+                hechos += 1
+                print(f"[{hechos}/{len(days)}] {fut.result()}", flush=True)
     print(f"listo: {hechos}/{len(days)} días", flush=True)
     return 0
 
