@@ -13,30 +13,38 @@ pendientes en `PENDIENTES.md`. Este archivo es el "¿en qué quedamos?".)
 ## Bucket del data lake
 `s3://mesocyclonic-test-data-20261015013924290100000003/`
 
-## Cobertura de datos lograda (al 2026-10-15 ~10:00)
-| Fuente | Prefijo S3 | Cobertura | Nº | Detalle |
-|---|---|---|---|---|
-| ERA5 ncar | `era5_store/*.zarr` | 2025-10-15 → **2026-07-31** (+2019-05-30) | 291 días | Zarr; 24h/día; 10 vars; 6 niveles |
-| ERA5 CDS | `era5_cds_year/<AAAA>/<MM>/` | parcial 2025-10→2026-01 + **relleno ago-sep 2026 EN CURSO** | — | NetCDF (pl+sfc separados) |
-| GOES C13 | `goes_store/<fecha>/` | 2025-10-15 → **2026-09-30** | 351 días | NetCDF; 144 escenas/día; imagen |
+## Cobertura de datos lograda (snapshot FINAL 2026-10-15 ~22:40)
 
-Límite ERA5 ncar = jul-2026 (el bucket público nsf-ncar-era5 no publica más reciente). CDS llega a
-sep-2026 (verificado) → por eso rellena ago-sep 2026. Verificado CDS≡ncar: dif 0.000 K (T, 500 hPa,
-2026-05-20).
+El data lake quedó con un **dataset de eventos + control, multi-año, 6 bandas GOES**, construido con
+flota multimáquina (ver `ARQUITECTURA_INGESTA.md`).
 
-## Qué está CORRIENDO ahora
-- **EC2 `mesocyclonic-test-cdslab`** (t3.medium, running): corre el **relleno CDS ago-sep 2026** en
-  background (`ingest_cds_year.py --start 2026-08 --end 2026-09`, log en `/tmp/relleno.log`,
-  progreso en `s3://.../experimentos/progreso.json`). Al último chequeo: 1/122 pasos (lento por la
-  cola de Copernicus). Es idempotente (`--skip-existing` no aplica aquí pero `ingest_cds_year` salta
-  lo ya subido).
-- **EC2 `mesocyclonic-test-viewer`** (t3.medium, running): visor del clon.
-- **EC2 `mesocyclonic-dev-*`**: NO TOCAR (entorno vivo del equipo).
+### ERA5 (`era5_store/*.zarr`) — variables atmosféricas
+| Tanda | Rango | Nº |
+|---|---|---|
+| Base | 2025-10-15 → 2026-07-31 | 291 días |
+| Eventos 2020-2025 (bloques 4d) | — | 111 días |
+| Eventos 2016-2019 (bloques 4d) | — | 61 días |
+| Control (negativos, muestreo sistemático) | 2016-2025 abr-sep | ~383 días |
+| **Total ERA5** | 2016-2026 | **~555 días** |
 
-## Qué está APAGADO / destruido (ya cumplió)
-- Flota ncar (6 workers) — destruida tras completar ncar.
-- Flota GOES (6 workers) — destruida tras completar GOES.
-- `ingest_ncar` (r7i) e `ingest_goes` (t3.large) — destruidas (`enable_ingest_fleet=false`).
+### GOES (`goes_store/<fecha>/goes_YYYYMMDD_CNN.nc`) — 6 bandas, recortadas a Chile
+| Bandas | Qué ven | Cobertura |
+|---|---|---|
+| C13 | IR ventana (topes nubosos) | ~700-730 días, 2018-2026 |
+| C08 / C09 / C10 | vapor de agua alto / medio / bajo | ~730 c/u |
+| C14 / C15 | split-window (overshooting) | ~720 c/u |
+
+GOES-16 hasta 2025-04-04, GOES-19 desde entonces (GOES-East; GOES-18 es West, no ve Chile). Límite:
+GOES-16 arranca dic-2017, por eso los días < 2018-03 solo tienen ERA5.
+
+### Emparejamiento ERA5↔GOES (lo utilizable para entrenar)
+- Mismos días, misma grilla (región `south-central-austral`, lat −30..−56, lon −76..−66).
+- **~673 días** con ERA5 + C13+C08+C09; **~328** con las 6 bandas (creciendo al cierre).
+- Distribución evento/control ~**1:4.6**; manifiesto en `scripts/ingest/etiquetas.json`.
+
+### Relleno CDS
+`era5_cds_year/` tiene 2019 + parcial 2026. El relleno del hueco ago-sep 2026 quedó **interrumpido**
+(se perdió al reiniciar la cdslab en los reescalados de flota). Pendiente opcional.
 
 ## Cómo RETOMAR el relleno si se apagó la cdslab
 ```bash
@@ -54,3 +62,29 @@ día, o (c) darlo por suficiente (ya está la mayor parte: ncar oct2025→jul202
 
 ## Rama git
 `intentos-nico` (pusheada a origin). 3 commits: data lake + docs + pendientes.
+
+
+## Qué está CORRIENDO ahora (cierre)
+- **EC2 `mesocyclonic-test-cdslab`** (t3.medium): ociosa (el relleno CDS se interrumpió). Candidata a apagar.
+- **EC2 `mesocyclonic-test-viewer`**: visor del clon.
+- **EC2 `mesocyclonic-dev-*`**: NO TOCAR (entorno vivo del equipo).
+- Bucket **público** de lectura (versionado en Terraform, `data_bucket_public=true`).
+
+## Qué está APAGADO / destruido (ya cumplió)
+- Todas las flotas de workers (ncar y GOES) — **destruidas** tras completar sus tandas.
+  `ncar_fleet_size=0`, `goes_fleet_size=0`.
+
+## Lecciones aprendidas (operativas)
+- **Sharding real** = partir la lista en N archivos físicos (`goes_s*.json`); `--shard-index` sobre
+  una lista única NO reparte.
+- **8 workers/máquina** es el techo para GOES en c7i.2xlarge (más → OOM, cuelgue, SSM sin responder;
+  se recupera con `reboot` por EC2 API).
+- **AMI fija** (`var.worker_ami`) evita que Terraform recree instancias vivas.
+- **Medir avance contando archivos en S3**, no por logs.
+- **Python 3.11** en workers; `common.py` compatible (se quitó el generic PEP 695 de `retry`).
+
+## Pendientes de cierre (opcionales)
+1. Apagar la cdslab ociosa.
+2. Reactivar el relleno CDS ago-sep 2026 si se quiere cerrar ese hueco (necesita reinyectar
+   `.cdsapirc`; la API key quedó visible en chat → **rotarla**).
+3. Al cierre del hackathon: revertir el bucket a privado (`data_bucket_public=false`).
