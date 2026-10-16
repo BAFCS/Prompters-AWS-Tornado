@@ -421,13 +421,22 @@ function evHours(date,txt){
  return null;}
 const map=L.map("map",{preferCanvas:true}).setView([-38.5,-72],5);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:9,attribution:"© OpenStreetMap"}).addTo(map);
-let relTouched=false;
+let relTouched=false, framed=false;
 const cells=L.layerGroup().addTo(map), marks=L.layerGroup().addTo(map), cache={};
 const $=id=>document.getElementById(id);
 async function day(d){return cache[d]??=(await fetch(`days/${d}.json`)).json();}
+// Al cambiar de día: si tiene eventos con hora, el control salta a la hora del primero, para que se
+// vea su punto rojo sin buscarlo. La primera vez el mapa se encuadra en la grilla del modelo.
+async function pickDay(){
+ const d=await day($("day").value);
+ const hs=d.events.map(e=>evHours(d.date,e.hour)).filter(Boolean).flatMap(t=>t.hours).filter(h=>d.hours[h]);
+ if(hs.length)$("hour").value=Math.min(...hs);
+ draw();}
+function frame(d){if(framed||!d.lats.length)return; framed=true; const h=d.step/2;
+ map.invalidateSize(); map.fitBounds([[Math.min(...d.lats)-h,Math.min(...d.lons)-h],[Math.max(...d.lats)+h,Math.max(...d.lons)+h]]);}
 async function draw(){
  const d=await day($("day").value), h=+$("hour").value, hl=chile(d.date,h)+" (hora de Chile)";
- $("hourlbl").textContent=hl; $("hour").setAttribute("aria-valuetext",hl);
+ $("hourlbl").textContent=hl; $("hour").setAttribute("aria-valuetext",hl); frame(d);
  const b=$("badge"); b.textContent=d.badge; b.className=d.modelo==="real"?"badge real":"badge"; b.hidden=!d.badge;
  const mi=d.modelo_info||{}; $("minfo").textContent=mi.model_dir?`Modelo: ${mi.config} · ${mi.model_dir} · ${mi.evaluacion||""}`:"";
  const dmax=(d.max??10000)/100||1; if(!relTouched)$("rel").checked=dmax<50;
@@ -451,7 +460,7 @@ async function draw(){
 }
 (async()=>{const idx=await (await fetch("days/index.json")).json();
  for(const d of idx.days){const o=document.createElement("option"); o.value=o.textContent=d; $("day").append(o);}
- $("day").value=idx.default; $("day").onchange=draw; $("hour").oninput=draw; $("rel").onchange=()=>{relTouched=true;draw();}; draw();})();
+ $("day").value=idx.default; $("day").onchange=pickDay; $("hour").oninput=draw; $("rel").onchange=()=>{relTouched=true;draw();}; pickDay();})();
 </script></body></html>
 """
 
