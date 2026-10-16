@@ -20,6 +20,12 @@ Uso::
 Con ``--predictions-dir`` usa el ``pred_AAAAMMDD.csv`` del Modelo_Real (``infer_grid.py``) si
 existe, es válido y su meta dice ``modelo: real``; si no, cae al sustituto. Un CSV real nunca se
 pisa con el sustituto.
+
+La página lleva un stamp con las métricas de ``metricas_v2_physical.json`` (visible solo en días
+de ese modelo) y un control de escala logarítmica. Para regenerar solo el HTML de sitios ya
+generados (sin ERA5 ni tocar ``days/``)::
+
+    uv run python scripts/app/prototype.py --rebuild-index demo_site_v2_physical demo_site
 """
 
 from __future__ import annotations
@@ -27,6 +33,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import functools
+import html
 import http.server
 import json
 import sys
@@ -70,6 +77,8 @@ BADGES = {
     "real/baseline_era5": "Modelo XGBoost (solo ERA5)",
     "sustituto": "Modelo sustituto heurístico (demo)",
 }
+# Métricas de validación del modelo publicado (fuente única para el stamp del sitio y otros usos).
+METRICS_FILE = Path(__file__).with_name("metricas_v2_physical.json")
 
 
 # --- Predicciones ---------------------------------------------------------------------------
@@ -212,8 +221,70 @@ def read_catalog(path: Path) -> pd.DataFrame | None:
     return out.dropna(subset=["date", "lat", "lon"])
 
 
-def build_site(payloads: list[dict], catalog: pd.DataFrame | None, site: Path) -> None:
-    """Escribe ``index.html``, ``days/index.json`` y un JSON por día en ``site``."""
+def load_metrics(path: Path = METRICS_FILE) -> dict | None:
+    """Métricas de validación del modelo (``metricas_v2_physical.json``), o None si no está."""
+    if not path.exists():
+        print(f"aviso: no está {path}; el sitio irá sin métricas", file=sys.stderr)
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def fmt_num(x: float, dec: int) -> str:
+    """Número con ``dec`` decimales y coma decimal (``0,893``)."""
+    return f"{x:.{dec}f}".replace(".", ",")
+
+
+def metric_text(m: dict) -> str:
+    """``Nombre valor`` y, si hay, ``(IC95 a–b; azar c)``."""
+    extra = []
+    if "ic95" in m:
+        lo, hi = m["ic95"]
+        extra.append(f"IC95 {fmt_num(lo, 2)}–{fmt_num(hi, 2)}")
+    if "azar" in m:
+        extra.append(f"azar {fmt_num(m['azar'], 3)}")
+    text = f"{m['nombre']} {fmt_num(m['valor'], m['decimales'])}"
+    return f"{text} ({'; '.join(extra)})" if extra else text
+
+
+def metric_lines(metrics: dict) -> list[str]:
+    """Líneas del stamp: modelo, una por fila de métricas, validación y nota."""
+    lines = [f"Modelo: {metrics['modelo']}"]
+    for row in metrics["filas"]:
+        text = " · ".join(metric_text(m) for m in row["metricas"])
+        lines.append(f"{row['etiqueta']}: {text}" if row.get("etiqueta") else text)
+    return [*lines, metrics["validacion"]]
+
+
+def stamp_html(metrics: dict | None) -> str:
+    """``<details>`` colapsable con las métricas (oculto hasta que el JS vea que el modelo coincide)."""
+    if not metrics:
+        return ""
+    target = metrics.get("aplica_a", {})
+    items = "".join(f"<li>{html.escape(x)}</li>" for x in metric_lines(metrics))
+    return (
+        f'<details id="stamp" class="stamp" data-config="{html.escape(str(target.get("config", "")))}"'
+        f' data-version="{html.escape(str(target.get("version", "")))}" hidden>'
+        f"<summary>{html.escape(metrics['titulo'])} <small>validación LOEO</small></summary>"
+        f'<ul>{items}</ul><p class="disc">{html.escape(metrics["nota"])}</p></details>'
+    )
+
+
+def write_index(site: Path, metrics: dict | None) -> None:
+    """Escribe ``site/index.html`` (con el stamp de ``metrics``) y, si hay, ``site/metricas.json``."""
+    page = INDEX_HTML.replace("__DISCLAIMER__", DISCLAIMER)
+    page = page.replace("__STAMP__", stamp_html(metrics))
+    atomic.write_text(site / "index.html", page)
+    if metrics:
+        atomic.write_json(site / "metricas.json", metrics)
+
+
+def build_site(
+    payloads: list[dict], catalog: pd.DataFrame | None, site: Path, metrics: dict | None = None
+) -> None:
+    """Escribe ``index.html``, ``days/index.json`` y un JSON por día en ``site``.
+
+    ``metrics`` (por defecto ``load_metrics()``) va al stamp de la página y a ``metricas.json``.
+    """
     days = sorted(p["date"] for p in payloads)
     events: dict[str, list[dict]] = {}
     if catalog is not None:
@@ -226,7 +297,7 @@ def build_site(payloads: list[dict], catalog: pd.DataFrame | None, site: Path) -
         )
     default = DEMO_DAY if DEMO_DAY in days else days[-1]
     atomic.write_json(site / "days" / "index.json", {"days": days, "default": default})
-    atomic.write_text(site / "index.html", INDEX_HTML.replace("__DISCLAIMER__", DISCLAIMER))
+    write_index(site, metrics if metrics is not None else load_metrics())
 
 
 # --- Alertas --------------------------------------------------------------------------------
@@ -285,7 +356,23 @@ def main(argv: list[str] | None = None) -> None:
         type=Path,
         help="usa pred_AAAAMMDD.csv de esta carpeta si su meta dice modelo real (infer_grid.py)",
     )
+    p.add_argument(
+        "--rebuild-index",
+        type=Path,
+        nargs="+",
+        metavar="SITE",
+        help="reescribe index.html y metricas.json de sitios existentes (no toca days/)",
+    )
     a = p.parse_args(argv)
+
+    if a.rebuild_index:
+        metrics = load_metrics()
+        for s in a.rebuild_index:
+            if not (s / "days" / "index.json").exists():
+                p.error(f"{s}: no es un sitio (falta days/index.json)")
+            write_index(s, metrics)
+            print(f"{s}: index.html regenerado")
+        return
 
     idx_dir = common.CROPS / a.region / "era5_indices"
     if a.days:
@@ -365,6 +452,9 @@ document.documentElement.dataset.theme =
  main{flex:1;display:flex;min-height:0} #map{flex:1;background:var(--bg)}
  aside{width:300px;overflow:auto;background:var(--panel);border-left:1px solid var(--line);padding:12px}
  .legend span{display:inline-block;width:44px;height:14px} .legend small{display:flex;justify-content:space-between;width:220px;font-size:9px}
+ .legend.log span{width:calc(220px / 6)}
+ .stamp{border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin-bottom:10px;background:var(--field);font-size:12.5px}
+ .stamp summary{font-weight:600;cursor:pointer} .stamp ul{margin:6px 0;padding-left:16px} .stamp li{margin:2px 0}
  #nodata{color:#E69F00;font-weight:600} .ev{margin:6px 0;font-size:13px;color:var(--muted)}
  .ev.now{color:var(--ink);font-weight:600} .ev.now::marker{color:#E63946}
  .tor{background:#E63946;border:2px solid #fff;border-radius:50%;width:14px;height:14px;box-shadow:0 0 0 1px #000}
@@ -383,13 +473,15 @@ document.documentElement.dataset.theme =
   <input id="hour" type="range" min="0" max="23" value="20">
   <output id="hourlbl" for="hour"></output>
   <label><input id="rel" type="checkbox"> Escala relativa al máximo del día</label>
+  <label><input id="log" type="checkbox"> Escala logarítmica</label>
   <span id="max"></span><span id="nodata" role="status"></span>
  </div>
  <p class="disc" id="minfo"></p>
 </header>
 <main><div id="map" aria-label="Mapa del índice de favorabilidad"></div>
 <aside>
- <h2>Leyenda (%)</h2>
+ __STAMP__
+ <h2 id="lgtitle">Leyenda (%)</h2>
  <div class="legend" id="legend"></div>
  <p class="disc" id="lgnote"></p>
  <h2>Eventos del catálogo en el día</h2>
@@ -399,8 +491,19 @@ document.documentElement.dataset.theme =
 <script>
 const COLORS=["#440154","#3b528b","#21918c","#5ec962","#fde725"];
 const color=v=>COLORS[Math.min(4,Math.floor(v/20))];
+// Escala logarítmica: índice f=v/10000 (0–1) con piso 0,001; t=(log10 f + 3)/3 en [0,1] y 6 tonos
+// (2 por década) para que los ticks 0,001 · 0,01 · 0,1 · 1 caigan en los bordes de la barra.
+const LOGC=["#440154","#414487","#2a788e","#22a884","#7ad151","#fde725"], FLOOR=1e-3;
+const logPos=f=>(Math.log10(Math.max(f,FLOOR))+3)/3;
+const colorLog=f=>LOGC[Math.min(5,Math.floor(logPos(f)*6))];
 const lg=document.getElementById("legend");
-function legend(rel,dmax){const t=rel?[0,10,20,30,40,50,60,70,80,90,100].map(x=>(x*dmax/100).toFixed(1)):[0,10,20,30,40,50,60,70,80,90,100];
+function legend(rel,dmax,log){
+ if(log){document.getElementById("lgtitle").textContent="Leyenda (índice 0–1, escala log₁₀)"; lg.className="legend log";
+  lg.innerHTML=LOGC.map(c=>`<span style="background:${c}"></span>`).join("")+"<small>"+["0,001","0,01","0,1","1"].map(x=>`<b>${x}</b>`).join("")+"</small>";
+  document.getElementById("lgnote").textContent="Escala logarítmica (log₁₀, piso 0,001 = 0,1 %): resalta variaciones en valores bajos; el valor en % está en el recuadro de cada celda.";
+  return;}
+ document.getElementById("lgtitle").textContent="Leyenda (%)"; lg.className="legend";
+ const t=rel?[0,10,20,30,40,50,60,70,80,90,100].map(x=>(x*dmax/100).toFixed(1)):[0,10,20,30,40,50,60,70,80,90,100];
  lg.innerHTML=COLORS.map(c=>`<span style="background:${c}"></span>`).join("")+"<small>"+t.map(x=>`<b>${x}</b>`).join("")+"</small>";
  document.getElementById("lgnote").textContent=rel?`Colores relativos al máximo del día (${dmax.toFixed(1)} %); el valor absoluto está en el recuadro de cada celda.`:"Colores en % absoluto del índice.";}
 // Hora de Chile continental (America/Santiago): el navegador aplica el horario de invierno o verano
@@ -424,6 +527,8 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:9,attr
 let relTouched=false, framed=false;
 const cells=L.layerGroup().addTo(map), marks=L.layerGroup().addTo(map), cache={};
 const $=id=>document.getElementById(id);
+// Stamp de métricas: abierto en escritorio, cerrado en móvil; solo se muestra si el día es del modelo.
+const st=$("stamp"); if(st)st.open=!matchMedia("(max-width:800px)").matches;
 async function day(d){return cache[d]??=(await fetch(`days/${d}.json`)).json();}
 // Al cambiar de día: si tiene eventos con hora, el control salta a la hora del primero, para que se
 // vea su punto rojo sin buscarlo. La primera vez el mapa se encuadra en la grilla del modelo.
@@ -439,14 +544,16 @@ async function draw(){
  $("hourlbl").textContent=hl; $("hour").setAttribute("aria-valuetext",hl); frame(d);
  const b=$("badge"); b.textContent=d.badge; b.className=d.modelo==="real"?"badge real":"badge"; b.hidden=!d.badge;
  const mi=d.modelo_info||{}; $("minfo").textContent=mi.model_dir?`Modelo: ${mi.config} · ${mi.model_dir} · ${mi.evaluacion||""}`:"";
+ if(st)st.hidden=!(mi.config===st.dataset.config&&mi.version===st.dataset.version);
  const dmax=(d.max??10000)/100||1; if(!relTouched)$("rel").checked=dmax<50;
- const rel=$("rel").checked; legend(rel,dmax);
+ // En escala log la relativa no aplica (log ya resuelve el rango): se deshabilita y se ignora.
+ const log=$("log").checked; $("rel").disabled=log; const rel=!log&&$("rel").checked; legend(rel,dmax,log);
  cells.clearLayers(); const vals=d.hours[h]; const half=d.step/2; let mx=0;
  if(!vals){$("nodata").textContent="Sin datos para esta hora";}
  else{$("nodata").textContent="";
-  vals.forEach((v,i)=>{if(v===null)return; const pct=v/100; mx=Math.max(mx,pct); const cv=rel?pct/dmax*100:pct; if(cv<1)return;
+  vals.forEach((v,i)=>{if(v===null)return; const pct=v/100; mx=Math.max(mx,pct); const cv=rel?pct/dmax*100:pct; if(!log&&cv<1)return;
    const la=d.lats[Math.floor(i/d.lons.length)], lo=d.lons[i%d.lons.length];
-   L.rectangle([[la-half,lo-half],[la+half,lo+half]],{stroke:false,fillColor:color(cv),fillOpacity:.65})
+   L.rectangle([[la-half,lo-half],[la+half,lo+half]],{stroke:false,fillColor:log?colorLog(v/10000):color(cv),fillOpacity:.65})
     .bindTooltip(`${pct.toFixed(1)} %`).addTo(cells);});}
  $("max").textContent=vals?`Máximo: ${mx.toFixed(1)} %`:"";
  marks.clearLayers(); const ul=$("events"); ul.replaceChildren();
@@ -460,7 +567,8 @@ async function draw(){
 }
 (async()=>{const idx=await (await fetch("days/index.json")).json();
  for(const d of idx.days){const o=document.createElement("option"); o.value=o.textContent=d; $("day").append(o);}
- $("day").value=idx.default; $("day").onchange=pickDay; $("hour").oninput=draw; $("rel").onchange=()=>{relTouched=true;draw();}; pickDay();})();
+ $("day").value=idx.default; $("day").onchange=pickDay; $("hour").oninput=draw; $("rel").onchange=()=>{relTouched=true;draw();};
+ $("log").checked=new URLSearchParams(location.search).get("escala")==="log"; $("log").onchange=draw; pickDay();})();
 </script></body></html>
 """
 

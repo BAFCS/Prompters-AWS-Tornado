@@ -25,7 +25,10 @@ document.documentElement.dataset.theme =
  .badge{background:#7a3e00;color:#fff;border-radius:6px;padding:2px 8px;font-size:13px} .badge.real{background:#14532d}
  main{flex:1;display:flex;min-height:0} #map{flex:1;background:var(--bg)}
  aside{width:300px;overflow:auto;background:var(--panel);border-left:1px solid var(--line);padding:12px}
- .legend span{display:inline-block;width:44px;height:14px} .legend small{display:flex;justify-content:space-between;width:220px}
+ .legend span{display:inline-block;width:44px;height:14px} .legend small{display:flex;justify-content:space-between;width:220px;font-size:9px}
+ .legend.log span{width:calc(220px / 6)}
+ .stamp{border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin-bottom:10px;background:var(--field);font-size:12.5px}
+ .stamp summary{font-weight:600;cursor:pointer} .stamp ul{margin:6px 0;padding-left:16px} .stamp li{margin:2px 0}
  #nodata{color:#E69F00;font-weight:600} .ev{margin:6px 0;font-size:13px;color:var(--muted)}
  .ev.now{color:var(--ink);font-weight:600} .ev.now::marker{color:#E63946}
  .tor{background:#E63946;border:2px solid #fff;border-radius:50%;width:14px;height:14px;box-shadow:0 0 0 1px #000}
@@ -44,13 +47,15 @@ document.documentElement.dataset.theme =
   <input id="hour" type="range" min="0" max="23" value="20">
   <output id="hourlbl" for="hour"></output>
   <label><input id="rel" type="checkbox"> Escala relativa al máximo del día</label>
+  <label><input id="log" type="checkbox"> Escala logarítmica</label>
   <span id="max"></span><span id="nodata" role="status"></span>
  </div>
  <p class="disc" id="minfo"></p>
 </header>
 <main><div id="map" aria-label="Mapa del índice de favorabilidad"></div>
 <aside>
- <h2>Leyenda (%)</h2>
+ <details id="stamp" class="stamp" data-config="physical" data-version="v2" hidden><summary>Desempeño del modelo v2 <small>validación LOEO</small></summary><ul><li>Modelo: XGBoost v2 &quot;physical&quot; (ERA5 + GOES físicos), 2026-10-15</li><li>ROC-AUC 0,893 · PR-AUC 0,429 (IC95 0,32–0,60; azar 0,031) · Brier 0,024</li><li>Umbral 0,50: F1 0,47 (IC95 0,34–0,58) · Precisión 0,49 · Recall 0,46 · MCC 0,46 · CSI 0,31</li><li>Umbral 0,28 (F1 óptimo): F1 0,57 · Precisión 0,49 · Recall 0,68 · MCC 0,56</li><li>Holdout sin 30–31/05/2019: F1 0,56 · PR-AUC 0,51 · CSI 0,39</li><li>Baseline solo ERA5: ROC-AUC 0,816 · F1 0,43</li><li>Validación LOEO fuera de partición: 37 eventos positivos en ~1.181 filas, prevalencia ≈3 %</li></ul><p class="disc">Puntaje = índice relativo de favorabilidad, no probabilidad calibrada. Accuracy no se reporta por el desbalance 1:30.</p></details>
+ <h2 id="lgtitle">Leyenda (%)</h2>
  <div class="legend" id="legend"></div>
  <p class="disc" id="lgnote"></p>
  <h2>Eventos del catálogo en el día</h2>
@@ -60,8 +65,19 @@ document.documentElement.dataset.theme =
 <script>
 const COLORS=["#440154","#3b528b","#21918c","#5ec962","#fde725"];
 const color=v=>COLORS[Math.min(4,Math.floor(v/20))];
+// Escala logarítmica: índice f=v/10000 (0–1) con piso 0,001; t=(log10 f + 3)/3 en [0,1] y 6 tonos
+// (2 por década) para que los ticks 0,001 · 0,01 · 0,1 · 1 caigan en los bordes de la barra.
+const LOGC=["#440154","#414487","#2a788e","#22a884","#7ad151","#fde725"], FLOOR=1e-3;
+const logPos=f=>(Math.log10(Math.max(f,FLOOR))+3)/3;
+const colorLog=f=>LOGC[Math.min(5,Math.floor(logPos(f)*6))];
 const lg=document.getElementById("legend");
-function legend(rel,dmax){const t=rel?[0,20,40,60,80,100].map(x=>(x*dmax/100).toFixed(1)):[0,20,40,60,80,100];
+function legend(rel,dmax,log){
+ if(log){document.getElementById("lgtitle").textContent="Leyenda (índice 0–1, escala log₁₀)"; lg.className="legend log";
+  lg.innerHTML=LOGC.map(c=>`<span style="background:${c}"></span>`).join("")+"<small>"+["0,001","0,01","0,1","1"].map(x=>`<b>${x}</b>`).join("")+"</small>";
+  document.getElementById("lgnote").textContent="Escala logarítmica (log₁₀, piso 0,001 = 0,1 %): resalta variaciones en valores bajos; el valor en % está en el recuadro de cada celda.";
+  return;}
+ document.getElementById("lgtitle").textContent="Leyenda (%)"; lg.className="legend";
+ const t=rel?[0,10,20,30,40,50,60,70,80,90,100].map(x=>(x*dmax/100).toFixed(1)):[0,10,20,30,40,50,60,70,80,90,100];
  lg.innerHTML=COLORS.map(c=>`<span style="background:${c}"></span>`).join("")+"<small>"+t.map(x=>`<b>${x}</b>`).join("")+"</small>";
  document.getElementById("lgnote").textContent=rel?`Colores relativos al máximo del día (${dmax.toFixed(1)} %); el valor absoluto está en el recuadro de cada celda.`:"Colores en % absoluto del índice.";}
 // Hora de Chile continental (America/Santiago): el navegador aplica el horario de invierno o verano
@@ -82,23 +98,36 @@ function evHours(date,txt){
  return null;}
 const map=L.map("map",{preferCanvas:true}).setView([-38.5,-72],5);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:9,attribution:"© OpenStreetMap"}).addTo(map);
-let relTouched=false;
+let relTouched=false, framed=false;
 const cells=L.layerGroup().addTo(map), marks=L.layerGroup().addTo(map), cache={};
 const $=id=>document.getElementById(id);
+// Stamp de métricas: abierto en escritorio, cerrado en móvil; solo se muestra si el día es del modelo.
+const st=$("stamp"); if(st)st.open=!matchMedia("(max-width:800px)").matches;
 async function day(d){return cache[d]??=(await fetch(`days/${d}.json`)).json();}
+// Al cambiar de día: si tiene eventos con hora, el control salta a la hora del primero, para que se
+// vea su punto rojo sin buscarlo. La primera vez el mapa se encuadra en la grilla del modelo.
+async function pickDay(){
+ const d=await day($("day").value);
+ const hs=d.events.map(e=>evHours(d.date,e.hour)).filter(Boolean).flatMap(t=>t.hours).filter(h=>d.hours[h]);
+ if(hs.length)$("hour").value=Math.min(...hs);
+ draw();}
+function frame(d){if(framed||!d.lats.length)return; framed=true; const h=d.step/2;
+ map.invalidateSize(); map.fitBounds([[Math.min(...d.lats)-h,Math.min(...d.lons)-h],[Math.max(...d.lats)+h,Math.max(...d.lons)+h]]);}
 async function draw(){
  const d=await day($("day").value), h=+$("hour").value, hl=chile(d.date,h)+" (hora de Chile)";
- $("hourlbl").textContent=hl; $("hour").setAttribute("aria-valuetext",hl);
+ $("hourlbl").textContent=hl; $("hour").setAttribute("aria-valuetext",hl); frame(d);
  const b=$("badge"); b.textContent=d.badge; b.className=d.modelo==="real"?"badge real":"badge"; b.hidden=!d.badge;
  const mi=d.modelo_info||{}; $("minfo").textContent=mi.model_dir?`Modelo: ${mi.config} · ${mi.model_dir} · ${mi.evaluacion||""}`:"";
+ if(st)st.hidden=!(mi.config===st.dataset.config&&mi.version===st.dataset.version);
  const dmax=(d.max??10000)/100||1; if(!relTouched)$("rel").checked=dmax<50;
- const rel=$("rel").checked; legend(rel,dmax);
+ // En escala log la relativa no aplica (log ya resuelve el rango): se deshabilita y se ignora.
+ const log=$("log").checked; $("rel").disabled=log; const rel=!log&&$("rel").checked; legend(rel,dmax,log);
  cells.clearLayers(); const vals=d.hours[h]; const half=d.step/2; let mx=0;
  if(!vals){$("nodata").textContent="Sin datos para esta hora";}
  else{$("nodata").textContent="";
-  vals.forEach((v,i)=>{if(v===null)return; const pct=v/100; mx=Math.max(mx,pct); const cv=rel?pct/dmax*100:pct; if(cv<1)return;
+  vals.forEach((v,i)=>{if(v===null)return; const pct=v/100; mx=Math.max(mx,pct); const cv=rel?pct/dmax*100:pct; if(!log&&cv<1)return;
    const la=d.lats[Math.floor(i/d.lons.length)], lo=d.lons[i%d.lons.length];
-   L.rectangle([[la-half,lo-half],[la+half,lo+half]],{stroke:false,fillColor:color(cv),fillOpacity:.65})
+   L.rectangle([[la-half,lo-half],[la+half,lo+half]],{stroke:false,fillColor:log?colorLog(v/10000):color(cv),fillOpacity:.65})
     .bindTooltip(`${pct.toFixed(1)} %`).addTo(cells);});}
  $("max").textContent=vals?`Máximo: ${mx.toFixed(1)} %`:"";
  marks.clearLayers(); const ul=$("events"); ul.replaceChildren();
@@ -112,5 +141,6 @@ async function draw(){
 }
 (async()=>{const idx=await (await fetch("days/index.json")).json();
  for(const d of idx.days){const o=document.createElement("option"); o.value=o.textContent=d; $("day").append(o);}
- $("day").value=idx.default; $("day").onchange=draw; $("hour").oninput=draw; $("rel").onchange=()=>{relTouched=true;draw();}; draw();})();
+ $("day").value=idx.default; $("day").onchange=pickDay; $("hour").oninput=draw; $("rel").onchange=()=>{relTouched=true;draw();};
+ $("log").checked=new URLSearchParams(location.search).get("escala")==="log"; $("log").onchange=draw; pickDay();})();
 </script></body></html>

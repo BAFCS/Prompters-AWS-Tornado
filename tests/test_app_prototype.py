@@ -1,5 +1,6 @@
 """Prueba sintética del prototipo (``scripts/app/prototype.py``): índices → sitio y alertas, sin red."""
 
+import html
 import json
 import sys
 import tempfile
@@ -64,6 +65,79 @@ class PrototypeTest(NoNetworkMixin):
             self.assertEqual([a["hora_utc"] for a in biobio], [20])
             self.assertEqual(biobio[0]["indice_max"], 100.0)
             self.assertTrue(all(a["hora_utc"] == 20 for a in alerts))
+
+
+EXPECTED_LINES = [
+    'Modelo: XGBoost v2 "physical" (ERA5 + GOES físicos), 2026-10-15',
+    "ROC-AUC 0,893 · PR-AUC 0,429 (IC95 0,32–0,60; azar 0,031) · Brier 0,024",
+    "Umbral 0,50: F1 0,47 (IC95 0,34–0,58) · Precisión 0,49 · Recall 0,46 · MCC 0,46 · CSI 0,31",
+    "Umbral 0,28 (F1 óptimo): F1 0,57 · Precisión 0,49 · Recall 0,68 · MCC 0,56",
+    "Holdout sin 30–31/05/2019: F1 0,56 · PR-AUC 0,51 · CSI 0,39",
+    "Baseline solo ERA5: ROC-AUC 0,816 · F1 0,43",
+]
+NOTE = (
+    "Puntaje = índice relativo de favorabilidad, no probabilidad calibrada. "
+    "Accuracy no se reporta por el desbalance 1:30."
+)
+
+
+def _payload() -> dict:
+    """Payload mínimo de un día (1 celda, 1 hora) del modelo v2 physical."""
+    pred = pd.DataFrame(
+        {
+            "date": ["2019-05-30"],
+            "hour_utc": [20],
+            "latitude": [-37.0],
+            "longitude": [-72.5],
+            "probability": [0.5],
+        }
+    )
+    return prototype.day_payload(pred, "real", {"config": "physical", "version": "v2"})
+
+
+class SiteMetricsTest(NoNetworkMixin):
+    """Stamp de métricas del v2 y control de escala logarítmica en la página."""
+
+    def test_metric_lines(self) -> None:
+        """Las líneas formateadas coinciden con las cifras de la validación del v2."""
+        metrics = prototype.load_metrics()
+        assert metrics is not None
+        lines = prototype.metric_lines(metrics)
+        self.assertEqual(lines[: len(EXPECTED_LINES)], EXPECTED_LINES)
+        self.assertIn("Validación LOEO", lines[-1])
+        self.assertEqual(metrics["nota"], NOTE)
+
+    def test_stamp_in_site(self) -> None:
+        """``build_site`` inyecta el stamp y escribe ``metricas.json``."""
+        with tempfile.TemporaryDirectory() as d:
+            site = Path(d)
+            prototype.build_site([_payload()], None, site)
+            page = (site / "index.html").read_text("utf-8")
+            self.assertIn('id="stamp"', page)
+            self.assertIn('data-config="physical"', page)
+            self.assertIn('data-version="v2"', page)
+            self.assertNotIn("__STAMP__", page)
+            for line in [*EXPECTED_LINES, NOTE]:
+                self.assertIn(html.escape(line), page)
+            saved = json.loads((site / "metricas.json").read_text("utf-8"))
+            self.assertEqual(saved, prototype.load_metrics())
+
+    def test_no_stamp_without_metrics(self) -> None:
+        """Sin métricas no hay stamp ni ``metricas.json``."""
+        with tempfile.TemporaryDirectory() as d:
+            site = Path(d)
+            prototype.write_index(site, None)
+            page = (site / "index.html").read_text("utf-8")
+            self.assertNotIn('id="stamp"', page)
+            self.assertNotIn("__STAMP__", page)
+            self.assertFalse((site / "metricas.json").exists())
+
+    def test_log_toggle(self) -> None:
+        """El toggle log existe, arranca en lineal y la leyenda log usa ticks 0,001…1."""
+        page = prototype.INDEX_HTML
+        self.assertIn('<input id="log" type="checkbox">', page)
+        self.assertIn("FLOOR=1e-3", page)
+        self.assertIn('["0,001","0,01","0,1","1"]', page)
 
 
 if __name__ == "__main__":

@@ -45,6 +45,7 @@ SITE_DIR ?= demo_site
 SITE_PREFIX ?= resultados/sitio
 publish: ## sube el sitio a S3 (SITE_PREFIX, por defecto resultados/sitio/) e invalida CloudFront
 	aws s3 cp $(SITE_DIR)/index.html s3://$(SITE_BUCKET)/$(SITE_PREFIX)/index.html --profile $(SITE_PROFILE) --content-type "text/html; charset=utf-8" --cache-control no-cache
+	aws s3 cp $(SITE_DIR)/metricas.json s3://$(SITE_BUCKET)/$(SITE_PREFIX)/metricas.json --profile $(SITE_PROFILE) --content-type "application/json; charset=utf-8" --cache-control no-cache
 	aws s3 sync $(SITE_DIR)/days s3://$(SITE_BUCKET)/$(SITE_PREFIX)/days --profile $(SITE_PROFILE) --content-type application/json --cache-control max-age=300 --delete
 	aws cloudfront create-invalidation --distribution-id $(SITE_DIST) --paths "/$(SITE_PREFIX)/*" --profile $(SITE_PROFILE)
 

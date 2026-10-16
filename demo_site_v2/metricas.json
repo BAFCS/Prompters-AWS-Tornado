@@ -1,0 +1,132 @@
+{
+  "aplica_a": {
+    "config": "physical",
+    "version": "v2"
+  },
+  "titulo": "Desempeño del modelo v2",
+  "modelo": "XGBoost v2 \"physical\" (ERA5 + GOES físicos), 2026-10-15",
+  "validacion": "Validación LOEO fuera de partición: 37 eventos positivos en ~1.181 filas, prevalencia ≈3 %",
+  "fuente": ".agents/tasks/hibrido/v2_metricas_clasificacion.txt",
+  "filas": [
+    {
+      "etiqueta": null,
+      "metricas": [
+        {
+          "nombre": "ROC-AUC",
+          "valor": 0.893,
+          "decimales": 3
+        },
+        {
+          "nombre": "PR-AUC",
+          "valor": 0.429,
+          "decimales": 3,
+          "ic95": [
+            0.32,
+            0.6
+          ],
+          "azar": 0.031
+        },
+        {
+          "nombre": "Brier",
+          "valor": 0.024,
+          "decimales": 3
+        }
+      ]
+    },
+    {
+      "etiqueta": "Umbral 0,50",
+      "metricas": [
+        {
+          "nombre": "F1",
+          "valor": 0.472,
+          "decimales": 2,
+          "ic95": [
+            0.34,
+            0.58
+          ]
+        },
+        {
+          "nombre": "Precisión",
+          "valor": 0.486,
+          "decimales": 2
+        },
+        {
+          "nombre": "Recall",
+          "valor": 0.459,
+          "decimales": 2
+        },
+        {
+          "nombre": "MCC",
+          "valor": 0.456,
+          "decimales": 2
+        },
+        {
+          "nombre": "CSI",
+          "valor": 0.309,
+          "decimales": 2
+        }
+      ]
+    },
+    {
+      "etiqueta": "Umbral 0,28 (F1 óptimo)",
+      "metricas": [
+        {
+          "nombre": "F1",
+          "valor": 0.568,
+          "decimales": 2
+        },
+        {
+          "nombre": "Precisión",
+          "valor": 0.49,
+          "decimales": 2
+        },
+        {
+          "nombre": "Recall",
+          "valor": 0.676,
+          "decimales": 2
+        },
+        {
+          "nombre": "MCC",
+          "valor": 0.56,
+          "decimales": 2
+        }
+      ]
+    },
+    {
+      "etiqueta": "Holdout sin 30–31/05/2019",
+      "metricas": [
+        {
+          "nombre": "F1",
+          "valor": 0.556,
+          "decimales": 2
+        },
+        {
+          "nombre": "PR-AUC",
+          "valor": 0.512,
+          "decimales": 2
+        },
+        {
+          "nombre": "CSI",
+          "valor": 0.385,
+          "decimales": 2
+        }
+      ]
+    },
+    {
+      "etiqueta": "Baseline solo ERA5",
+      "metricas": [
+        {
+          "nombre": "ROC-AUC",
+          "valor": 0.816,
+          "decimales": 3
+        },
+        {
+          "nombre": "F1",
+          "valor": 0.427,
+          "decimales": 2
+        }
+      ]
+    }
+  ],
+  "nota": "Puntaje = índice relativo de favorabilidad, no probabilidad calibrada. Accuracy no se reporta por el desbalance 1:30."
+}
