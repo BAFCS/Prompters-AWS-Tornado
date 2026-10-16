@@ -121,5 +121,6 @@ variable "alert_recipients" {
     "nicolas.e.delgado.a@gmail.com",
     "renato.gutierrez.maulme@gmail.com",
     "nicolas.delgado.a@ug.uchile.cl",
+    "zanelli.93@gmail.com",
   ]
 }

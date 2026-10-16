@@ -7,7 +7,7 @@ rol de la instancia (permiso ``ses:SendRawEmail`` limitado al remitente).
 
 Variables de entorno (todas opcionales):
 
-- ``ALERT_THRESHOLD``: umbral de probabilidad, entre 0 y 1 (por defecto 0.80).
+- ``ALERT_THRESHOLD``: umbral de probabilidad, entre 0 y 1 (por defecto 0.90).
 - ``ALERT_EMAIL_FROM``: remitente verificado en SES.
 - ``ALERT_EMAIL_TO``: destinatarios separados por comas. Mientras la cuenta de SES esté en modo
   sandbox, cada destinatario debe estar verificado en SES; a los que no lo estén no les llega.
@@ -30,7 +30,7 @@ from zoneinfo import ZoneInfo
 
 import numpy as np
 
-THRESHOLD = 0.80
+THRESHOLD = 0.90
 SENDER = "sjurado@das.uchile.cl"
 RECIPIENTS = (
     "sjurado@das.uchile.cl",
@@ -38,6 +38,7 @@ RECIPIENTS = (
     "nicolas.e.delgado.a@gmail.com",
     "renato.gutierrez.maulme@gmail.com",
     "nicolas.delgado.a@ug.uchile.cl",
+    "zanelli.93@gmail.com",
 )
 REGION = "us-east-1"
 
@@ -140,7 +141,7 @@ class SesClient(Protocol):
 
 
 def threshold() -> float:
-    """Umbral de probabilidad (``ALERT_THRESHOLD`` o 0.80)."""
+    """Umbral de probabilidad (``ALERT_THRESHOLD`` o 0.90)."""
     return float(os.environ.get("ALERT_THRESHOLD", THRESHOLD))
 
 
